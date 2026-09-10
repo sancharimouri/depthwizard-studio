@@ -173,12 +173,12 @@ body {
 
 
 .right-rail {
-    top: 100px;
+    top: 62px;
     right: 24px;
 
     width: clamp(260px, 24vw, 340px);
 
-    max-height: calc(100vh - 132px);
+    max-height: calc(100vh - 94px);
 
     display: flex;
     flex-direction: column;
@@ -300,26 +300,6 @@ kbd {
 }
 
 
-/* ============================================================
-   PIPELINE PANEL
-============================================================ */
-
-.pipeline-panel {
-    padding: 16px 18px;
-
-    border: 1px solid
-        rgba(255,255,255,0.10);
-
-    border-radius: 12px;
-
-    background:
-        rgba(5, 12, 10, 0.65);
-
-    backdrop-filter:
-        blur(14px);
-}
-
-
 .panel-title {
     margin-bottom: 10px;
 
@@ -331,40 +311,6 @@ kbd {
 
     color:
         rgba(255,255,255,0.45);
-}
-
-
-.pipeline-step {
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-
-    padding: 6px 0;
-
-    font-size: 11px;
-
-    color:
-        rgba(255,255,255,0.40);
-
-    transition:
-        color 0.2s ease;
-}
-
-
-.pipeline-step.active {
-    color:
-        rgba(255,255,255,0.95);
-}
-
-
-.pipeline-indicator {
-    font-size: 9px;
-
-    font-weight: 700;
-
-    opacity: 0.55;
 }
 
 
@@ -469,10 +415,8 @@ kbd {
  * re-enable pointer events.
  */
 
-.pipeline-panel,
 .layer-panel,
-.region-panel,
-.activity-panel {
+.region-panel {
     pointer-events: auto;
 }
 
@@ -550,10 +494,6 @@ kbd {
     display: none;
 }
 
-.region-card.locked .region-status {
-    margin-top: 0;
-}
-
 
 .region-name {
     font-size: 13px;
@@ -569,22 +509,6 @@ kbd {
 }
 
 
-.region-status {
-    margin-top: 6px;
-
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1px;
-
-    color: rgba(255,255,255,0.4);
-}
-
-
-.region-status.ready {
-    color: #62d98b;
-}
-
-
 .region-note {
     min-height: 14px;
     margin-top: 10px;
@@ -592,35 +516,6 @@ kbd {
     font-size: 10px;
     line-height: 1.4;
     color: rgba(255,255,255,0.5);
-}
-
-
-.upload-trigger {
-    width: 100%;
-    margin-top: 4px;
-
-    padding: 9px 12px;
-
-    border: 1px dashed rgba(255,255,255,0.2);
-    border-radius: 8px;
-
-    background: transparent;
-    color: rgba(255,255,255,0.55);
-
-    font-family: inherit;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.6px;
-
-    cursor: pointer;
-
-    transition: all 0.2s ease;
-}
-
-.upload-trigger:hover {
-    border-color: rgba(255,255,255,0.4);
-    color: white;
-    background: rgba(255,255,255,0.04);
 }
 
 
@@ -807,81 +702,7 @@ kbd {
 }
 
 
-/* ============================================================
-   ACTIVITY FEED
-============================================================ */
-
-.activity-panel {
-    padding: 16px 18px;
-
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 12px;
-
-    background: rgba(5, 12, 10, 0.65);
-    backdrop-filter: blur(14px);
-
-    min-height: 0;
-
-    display: flex;
-    flex-direction: column;
-}
-
-
-.activity-feed {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    overflow-y: auto;
-    scrollbar-width: none;
-}
-
-.activity-feed::-webkit-scrollbar {
-    display: none;
-}
-
-
-.activity-item {
-    padding-left: 10px;
-    border-left: 2px solid rgba(255,255,255,0.12);
-}
-
-
-.activity-item.warn {
-    border-left-color: rgba(230, 180, 90, 0.6);
-}
-
-
-.activity-item-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    color: rgba(255,255,255,0.4);
-}
-
-
-.activity-item-time {
-    white-space: nowrap;
-    color: rgba(255,255,255,0.3);
-}
-
-
-.activity-item-text {
-    margin-top: 3px;
-
-    font-size: 11px;
-    line-height: 1.4;
-    color: rgba(255,255,255,0.8);
-}
-
 .run-reconstruction-button {
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
     z-index: 20;
 
     padding: 14px 22px;
@@ -898,6 +719,7 @@ kbd {
     letter-spacing: 0.08em;
 
     cursor: pointer;
+    pointer-events: auto;
 
     backdrop-filter: blur(12px);
 
