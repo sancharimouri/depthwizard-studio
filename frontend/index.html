@@ -78,19 +78,56 @@
 
         <div class="overlay left-rail">
 
-            <div class="location-card">
+            <div class="region-panel">
 
-                <div class="eyebrow">
-                    CURRENT SCENE
+                <div class="panel-title">
+                    REGIONS
                 </div>
 
-                <h1>
-                    Darjeeling
-                </h1>
+                <div class="region-list">
 
-                <div class="location-meta">
-                    West Bengal, India
+                    <button
+                        class="region-card active"
+                        data-region="darjeeling"
+                    >
+                        <div class="region-name">Darjeeling</div>
+                        <div class="region-meta">West Bengal · 10×10 km</div>
+                        <div class="region-status ready">READY</div>
+                    </button>
+
+                    <button
+                        class="region-card locked"
+                        data-region="kolkata"
+                    >
+                        <div class="region-name">Kolkata</div>
+                        <div class="region-meta">West Bengal · 10×10 km</div>
+                        <div class="region-status">IMAGERY ONLY</div>
+                    </button>
+
+                    <button
+                        class="region-card locked"
+                        data-region="bardhaman"
+                    >
+                        <div class="region-name">Bardhaman</div>
+                        <div class="region-meta">West Bengal · 10×10 km</div>
+                        <div class="region-status">IMAGERY ONLY</div>
+                    </button>
+
+                    <button
+                        class="region-card locked"
+                        data-region="sundarbans"
+                    >
+                        <div class="region-name">Sundarbans</div>
+                        <div class="region-meta">West Bengal · 10×10 km</div>
+                        <div class="region-status">IMAGERY ONLY</div>
+                    </button>
+
                 </div>
+
+                <div
+                    id="region-note"
+                    class="region-note"
+                ></div>
 
             </div>
 
@@ -167,98 +204,107 @@
 
             </div>
 
-        </div>
 
+            <div class="stats-strip">
 
-        <!-- Layer controls -->
+                <div class="stat-tile">
+                    <div class="stat-value">1.17s</div>
+                    <div class="stat-label">DAv2 INFERENCE</div>
+                </div>
 
-        <div class="overlay layer-panel">
+                <div class="stat-tile">
+                    <div class="stat-value">10m</div>
+                    <div class="stat-label">RESOLUTION</div>
+                </div>
 
-            <div class="panel-title">
-                VISUALIZATION LAYER
-            </div>
+                <div class="stat-tile">
+                    <div class="stat-value">361×325</div>
+                    <div class="stat-label">MESH GRID</div>
+                </div>
 
-
-            <div class="layer-buttons">
-
-                <button
-                    id="satellite-button"
-                    class="layer-button active"
-                >
-                    SATELLITE
-                </button>
-
-
-                <button
-                    id="depth-button"
-                    class="layer-button"
-                >
-                    RELATIVE DEPTH
-                </button>
-
-                <button
-                    id="elevation-button"
-                    class="layer-button"
-                >
-                    ELEVATION
-                </button>
+                <div class="stat-tile">
+                    <div class="stat-value">32645</div>
+                    <div class="stat-label">EPSG</div>
+                </div>
 
             </div>
 
-
-            <div
-                id="layer-description"
-                class="layer-description"
-            >
-                Sentinel-2 RGB imagery
-            </div>
-
-        </div>
-
-
-        <!-- Terrain information -->
-
-        <div class="overlay bottom-left">
 
             <div class="terrain-card">
 
                 <div class="metric">
+                    <span class="metric-label">ELEVATION RANGE</span>
+                    <span id="elevation-value">—</span>
+                </div>
 
-                    <span class="metric-label">
+                <div class="metric metric-stacked">
+                    <span class="metric-label">TERRAIN SOURCE</span>
+                    <span>OpenTopography DSM</span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Layer controls + activity feed -->
+
+        <div class="overlay right-rail">
+
+            <div class="layer-panel">
+
+                <div class="panel-title">
+                    VISUALIZATION LAYER
+                </div>
+
+
+                <div class="layer-buttons">
+
+                    <button
+                        id="satellite-button"
+                        class="layer-button active"
+                    >
+                        SATELLITE
+                    </button>
+
+
+                    <button
+                        id="depth-button"
+                        class="layer-button"
+                    >
+                        RELATIVE DEPTH
+                    </button>
+
+                    <button
+                        id="elevation-button"
+                        class="layer-button"
+                    >
                         ELEVATION
-                    </span>
-
-                    <span id="elevation-value">
-                        —
-                    </span>
+                    </button>
 
                 </div>
 
 
-                <div class="metric">
-
-                    <span class="metric-label">
-                        TERRAIN RANGE
-                    </span>
-
-                    <span>
-                        556–2478 m
-                    </span>
-
+                <div
+                    id="layer-description"
+                    class="layer-description"
+                >
+                    Sentinel-2 RGB imagery
                 </div>
 
+            </div>
 
-                <div class="metric">
 
-                    <span class="metric-label">
-                        TERRAIN SOURCE
-                    </span>
+            <div class="activity-panel">
 
-                    <span>
-                        OpenTopography DSM
-                    </span>
-
+                <div class="panel-title">
+                    PIPELINE LOG
                 </div>
+
+                <div
+                    id="activity-feed"
+                    class="activity-feed"
+                ></div>
 
             </div>
 
