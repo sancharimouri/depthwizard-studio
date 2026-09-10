@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     />
 
-    <title>Depth Wizard 2</title>
+    <title>Depth Wizard 2.0</title>
 
     <link
         rel="stylesheet"
@@ -24,6 +24,49 @@
 
 <div id="app">
 
+
+    <!-- =====================================================
+         PAGE NAVIGATION (collapsible icon rail)
+    ====================================================== -->
+
+    <nav id="page-nav" class="page-nav">
+
+        <button
+            id="page-nav-toggle"
+            class="page-nav-toggle"
+            aria-label="Toggle navigation"
+        >
+            ☰
+        </button>
+
+        <div class="page-nav-tabs">
+
+            <button
+                class="page-nav-tab active"
+                data-page="page-1"
+            >
+                <span class="page-nav-icon">1</span>
+                <span class="page-nav-label">Page 1</span>
+            </button>
+
+            <button
+                class="page-nav-tab"
+                data-page="page-2"
+            >
+                <span class="page-nav-icon">2</span>
+                <span class="page-nav-label">Page 2</span>
+            </button>
+
+        </div>
+
+    </nav>
+
+
+    <!-- =====================================================
+         PAGE 1
+    ====================================================== -->
+
+    <div id="page-1" class="page active">
 
     <!-- =====================================================
          TOP BAR
@@ -40,7 +83,7 @@
             <div>
 
                 <div class="brand-name">
-                    DEPTH WIZARD
+                    DEPTH WIZARD 2.0
                 </div>
 
                 <div class="brand-subtitle">
@@ -405,6 +448,21 @@
 
 
     </main>
+
+    </div>
+
+
+    <!-- =====================================================
+         PAGE 2 (placeholder)
+    ====================================================== -->
+
+    <div id="page-2" class="page">
+
+        <div class="page-2-content">
+            <h1>Page 2</h1>
+        </div>
+
+    </div>
 
 </div>
 
