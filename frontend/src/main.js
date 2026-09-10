@@ -24,20 +24,26 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
+// No base yaw correction — the earlier "tilt it a few degrees" tweak was
+// actually compensating for the camera's steep default angle, not a mesh
+// orientation problem (see the lowered camera elevation below).
+const BASE_YAW = 0;
+
+// terrainRig's wheel listener must attach to domElement before
+// OrbitControls' own (created next) so it can claim plain two-finger
+// scroll for rotation ahead of OrbitControls treating it as a zoom.
+const terrainRig = createTerrainRig(renderer.domElement, BASE_YAW);
+
+// South-east screen offset so the structure clears the panels occupying
+// the top and left of the page.
+terrainRig.rig.position.set(18, -10, 0);
+scene.add(terrainRig.rig);
+
 const controls = createControls(
     camera,
     renderer.domElement,
     new THREE.Vector3(0, 12, 0)
 );
-
-// Base yaw correction so the real ridge line reads level/natural instead of
-// diagonally tilted, plus a south-east screen offset so the structure clears
-// the panels now occupying the top and left of the page.
-const BASE_YAW = THREE.MathUtils.degToRad(12);
-
-const terrainRig = createTerrainRig(renderer.domElement, BASE_YAW);
-terrainRig.rig.position.set(18, -10, 0);
-scene.add(terrainRig.rig);
 
 const ambient = new THREE.HemisphereLight(
     0xddebd8,
@@ -257,7 +263,9 @@ async function loadRegion(regionKey) {
     // Camera
     // --------------------------------------------------------
 
-    camera.position.set(0, 95, 125);
+    // ~18 degrees above the horizon (was ~34 degrees / a steep bird's-eye
+    // angle) — same viewing distance, just lower and more oblique.
+    camera.position.set(0, 58, 143);
     controls.target.set(0, 12, 0);
     controls.update();
     terrainRig.reset();
