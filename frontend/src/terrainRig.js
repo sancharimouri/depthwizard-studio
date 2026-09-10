@@ -18,6 +18,7 @@ export function createTerrainRig(domElement, baseYaw = 0) {
     let pitch = 0;
     let autoRotating = true;
     let idleTimer = null;
+    let speedMultiplier = 1;
 
     const activePointers = new Map();
     let dragPointerId = null;
@@ -105,7 +106,7 @@ export function createTerrainRig(domElement, baseYaw = 0) {
 
     function update() {
         if (autoRotating) {
-            yaw += AUTO_ROTATE_RADIANS_PER_FRAME;
+            yaw += AUTO_ROTATE_RADIANS_PER_FRAME * speedMultiplier;
             applyRotation();
         }
     }
@@ -113,8 +114,13 @@ export function createTerrainRig(domElement, baseYaw = 0) {
     function reset() {
         yaw = baseYaw;
         pitch = 0;
+        speedMultiplier = 1;
         applyRotation();
     }
 
-    return { rig, update, reset };
+    function setSpeedMultiplier(multiplier) {
+        speedMultiplier = multiplier;
+    }
+
+    return { rig, update, reset, setSpeedMultiplier };
 }

@@ -274,9 +274,24 @@ export function createTerrain(
 
     // Flood overlay: reddens genuinely low-lying vertices via a smooth
     // (non-hard-cutoff) gradient, multiplied on top of whatever texture
-    // is currently mapped.
+    // is currently mapped. The threshold is an elevation percentile
+    // computed from this region's actual distribution — not a fixed
+    // normalized-elevation number — so coverage stays ~25-35% of the
+    // surface regardless of how relief is distributed in a given region.
 
-    const FLOOD_LEVEL = 0.35;
+    function computePercentile(values, percentile) {
+        const sorted = [...values].sort((a, b) => a - b);
+        const index = Math.min(
+            sorted.length - 1,
+            Math.max(0, Math.floor(percentile * (sorted.length - 1)))
+        );
+        return sorted[index];
+    }
+
+    const FLOOD_COVERAGE_PERCENTILE = 0.3;
+    // Guard against a degenerate zero-width ramp (e.g. a region where the
+    // lowest 30% of vertices all sit at the same minimum elevation).
+    const floodLevel = Math.max(computePercentile(heights, FLOOD_COVERAGE_PERCENTILE), 1e-6);
 
     function smoothstep(x, edge0, edge1) {
         const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
@@ -299,7 +314,7 @@ export function createTerrain(
             }
 
             const normalizedElevation = heights[index];
-            const aboveFloodLevel = smoothstep(normalizedElevation, 0, FLOOD_LEVEL);
+            const aboveFloodLevel = smoothstep(normalizedElevation, 0, floodLevel);
             const redAmount = 1 - aboveFloodLevel;
 
             colorAttribute.setXYZ(

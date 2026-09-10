@@ -167,7 +167,7 @@ function activateLayer(layer) {
 
 // Selecting a layer by hand (as opposed to the flood toggle switching to
 // it itself) always clears the flood overlay — it only makes sense on
-// top of the relative-depth layer.
+// top of the DSM layer.
 function selectLayer(layer) {
     if (floodActive) {
         setFloodActive(false);
@@ -437,8 +437,11 @@ runAgainButton?.addEventListener("click", runReconstruction);
 
 let flythrough = null;
 
+const FLYTHROUGH_ROTATE_SPEED_MULTIPLIER = 2;
+
 function resetFlythrough() {
     flythrough = null;
+    terrainRig.setSpeedMultiplier(1);
 
     if (flythroughButton) {
         flythroughButton.disabled = false;
@@ -458,8 +461,12 @@ function startFlythrough() {
         startDistance,
         endDistance,
         startTime: performance.now(),
-        duration: 4500,
+        duration: 9500,
     };
+
+    // 2x idle rotation speed for the zoom-in and for the continued
+    // rotation afterward — stays elevated until the next reset.
+    terrainRig.setSpeedMultiplier(FLYTHROUGH_ROTATE_SPEED_MULTIPLIER);
 
     flythroughButton.disabled = true;
     flythroughButton.textContent = "FLYING THROUGH…";
@@ -506,7 +513,7 @@ function setFloodActive(active) {
 
 floodButton?.addEventListener("click", () => {
     if (!floodActive) {
-        activateLayer("depth-flat");
+        activateLayer("dsm-3d");
     }
 
     setFloodActive(!floodActive);
