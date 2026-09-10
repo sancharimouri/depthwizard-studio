@@ -1,0 +1,1 @@
+# Calibration support distance map.

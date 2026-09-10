@@ -1,0 +1,1 @@
+# Terrain/nDSM composition tests.

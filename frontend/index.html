@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8" />
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>Depth Wizard 2</title>
+
+    <link
+        rel="stylesheet"
+        href="/src/styles.css"
+    />
+
+</head>
+
+
+<body>
+
+<div id="app">
+
+
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                DW
+            </div>
+
+            <div>
+
+                <div class="brand-name">
+                    DEPTH WIZARD
+                </div>
+
+                <div class="brand-subtitle">
+                    Satellite → Metric Terrain Reconstruction
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="status">
+
+            <span class="status-dot"></span>
+
+            DEMO MODE
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         VIEWER
+    ====================================================== -->
+
+    <main class="viewer">
+
+        <canvas
+            id="terrain-canvas"
+        ></canvas>
+
+
+        <!-- Scene -->
+
+        <div class="overlay top-left">
+
+            <div class="location-card">
+
+                <div class="eyebrow">
+                    CURRENT SCENE
+                </div>
+
+                <h1>
+                    Darjeeling
+                </h1>
+
+                <div class="location-meta">
+                    West Bengal, India
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Pipeline -->
+
+        <div class="overlay pipeline-panel">
+
+            <div class="panel-title">
+                RECONSTRUCTION PIPELINE
+            </div>
+
+
+            <div
+                class="pipeline-step active"
+                data-step="satellite"
+            >
+
+                <span class="pipeline-indicator">
+                    01
+                </span>
+
+                <span>
+                    Satellite Image
+                </span>
+
+            </div>
+
+
+            <div
+                class="pipeline-step"
+                data-step="depth"
+            >
+
+                <span class="pipeline-indicator">
+                    02
+                </span>
+
+                <span>
+                    Relative Depth
+                </span>
+
+            </div>
+
+
+            <div
+                class="pipeline-step"
+                data-step="alignment"
+            >
+
+                <span class="pipeline-indicator">
+                    03
+                </span>
+
+                <span>
+                    Metric Alignment
+                </span>
+
+            </div>
+
+
+            <div
+                class="pipeline-step"
+                data-step="terrain"
+            >
+
+                <span class="pipeline-indicator">
+                    04
+                </span>
+
+                <span>
+                    3D Reconstruction
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- Layer controls -->
+
+        <div class="overlay layer-panel">
+
+            <div class="panel-title">
+                VISUALIZATION LAYER
+            </div>
+
+
+            <div class="layer-buttons">
+
+                <button
+                    id="satellite-button"
+                    class="layer-button active"
+                >
+                    SATELLITE
+                </button>
+
+
+                <button
+                    id="depth-button"
+                    class="layer-button"
+                >
+                    RELATIVE DEPTH
+                </button>
+
+                <button
+                    id="elevation-button"
+                    class="layer-button"
+                >
+                    ELEVATION
+                </button>
+
+            </div>
+
+
+            <div
+                id="layer-description"
+                class="layer-description"
+            >
+                Sentinel-2 RGB imagery
+            </div>
+
+        </div>
+
+
+        <!-- Terrain information -->
+
+        <div class="overlay bottom-left">
+
+            <div class="terrain-card">
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        ELEVATION
+                    </span>
+
+                    <span id="elevation-value">
+                        —
+                    </span>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        TERRAIN RANGE
+                    </span>
+
+                    <span>
+                        556–2478 m
+                    </span>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        TERRAIN SOURCE
+                    </span>
+
+                    <span>
+                        OpenTopography DSM
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Controls -->
+
+        <div class="overlay bottom-right">
+
+            <div class="controls-hint">
+
+                <div>
+
+                    <kbd>W</kbd>
+                    <kbd>A</kbd>
+                    <kbd>S</kbd>
+                    <kbd>D</kbd>
+
+                </div>
+
+                <span>
+                    Navigate
+                </span>
+
+            </div>
+
+        </div>
+
+
+    </main>
+
+</div>
+
+
+<script
+    type="module"
+    src="/src/main.js"
+></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+[project]
+name = "depthwizard2"
+version = "0.1.0"
+description = "SIH 2026 single-view height estimation and 3D terrain reconstruction"
+requires-python = ">=3.11"
+dependencies = [
+    "rasterio>=1.4.4",
+]
+
+[project.optional-dependencies]
+ml = ["torch","transformers","pillow","numpy","scipy","scikit-learn","rasterio","pyproj"]
+backend = ["fastapi","uvicorn","python-dotenv"]
+training = ["torchvision","albumentations"]
+dev = ["pytest","ruff"]
