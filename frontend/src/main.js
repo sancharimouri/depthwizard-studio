@@ -69,6 +69,81 @@ function setLayerDescription(layer) {
 
 
 // ============================================================
+// REGION RAIL
+// ============================================================
+
+const REGION_LABELS = {
+    darjeeling: "Darjeeling",
+    kolkata: "Kolkata",
+    bardhaman: "Bardhaman",
+    sundarbans: "Sundarbans",
+};
+
+document.querySelectorAll(".region-card").forEach(card => {
+    card.addEventListener("click", () => {
+        const region = card.dataset.region;
+        const note = document.getElementById("region-note");
+
+        if (!note) {
+            return;
+        }
+
+        if (card.classList.contains("locked")) {
+            note.textContent = `${REGION_LABELS[region]} — imagery indexed, full pipeline lands in Session 2.`;
+            setTimeout(() => {
+                note.textContent = "";
+            }, 3500);
+            return;
+        }
+
+        note.textContent = "";
+    });
+});
+
+
+// ============================================================
+// ACTIVITY / PIPELINE LOG
+// ============================================================
+
+const ACTIVITY_LOG = [
+    { tag: "TERRAIN", time: "now", text: "OpenTopography DSM loaded — 557–2478 m range, Darjeeling" },
+    { tag: "MESH", time: "2s ago", text: "Terrain mesh built — 361 × 325 vertices at 10 m/px" },
+    { tag: "VALIDATION", time: "1m ago", warn: true, text: "Spatial-trend correlation check — Pearson r +0.60 → −0.41 after detrending. Elevation pipeline frozen." },
+    { tag: "DEPTH", time: "1m ago", text: "DAv2 (Depth-Anything-V2-Large) relative-depth inference — 1.17s on MPS" },
+    { tag: "VALIDATION", time: "2m ago", warn: true, text: "RDAH-Net zero-shot check (Swiss/HK weights) — checkerboard artifacts, rejected" },
+    { tag: "INGEST", time: "3m ago", text: "Sentinel-2 RGB tile indexed — 10×10 km, EPSG:32645" },
+    { tag: "INGEST", time: "6m ago", text: "Kolkata / Bardhaman / Sundarbans imagery indexed — full pipeline pending" },
+];
+
+function renderActivityFeed() {
+    const feed = document.getElementById("activity-feed");
+
+    if (!feed) {
+        return;
+    }
+
+    feed.innerHTML = "";
+
+    for (const entry of ACTIVITY_LOG) {
+        const item = document.createElement("div");
+        item.className = entry.warn ? "activity-item warn" : "activity-item";
+
+        item.innerHTML = `
+            <div class="activity-item-head">
+                <span>${entry.tag}</span>
+                <span class="activity-item-time">${entry.time}</span>
+            </div>
+            <div class="activity-item-text">${entry.text}</div>
+        `;
+
+        feed.appendChild(item);
+    }
+}
+
+renderActivityFeed();
+
+
+// ============================================================
 // LOAD TERRAIN
 // ============================================================
 

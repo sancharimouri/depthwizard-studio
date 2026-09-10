@@ -152,17 +152,41 @@ body {
     top: 100px;
     left: 24px;
 
-    width: 240px;
+    width: 250px;
+
+    max-height: calc(100vh - 132px);
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.left-rail::-webkit-scrollbar {
+    display: none;
+}
+
+
+.right-rail {
+    top: 100px;
+    right: 24px;
+
+    width: clamp(260px, 24vw, 340px);
+
+    max-height: calc(100vh - 132px);
 
     display: flex;
     flex-direction: column;
     gap: 14px;
+
+    overflow-y: auto;
+    scrollbar-width: none;
 }
 
-
-.bottom-left {
-    left: 24px;
-    bottom: 24px;
+.right-rail::-webkit-scrollbar {
+    display: none;
 }
 
 
@@ -172,7 +196,6 @@ body {
 }
 
 
-.location-card,
 .terrain-card,
 .controls-hint {
     padding: 16px 18px;
@@ -203,13 +226,6 @@ body {
 }
 
 
-.location-card h1 {
-    margin: 5px 0 2px;
-
-    font-size: 28px;
-}
-
-
 .location-meta {
     font-size: 12px;
 
@@ -223,11 +239,15 @@ body {
 
     justify-content: space-between;
 
-    gap: 40px;
-
-    min-width: 260px;
+    gap: 16px;
 
     padding: 5px 0;
+}
+
+
+.metric-stacked {
+    flex-direction: column;
+    gap: 3px;
 }
 
 
@@ -317,7 +337,7 @@ kbd {
 
     gap: 10px;
 
-    padding: 8px 0;
+    padding: 6px 0;
 
     font-size: 11px;
 
@@ -349,11 +369,6 @@ kbd {
 ============================================================ */
 
 .layer-panel {
-    right: 24px;
-    top: 100px;
-
-    width: clamp(260px, 24vw, 340px);
-
     padding: 16px 18px;
 
     border: 1px solid
@@ -451,14 +466,241 @@ kbd {
  */
 
 .pipeline-panel,
-.layer-panel {
+.layer-panel,
+.region-panel,
+.activity-panel {
     pointer-events: auto;
 }
 
 
-.layer-button {
+.layer-button,
+.region-card {
     pointer-events: auto;
     cursor: pointer;
+}
+
+
+/* ============================================================
+   REGION RAIL
+============================================================ */
+
+.region-panel {
+    padding: 16px 18px;
+
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+
+    background: rgba(5, 12, 10, 0.65);
+    backdrop-filter: blur(14px);
+}
+
+
+.region-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+
+.region-card {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 8px;
+
+    background: rgba(255,255,255,0.03);
+
+    text-align: left;
+    font-family: inherit;
+    color: white;
+
+    transition: all 0.2s ease;
+}
+
+
+.region-card:hover {
+    background: rgba(255,255,255,0.07);
+}
+
+
+.region-card.active {
+    background: rgba(98,217,139,0.10);
+    border-color: rgba(98,217,139,0.35);
+}
+
+
+.region-card.locked {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    padding: 8px 12px;
+
+    opacity: 0.5;
+}
+
+.region-card.locked .region-meta {
+    display: none;
+}
+
+.region-card.locked .region-status {
+    margin-top: 0;
+}
+
+
+.region-name {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+.region-meta {
+    margin-top: 2px;
+
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+}
+
+
+.region-status {
+    margin-top: 6px;
+
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+
+    color: rgba(255,255,255,0.4);
+}
+
+
+.region-status.ready {
+    color: #62d98b;
+}
+
+
+.region-note {
+    min-height: 14px;
+    margin-top: 10px;
+
+    font-size: 10px;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.5);
+}
+
+
+/* ============================================================
+   STATS STRIP
+============================================================ */
+
+.stats-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    padding: 14px 16px;
+
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+
+    background: rgba(5, 12, 10, 0.65);
+    backdrop-filter: blur(14px);
+}
+
+
+.stat-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+
+.stat-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.4);
+}
+
+
+/* ============================================================
+   ACTIVITY FEED
+============================================================ */
+
+.activity-panel {
+    padding: 16px 18px;
+
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+
+    background: rgba(5, 12, 10, 0.65);
+    backdrop-filter: blur(14px);
+
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.activity-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.activity-feed::-webkit-scrollbar {
+    display: none;
+}
+
+
+.activity-item {
+    padding-left: 10px;
+    border-left: 2px solid rgba(255,255,255,0.12);
+}
+
+
+.activity-item.warn {
+    border-left-color: rgba(230, 180, 90, 0.6);
+}
+
+
+.activity-item-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: rgba(255,255,255,0.4);
+}
+
+
+.activity-item-time {
+    white-space: nowrap;
+    color: rgba(255,255,255,0.3);
+}
+
+
+.activity-item-text {
+    margin-top: 3px;
+
+    font-size: 11px;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.8);
 }
 
 .run-reconstruction-button {
