@@ -116,7 +116,7 @@ export function createTerrainRig(domElement, baseYaw = 0) {
         event.preventDefault();
         event.stopImmediatePropagation();
 
-        yaw += event.deltaX * WHEEL_YAW_SENSITIVITY;
+        yaw -= event.deltaX * WHEEL_YAW_SENSITIVITY;
         pitch = THREE.MathUtils.clamp(pitch + event.deltaY * WHEEL_PITCH_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT);
 
         applyRotation();
