@@ -78,6 +78,107 @@ function createValueNoise2D(seed, gridSize) {
 }
 
 
+// ============================================================
+// EXPERIMENT: Kolkata-only spike smoothing
+//
+// Kolkata's real relief is subtle (~43m range over a 10km tile), so the
+// automatic vertical-exaggeration factor is high (~7.7x here) to make
+// that relief read as terrain at all. That amplifies single/few-vertex
+// elevation outliers in the source Copernicus GLO-30 DSM — plausibly
+// buildings, which a surface-model DEM bakes into the height value at
+// 30m resolution — into sharp needles. Two independent, additive passes
+// applied only to Kolkata's height field, only before/for the extruded
+// (3D) meshes:
+//
+//   1. A small-kernel median filter on the raw normalized heights,
+//      before exaggeration — removes isolated single-vertex noise/
+//      outliers without blurring genuine broader relief.
+//   2. A slope cap on the exaggerated (world-space) heights — pulls
+//      any vertex down toward "lowest neighbor + cap", iteratively, so
+//      a spike that survives the median filter (e.g. a building a few
+//      vertices wide) flattens into a small plateau — reading as a
+//      flat-topped block — instead of a point.
+//
+// Tweak and reload to adjust:
+//   MEDIAN_KERNEL_SIZE   — window width in vertices (must be odd).
+//                          3 = 3x3. Larger softens more but starts
+//                          eating real relief detail.
+//   SLOPE_CAP            — max world-space height delta allowed
+//                          between adjacent vertices, per iteration.
+//   SLOPE_CAP_ITERATIONS — how many relaxation passes propagate that
+//                          cap outward from a spike's base.
+// ============================================================
+
+const SPIKE_SMOOTHING_REGION = "kolkata";
+const SPIKE_MEDIAN_KERNEL_SIZE = 3;
+const SPIKE_SLOPE_CAP = 0.6;
+const SPIKE_SLOPE_CAP_ITERATIONS = 4;
+
+
+// Out-of-place median filter over a WxH scalar field (border-clamped).
+function medianFilter2D(field, width, height, kernelSize) {
+    const radius = Math.floor(kernelSize / 2);
+    const output = new Float32Array(field.length);
+    const neighborhood = [];
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+
+            neighborhood.length = 0;
+
+            for (let ky = -radius; ky <= radius; ky++) {
+                const ny = Math.min(height - 1, Math.max(0, y + ky));
+
+                for (let kx = -radius; kx <= radius; kx++) {
+                    const nx = Math.min(width - 1, Math.max(0, x + kx));
+                    neighborhood.push(field[ny * width + nx]);
+                }
+            }
+
+            neighborhood.sort((a, b) => a - b);
+            output[y * width + x] = neighborhood[Math.floor(neighborhood.length / 2)];
+        }
+    }
+
+    return output;
+}
+
+// Iteratively pulls each vertex down to at most "lowest 4-neighbor +
+// maxDelta", in place. Peaks taller than their surroundings by more than
+// maxDelta flatten into a plateau instead of keeping a sharp apex; genuine
+// gradual slopes (delta already under the cap) are left alone.
+function capSlope2D(field, width, height, maxDelta, iterations) {
+    for (let iteration = 0; iteration < iterations; iteration++) {
+
+        let changed = false;
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+
+                const index = y * width + x;
+                let lowestNeighbor = Infinity;
+
+                if (x > 0) lowestNeighbor = Math.min(lowestNeighbor, field[index - 1]);
+                if (x < width - 1) lowestNeighbor = Math.min(lowestNeighbor, field[index + 1]);
+                if (y > 0) lowestNeighbor = Math.min(lowestNeighbor, field[index - width]);
+                if (y < height - 1) lowestNeighbor = Math.min(lowestNeighbor, field[index + width]);
+
+                const cap = lowestNeighbor + maxDelta;
+
+                if (field[index] > cap) {
+                    field[index] = cap;
+                    changed = true;
+                }
+            }
+        }
+
+        if (!changed) {
+            break;
+        }
+    }
+}
+
+
 export function createTerrain(
     parent,
     regionKey,
@@ -185,6 +286,13 @@ export function createTerrain(
     // flat z=0 rest state so layers can toggle between the two without
     // reloading geometry.
 
+    // Kolkata-only: median-filter the raw height field before exaggeration
+    // (see the block comment above) to remove single/few-vertex outliers.
+    const heightsForMesh =
+        regionKey === SPIKE_SMOOTHING_REGION
+            ? medianFilter2D(heights, width, height, SPIKE_MEDIAN_KERNEL_SIZE)
+            : heights;
+
     const extrudedZ = new Float32Array(positions.count);
 
     for (
@@ -204,7 +312,7 @@ export function createTerrain(
 
             const elevation =
                 elevationMin +
-                heights[index] *
+                heightsForMesh[index] *
                 elevationRange;
 
             extrudedZ[index] =
@@ -213,12 +321,22 @@ export function createTerrain(
                     elevationMin
                 ) *
                 verticalExaggeration;
-
-            positions.setZ(
-                index,
-                extrudedZ[index]
-            );
         }
+    }
+
+    // Kolkata-only: cap the world-space slope between adjacent vertices so
+    // any spike the median filter didn't fully absorb flattens into a
+    // small plateau instead of keeping a sharp apex.
+    if (regionKey === SPIKE_SMOOTHING_REGION) {
+        capSlope2D(extrudedZ, width, height, SPIKE_SLOPE_CAP, SPIKE_SLOPE_CAP_ITERATIONS);
+    }
+
+    for (
+        let index = 0;
+        index < positions.count;
+        index++
+    ) {
+        positions.setZ(index, extrudedZ[index]);
     }
 
 
