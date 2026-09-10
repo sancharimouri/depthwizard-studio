@@ -1,0 +1,505 @@
+* {
+    box-sizing: border-box;
+}
+
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    background: #07100d;
+    color: white;
+}
+
+
+#app {
+    width: 100%;
+    height: 100%;
+}
+
+
+.topbar {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 28px;
+
+    z-index: 10;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(5, 12, 10, 0.95),
+            rgba(5, 12, 10, 0.65),
+            transparent
+        );
+
+    pointer-events: none;
+}
+
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+.brand-mark {
+    width: 38px;
+    height: 38px;
+
+    display: grid;
+    place-items: center;
+
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+
+    background: rgba(255,255,255,0.06);
+}
+
+
+.brand-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+
+.brand-subtitle {
+    margin-top: 3px;
+
+    font-size: 11px;
+
+    color: rgba(255,255,255,0.55);
+}
+
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+
+    color: rgba(255,255,255,0.7);
+}
+
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #62d98b;
+
+    box-shadow:
+        0 0 12px rgba(98,217,139,0.8);
+}
+
+
+.viewer {
+    position: fixed;
+
+    inset: 0;
+}
+
+
+#terrain-canvas {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+}
+
+
+.overlay {
+    position: fixed;
+
+    z-index: 5;
+
+    pointer-events: none;
+}
+
+
+.top-left {
+    top: 105px;
+    left: 28px;
+}
+
+
+.bottom-left {
+    left: 28px;
+    bottom: 28px;
+}
+
+
+.bottom-right {
+    right: 28px;
+    bottom: 28px;
+}
+
+
+.location-card,
+.terrain-card,
+.controls-hint {
+    padding: 16px 18px;
+
+    border: 1px solid
+        rgba(255,255,255,0.10);
+
+    border-radius: 12px;
+
+    background:
+        rgba(5, 12, 10, 0.65);
+
+    backdrop-filter:
+        blur(14px);
+}
+
+
+.eyebrow,
+.metric-label {
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.6px;
+
+    color:
+        rgba(255,255,255,0.45);
+}
+
+
+.location-card h1 {
+    margin: 5px 0 2px;
+
+    font-size: 28px;
+}
+
+
+.location-meta {
+    font-size: 12px;
+
+    color:
+        rgba(255,255,255,0.55);
+}
+
+
+.metric {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 40px;
+
+    min-width: 260px;
+
+    padding: 5px 0;
+}
+
+
+.metric span:last-child {
+    font-size: 12px;
+
+    color:
+        rgba(255,255,255,0.85);
+}
+
+
+.controls-hint {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    font-size: 11px;
+
+    color:
+        rgba(255,255,255,0.55);
+}
+
+
+kbd {
+    display: inline-flex;
+
+    width: 22px;
+    height: 22px;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 3px;
+
+    border-radius: 5px;
+
+    border: 1px solid
+        rgba(255,255,255,0.15);
+
+    background:
+        rgba(255,255,255,0.07);
+
+    font-size: 10px;
+}
+
+
+/* ============================================================
+   PIPELINE PANEL
+============================================================ */
+
+.pipeline-panel {
+    top: 112px;
+    left: 250px;
+
+    min-width: 220px;
+
+    padding: 16px 18px;
+
+    border: 1px solid
+        rgba(255,255,255,0.10);
+
+    border-radius: 12px;
+
+    background:
+        rgba(5, 12, 10, 0.65);
+
+    backdrop-filter:
+        blur(14px);
+}
+
+
+.panel-title {
+    margin-bottom: 10px;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.6px;
+
+    color:
+        rgba(255,255,255,0.45);
+}
+
+
+.pipeline-step {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 8px 0;
+
+    font-size: 11px;
+
+    color:
+        rgba(255,255,255,0.40);
+
+    transition:
+        color 0.2s ease;
+}
+
+
+.pipeline-step.active {
+    color:
+        rgba(255,255,255,0.95);
+}
+
+
+.pipeline-indicator {
+    font-size: 9px;
+
+    font-weight: 700;
+
+    opacity: 0.55;
+}
+
+
+/* ============================================================
+   LAYER PANEL
+============================================================ */
+
+.layer-panel {
+    right: 28px;
+    top: 112px;
+
+    width: 390px;
+
+    padding: 16px 18px;
+
+    border: 1px solid
+        rgba(255,255,255,0.10);
+
+    border-radius: 12px;
+
+    background:
+        rgba(5, 12, 10, 0.65);
+
+    backdrop-filter:
+        blur(14px);
+}
+
+
+.layer-buttons {
+    display: flex;
+
+    gap: 6px;
+}
+
+
+.layer-button {
+    flex: 1;
+
+    padding: 9px 8px;
+
+    border: 1px solid
+        rgba(255,255,255,0.12);
+
+    border-radius: 7px;
+
+    background:
+        rgba(255,255,255,0.04);
+
+    color:
+        rgba(255,255,255,0.55);
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    cursor: pointer;
+
+    transition:
+        all 0.2s ease;
+}
+
+
+.layer-button:hover {
+    background:
+        rgba(255,255,255,0.09);
+
+    color:
+        white;
+}
+
+
+.layer-button.active {
+    background:
+        rgba(255,255,255,0.14);
+
+    color:
+        white;
+
+    border-color:
+        rgba(255,255,255,0.25);
+}
+
+
+.layer-description {
+    margin-top: 10px;
+
+    font-size: 10px;
+
+    line-height: 1.4;
+
+    color:
+        rgba(255,255,255,0.45);
+}
+
+
+/* ============================================================
+   INTERACTIVE UI
+============================================================ */
+
+/*
+ * Overlays are normally non-interactive so they don't
+ * interfere with the 3D viewer.
+ *
+ * These panels contain actual controls, so explicitly
+ * re-enable pointer events.
+ */
+
+.pipeline-panel,
+.layer-panel {
+    pointer-events: auto;
+}
+
+
+.layer-button {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.run-reconstruction-button {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 20;
+
+    padding: 14px 22px;
+
+    border: 1px solid rgba(180, 220, 190, 0.35);
+    border-radius: 10px;
+
+    background: rgba(10, 24, 16, 0.94);
+    color: #e8f4ea;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+
+    cursor: pointer;
+
+    backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.35);
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.run-reconstruction-button:hover {
+    transform: translateY(-2px);
+    background: rgba(18, 42, 27, 0.96);
+    border-color: rgba(190, 230, 200, 0.6);
+}
+
+.run-reconstruction-button:disabled {
+    cursor: default;
+    opacity: 0.8;
+    transform: none;
+}

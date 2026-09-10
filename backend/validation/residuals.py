@@ -1,0 +1,1 @@
+# Spatial residual maps/diagnostics.
