@@ -117,7 +117,7 @@
         ></canvas>
 
 
-        <!-- Left rail: scene + pipeline -->
+        <!-- Left rail: regions + stats -->
 
         <div class="overlay left-rail">
 
@@ -135,7 +135,6 @@
                     >
                         <div class="region-name">Darjeeling</div>
                         <div class="region-meta">West Bengal · 10×10 km</div>
-                        <div class="region-status ready">READY</div>
                     </button>
 
                     <button
@@ -144,7 +143,6 @@
                     >
                         <div class="region-name">Kolkata</div>
                         <div class="region-meta">West Bengal · 10×10 km</div>
-                        <div class="region-status ready">READY</div>
                     </button>
 
                     <button
@@ -153,7 +151,6 @@
                     >
                         <div class="region-name">Bardhaman</div>
                         <div class="region-meta">West Bengal · 10×10 km</div>
-                        <div class="region-status ready">READY</div>
                     </button>
 
                     <button
@@ -162,7 +159,6 @@
                     >
                         <div class="region-name">Sundarbans</div>
                         <div class="region-meta">West Bengal · 10×10 km</div>
-                        <div class="region-status ready">READY</div>
                     </button>
 
                 </div>
@@ -171,98 +167,6 @@
                     id="region-note"
                     class="region-note"
                 ></div>
-
-                <button
-                    id="upload-trigger"
-                    class="upload-trigger"
-                >
-                    + UPLOAD SATELLITE IMAGE
-                </button>
-
-            </div>
-
-
-            <div class="pipeline-panel">
-
-                <div class="panel-title">
-                    RECONSTRUCTION PIPELINE
-                </div>
-
-
-                <div
-                    class="pipeline-step active"
-                    data-step="satellite"
-                >
-
-                    <span class="pipeline-indicator">
-                        01
-                    </span>
-
-                    <span>
-                        Satellite Image
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="pipeline-step"
-                    data-step="depth"
-                >
-
-                    <span class="pipeline-indicator">
-                        02
-                    </span>
-
-                    <span>
-                        Relative Depth
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="pipeline-step"
-                    data-step="alignment"
-                >
-
-                    <span class="pipeline-indicator">
-                        03
-                    </span>
-
-                    <span>
-                        Metric Alignment
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="pipeline-step"
-                    data-step="terrain"
-                >
-
-                    <span class="pipeline-indicator">
-                        04
-                    </span>
-
-                    <span>
-                        3D Reconstruction
-                    </span>
-
-                </div>
-
-
-                <div
-                    id="pipeline-progress"
-                    class="pipeline-progress"
-                    hidden
-                >
-                    <div
-                        id="pipeline-progress-fill"
-                        class="pipeline-progress-fill"
-                    ></div>
-                </div>
 
             </div>
 
@@ -309,7 +213,7 @@
         </div>
 
 
-        <!-- Layer controls + activity feed -->
+        <!-- Layer controls + run reconstruction -->
 
         <div class="overlay right-rail">
 
@@ -354,19 +258,17 @@
                     Sentinel-2 RGB imagery
                 </div>
 
-            </div>
-
-
-            <div class="activity-panel">
-
-                <div class="panel-title">
-                    PIPELINE LOG
-                </div>
 
                 <div
-                    id="activity-feed"
-                    class="activity-feed"
-                ></div>
+                    id="pipeline-progress"
+                    class="pipeline-progress"
+                    hidden
+                >
+                    <div
+                        id="pipeline-progress-fill"
+                        class="pipeline-progress-fill"
+                    ></div>
+                </div>
 
             </div>
 
