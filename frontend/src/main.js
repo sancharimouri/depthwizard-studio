@@ -754,6 +754,10 @@ function setActivePage(pageId) {
     pageNavTabs.forEach(tab => {
         tab.classList.toggle("active", tab.dataset.page === pageId);
     });
+
+    if (pageId === "page-2") {
+        requestAnimationFrame(drawPipelineConnectors);
+    }
 }
 
 pageNavTabs.forEach(tab => {
@@ -768,6 +772,205 @@ pageNavToggle?.addEventListener("click", () => {
 
 document.getElementById("build-your-own-card")?.addEventListener("click", () => {
     setActivePage("page-2");
+});
+
+
+// ============================================================
+// RECONSTRUCTION PIPELINE DIAGRAM (Workbench, static/placeholder)
+// ============================================================
+
+const pipelineDiagram = document.getElementById("pipeline-diagram");
+const pipelineSvg = document.getElementById("pipeline-connectors");
+const pipelineCaption = document.getElementById("pipeline-caption");
+const pipelineViewerBox = document.getElementById("viewer-box");
+
+const PIPELINE_CAPTION_DEFAULT = "Hover or focus a stage for details.";
+
+// [from, to, style] — "aux" marks the DEM feeding forward into the
+// nDSM+DEM combine step, reused from earlier in the graph rather than
+// following the main left-to-right flow.
+const PIPELINE_EDGES = [
+    ["pn-input", "pn-preprocess", "main"],
+    ["pn-preprocess", "pn-dav2", "main"],
+    ["pn-preprocess", "pn-dem", "main"],
+    ["pn-preprocess", "pn-anchors", "main"],
+    ["pn-dav2", "pn-fusion", "main"],
+    ["pn-dem", "pn-fusion", "main"],
+    ["pn-anchors", "pn-fusion", "main"],
+    ["pn-fusion", "pn-ndsm", "wrap"],
+    ["pn-dem", "pn-combine", "aux"],
+    ["pn-ndsm", "pn-combine", "main"],
+    ["pn-combine", "pn-calibrate", "main"],
+    ["pn-calibrate", "pn-finaldsm", "main"],
+    ["pn-finaldsm", "pn-validate", "main"],
+];
+
+function pipelineRect(el, containerRect) {
+    const r = el.getBoundingClientRect();
+    const left = r.left - containerRect.left;
+    const top = r.top - containerRect.top;
+
+    return {
+        left,
+        top,
+        right: left + r.width,
+        bottom: top + r.height,
+        cx: left + r.width / 2,
+        cy: top + r.height / 2,
+    };
+}
+
+function pipelineEdgePoint(from, to) {
+    const dx = to.cx - from.cx;
+    const dy = to.cy - from.cy;
+
+    if (Math.abs(dx) >= Math.abs(dy)) {
+        return dx >= 0
+            ? { x: from.right, y: from.cy }
+            : { x: from.left, y: from.cy };
+    }
+
+    return dy >= 0
+        ? { x: from.cx, y: from.bottom }
+        : { x: from.cx, y: from.top };
+}
+
+function pipelineElbowPath(fromRect, toRect) {
+    const start = pipelineEdgePoint(fromRect, toRect);
+    const end = pipelineEdgePoint(toRect, fromRect);
+
+    if (Math.abs(start.x - end.x) < 2 || Math.abs(start.y - end.y) < 2) {
+        return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    }
+
+    const midX = start.x + (end.x - start.x) / 2;
+    return `M ${start.x} ${start.y} L ${midX} ${start.y} L ${midX} ${end.y} L ${end.x} ${end.y}`;
+}
+
+function pipelineCurvePath(fromRect, toRect) {
+    const start = pipelineEdgePoint(fromRect, toRect);
+    const end = pipelineEdgePoint(toRect, fromRect);
+    const midY = start.y + (end.y - start.y) / 2;
+
+    return `M ${start.x} ${start.y} C ${start.x} ${midY}, ${end.x} ${midY}, ${end.x} ${end.y}`;
+}
+
+// Forces a bottom-of-from → top-of-to elbow, used for the row-wrap
+// transition (fusion head down into the second pipeline row). A generic
+// nearest-edge anchor would land on fusion's left edge and ndsm's right
+// edge — the same edge ndsm uses for its own outgoing arrow — reading as
+// a false bidirectional arrow.
+function pipelineWrapPath(fromRect, toRect) {
+    const start = { x: fromRect.cx, y: fromRect.bottom };
+    const end = { x: toRect.cx, y: toRect.top };
+    const midY = start.y + (end.y - start.y) / 2;
+
+    return `M ${start.x} ${start.y} L ${start.x} ${midY} L ${end.x} ${midY} L ${end.x} ${end.y}`;
+}
+
+function drawPipelineConnectors() {
+    if (!pipelineSvg || !pipelineDiagram || activePageId !== "page-2") {
+        return;
+    }
+
+    pipelineSvg.querySelectorAll("path.pipeline-edge").forEach(path => path.remove());
+
+    const containerRect = pipelineDiagram.getBoundingClientRect();
+
+    if (containerRect.width === 0) {
+        return;
+    }
+
+    PIPELINE_EDGES.forEach(([fromKey, toKey, style]) => {
+        const fromEl = pipelineDiagram.querySelector(`.${fromKey}`);
+        const toEl = pipelineDiagram.querySelector(`.${toKey}`);
+
+        if (!fromEl || !toEl) {
+            return;
+        }
+
+        const fromRect = pipelineRect(fromEl, containerRect);
+        const toRect = pipelineRect(toEl, containerRect);
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("class", "pipeline-edge");
+        path.setAttribute("fill", "none");
+
+        if (style === "aux") {
+            path.setAttribute("d", pipelineCurvePath(fromRect, toRect));
+            path.setAttribute("stroke", "rgba(98,217,139,0.55)");
+            path.setAttribute("stroke-dasharray", "4 3");
+            path.setAttribute("marker-end", "url(#pipeline-arrow-aux)");
+        } else if (style === "wrap") {
+            path.setAttribute("d", pipelineWrapPath(fromRect, toRect));
+            path.setAttribute("stroke", "rgba(255,255,255,0.35)");
+            path.setAttribute("marker-end", "url(#pipeline-arrow)");
+        } else {
+            path.setAttribute("d", pipelineElbowPath(fromRect, toRect));
+            path.setAttribute("stroke", "rgba(255,255,255,0.35)");
+            path.setAttribute("marker-end", "url(#pipeline-arrow)");
+        }
+
+        path.setAttribute("stroke-width", "1.5");
+        pipelineSvg.appendChild(path);
+    });
+
+    if (pipelineViewerBox) {
+        const validateEl = pipelineDiagram.querySelector(".pn-validate");
+
+        if (validateEl) {
+            const validateRect = pipelineRect(validateEl, containerRect);
+            const viewerRect = pipelineRect(pipelineViewerBox, containerRect);
+
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("class", "pipeline-edge");
+            path.setAttribute("fill", "none");
+            path.setAttribute("d", pipelineElbowPath(validateRect, viewerRect));
+            path.setAttribute("stroke", "rgba(255,255,255,0.35)");
+            path.setAttribute("stroke-width", "1.5");
+            path.setAttribute("marker-end", "url(#pipeline-arrow)");
+            pipelineSvg.appendChild(path);
+        }
+    }
+}
+
+pipelineDiagram?.addEventListener("mouseover", event => {
+    const node = event.target.closest(".pipeline-node");
+
+    if (node && pipelineCaption) {
+        pipelineCaption.textContent = node.dataset.desc ?? PIPELINE_CAPTION_DEFAULT;
+    }
+});
+
+pipelineDiagram?.addEventListener("mouseout", event => {
+    const node = event.target.closest(".pipeline-node");
+    const toNode = event.relatedTarget?.closest?.(".pipeline-node");
+
+    if (node && !toNode && pipelineCaption) {
+        pipelineCaption.textContent = PIPELINE_CAPTION_DEFAULT;
+    }
+});
+
+pipelineDiagram?.addEventListener("focusin", event => {
+    const node = event.target.closest(".pipeline-node");
+
+    if (node && pipelineCaption) {
+        pipelineCaption.textContent = node.dataset.desc ?? PIPELINE_CAPTION_DEFAULT;
+    }
+});
+
+pipelineDiagram?.addEventListener("focusout", event => {
+    const node = event.target.closest(".pipeline-node");
+
+    if (node && pipelineCaption) {
+        pipelineCaption.textContent = PIPELINE_CAPTION_DEFAULT;
+    }
+});
+
+window.addEventListener("resize", () => {
+    if (activePageId === "page-2") {
+        drawPipelineConnectors();
+    }
 });
 
 
