@@ -34,9 +34,12 @@ const BASE_YAW = 0;
 // scroll for rotation ahead of OrbitControls treating it as a zoom.
 const terrainRig = createTerrainRig(renderer.domElement, BASE_YAW);
 
-// South-east screen offset so the structure clears the panels occupying
-// the top and left of the page.
-terrainRig.rig.position.set(18, -10, 0);
+// Vertical-only screen offset so the structure clears the panels occupying
+// the top of the page. No horizontal offset — kept centered on X so it
+// lines up with controls.target's X, which is also the flythrough's zoom
+// pivot; an X mismatch between the two is what drifted the structure
+// sideways as the flythrough zoomed in.
+terrainRig.rig.position.set(0, -10, 0);
 scene.add(terrainRig.rig);
 
 const controls = createControls(
