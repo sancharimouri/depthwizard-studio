@@ -55,6 +55,27 @@ function sleep(ms) {
     });
 }
 
+function layerDescriptionText(layer) {
+    const source = REGIONS[currentRegionKey]?.elevationSource ?? "DSM";
+
+    switch (layer) {
+        case "satellite-flat":
+            return "Sentinel-2 RGB imagery — flat";
+        case "depth-flat":
+            return "DAv2 relative depth — flat, not absolute elevation";
+        case "elevation-flat":
+            return `Metric elevation from ${source} — flat`;
+        case "dsm-3d":
+            return "DAv2 relative depth draped on extruded terrain";
+        case "elevation-3d":
+            return `Metric elevation from ${source} — color-ramped by elevation`;
+        case "satellite-3d":
+            return "Sentinel-2 RGB draped on extruded terrain";
+        default:
+            return "Sentinel-2 RGB imagery";
+    }
+}
+
 function setLayerDescription(layer) {
     const description = document.getElementById("layer-description");
 
@@ -62,14 +83,7 @@ function setLayerDescription(layer) {
         return;
     }
 
-    if (layer === "depth") {
-        description.textContent = "DAv2 relative depth — not absolute elevation";
-    } else if (layer === "elevation") {
-        const source = REGIONS[currentRegionKey]?.elevationSource ?? "DSM";
-        description.textContent = `Metric elevation from ${source}`;
-    } else {
-        description.textContent = "Sentinel-2 RGB imagery";
-    }
+    description.textContent = layerDescriptionText(layer);
 }
 
 
@@ -134,11 +148,22 @@ function activateLayer(layer) {
 
     currentTerrain.setLayer(layer);
 
-    satelliteButton?.classList.toggle("active", layer === "satellite");
-    depthButton?.classList.toggle("active", layer === "depth");
-    elevationButton?.classList.toggle("active", layer === "elevation");
+    document.querySelectorAll(".layer-button").forEach(button => {
+        button.classList.toggle("active", button.dataset.layer === layer);
+    });
 
     setLayerDescription(layer);
+}
+
+// Selecting a layer by hand (as opposed to the flood toggle switching to
+// it itself) always clears the flood overlay — it only makes sense on
+// top of the relative-depth layer.
+function selectLayer(layer) {
+    if (floodActive) {
+        setFloodActive(false);
+    }
+
+    activateLayer(layer);
 }
 
 function updateStatsAndLabels(regionKey, terrain, terrainData) {
@@ -237,7 +262,8 @@ async function loadRegion(regionKey) {
         card.classList.toggle("active", card.dataset.region === regionKey);
     });
 
-    activateLayer("satellite");
+    activateLayer("satellite-3d");
+    resetRunState();
 
     return terrain;
 }
@@ -247,13 +273,9 @@ async function loadRegion(regionKey) {
 // LAYER BUTTONS
 // ============================================================
 
-const satelliteButton = document.getElementById("satellite-button");
-const depthButton = document.getElementById("depth-button");
-const elevationButton = document.getElementById("elevation-button");
-
-satelliteButton?.addEventListener("click", () => { activateLayer("satellite"); });
-depthButton?.addEventListener("click", () => { activateLayer("depth"); });
-elevationButton?.addEventListener("click", () => { activateLayer("elevation"); });
+document.querySelectorAll(".layer-button").forEach(button => {
+    button.addEventListener("click", () => { selectLayer(button.dataset.layer); });
+});
 
 
 // ============================================================
@@ -276,20 +298,54 @@ document.querySelectorAll(".region-card").forEach(card => {
 // ============================================================
 // RECONSTRUCTION SEQUENCE
 // (shared by the RUN RECONSTRUCTION button and the mock upload
-// flow — both resolve to the currently selected region's result)
+// flow — both step through all 6 visualization states in order,
+// flat row first, then the extruded 3D row)
 // ============================================================
 
 const STAGES = [
-    { step: "satellite", layer: "satellite", duration: 900 },
-    { step: "depth", layer: "depth", duration: 1350 },
-    { step: "alignment", layer: "elevation", duration: 1200 },
-    { step: "terrain", layer: "elevation", duration: 1450 },
+    { layer: "satellite-flat", caption: "Satellite", duration: 800 },
+    { layer: "depth-flat", caption: "Relative Depth", duration: 900 },
+    { layer: "elevation-flat", caption: "Elevation", duration: 900 },
+    { layer: "dsm-3d", caption: "DSM", duration: 1000 },
+    { layer: "elevation-3d", caption: "Metric Elevation", duration: 1000 },
+    { layer: "satellite-3d", caption: "True Color", duration: 1300 },
 ];
 
 const STAGE_TOTAL_MS = STAGES.reduce((sum, s) => sum + s.duration, 0);
 
 const progressBar = document.getElementById("pipeline-progress");
 const progressFill = document.getElementById("pipeline-progress-fill");
+
+const runPanel = document.getElementById("run-panel");
+const runButton = document.getElementById("run-button");
+const postRunPanel = document.getElementById("post-run-panel");
+const runAgainButton = document.getElementById("run-again-button");
+const flythroughButton = document.getElementById("flythrough-button");
+const floodButton = document.getElementById("flood-button");
+
+function resetRunState() {
+    running = false;
+
+    if (runPanel) {
+        runPanel.hidden = false;
+    }
+    if (postRunPanel) {
+        postRunPanel.hidden = true;
+    }
+    if (runButton) {
+        runButton.disabled = false;
+        runButton.textContent = "▶ RUN RECONSTRUCTION";
+    }
+    if (progressBar) {
+        progressBar.hidden = true;
+    }
+    if (progressFill) {
+        progressFill.style.width = "0%";
+    }
+
+    setFloodActive(false);
+    resetFlythrough();
+}
 
 async function runReconstruction() {
     if (running) {
@@ -298,14 +354,33 @@ async function runReconstruction() {
 
     running = true;
 
+    setFloodActive(false);
+    resetFlythrough();
+
+    if (postRunPanel) {
+        postRunPanel.hidden = true;
+    }
+    if (runPanel) {
+        runPanel.hidden = false;
+    }
+    if (runButton) {
+        runButton.disabled = true;
+        runButton.textContent = "PROCESSING…";
+    }
     if (progressBar) {
         progressBar.hidden = false;
     }
+
+    const description = document.getElementById("layer-description");
 
     let elapsed = 0;
 
     for (const stage of STAGES) {
         activateLayer(stage.layer);
+
+        if (description) {
+            description.textContent = stage.caption;
+        }
 
         await sleep(stage.duration);
 
@@ -316,9 +391,8 @@ async function runReconstruction() {
         }
     }
 
-    const description = document.getElementById("layer-description");
     if (description) {
-        description.textContent = "Reconstruction complete — metric terrain ready";
+        description.textContent = "Reconstruction complete";
     }
 
     setTimeout(() => {
@@ -328,36 +402,103 @@ async function runReconstruction() {
         if (progressFill) {
             progressFill.style.width = "0%";
         }
+
         running = false;
-    }, 1500);
+
+        if (runPanel) {
+            runPanel.hidden = true;
+        }
+        if (postRunPanel) {
+            postRunPanel.hidden = false;
+        }
+    }, 800);
 }
 
+runButton?.addEventListener("click", runReconstruction);
+runAgainButton?.addEventListener("click", runReconstruction);
+
 
 // ============================================================
-// RECONSTRUCTION BUTTON
+// FLYTHROUGH
+// (one-shot camera dolly-in — no loop back out — layered on top
+// of the render loop's own controls.update()/autoRotate)
 // ============================================================
 
-const runButton = document.createElement("button");
-runButton.textContent = "▶ RUN RECONSTRUCTION";
-runButton.className = "run-reconstruction-button";
-document.querySelector(".right-rail")?.appendChild(runButton);
+let flythrough = null;
 
-runButton.addEventListener("click", async () => {
-    if (running) {
+function resetFlythrough() {
+    flythrough = null;
+
+    if (flythroughButton) {
+        flythroughButton.disabled = false;
+        flythroughButton.textContent = "◎ FLYTHROUGH";
+    }
+}
+
+function startFlythrough() {
+    if (flythrough || !flythroughButton || flythroughButton.disabled) {
         return;
     }
 
-    runButton.disabled = true;
-    runButton.textContent = "PROCESSING…";
+    const startDistance = camera.position.distanceTo(controls.target);
+    const endDistance = Math.max(controls.minDistance, startDistance * 0.5);
 
-    await runReconstruction();
+    flythrough = {
+        startDistance,
+        endDistance,
+        startTime: performance.now(),
+        duration: 4500,
+    };
 
-    runButton.textContent = "✓ RECONSTRUCTION COMPLETE";
+    flythroughButton.disabled = true;
+    flythroughButton.textContent = "FLYING THROUGH…";
+}
 
-    setTimeout(() => {
-        runButton.textContent = "↻ RUN AGAIN";
-        runButton.disabled = false;
-    }, 1500);
+function updateFlythrough() {
+    if (!flythrough) {
+        return;
+    }
+
+    const t = Math.min(1, (performance.now() - flythrough.startTime) / flythrough.duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+
+    const distance = flythrough.startDistance + (flythrough.endDistance - flythrough.startDistance) * eased;
+
+    const offset = camera.position.clone().sub(controls.target);
+    offset.setLength(distance);
+    camera.position.copy(controls.target).add(offset);
+
+    if (t >= 1) {
+        flythrough = null;
+
+        if (flythroughButton) {
+            flythroughButton.textContent = "✓ FLYTHROUGH";
+        }
+    }
+}
+
+flythroughButton?.addEventListener("click", startFlythrough);
+
+
+// ============================================================
+// DANGER ZONES — FLOOD (toggle) / EARTHQUAKE (coming soon)
+// ============================================================
+
+let floodActive = false;
+
+function setFloodActive(active) {
+    floodActive = active;
+
+    floodButton?.classList.toggle("active", floodActive);
+    currentTerrain?.setFloodOverlay(floodActive);
+}
+
+floodButton?.addEventListener("click", () => {
+    if (!floodActive) {
+        activateLayer("depth-flat");
+    }
+
+    setFloodActive(!floodActive);
 });
 
 
@@ -470,6 +611,7 @@ function animate() {
         return;
     }
 
+    updateFlythrough();
     controls.update();
     renderer.render(scene, camera);
 }
