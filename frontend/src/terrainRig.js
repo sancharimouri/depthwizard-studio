@@ -6,7 +6,11 @@ const YAW_SENSITIVITY = 0.0065;
 const PITCH_SENSITIVITY = 0.0065;
 const WHEEL_YAW_SENSITIVITY = 0.0065;
 const WHEEL_PITCH_SENSITIVITY = 0.0065;
-const PITCH_LIMIT = THREE.MathUtils.degToRad(72);
+
+// Was ±72° (could tip past horizontal toward upside-down). Restricted to
+// ~30% of that range so the hinge tilts noticeably but can never approach
+// upside-down: ±72° * 0.3 = ±21.6°.
+const PITCH_LIMIT = THREE.MathUtils.degToRad(72 * 0.3);
 
 // Direct trackball-style control of the terrain itself (not the camera):
 // single-pointer drag, and two-finger trackpad SCROLL, yaw/pitch the rig
@@ -33,8 +37,20 @@ export function createTerrainRig(domElement, baseYaw = 0) {
     let lastX = 0;
     let lastY = 0;
 
+    // Order matters here, and it was the source of the "third axis": with
+    // "YXZ", yaw is applied as the outer (world-fixed Y) rotation and pitch
+    // as the inner one — meaning pitch's own effective axis is whatever
+    // world direction yaw has rotated the local X axis to. At yaw=90° that
+    // axis lands exactly on the camera's view/depth axis, so a pitch drag
+    // at that point reads as pure roll instead of a tilt — up to the full
+    // pitch range (was ±72°) could show up as unintended roll. Swapping to
+    // "XYZ" makes pitch the outer rotation instead, always applied around
+    // the fixed world X axis regardless of yaw, so it reads as a clean
+    // up/down tilt from the camera's fixed viewpoint at any yaw — the
+    // emergent-roll range this eliminates goes from as much as ±72° down
+    // to ~0°.
     function applyRotation() {
-        rig.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, "YXZ"));
+        rig.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, 0, "XYZ"));
     }
 
     function pauseAutoRotate() {
