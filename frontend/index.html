@@ -74,9 +74,9 @@
         ></canvas>
 
 
-        <!-- Scene -->
+        <!-- Left rail: scene + pipeline -->
 
-        <div class="overlay top-left">
+        <div class="overlay left-rail">
 
             <div class="location-card">
 
@@ -94,78 +94,76 @@
 
             </div>
 
-        </div>
+
+            <div class="pipeline-panel">
+
+                <div class="panel-title">
+                    RECONSTRUCTION PIPELINE
+                </div>
 
 
-        <!-- Pipeline -->
+                <div
+                    class="pipeline-step active"
+                    data-step="satellite"
+                >
 
-        <div class="overlay pipeline-panel">
+                    <span class="pipeline-indicator">
+                        01
+                    </span>
 
-            <div class="panel-title">
-                RECONSTRUCTION PIPELINE
-            </div>
+                    <span>
+                        Satellite Image
+                    </span>
 
-
-            <div
-                class="pipeline-step active"
-                data-step="satellite"
-            >
-
-                <span class="pipeline-indicator">
-                    01
-                </span>
-
-                <span>
-                    Satellite Image
-                </span>
-
-            </div>
+                </div>
 
 
-            <div
-                class="pipeline-step"
-                data-step="depth"
-            >
+                <div
+                    class="pipeline-step"
+                    data-step="depth"
+                >
 
-                <span class="pipeline-indicator">
-                    02
-                </span>
+                    <span class="pipeline-indicator">
+                        02
+                    </span>
 
-                <span>
-                    Relative Depth
-                </span>
+                    <span>
+                        Relative Depth
+                    </span>
 
-            </div>
-
-
-            <div
-                class="pipeline-step"
-                data-step="alignment"
-            >
-
-                <span class="pipeline-indicator">
-                    03
-                </span>
-
-                <span>
-                    Metric Alignment
-                </span>
-
-            </div>
+                </div>
 
 
-            <div
-                class="pipeline-step"
-                data-step="terrain"
-            >
+                <div
+                    class="pipeline-step"
+                    data-step="alignment"
+                >
 
-                <span class="pipeline-indicator">
-                    04
-                </span>
+                    <span class="pipeline-indicator">
+                        03
+                    </span>
 
-                <span>
-                    3D Reconstruction
-                </span>
+                    <span>
+                        Metric Alignment
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="pipeline-step"
+                    data-step="terrain"
+                >
+
+                    <span class="pipeline-indicator">
+                        04
+                    </span>
+
+                    <span>
+                        3D Reconstruction
+                    </span>
+
+                </div>
 
             </div>
 

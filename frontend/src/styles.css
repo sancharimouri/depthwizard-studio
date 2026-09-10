@@ -148,21 +148,27 @@ body {
 }
 
 
-.top-left {
-    top: 105px;
-    left: 28px;
+.left-rail {
+    top: 100px;
+    left: 24px;
+
+    width: 240px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
 
 .bottom-left {
-    left: 28px;
-    bottom: 28px;
+    left: 24px;
+    bottom: 24px;
 }
 
 
 .bottom-right {
-    right: 28px;
-    bottom: 28px;
+    right: 24px;
+    bottom: 88px;
 }
 
 
@@ -275,11 +281,6 @@ kbd {
 ============================================================ */
 
 .pipeline-panel {
-    top: 112px;
-    left: 250px;
-
-    min-width: 220px;
-
     padding: 16px 18px;
 
     border: 1px solid
@@ -348,10 +349,10 @@ kbd {
 ============================================================ */
 
 .layer-panel {
-    right: 28px;
-    top: 112px;
+    right: 24px;
+    top: 100px;
 
-    width: 390px;
+    width: clamp(260px, 24vw, 340px);
 
     padding: 16px 18px;
 
