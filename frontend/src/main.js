@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createTerrain } from "./terrain.js";
-import { createFlythrough } from "./flythrough.js";
+import { createControls } from "./controls.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -23,7 +23,11 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-const flythrough = createFlythrough(camera, scene);
+const controls = createControls(
+    camera,
+    renderer.domElement,
+    new THREE.Vector3(0, 12, 0)
+);
 
 const ambient = new THREE.HemisphereLight(
     0xddebd8,
@@ -199,7 +203,8 @@ async function loadTerrain() {
     // --------------------------------------------------------
 
     camera.position.set(0, 95, 125);
-    camera.lookAt(0, 12, 0);
+    controls.target.set(0, 12, 0);
+    controls.update();
 
 
     // --------------------------------------------------------
@@ -422,7 +427,7 @@ async function loadTerrain() {
 
 function animate() {
     requestAnimationFrame(animate);
-    flythrough.update();
+    controls.update();
     renderer.render(scene, camera);
 }
 
