@@ -4,13 +4,21 @@ const IDLE_RESUME_MS = 2500;
 const AUTO_ROTATE_RADIANS_PER_FRAME = 0.0018;
 const YAW_SENSITIVITY = 0.0065;
 const PITCH_SENSITIVITY = 0.0065;
+const WHEEL_YAW_SENSITIVITY = 0.0065;
+const WHEEL_PITCH_SENSITIVITY = 0.0065;
 const PITCH_LIMIT = THREE.MathUtils.degToRad(72);
 
 // Direct trackball-style control of the terrain itself (not the camera):
-// single-pointer drag yaw/pitches the rig around its own center, two-finger
-// touch is left alone so OrbitControls' zoom-only pinch handling still owns
-// it. Idle auto-rotate resumes shortly after the last interaction, but any
-// new drag/pinch preempts it immediately — no waiting for a cycle to finish.
+// single-pointer drag, and two-finger trackpad SCROLL, yaw/pitch the rig
+// around its own center. Two-finger PINCH (real touch pinch, or a trackpad
+// pinch gesture — reported as a wheel event with ctrlKey true) is left
+// alone so OrbitControls' zoom-only handling still owns it; this module's
+// wheel listener must be registered on domElement before OrbitControls'
+// own listener so it can claim (and stopImmediatePropagation) plain
+// two-finger scroll before OrbitControls treats it as a zoom. Idle
+// auto-rotate resumes shortly after the last interaction, but any new
+// drag/scroll/pinch preempts it immediately — no waiting for a cycle to
+// finish.
 export function createTerrainRig(domElement, baseYaw = 0) {
     const rig = new THREE.Group();
 
@@ -70,8 +78,10 @@ export function createTerrainRig(domElement, baseYaw = 0) {
         lastX = event.clientX;
         lastY = event.clientY;
 
-        yaw -= dx * YAW_SENSITIVITY;
-        pitch = THREE.MathUtils.clamp(pitch - dy * PITCH_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT);
+        // Rotation follows the swipe direction: drag right → yaw right,
+        // drag down → pitch down.
+        yaw += dx * YAW_SENSITIVITY;
+        pitch = THREE.MathUtils.clamp(pitch + dy * PITCH_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT);
 
         applyRotation();
     }
@@ -92,15 +102,34 @@ export function createTerrainRig(domElement, baseYaw = 0) {
         }
     }
 
-    function onWheel() {
+    function onWheel(event) {
         pauseAutoRotate();
+
+        // A pinch gesture (real touch pinch, or a trackpad pinch reported
+        // as wheel+ctrlKey) is zoom-only — leave it for OrbitControls.
+        if (event.ctrlKey) {
+            return;
+        }
+
+        // Plain two-finger scroll: claim it for rotation before
+        // OrbitControls' own wheel listener treats it as a zoom.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        yaw += event.deltaX * WHEEL_YAW_SENSITIVITY;
+        pitch = THREE.MathUtils.clamp(pitch + event.deltaY * WHEEL_PITCH_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT);
+
+        applyRotation();
     }
 
     domElement.addEventListener("pointerdown", onPointerDown);
     domElement.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
-    domElement.addEventListener("wheel", onWheel, { passive: true });
+    // Registered before OrbitControls' own wheel listener (createTerrainRig
+    // is called before createControls in main.js) so stopImmediatePropagation
+    // above can actually pre-empt it for plain two-finger scroll.
+    domElement.addEventListener("wheel", onWheel, { passive: false });
 
     applyRotation();
 
