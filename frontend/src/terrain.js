@@ -52,8 +52,55 @@ export function createTerrain(
         elevationMax - elevationMin;
 
 
+    // Vertical exaggeration is derived per-region from the real relief
+    // ratio (elevation range vs. horizontal footprint in meters), not
+    // hardcoded per region. A relief ratio around 0.2 — roughly what
+    // Darjeeling's real terrain has — reads as natural mountainous
+    // relief at ~1x; flatter regions (Kolkata/Bardhaman/Sundarbans)
+    // scale up so their real-but-subtle relief still reads as terrain,
+    // clamped to a 1x-10x range so nothing goes flat or comically spiky.
+
+    const metersPerDegLat = 111320;
+
+    const latMidRad =
+        ((bounds.north + bounds.south) / 2) *
+        (Math.PI / 180);
+
+    const metersPerDegLon =
+        metersPerDegLat * Math.cos(latMidRad);
+
+    const footprintWidthMeters =
+        geographicWidth * metersPerDegLon;
+
+    const footprintHeightMeters =
+        geographicHeight * metersPerDegLat;
+
+    const footprintMeters =
+        Math.sqrt(
+            footprintWidthMeters *
+            footprintHeightMeters
+        );
+
+    const reliefRatio =
+        elevationRange / footprintMeters;
+
+    const referenceReliefRatio = 0.2;
+
+    const exaggerationFactor =
+        Math.min(
+            10,
+            Math.max(
+                1,
+                1 + 4 * Math.log10(
+                    referenceReliefRatio / reliefRatio
+                )
+            )
+        );
+
+    const baseVerticalScale = 0.02;
+
     const verticalExaggeration =
-        0.02;
+        baseVerticalScale * exaggerationFactor;
 
 
     for (
@@ -202,6 +249,8 @@ export function createTerrain(
         elevationMax,
 
         elevationRange,
+
+        exaggerationFactor,
 
         geographicWidth,
 
