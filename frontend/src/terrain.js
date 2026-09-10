@@ -2,27 +2,56 @@ import * as THREE from "three";
 
 
 // ============================================================
-// EXPERIMENT: Kolkata-only irregular 3D-mesh edge erosion
+// EXPERIMENT: irregular 3D-mesh edge erosion (Kolkata, Sundarbans,
+// Bardhaman)
 //
 // Darjeeling's tile boundary is naturally irregular (real DSM data
-// coverage); Kolkata's hard rectangular edge looks artificial next to
-// it. This carves a low-frequency noise-based bite out of the boundary
-// of Kolkata's *extruded* (3D) meshes only — DSM / Metric Elevation /
-// True Color. Flat 2D layers and every other region are untouched.
+// coverage); the flat-region tiles' hard rectangular edges look
+// artificial next to it. This carves a low-frequency noise-based bite
+// out of the boundary of each listed region's *extruded* (3D) meshes
+// only — DSM / Metric Elevation / True Color. Flat 2D layers, and any
+// region not listed here (Darjeeling), are untouched.
 //
-// Tweak and reload (Vite will pick these up) to adjust the look:
-//   SEED   — any integer; changes the exact shape of the bites.
-//   SCALE  — low-frequency noise lattice resolution across the tile.
-//            Lower = broader, gentler bays. Higher = more, smaller ones.
-//   AMOUNT — max fraction of the tile's span eaten away from any edge.
-//            Keep this small — it's meant to be a restrained nibble,
-//            not a starburst or a rounded-rectangle blob.
+// Each region gets its own entry so it can be tweaked or reverted
+// (just delete its entry) independently. Reload after editing to see
+// the change:
+//   seed       — any integer; changes the exact shape of the bites.
+//   noiseScale — low-frequency noise lattice resolution across the
+//                tile. Lower = broader, gentler bays. Higher = more,
+//                smaller ones.
+//   amount     — max fraction of the tile's span eaten away from any
+//                edge. Keep this small — it's meant to be a
+//                restrained nibble, not a starburst or a
+//                rounded-rectangle blob.
+//
+// Kolkata's values are the tuned baseline; Sundarbans and Bardhaman
+// started from the same numbers and were nudged from there.
 // ============================================================
 
-const EDGE_EROSION_REGION = "kolkata";
-const EDGE_EROSION_SEED = 1337;
-const EDGE_EROSION_NOISE_SCALE = 5;
-const EDGE_EROSION_AMOUNT = 0.06;
+const EDGE_EROSION_PARAMS = {
+    kolkata: {
+        seed: 1337,
+        noiseScale: 5,
+        amount: 0.06,
+    },
+    sundarbans: {
+        // Real Sundarbans coastline is a much busier tangle of tidal
+        // creeks than Kolkata's riverbank — a slightly higher noiseScale
+        // (more, smaller bays) and a touch more amount reads closer to
+        // that than Kolkata's gentler nibble.
+        seed: 2701,
+        noiseScale: 7,
+        amount: 0.08,
+    },
+    bardhaman: {
+        // Rural/agricultural coverage gaps tend to be broader and
+        // blockier (field-sized) than a riverbank or tidal coastline —
+        // a lower noiseScale gives fewer, broader bays.
+        seed: 8161,
+        noiseScale: 4,
+        amount: 0.06,
+    },
+};
 
 
 function createSeededRandom(seed) {
@@ -79,40 +108,65 @@ function createValueNoise2D(seed, gridSize) {
 
 
 // ============================================================
-// EXPERIMENT: Kolkata-only spike smoothing
+// EXPERIMENT: spike smoothing (Kolkata, Sundarbans, Bardhaman)
 //
-// Kolkata's real relief is subtle (~43m range over a 10km tile), so the
-// automatic vertical-exaggeration factor is high (~7.7x here) to make
-// that relief read as terrain at all. That amplifies single/few-vertex
-// elevation outliers in the source Copernicus GLO-30 DSM — plausibly
-// buildings, which a surface-model DEM bakes into the height value at
-// 30m resolution — into sharp needles. Two independent, additive passes
-// applied only to Kolkata's height field, only before/for the extruded
-// (3D) meshes:
+// Each of these regions' real relief is subtle relative to its 10km
+// footprint, so the automatic vertical-exaggeration factor is high to
+// make that relief read as terrain at all. That amplifies single/
+// few-vertex elevation outliers in the source Copernicus GLO-30 DSM —
+// plausibly structures, which a surface-model DEM bakes into the
+// height value at 30m resolution — into sharp needles. Two
+// independent, additive passes per region, applied only to that
+// region's height field, only before/for the extruded (3D) meshes:
 //
 //   1. A small-kernel median filter on the raw normalized heights,
 //      before exaggeration — removes isolated single-vertex noise/
 //      outliers without blurring genuine broader relief.
 //   2. A slope cap on the exaggerated (world-space) heights — pulls
 //      any vertex down toward "lowest neighbor + cap", iteratively, so
-//      a spike that survives the median filter (e.g. a building a few
+//      a spike that survives the median filter (e.g. a structure a few
 //      vertices wide) flattens into a small plateau — reading as a
 //      flat-topped block — instead of a point.
 //
-// Tweak and reload to adjust:
-//   MEDIAN_KERNEL_SIZE   — window width in vertices (must be odd).
-//                          3 = 3x3. Larger softens more but starts
-//                          eating real relief detail.
-//   SLOPE_CAP            — max world-space height delta allowed
-//                          between adjacent vertices, per iteration.
-//   SLOPE_CAP_ITERATIONS — how many relaxation passes propagate that
-//                          cap outward from a spike's base.
+// Each region gets its own entry (tweak or delete independently).
+// Reload after editing to see the change:
+//   medianKernelSize   — window width in vertices (must be odd). 3 =
+//                        3x3. Larger softens more but starts eating
+//                        real relief detail.
+//   slopeCap           — max world-space height delta allowed between
+//                        adjacent vertices, per iteration. Scale this
+//                        against the region's own exaggerated
+//                        elevation range, not Kolkata's.
+//   slopeCapIterations — how many relaxation passes propagate that
+//                        cap outward from a spike's base.
+//
+// Kolkata's values are the tuned baseline; Sundarbans and Bardhaman
+// started from the same numbers and were nudged from there.
 // ============================================================
 
-const SPIKE_SMOOTHING_REGION = "kolkata";
-const SPIKE_MEDIAN_KERNEL_SIZE = 3;
-const SPIKE_SLOPE_CAP = 0.6;
-const SPIKE_SLOPE_CAP_ITERATIONS = 4;
+const SPIKE_SMOOTHING_PARAMS = {
+    kolkata: {
+        medianKernelSize: 3,
+        slopeCap: 0.6,
+        slopeCapIterations: 4,
+    },
+    sundarbans: {
+        // Waterlogged delta: DSM noise over water/mudflats tends to be
+        // noisier than Kolkata's built-up riverbank, so a slightly wider
+        // median window helps before the slope cap does its work.
+        medianKernelSize: 3,
+        slopeCap: 0.5,
+        slopeCapIterations: 4,
+    },
+    bardhaman: {
+        // Flat agricultural land with occasional isolated structures
+        // (silos, water towers) — same shape of problem as Kolkata's
+        // buildings, at lower density, so Kolkata's values as-is.
+        medianKernelSize: 3,
+        slopeCap: 0.6,
+        slopeCapIterations: 4,
+    },
+};
 
 
 // Out-of-place median filter over a WxH scalar field (border-clamped).
@@ -286,12 +340,13 @@ export function createTerrain(
     // flat z=0 rest state so layers can toggle between the two without
     // reloading geometry.
 
-    // Kolkata-only: median-filter the raw height field before exaggeration
+    // Per-region: median-filter the raw height field before exaggeration
     // (see the block comment above) to remove single/few-vertex outliers.
-    const heightsForMesh =
-        regionKey === SPIKE_SMOOTHING_REGION
-            ? medianFilter2D(heights, width, height, SPIKE_MEDIAN_KERNEL_SIZE)
-            : heights;
+    const spikeSmoothingParams = SPIKE_SMOOTHING_PARAMS[regionKey];
+
+    const heightsForMesh = spikeSmoothingParams
+        ? medianFilter2D(heights, width, height, spikeSmoothingParams.medianKernelSize)
+        : heights;
 
     const extrudedZ = new Float32Array(positions.count);
 
@@ -324,11 +379,17 @@ export function createTerrain(
         }
     }
 
-    // Kolkata-only: cap the world-space slope between adjacent vertices so
+    // Per-region: cap the world-space slope between adjacent vertices so
     // any spike the median filter didn't fully absorb flattens into a
     // small plateau instead of keeping a sharp apex.
-    if (regionKey === SPIKE_SMOOTHING_REGION) {
-        capSlope2D(extrudedZ, width, height, SPIKE_SLOPE_CAP, SPIKE_SLOPE_CAP_ITERATIONS);
+    if (spikeSmoothingParams) {
+        capSlope2D(
+            extrudedZ,
+            width,
+            height,
+            spikeSmoothingParams.slopeCap,
+            spikeSmoothingParams.slopeCapIterations
+        );
     }
 
     for (
@@ -343,16 +404,18 @@ export function createTerrain(
     geometry.computeVertexNormals();
 
 
-    // Kolkata-only: erode the 3D-mesh boundary (see the block comment at
+    // Per-region: erode the 3D-mesh boundary (see the block comment at
     // the top of this file). Everywhere else, erodedIndexArray stays null
     // and setExtruded() never touches the index buffer.
 
     const fullIndexArray = geometry.index.array.slice();
     let erodedIndexArray = null;
 
-    if (regionKey === EDGE_EROSION_REGION) {
+    const edgeErosionParams = EDGE_EROSION_PARAMS[regionKey];
 
-        const edgeNoise = createValueNoise2D(EDGE_EROSION_SEED, EDGE_EROSION_NOISE_SCALE);
+    if (edgeErosionParams) {
+
+        const edgeNoise = createValueNoise2D(edgeErosionParams.seed, edgeErosionParams.noiseScale);
         const erodedVertex = new Uint8Array(positions.count);
 
         for (let y = 0; y < height; y++) {
@@ -364,7 +427,7 @@ export function createTerrain(
                 const v = y / (height - 1);
 
                 const edgeDistance = Math.min(u, 1 - u, v, 1 - v);
-                const biteDepth = EDGE_EROSION_AMOUNT * edgeNoise(u, v);
+                const biteDepth = edgeErosionParams.amount * edgeNoise(u, v);
 
                 if (edgeDistance < biteDepth) {
                     erodedVertex[index] = 1;
