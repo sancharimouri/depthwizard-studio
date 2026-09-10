@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -6,12 +7,24 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 
+REGION = sys.argv[1] if len(sys.argv) > 1 else "darjeeling"
+
+# Darjeeling's OpenTopography DSM arrived pre-cropped to its Sentinel tile.
+# The others are Copernicus GLO-30 DSMs cropped to their tile footprint by
+# scripts/crop_dsm_to_region.py before this script runs.
+DSM_FILENAMES = {
+    "darjeeling": "Darjeeling_OpenTopography_DSM.tif",
+    "kolkata": "Kolkata_Copernicus_GLO30_DSM_cropped.tif",
+    "bardhaman": "Bardhaman_Copernicus_GLO30_DSM_cropped.tif",
+    "sundarbans": "Sundarbans_Copernicus_GLO30_DSM_cropped.tif",
+}
+
 INPUT = (
     ROOT
     / "data"
     / "elevation"
-    / "darjeeling"
-    / "Darjeeling_OpenTopography_DSM.tif"
+    / REGION
+    / DSM_FILENAMES[REGION]
 )
 
 OUTPUT = (
@@ -19,7 +32,7 @@ OUTPUT = (
     / "frontend"
     / "public"
     / "data"
-    / "darjeeling"
+    / REGION
     / "elevation.png"
 )
 
