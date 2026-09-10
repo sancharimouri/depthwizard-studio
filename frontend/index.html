@@ -129,6 +129,13 @@
                     class="region-note"
                 ></div>
 
+                <button
+                    id="upload-trigger"
+                    class="upload-trigger"
+                >
+                    + UPLOAD SATELLITE IMAGE
+                </button>
+
             </div>
 
 
@@ -200,6 +207,18 @@
                         3D Reconstruction
                     </span>
 
+                </div>
+
+
+                <div
+                    id="pipeline-progress"
+                    class="pipeline-progress"
+                    hidden
+                >
+                    <div
+                        id="pipeline-progress-fill"
+                        class="pipeline-progress-fill"
+                    ></div>
                 </div>
 
             </div>
@@ -329,6 +348,58 @@
                 <span>
                     Navigate
                 </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- Upload modal (mock flow) -->
+
+        <div
+            id="upload-modal"
+            class="upload-modal"
+            hidden
+        >
+
+            <div
+                id="upload-backdrop"
+                class="upload-backdrop"
+            ></div>
+
+            <div class="upload-panel">
+
+                <div class="panel-title">
+                    UPLOAD SATELLITE IMAGE
+                </div>
+
+                <label
+                    id="upload-dropzone"
+                    class="upload-dropzone"
+                    for="upload-input"
+                >
+                    <div class="upload-dropzone-glyph">⇧</div>
+                    <div class="upload-dropzone-text">
+                        Drop an image, or click to browse
+                    </div>
+                    <input
+                        id="upload-input"
+                        type="file"
+                        accept="image/*"
+                        hidden
+                    />
+                </label>
+
+                <div class="upload-note">
+                    Prototype flow — any image resolves to the Darjeeling demo reconstruction below.
+                </div>
+
+                <button
+                    id="upload-cancel"
+                    class="upload-cancel"
+                >
+                    CANCEL
+                </button>
 
             </div>
 

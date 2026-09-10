@@ -591,6 +591,177 @@ kbd {
 }
 
 
+.upload-trigger {
+    width: 100%;
+    margin-top: 4px;
+
+    padding: 9px 12px;
+
+    border: 1px dashed rgba(255,255,255,0.2);
+    border-radius: 8px;
+
+    background: transparent;
+    color: rgba(255,255,255,0.55);
+
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.upload-trigger:hover {
+    border-color: rgba(255,255,255,0.4);
+    color: white;
+    background: rgba(255,255,255,0.04);
+}
+
+
+/* ============================================================
+   PIPELINE PROGRESS
+============================================================ */
+
+.pipeline-progress {
+    height: 3px;
+    margin-top: 12px;
+
+    border-radius: 2px;
+
+    background: rgba(255,255,255,0.08);
+
+    overflow: hidden;
+}
+
+
+.pipeline-progress-fill {
+    height: 100%;
+    width: 0%;
+
+    background: #62d98b;
+
+    transition: width 0.3s ease;
+}
+
+
+/* ============================================================
+   UPLOAD MODAL
+============================================================ */
+
+.upload-modal {
+    position: fixed;
+    inset: 0;
+
+    z-index: 50;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-modal[hidden] {
+    display: none;
+}
+
+
+.upload-backdrop {
+    position: absolute;
+    inset: 0;
+
+    background: rgba(3, 8, 6, 0.75);
+    backdrop-filter: blur(4px);
+}
+
+
+.upload-panel {
+    position: relative;
+
+    width: min(420px, calc(100vw - 48px));
+
+    padding: 22px;
+
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+
+    background: rgba(8, 18, 14, 0.96);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+
+.upload-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    margin-top: 8px;
+    padding: 36px 16px;
+
+    border: 1px dashed rgba(255,255,255,0.25);
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.upload-dropzone:hover,
+.upload-dropzone.drag-over {
+    border-color: rgba(98,217,139,0.6);
+    background: rgba(98,217,139,0.06);
+}
+
+
+.upload-dropzone-glyph {
+    font-size: 20px;
+    color: rgba(255,255,255,0.5);
+}
+
+
+.upload-dropzone-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+}
+
+
+.upload-note {
+    margin-top: 14px;
+
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.45);
+}
+
+
+.upload-cancel {
+    width: 100%;
+    margin-top: 16px;
+
+    padding: 10px;
+
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 8px;
+
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+
+    cursor: pointer;
+}
+
+.upload-cancel:hover {
+    color: white;
+    border-color: rgba(255,255,255,0.3);
+}
+
+
 /* ============================================================
    STATS STRIP
 ============================================================ */
