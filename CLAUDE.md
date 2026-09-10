@@ -3,11 +3,12 @@
 You are working in `DepthWizard2`, a Smart India Hackathon 2026 (SIH26175) project.
 This file is your persistent memory for this project. Read it once at the start of
 each session, then **inspect the actual repo yourself** (file tree, package.json,
-existing components) — this doc gives you the story and the rules, not a file map.
+existing components, existing scripts) — this doc gives you the story and the rules,
+not a file map.
 
 ## The one rule that overrides everything else
 
-**Quota is scarce.** We have ~2 Claude Code sessions of ~5 hours total left this week.
+**Quota is scarce.** We're on the last stretch of Claude Code sessions for this project.
 Do NOT do extensive upfront planning, do NOT ask clarifying questions unless something
 is a genuine blocker, do NOT re-read this whole file into your response. Skim, decide,
 build, commit in small increments, move on. If you're unsure between two reasonable
@@ -23,105 +24,107 @@ control for spatial trend (on Darjeeling, correlation flipped from +0.6 to -0.4 
 detrending). We also tried RDAH-Net checkpoints (trained on Swiss/HK building height)
 zero-shot on our Sentinel-2 terrain tiles — it produced checkerboard artifacts, rejected.
 
-**Decision made: the ML pipeline is FROZEN. This project is now a polished demo/prototype
+**Decision made: the ML pipeline is FROZEN. This project is a polished demo/prototype
 UI, not a working metric-elevation system.** Real data is used throughout (real Sentinel-2
-imagery, real DAv2 relative-depth output, real OpenTopography DSM for the actual 3D
-terrain), but the "satellite → absolute elevation" claim is honestly framed as a future
-research direction, not a working capability. Never let the UI imply the current pipeline
-computes real elevation from RGB — it uses a real DSM as the terrain source; DAv2 output
-is shown as relative-depth *visualization*, not as the thing that produced the terrain.
+imagery, real DAv2 relative-depth output, real DSMs as the terrain source), but the
+"satellite → absolute elevation" claim is honestly framed as a future research direction,
+not a working capability. Never let the UI imply the current pipeline computes real
+elevation from RGB — a real DSM is the terrain source; DAv2 output is shown as
+relative-depth *visualization*, not as the thing that produced the terrain.
 
-**Your job this session is UI/UX and frontend polish only. Do not touch any ML code,
-Python inference scripts, or model checkpoints. Do not attempt to "fix" the elevation
-pipeline. Frontend only.**
+**Frontend and asset-generation work only. Do not modify DAv2 inference logic, add any
+correction/calibration/fine-tuning attempt, or otherwise change the ML pipeline itself.**
+The one exception, specific to Session 2: you may *run* the existing, already-used
+asset-generation process (DAv2 inference + DSM crop/reproject) unmodified, to produce
+visualization assets for new regions — that's reusing a frozen process, not changing it.
 
-## What actually exists right now (real, don't re-derive fake versions of this)
+## What actually exists right now
 
 - Frontend: Three.js + Vite, dev server at `localhost:5173`.
-- Real datasets already in the repo: Sentinel-2 RGB GeoTIFFs (10x10km, 10m, 3-band,
-  EPSG:32645) for **Darjeeling, Kolkata, Bardhaman, Sundarbans** under `data/sentinel2/`.
-- Real terrain source for the working 3D demo: an OpenTopography DSM for Darjeeling,
-  elevation range ~557–2478 m, labeled in-UI as "OpenTopography DSM".
-- Precomputed demo assets already generated for Darjeeling: `terrain.json`, satellite
-  texture PNG, relative-depth texture PNG, elevation texture PNG, under
-  `frontend/public/data/darjeeling/`.
-- DAv2 (Depth-Anything-V2-Large-hf) runs on MPS, ~1.17s inference, produces a valid
-  normalized 0–1 relative-depth map. Only Darjeeling has a full asset set right now;
-  the other 3 regions have satellite imagery but not full processed layers yet.
-- Working UI today: dark theme, "DEPTH WIZARD" branding, a green "DEMO MODE" indicator,
-  a scene card (Darjeeling / West Bengal), a "Reconstruction Pipeline" panel listing
-  `01 Satellite Image / 02 Relative Depth / 03 Metric Alignment / 04 3D Reconstruction`,
-  a visualization-layer switch (SATELLITE / RELATIVE DEPTH / ELEVATION), an
-  elevation/terrain-range info panel, and a "RUN RECONSTRUCTION" button. See
-  `docs/design-reference/current-state.png` — this is genuinely what it looks like now.
-  It is honest and clean but sparse/empty, and the panel currently overlaps the terrain.
-- Cinematic camera flythrough: attempted multiple times with spline-based paths, always
-  came out jarring (erratic rotation, terrain leaving frame, clipping). It's currently
-  **disabled**. Do not attempt another spline rewrite this session — see Session 1 scope.
+- Real Sentinel-2 RGB GeoTIFFs (10x10km, 10m, 3-band, **EPSG:32645**) for **Darjeeling,
+  Kolkata, Bardhaman, Sundarbans** under `data/sentinel2/`.
+- Elevation sources:
+  - Darjeeling: OpenTopography DSM (elevation range ~557–2478 m) — CartoDEM/Copernicus
+    for Darjeeling specifically was rejected earlier as unusable/all-NaN, OpenTopography
+    is what's actually wired in.
+  - **New: Copernicus GLO-30 DSMs for Kolkata, Bardhaman, and Sundarbans**, now at
+    `data/elevation/{region}/`, **30 m, EPSG:4326**, each covering its region's Sentinel
+    footprint. Note the CRS mismatch vs. the Sentinel tiles (EPSG:32645 vs EPSG:4326) —
+    reprojection/alignment is needed when cropping these to match each satellite tile,
+    same as whatever step already handles this for Darjeeling's DEM sources. Also note
+    these three regions only have this one (coarser, 30 m) elevation source — no
+    OpenTopography-equivalent was acquired for them, so their terrain will read visibly
+    less detailed than Darjeeling's. That's expected, not a bug to chase.
+- Satellite textures: `frontend/public/data/{region}/satellite.png` now exist for **all
+  four regions**.
+- Still to generate, for Kolkata/Bardhaman/Sundarbans only (Darjeeling already has these):
+  DAv2 `relative_depth.png`, a cropped/reprojected DSM-derived `elevation.png`, and a
+  matching `terrain.json`. Find and reuse whatever script/process already generated
+  Darjeeling's versions of these three files rather than writing a new one from scratch —
+  same process, three more regions, no changes to the process itself.
+- Once those assets exist: wire Kolkata/Bardhaman/Sundarbans into the existing scene
+  switcher/region rail so all four regions are fully interactive (previously only
+  Darjeeling was).
+
+## Session 1 outcomes (done — for your own awareness of current repo state, not to redo)
+
+1. Layout: panels restructured into a left rail instead of a hardcoded offset; fixed the
+   WASD-hint-hidden-under-run-button bug.
+2. Density: a region rail listing all 4 real regions (only Darjeeling was interactive at
+   the time), a stats strip (1.17s DAv2 inference, 10 m resolution, 361×325 grid,
+   EPSG:32645), and a pipeline log seeded with this project's real research findings
+   (the DAv2/RDAH-Net rejections, the correlation flip that froze the elevation pipeline).
+3. Mock upload flow: drag-drop/file-picker modal wired into a shared `runReconstruction()`
+   with a real progress bar and live pipeline-step highlighting; resolves to the
+   Darjeeling result regardless of the uploaded file, labeled inline as a prototype flow.
+4. Flythrough: deleted the previous ~941-line broken spline-based implementation,
+   replaced with three.js `OrbitControls` (damped drag-orbit, scroll-zoom, gentle idle
+   auto-rotate that pauses on user interaction).
+5. Also simplified the bottom-left info card: dropped a "TERRAIN RANGE" readout that
+   duplicated "ELEVATION," reused that space for the terrain source label instead.
 
 ## Visual direction
 
-Reference: `docs/design-reference/muster-reference.png` — screenshots of an existing
-Claude Code-built dashboard (muster.vyse.site/ops) that the user wants as the *density
-and confidence* reference, not a literal template to copy. Note what it's actually doing:
-big single KPI numbers with small labels, per-item small bar/sparkline rows, a running
-activity/event feed down one side, compact data tables, a real map view. That's the
-texture we're going for: a screen that feels like live operational software, not a
-landing page.
+Reference: `docs/design-reference/muster-reference.png` for density/confidence texture
+(big KPI numbers, sparkline rows, activity feed, real map view) — not a literal template.
+`docs/design-reference/current-state.png` is now stale (predates Session 1's layout fix);
+trust the live `localhost:5173` over that screenshot.
 
-**Important: do not invent fake data to fill space.** We already have real numbers —
-elevation range, Pearson/Spearman correlation values, inference timing (1.17s), tile
-counts, resolution, region names, EPSG code. Style *real* numbers as dense telemetry.
-Placeholder-but-meaningless visual texture (subtle grid lines, scanline/radar sweep
-accents, a live-looking log of actual pipeline steps as they run) is fine for wow-factor,
-but don't fabricate specific numeric readouts that look like real sensor data — that
-crosses from "polished demo" into "misleading."
+Keep styling **real** numbers as dense telemetry rather than inventing fake readouts —
+this project already has plenty of real data (per-region resolution, grid size, CRS,
+elevation range, inference timing) to make all 4 regions feel equally "live," even
+though Kolkata/Bardhaman/Sundarbans have coarser elevation data than Darjeeling.
 
-**Also read the embedded design skill at `.claude/skills/frontend-design/SKILL.md`
-before making visual decisions** — it's auto-loaded, but skim it explicitly once. Core
-things it says that matter most here: avoid the generic AI-dashboard tells (tracked-out
-ALL-CAPS eyebrows on everything, numbered 01/02/03 badges unless something really is a
-sequence — the pipeline stages ARE a real sequence so numbering those is fine, but don't
-add numbering elsewhere reflexively), spend boldness in one place and keep the rest
-disciplined, and only add motion that's either one deliberate orchestrated moment or
-responds to a user action.
+Read `.claude/skills/frontend-design/SKILL.md` (auto-loaded) before new visual work —
+same rules as before: avoid generic AI-dashboard tells, one hero kept quiet around it,
+motion is either one orchestrated moment or a response to user action.
 
-## Session 1 scope (do these, in this order, small commits between each)
+## Session 2 scope (do these, in this order, small commits between each)
 
-1. **Fix the layout bug first.** The pipeline/info panels currently overlap the terrain
-   too heavily. Push panels to the edges, terrain stays the visual hero, generous negative
-   space. This is the single most visible current flaw — fix it before adding anything.
-2. **Add density using real data.** A left-side rail listing the 4 real regions
-   (Darjeeling / Kolkata / Bardhaman / Sundarbans) as scene-select cards (Darjeeling is
-   the only one fully interactive right now — the others can be present but visually
-   marked as additional/lower-detail until Session 2 wires them in). A running
-   activity/log feed styled like a pipeline event stream, seeded with real steps and
-   real numbers from this project (DAv2 inference time, correlation stats, elevation
-   range, resolution). A small stats/metrics strip near the pipeline panel.
-3. **Build the mock upload → mock pipeline flow.** A drag-and-drop / file-picker UI to
-   "upload a satellite image," which then runs an animated 4-stage pipeline sequence
-   (reuse the existing 01→04 stages) with a progress indicator, and resolves to the
-   precomputed Darjeeling result regardless of what was uploaded. Label this clearly as
-   a prototype/demo flow in the UI copy itself (short, honest, in the interface's voice
-   — not a disclaimer paragraph).
-4. **Replace the broken flythrough with something simple and stable**: a slow constant
-   auto-orbit around the terrain, or just leave manual WASD/mouse control as the primary
-   interaction with a gentle idle auto-rotate. Do not attempt a scripted cinematic spline
-   path again this session — it has failed multiple times and is a time sink we can't
-   afford right now. Simple and reliable beats ambitious and broken.
-
-Not in scope for Session 1 (Session 2, later): wiring Kolkata/Bardhaman/Sundarbans fully,
-crossfade transitions between layers, lighting/post-processing pass, recording a backup
-demo video.
+1. **Generate the missing assets** for Kolkata, Bardhaman, and Sundarbans: DAv2
+   relative-depth output, DSM-derived elevation texture (cropped/reprojected from the
+   new Copernicus GLO-30 data to match each region's Sentinel footprint), and
+   `terrain.json`. Reuse Darjeeling's exact asset-generation process — find it in the
+   repo first, don't rewrite it. Do this per-region and sanity-check each region's
+   output (does the relative-depth image look like a plausible depth map, does the
+   terrain mesh look like real topography for that region) before moving to the next.
+2. **Wire all three new regions into the scene switcher/region rail**, matching how
+   Darjeeling already works: satellite/relative-depth/elevation layer switching, the
+   RUN RECONSTRUCTION mock pipeline flow, and the per-region stats strip populated with
+   that region's real numbers (resolution, grid size, elevation range, CRS, etc.).
+3. **If time remains**, in priority order: crossfade transitions between visualization
+   layers (currently hard cuts), a lighting/post-processing pass on the terrain, and a
+   recorded screen-capture backup of the working demo in case live rendering hiccups
+   during judging.
 
 ## Workflow rules for this session
 
-- Work in small, buildable increments. Commit after each of the 4 scope items above
-  (or sooner if a commit is a natural checkpoint).
-- Take a screenshot of the running dev server after each major visual change if your
-  environment supports it, and sanity-check it against `current-state.png` and the
-  scope item you just did, before moving to the next item.
-- If you hit a genuine blocker (missing asset, ambiguous requirement with no reasonable
-  default), say so briefly and pick the most reasonable default rather than stopping to ask.
-- Don't refactor unrelated code. Don't touch anything under the ML/data-processing side
-  of the repo. Frontend and its assets only.
+- Work in small, buildable increments. Commit after each of the numbered items above,
+  and after each individual region in item 1 if that's a natural checkpoint.
+- Take a screenshot of the running dev server after wiring each region, and sanity-check
+  it before moving on.
+- If you hit a genuine blocker (a script that doesn't generalize cleanly to the new
+  regions' CRS, a missing dependency), say so briefly and pick the most reasonable
+  default rather than stopping to ask.
+- Don't refactor unrelated code. Don't touch ML/model logic — only run the existing
+  asset-generation process as-is, per the exception noted above.
