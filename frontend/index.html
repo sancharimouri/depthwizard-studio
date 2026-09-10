@@ -96,30 +96,30 @@
                     </button>
 
                     <button
-                        class="region-card locked"
+                        class="region-card"
                         data-region="kolkata"
                     >
                         <div class="region-name">Kolkata</div>
                         <div class="region-meta">West Bengal · 10×10 km</div>
-                        <div class="region-status">IMAGERY ONLY</div>
+                        <div class="region-status ready">READY</div>
                     </button>
 
                     <button
-                        class="region-card locked"
+                        class="region-card"
                         data-region="bardhaman"
                     >
                         <div class="region-name">Bardhaman</div>
                         <div class="region-meta">West Bengal · 10×10 km</div>
-                        <div class="region-status">IMAGERY ONLY</div>
+                        <div class="region-status ready">READY</div>
                     </button>
 
                     <button
-                        class="region-card locked"
+                        class="region-card"
                         data-region="sundarbans"
                     >
                         <div class="region-name">Sundarbans</div>
                         <div class="region-meta">West Bengal · 10×10 km</div>
-                        <div class="region-status">IMAGERY ONLY</div>
+                        <div class="region-status ready">READY</div>
                     </button>
 
                 </div>
@@ -227,22 +227,22 @@
             <div class="stats-strip">
 
                 <div class="stat-tile">
-                    <div class="stat-value">1.17s</div>
+                    <div id="stat-inference" class="stat-value">1.17s</div>
                     <div class="stat-label">DAv2 INFERENCE</div>
                 </div>
 
                 <div class="stat-tile">
-                    <div class="stat-value">10m</div>
+                    <div id="stat-resolution" class="stat-value">10m</div>
                     <div class="stat-label">RESOLUTION</div>
                 </div>
 
                 <div class="stat-tile">
-                    <div class="stat-value">361×325</div>
+                    <div id="stat-grid" class="stat-value">361×325</div>
                     <div class="stat-label">MESH GRID</div>
                 </div>
 
                 <div class="stat-tile">
-                    <div class="stat-value">32645</div>
+                    <div id="stat-epsg" class="stat-value">32645</div>
                     <div class="stat-label">EPSG</div>
                 </div>
 
@@ -258,7 +258,7 @@
 
                 <div class="metric metric-stacked">
                     <span class="metric-label">TERRAIN SOURCE</span>
-                    <span>OpenTopography DSM</span>
+                    <span id="terrain-source-value">OpenTopography DSM</span>
                 </div>
 
             </div>
@@ -389,7 +389,7 @@
                 </label>
 
                 <div class="upload-note">
-                    Prototype flow — any image resolves to the Darjeeling demo reconstruction below.
+                    Prototype flow — any image resolves to the selected region's demo reconstruction below.
                 </div>
 
                 <button

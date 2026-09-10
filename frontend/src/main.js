@@ -65,7 +65,8 @@ function setLayerDescription(layer) {
     if (layer === "depth") {
         description.textContent = "DAv2 relative depth — not absolute elevation";
     } else if (layer === "elevation") {
-        description.textContent = "Metric elevation from OpenTopography DSM";
+        const source = REGIONS[currentRegionKey]?.elevationSource ?? "DSM";
+        description.textContent = `Metric elevation from ${source}`;
     } else {
         description.textContent = "Sentinel-2 RGB imagery";
     }
@@ -76,33 +77,36 @@ function setLayerDescription(layer) {
 // REGION RAIL
 // ============================================================
 
-const REGION_LABELS = {
-    darjeeling: "Darjeeling",
-    kolkata: "Kolkata",
-    bardhaman: "Bardhaman",
-    sundarbans: "Sundarbans",
+const REGIONS = {
+    darjeeling: {
+        label: "Darjeeling",
+        elevationSource: "OpenTopography DSM",
+        crsEpsg: "32645",
+        resolution: "10m",
+        inferenceTime: "1.17s",
+    },
+    kolkata: {
+        label: "Kolkata",
+        elevationSource: "Copernicus GLO-30 DSM",
+        crsEpsg: "32645",
+        resolution: "10m",
+        inferenceTime: "1.67s",
+    },
+    bardhaman: {
+        label: "Bardhaman",
+        elevationSource: "Copernicus GLO-30 DSM",
+        crsEpsg: "32645",
+        resolution: "10m",
+        inferenceTime: "0.66s",
+    },
+    sundarbans: {
+        label: "Sundarbans",
+        elevationSource: "Copernicus GLO-30 DSM",
+        crsEpsg: "32645",
+        resolution: "10m",
+        inferenceTime: "0.66s",
+    },
 };
-
-document.querySelectorAll(".region-card").forEach(card => {
-    card.addEventListener("click", () => {
-        const region = card.dataset.region;
-        const note = document.getElementById("region-note");
-
-        if (!note) {
-            return;
-        }
-
-        if (card.classList.contains("locked")) {
-            note.textContent = `${REGION_LABELS[region]} — imagery indexed, full pipeline lands in Session 2.`;
-            setTimeout(() => {
-                note.textContent = "";
-            }, 3500);
-            return;
-        }
-
-        note.textContent = "";
-    });
-});
 
 
 // ============================================================
@@ -116,7 +120,7 @@ const ACTIVITY_LOG = [
     { tag: "DEPTH", time: "1m ago", text: "DAv2 (Depth-Anything-V2-Large) relative-depth inference — 1.17s on MPS" },
     { tag: "VALIDATION", time: "2m ago", warn: true, text: "RDAH-Net zero-shot check (Swiss/HK weights) — checkerboard artifacts, rejected" },
     { tag: "INGEST", time: "3m ago", text: "Sentinel-2 RGB tile indexed — 10×10 km, EPSG:32645" },
-    { tag: "INGEST", time: "6m ago", text: "Kolkata / Bardhaman / Sundarbans imagery indexed — full pipeline pending" },
+    { tag: "INGEST", time: "6m ago", text: "Kolkata / Bardhaman / Sundarbans reconstruction assets generated — all 4 regions live" },
 ];
 
 function renderActivityFeed() {
@@ -153,21 +157,81 @@ function prependActivity(entry) {
 
 
 // ============================================================
-// LOAD TERRAIN
+// LOAD TERRAIN (per region — region rail switches between these)
 // ============================================================
 
-async function loadTerrain() {
-    console.log("Loading Darjeeling terrain...");
+let currentTerrain = null;
+let currentRegionKey = null;
+let running = false;
 
-    const terrainResponse = await fetch("/data/darjeeling/terrain.json");
+function disposeTerrain(terrain) {
+    if (!terrain) {
+        return;
+    }
+
+    scene.remove(terrain.mesh);
+    terrain.mesh.geometry.dispose();
+    terrain.material.dispose();
+}
+
+function activateLayer(layer) {
+    if (!currentTerrain) {
+        return;
+    }
+
+    currentTerrain.setLayer(layer);
+
+    satelliteButton?.classList.toggle("active", layer === "satellite");
+    depthButton?.classList.toggle("active", layer === "depth");
+    elevationButton?.classList.toggle("active", layer === "elevation");
+
+    setLayerDescription(layer);
+}
+
+function updateStatsAndLabels(regionKey, terrain, terrainData) {
+    const region = REGIONS[regionKey];
+
+    const elevationElement = document.getElementById("elevation-value");
+    if (elevationElement) {
+        elevationElement.textContent = `${Math.round(terrain.elevationMin)}–${Math.round(terrain.elevationMax)} m`;
+    }
+
+    const sourceElement = document.getElementById("terrain-source-value");
+    if (sourceElement) {
+        sourceElement.textContent = region.elevationSource;
+    }
+
+    const inferenceStat = document.getElementById("stat-inference");
+    if (inferenceStat) {
+        inferenceStat.textContent = region.inferenceTime;
+    }
+
+    const resolutionStat = document.getElementById("stat-resolution");
+    if (resolutionStat) {
+        resolutionStat.textContent = region.resolution;
+    }
+
+    const gridStat = document.getElementById("stat-grid");
+    if (gridStat) {
+        gridStat.textContent = `${terrainData.width}×${terrainData.height}`;
+    }
+
+    const epsgStat = document.getElementById("stat-epsg");
+    if (epsgStat) {
+        epsgStat.textContent = region.crsEpsg;
+    }
+}
+
+async function loadRegion(regionKey) {
+    console.log(`Loading ${regionKey} terrain...`);
+
+    const terrainResponse = await fetch(`/data/${regionKey}/terrain.json`);
 
     if (!terrainResponse.ok) {
         throw new Error(`Failed to load terrain: ${terrainResponse.status}`);
     }
 
     const terrainData = await terrainResponse.json();
-
-    console.log("Terrain loaded:", terrainData);
 
 
     // --------------------------------------------------------
@@ -176,16 +240,16 @@ async function loadTerrain() {
 
     const textureLoader = new THREE.TextureLoader();
 
-    console.log("Loading imagery and depth maps...");
-
-    const satelliteTexture = await textureLoader.loadAsync("/data/darjeeling/satellite.png");
-    const depthTexture = await textureLoader.loadAsync("/data/darjeeling/relative_depth.png");
-    const elevationTexture = await textureLoader.loadAsync("/data/darjeeling/elevation.png");
+    const satelliteTexture = await textureLoader.loadAsync(`/data/${regionKey}/satellite.png`);
+    const depthTexture = await textureLoader.loadAsync(`/data/${regionKey}/relative_depth.png`);
+    const elevationTexture = await textureLoader.loadAsync(`/data/${regionKey}/elevation.png`);
 
 
     // --------------------------------------------------------
-    // Create terrain
+    // Swap in the new terrain
     // --------------------------------------------------------
+
+    disposeTerrain(currentTerrain);
 
     const terrain = createTerrain(
         scene,
@@ -195,11 +259,14 @@ async function loadTerrain() {
         elevationTexture
     );
 
+    currentTerrain = terrain;
+    currentRegionKey = regionKey;
+
     console.log("Terrain created:", terrain);
 
 
     // --------------------------------------------------------
-    // Initial camera
+    // Camera
     // --------------------------------------------------------
 
     camera.position.set(0, 95, 125);
@@ -208,217 +275,227 @@ async function loadTerrain() {
 
 
     // --------------------------------------------------------
-    // Elevation information
+    // Stats, labels, region rail, default layer
     // --------------------------------------------------------
 
-    const elevationElement = document.getElementById("elevation-value");
+    updateStatsAndLabels(regionKey, terrain, terrainData);
 
-    if (elevationElement) {
-        elevationElement.textContent = `${Math.round(terrain.elevationMin)}–${Math.round(terrain.elevationMax)} m`;
-    }
-
-
-    // --------------------------------------------------------
-    // Layer buttons
-    // --------------------------------------------------------
-
-    const satelliteButton = document.getElementById("satellite-button");
-    const depthButton = document.getElementById("depth-button");
-    const elevationButton = document.getElementById("elevation-button");
-
-    function activateLayer(layer) {
-        terrain.setLayer(layer);
-
-        if (satelliteButton) {
-            satelliteButton.classList.toggle("active", layer === "satellite");
-        }
-
-        if (depthButton) {
-            depthButton.classList.toggle("active", layer === "depth");
-        }
-
-        if (elevationButton) {
-            elevationButton.classList.toggle("active", layer === "elevation");
-        }
-
-        setLayerDescription(layer);
-    }
-
-    satelliteButton?.addEventListener("click", () => { activateLayer("satellite"); });
-    depthButton?.addEventListener("click", () => { activateLayer("depth"); });
-    elevationButton?.addEventListener("click", () => { activateLayer("elevation"); });
-
-
-    // ========================================================
-    // RECONSTRUCTION SEQUENCE
-    // (shared by the RUN RECONSTRUCTION button and the mock
-    // upload flow — both resolve to the same Darjeeling result)
-    // ========================================================
-
-    const STAGES = [
-        { step: "satellite", layer: "satellite", duration: 900 },
-        { step: "depth", layer: "depth", duration: 1350 },
-        { step: "alignment", layer: "elevation", duration: 1200 },
-        { step: "terrain", layer: "elevation", duration: 1450 },
-    ];
-
-    const STAGE_TOTAL_MS = STAGES.reduce((sum, s) => sum + s.duration, 0);
-
-    const progressBar = document.getElementById("pipeline-progress");
-    const progressFill = document.getElementById("pipeline-progress-fill");
-    const pipelineSteps = document.querySelectorAll(".pipeline-step");
-
-    let running = false;
-
-    async function runReconstruction(sourceLabel) {
-        if (running) {
-            return;
-        }
-
-        running = true;
-
-        if (progressBar) {
-            progressBar.hidden = false;
-        }
-
-        let elapsed = 0;
-
-        for (const stage of STAGES) {
-            pipelineSteps.forEach(el => {
-                el.classList.toggle("active", el.dataset.step === stage.step);
-            });
-
-            activateLayer(stage.layer);
-
-            await sleep(stage.duration);
-
-            elapsed += stage.duration;
-
-            if (progressFill) {
-                progressFill.style.width = `${Math.round((elapsed / STAGE_TOTAL_MS) * 100)}%`;
-            }
-        }
-
-        const description = document.getElementById("layer-description");
-        if (description) {
-            description.textContent = "Reconstruction complete — metric terrain ready";
-        }
-
-        prependActivity({
-            tag: "RECONSTRUCT",
-            time: "now",
-            text: `${sourceLabel} — resolved to the Darjeeling demo reconstruction`,
-        });
-
-        setTimeout(() => {
-            if (progressBar) {
-                progressBar.hidden = true;
-            }
-            if (progressFill) {
-                progressFill.style.width = "0%";
-            }
-            running = false;
-        }, 1500);
-    }
-
-
-    // ========================================================
-    // RECONSTRUCTION BUTTON
-    // ========================================================
-
-    const runButton = document.createElement("button");
-    runButton.textContent = "▶ RUN RECONSTRUCTION";
-    runButton.className = "run-reconstruction-button";
-    document.body.appendChild(runButton);
-
-    runButton.addEventListener("click", async () => {
-        if (running) {
-            return;
-        }
-
-        runButton.disabled = true;
-        runButton.textContent = "PROCESSING…";
-
-        await runReconstruction("Darjeeling scene");
-
-        runButton.textContent = "✓ RECONSTRUCTION COMPLETE";
-
-        setTimeout(() => {
-            runButton.textContent = "↻ RUN AGAIN";
-            runButton.disabled = false;
-        }, 1500);
+    document.querySelectorAll(".region-card").forEach(card => {
+        card.classList.toggle("active", card.dataset.region === regionKey);
     });
 
+    activateLayer("satellite");
 
-    // ========================================================
-    // MOCK UPLOAD FLOW
-    // ========================================================
-
-    const uploadTrigger = document.getElementById("upload-trigger");
-    const uploadModal = document.getElementById("upload-modal");
-    const uploadBackdrop = document.getElementById("upload-backdrop");
-    const uploadCancel = document.getElementById("upload-cancel");
-    const uploadDropzone = document.getElementById("upload-dropzone");
-    const uploadInput = document.getElementById("upload-input");
-
-    function openUploadModal() {
-        if (uploadModal) {
-            uploadModal.hidden = false;
-        }
-    }
-
-    function closeUploadModal() {
-        if (uploadModal) {
-            uploadModal.hidden = true;
-        }
-        uploadDropzone?.classList.remove("drag-over");
-    }
-
-    async function handleUploadedFile(file) {
-        if (!file) {
-            return;
-        }
-
-        closeUploadModal();
-
-        prependActivity({
-            tag: "UPLOAD",
-            time: "now",
-            text: `"${file.name}" received — running mock reconstruction`,
-        });
-
-        await runReconstruction(`"${file.name}"`);
-    }
-
-    uploadTrigger?.addEventListener("click", openUploadModal);
-    uploadCancel?.addEventListener("click", closeUploadModal);
-    uploadBackdrop?.addEventListener("click", closeUploadModal);
-
-    uploadInput?.addEventListener("change", () => {
-        handleUploadedFile(uploadInput.files?.[0]);
-    });
-
-    uploadDropzone?.addEventListener("dragover", event => {
-        event.preventDefault();
-        uploadDropzone.classList.add("drag-over");
-    });
-
-    uploadDropzone?.addEventListener("dragleave", () => {
-        uploadDropzone.classList.remove("drag-over");
-    });
-
-    uploadDropzone?.addEventListener("drop", event => {
-        event.preventDefault();
-        uploadDropzone.classList.remove("drag-over");
-        handleUploadedFile(event.dataTransfer?.files?.[0]);
-    });
-
-    document.addEventListener("keydown", event => {
-        if (event.key === "Escape" && uploadModal && !uploadModal.hidden) {
-            closeUploadModal();
-        }
-    });
+    return terrain;
 }
+
+
+// ============================================================
+// LAYER BUTTONS
+// ============================================================
+
+const satelliteButton = document.getElementById("satellite-button");
+const depthButton = document.getElementById("depth-button");
+const elevationButton = document.getElementById("elevation-button");
+
+satelliteButton?.addEventListener("click", () => { activateLayer("satellite"); });
+depthButton?.addEventListener("click", () => { activateLayer("depth"); });
+elevationButton?.addEventListener("click", () => { activateLayer("elevation"); });
+
+
+// ============================================================
+// REGION RAIL — switching
+// ============================================================
+
+document.querySelectorAll(".region-card").forEach(card => {
+    card.addEventListener("click", async () => {
+        const region = card.dataset.region;
+
+        if (running || region === currentRegionKey) {
+            return;
+        }
+
+        await loadRegion(region);
+
+        prependActivity({
+            tag: "REGION",
+            time: "now",
+            text: `Switched to ${REGIONS[region].label} — ${REGIONS[region].elevationSource}`,
+        });
+    });
+});
+
+
+// ============================================================
+// RECONSTRUCTION SEQUENCE
+// (shared by the RUN RECONSTRUCTION button and the mock upload
+// flow — both resolve to the currently selected region's result)
+// ============================================================
+
+const STAGES = [
+    { step: "satellite", layer: "satellite", duration: 900 },
+    { step: "depth", layer: "depth", duration: 1350 },
+    { step: "alignment", layer: "elevation", duration: 1200 },
+    { step: "terrain", layer: "elevation", duration: 1450 },
+];
+
+const STAGE_TOTAL_MS = STAGES.reduce((sum, s) => sum + s.duration, 0);
+
+const progressBar = document.getElementById("pipeline-progress");
+const progressFill = document.getElementById("pipeline-progress-fill");
+const pipelineSteps = document.querySelectorAll(".pipeline-step");
+
+async function runReconstruction(sourceLabel) {
+    if (running) {
+        return;
+    }
+
+    running = true;
+
+    if (progressBar) {
+        progressBar.hidden = false;
+    }
+
+    let elapsed = 0;
+
+    for (const stage of STAGES) {
+        pipelineSteps.forEach(el => {
+            el.classList.toggle("active", el.dataset.step === stage.step);
+        });
+
+        activateLayer(stage.layer);
+
+        await sleep(stage.duration);
+
+        elapsed += stage.duration;
+
+        if (progressFill) {
+            progressFill.style.width = `${Math.round((elapsed / STAGE_TOTAL_MS) * 100)}%`;
+        }
+    }
+
+    const description = document.getElementById("layer-description");
+    if (description) {
+        description.textContent = "Reconstruction complete — metric terrain ready";
+    }
+
+    const regionLabel = REGIONS[currentRegionKey]?.label ?? currentRegionKey;
+
+    prependActivity({
+        tag: "RECONSTRUCT",
+        time: "now",
+        text: `${sourceLabel} — resolved to the ${regionLabel} demo reconstruction`,
+    });
+
+    setTimeout(() => {
+        if (progressBar) {
+            progressBar.hidden = true;
+        }
+        if (progressFill) {
+            progressFill.style.width = "0%";
+        }
+        running = false;
+    }, 1500);
+}
+
+
+// ============================================================
+// RECONSTRUCTION BUTTON
+// ============================================================
+
+const runButton = document.createElement("button");
+runButton.textContent = "▶ RUN RECONSTRUCTION";
+runButton.className = "run-reconstruction-button";
+document.body.appendChild(runButton);
+
+runButton.addEventListener("click", async () => {
+    if (running) {
+        return;
+    }
+
+    runButton.disabled = true;
+    runButton.textContent = "PROCESSING…";
+
+    const regionLabel = REGIONS[currentRegionKey]?.label ?? currentRegionKey;
+    await runReconstruction(`${regionLabel} scene`);
+
+    runButton.textContent = "✓ RECONSTRUCTION COMPLETE";
+
+    setTimeout(() => {
+        runButton.textContent = "↻ RUN AGAIN";
+        runButton.disabled = false;
+    }, 1500);
+});
+
+
+// ============================================================
+// MOCK UPLOAD FLOW
+// ============================================================
+
+const uploadTrigger = document.getElementById("upload-trigger");
+const uploadModal = document.getElementById("upload-modal");
+const uploadBackdrop = document.getElementById("upload-backdrop");
+const uploadCancel = document.getElementById("upload-cancel");
+const uploadDropzone = document.getElementById("upload-dropzone");
+const uploadInput = document.getElementById("upload-input");
+
+function openUploadModal() {
+    if (uploadModal) {
+        uploadModal.hidden = false;
+    }
+}
+
+function closeUploadModal() {
+    if (uploadModal) {
+        uploadModal.hidden = true;
+    }
+    uploadDropzone?.classList.remove("drag-over");
+}
+
+async function handleUploadedFile(file) {
+    if (!file) {
+        return;
+    }
+
+    closeUploadModal();
+
+    prependActivity({
+        tag: "UPLOAD",
+        time: "now",
+        text: `"${file.name}" received — running mock reconstruction`,
+    });
+
+    await runReconstruction(`"${file.name}"`);
+}
+
+uploadTrigger?.addEventListener("click", openUploadModal);
+uploadCancel?.addEventListener("click", closeUploadModal);
+uploadBackdrop?.addEventListener("click", closeUploadModal);
+
+uploadInput?.addEventListener("change", () => {
+    handleUploadedFile(uploadInput.files?.[0]);
+});
+
+uploadDropzone?.addEventListener("dragover", event => {
+    event.preventDefault();
+    uploadDropzone.classList.add("drag-over");
+});
+
+uploadDropzone?.addEventListener("dragleave", () => {
+    uploadDropzone.classList.remove("drag-over");
+});
+
+uploadDropzone?.addEventListener("drop", event => {
+    event.preventDefault();
+    uploadDropzone.classList.remove("drag-over");
+    handleUploadedFile(event.dataTransfer?.files?.[0]);
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && uploadModal && !uploadModal.hidden) {
+        closeUploadModal();
+    }
+});
 
 
 // ============================================================
@@ -447,7 +524,7 @@ window.addEventListener("resize", () => {
 // START
 // ============================================================
 
-loadTerrain()
+loadRegion("darjeeling")
     .then(() => {
         console.log("DepthWizard2 viewer ready.");
         animate();
