@@ -276,13 +276,13 @@ body {
 kbd {
     display: inline-flex;
 
-    width: 22px;
     height: 22px;
+    padding: 0 8px;
 
     align-items: center;
     justify-content: center;
 
-    margin-right: 3px;
+    margin-right: 5px;
 
     border-radius: 5px;
 
@@ -293,6 +293,7 @@ kbd {
         rgba(255,255,255,0.07);
 
     font-size: 10px;
+    font-family: inherit;
 }
 
 
