@@ -406,7 +406,7 @@ async function runReconstruction(sourceLabel) {
 const runButton = document.createElement("button");
 runButton.textContent = "▶ RUN RECONSTRUCTION";
 runButton.className = "run-reconstruction-button";
-document.body.appendChild(runButton);
+document.getElementById("page-1")?.appendChild(runButton);
 
 runButton.addEventListener("click", async () => {
     if (running) {
@@ -499,11 +499,50 @@ document.addEventListener("keydown", event => {
 
 
 // ============================================================
+// PAGE NAVIGATION (collapsible left icon rail)
+// ============================================================
+
+const pageNav = document.getElementById("page-nav");
+const pageNavToggle = document.getElementById("page-nav-toggle");
+const pageNavTabs = document.querySelectorAll(".page-nav-tab");
+const pages = document.querySelectorAll(".page");
+
+let activePageId = "page-1";
+
+function setActivePage(pageId) {
+    activePageId = pageId;
+
+    pages.forEach(page => {
+        page.classList.toggle("active", page.id === pageId);
+    });
+
+    pageNavTabs.forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.page === pageId);
+    });
+}
+
+pageNavTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+        setActivePage(tab.dataset.page);
+    });
+});
+
+pageNavToggle?.addEventListener("click", () => {
+    pageNav?.classList.toggle("expanded");
+});
+
+
+// ============================================================
 // RENDER LOOP
 // ============================================================
 
 function animate() {
     requestAnimationFrame(animate);
+
+    if (activePageId !== "page-1") {
+        return;
+    }
+
     controls.update();
     renderer.render(scene, camera);
 }
