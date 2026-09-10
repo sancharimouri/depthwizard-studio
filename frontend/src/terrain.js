@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 
 export function createTerrain(
-    scene,
+    parent,
     terrainData,
     satelliteTexture,
     depthTexture,
@@ -216,7 +216,7 @@ export function createTerrain(
     terrain.castShadow = true;
 
 
-    scene.add(terrain);
+    parent.add(terrain);
 
 
     // Six visualization states: the top row is the same three textures

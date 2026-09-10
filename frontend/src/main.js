@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createTerrain } from "./terrain.js";
 import { createControls } from "./controls.js";
+import { createTerrainRig } from "./terrainRig.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -28,6 +29,15 @@ const controls = createControls(
     renderer.domElement,
     new THREE.Vector3(0, 12, 0)
 );
+
+// Base yaw correction so the real ridge line reads level/natural instead of
+// diagonally tilted, plus a south-east screen offset so the structure clears
+// the panels now occupying the top and left of the page.
+const BASE_YAW = THREE.MathUtils.degToRad(12);
+
+const terrainRig = createTerrainRig(renderer.domElement, BASE_YAW);
+terrainRig.rig.position.set(18, -10, 0);
+scene.add(terrainRig.rig);
 
 const ambient = new THREE.HemisphereLight(
     0xddebd8,
@@ -136,7 +146,7 @@ function disposeTerrain(terrain) {
         return;
     }
 
-    scene.remove(terrain.mesh);
+    terrainRig.rig.remove(terrain.mesh);
     terrain.mesh.geometry.dispose();
     terrain.material.dispose();
 }
@@ -230,7 +240,7 @@ async function loadRegion(regionKey) {
     disposeTerrain(currentTerrain);
 
     const terrain = createTerrain(
-        scene,
+        terrainRig.rig,
         terrainData,
         satelliteTexture,
         depthTexture,
@@ -250,6 +260,7 @@ async function loadRegion(regionKey) {
     camera.position.set(0, 95, 125);
     controls.target.set(0, 12, 0);
     controls.update();
+    terrainRig.reset();
 
 
     // --------------------------------------------------------
@@ -420,8 +431,8 @@ runAgainButton?.addEventListener("click", runReconstruction);
 
 // ============================================================
 // FLYTHROUGH
-// (one-shot camera dolly-in — no loop back out — layered on top
-// of the render loop's own controls.update()/autoRotate)
+// (one-shot camera dolly-in — no loop back out — the terrain rig
+// keeps auto-rotating underneath it via its own render-loop update)
 // ============================================================
 
 let flythrough = null;
@@ -612,6 +623,7 @@ function animate() {
     }
 
     updateFlythrough();
+    terrainRig.update();
     controls.update();
     renderer.render(scene, camera);
 }
