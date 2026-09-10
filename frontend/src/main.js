@@ -629,6 +629,10 @@ pageNavToggle?.addEventListener("click", () => {
     pageNav?.classList.toggle("expanded");
 });
 
+document.getElementById("build-your-own-card")?.addEventListener("click", () => {
+    setActivePage("page-2");
+});
+
 
 // ============================================================
 // RENDER LOOP

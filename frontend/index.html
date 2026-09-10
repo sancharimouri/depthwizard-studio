@@ -46,7 +46,7 @@
                 data-page="page-1"
             >
                 <span class="page-nav-icon">1</span>
-                <span class="page-nav-label">Page 1</span>
+                <span class="page-nav-label">Explore</span>
             </button>
 
             <button
@@ -54,7 +54,7 @@
                 data-page="page-2"
             >
                 <span class="page-nav-icon">2</span>
-                <span class="page-nav-label">Page 2</span>
+                <span class="page-nav-label">Workbench</span>
             </button>
 
         </div>
@@ -167,6 +167,19 @@
                     id="region-note"
                     class="region-note"
                 ></div>
+
+            </div>
+
+
+            <div class="region-panel">
+
+                <button
+                    id="build-your-own-card"
+                    class="region-card build-your-own-card"
+                >
+                    <div class="region-name">Build Your Own</div>
+                    <div class="region-meta">Assemble a custom scene →</div>
+                </button>
 
             </div>
 
@@ -457,13 +470,50 @@
 
 
     <!-- =====================================================
-         PAGE 2 (placeholder)
+         PAGE 2 — WORKBENCH (layout skeleton, placeholder content)
     ====================================================== -->
 
     <div id="page-2" class="page">
 
-        <div class="page-2-content">
-            <h1>Page 2</h1>
+        <div class="workbench-grid">
+
+            <div class="workbench-left">
+
+                <div
+                    id="scene-input-box"
+                    class="workbench-box"
+                >
+                    Scene Input
+                </div>
+
+                <div
+                    id="preview-box"
+                    class="workbench-box"
+                >
+                    Preview
+                </div>
+
+            </div>
+
+            <div class="workbench-right">
+
+                <div
+                    id="pipeline-box"
+                    class="workbench-box workbench-pipeline"
+                >
+                    Reconstruction Pipeline
+
+                    <div
+                        id="viewer-box"
+                        class="workbench-box workbench-viewer"
+                    >
+                        3D Viewer
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
     </div>
