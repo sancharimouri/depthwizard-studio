@@ -247,6 +247,7 @@ async function loadRegion(regionKey) {
 
     const terrain = createTerrain(
         terrainRig.rig,
+        regionKey,
         terrainData,
         satelliteTexture,
         depthTexture,
