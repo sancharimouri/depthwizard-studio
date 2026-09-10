@@ -224,29 +224,57 @@
                 </div>
 
 
-                <div class="layer-buttons">
+                <div class="layer-buttons-grid">
 
-                    <button
-                        id="satellite-button"
-                        class="layer-button active"
-                    >
-                        SATELLITE
-                    </button>
+                    <div class="layer-buttons-row">
 
+                        <button
+                            class="layer-button"
+                            data-layer="satellite-flat"
+                        >
+                            SATELLITE
+                        </button>
 
-                    <button
-                        id="depth-button"
-                        class="layer-button"
-                    >
-                        RELATIVE DEPTH
-                    </button>
+                        <button
+                            class="layer-button"
+                            data-layer="depth-flat"
+                        >
+                            RELATIVE DEPTH
+                        </button>
 
-                    <button
-                        id="elevation-button"
-                        class="layer-button"
-                    >
-                        ELEVATION
-                    </button>
+                        <button
+                            class="layer-button"
+                            data-layer="elevation-flat"
+                        >
+                            ELEVATION
+                        </button>
+
+                    </div>
+
+                    <div class="layer-buttons-row">
+
+                        <button
+                            class="layer-button"
+                            data-layer="dsm-3d"
+                        >
+                            DSM
+                        </button>
+
+                        <button
+                            class="layer-button"
+                            data-layer="elevation-3d"
+                        >
+                            METRIC ELEVATION
+                        </button>
+
+                        <button
+                            class="layer-button active"
+                            data-layer="satellite-3d"
+                        >
+                            TRUE COLOR
+                        </button>
+
+                    </div>
 
                 </div>
 
@@ -255,7 +283,7 @@
                     id="layer-description"
                     class="layer-description"
                 >
-                    Sentinel-2 RGB imagery
+                    Sentinel-2 RGB draped on extruded terrain
                 </div>
 
 
@@ -268,6 +296,70 @@
                         id="pipeline-progress-fill"
                         class="pipeline-progress-fill"
                     ></div>
+                </div>
+
+            </div>
+
+
+            <div id="run-panel" class="run-panel">
+
+                <button
+                    id="run-button"
+                    class="run-reconstruction-button"
+                >
+                    ▶ RUN RECONSTRUCTION
+                </button>
+
+            </div>
+
+
+            <div
+                id="post-run-panel"
+                class="post-run-panel"
+                hidden
+            >
+
+                <button
+                    id="run-again-button"
+                    class="run-reconstruction-button"
+                >
+                    ↻ RUN AGAIN
+                </button>
+
+                <button
+                    id="flythrough-button"
+                    class="secondary-button"
+                >
+                    ◎ FLYTHROUGH
+                </button>
+
+
+                <div class="danger-zone-panel">
+
+                    <div class="panel-title">
+                        DANGER ZONES
+                    </div>
+
+                    <div class="danger-zone-buttons">
+
+                        <button
+                            id="flood-button"
+                            class="danger-button"
+                        >
+                            FLOOD
+                        </button>
+
+                        <button
+                            id="earthquake-button"
+                            class="danger-button"
+                            disabled
+                        >
+                            EARTHQUAKE
+                            <span class="coming-soon-tag">SOON</span>
+                        </button>
+
+                    </div>
+
                 </div>
 
             </div>

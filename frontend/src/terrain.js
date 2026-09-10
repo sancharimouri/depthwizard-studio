@@ -103,6 +103,12 @@ export function createTerrain(
         baseVerticalScale * exaggerationFactor;
 
 
+    // Extruded (3D) height per vertex, kept separately from the plane's
+    // flat z=0 rest state so layers can toggle between the two without
+    // reloading geometry.
+
+    const extrudedZ = new Float32Array(positions.count);
+
     for (
         let y = 0;
         y < height;
@@ -123,19 +129,33 @@ export function createTerrain(
                 heights[index] *
                 elevationRange;
 
-            positions.setZ(
-                index,
+            extrudedZ[index] =
                 (
                     elevation -
                     elevationMin
                 ) *
-                verticalExaggeration
+                verticalExaggeration;
+
+            positions.setZ(
+                index,
+                extrudedZ[index]
             );
         }
     }
 
 
     geometry.computeVertexNormals();
+
+
+    // Flood-overlay vertex colors. Default is neutral white (no tint);
+    // setFloodOverlay() reddens low-lying vertices on top of whatever
+    // texture is currently mapped.
+
+    const vertexColors = new Float32Array(positions.count * 3).fill(1);
+    geometry.setAttribute(
+        "color",
+        new THREE.BufferAttribute(vertexColors, 3)
+    );
 
 
     // Texture setup
@@ -170,6 +190,8 @@ export function createTerrain(
 
             map: satelliteTexture,
 
+            vertexColors: true,
+
             roughness: 0.95,
 
             metalness: 0,
@@ -197,42 +219,98 @@ export function createTerrain(
     scene.add(terrain);
 
 
+    // Six visualization states: the top row is the same three textures
+    // shown flat (no extrusion), the bottom row is those textures draped
+    // over the real extruded terrain.
+
+    const LAYER_TEXTURES = {
+        "satellite-flat": satelliteTexture,
+        "depth-flat": depthTexture,
+        "elevation-flat": elevationTexture,
+        "dsm-3d": depthTexture,
+        "elevation-3d": elevationTexture,
+        "satellite-3d": satelliteTexture,
+    };
+
+    const EXTRUDED_LAYERS = new Set([
+        "dsm-3d",
+        "elevation-3d",
+        "satellite-3d",
+    ]);
+
+
+    function setExtruded(extruded) {
+
+        for (
+            let index = 0;
+            index < positions.count;
+            index++
+        ) {
+
+            positions.setZ(
+                index,
+                extruded ? extrudedZ[index] : 0
+            );
+        }
+
+        positions.needsUpdate = true;
+
+        geometry.computeVertexNormals();
+        geometry.computeBoundingSphere();
+    }
+
+
     function setLayer(layer) {
 
-        if (layer === "depth") {
+        material.map =
+            LAYER_TEXTURES[layer] ?? satelliteTexture;
 
-            material.map =
-                depthTexture;
-
-            material.color.set(
-                0xffffff
-            );
-
-        }
-
-        else if (layer === "elevation") {
-
-            material.map =
-                elevationTexture;
-
-            material.color.set(
-                0xffffff
-            );
-
-        }
-
-        else {
-
-            material.map =
-                satelliteTexture;
-
-            material.color.set(
-                0xffffff
-            );
-        }
-
-
+        material.color.set(0xffffff);
         material.needsUpdate = true;
+
+        setExtruded(EXTRUDED_LAYERS.has(layer));
+    }
+
+
+    // Flood overlay: reddens genuinely low-lying vertices via a smooth
+    // (non-hard-cutoff) gradient, multiplied on top of whatever texture
+    // is currently mapped.
+
+    const FLOOD_LEVEL = 0.35;
+
+    function smoothstep(x, edge0, edge1) {
+        const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+        return t * t * (3 - 2 * t);
+    }
+
+    function setFloodOverlay(active) {
+
+        const colorAttribute = geometry.attributes.color;
+
+        for (
+            let index = 0;
+            index < positions.count;
+            index++
+        ) {
+
+            if (!active) {
+                colorAttribute.setXYZ(index, 1, 1, 1);
+                continue;
+            }
+
+            const normalizedElevation = heights[index];
+            const aboveFloodLevel = smoothstep(normalizedElevation, 0, FLOOD_LEVEL);
+            const redAmount = 1 - aboveFloodLevel;
+
+            colorAttribute.setXYZ(
+                index,
+                1,
+                1 - redAmount * 0.75,
+                1 - redAmount * 0.75
+            );
+        }
+
+        colorAttribute.needsUpdate = true;
     }
 
 
@@ -243,6 +321,8 @@ export function createTerrain(
         material,
 
         setLayer,
+
+        setFloodOverlay,
 
         elevationMin,
 
