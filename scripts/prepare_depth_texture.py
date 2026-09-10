@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -6,12 +7,14 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 
+REGION = sys.argv[1] if len(sys.argv) > 1 else "darjeeling"
+
 INPUT = (
     ROOT
     / "data"
     / "diagnostics"
-    / "darjeeling"
-    / "Darjeeling_RGB_depth.npy"
+    / REGION
+    / f"{REGION.capitalize()}_RGB_depth.npy"
 )
 
 OUTPUT_DIR = (
@@ -19,7 +22,7 @@ OUTPUT_DIR = (
     / "frontend"
     / "public"
     / "data"
-    / "darjeeling"
+    / REGION
 )
 
 OUTPUT_DIR.mkdir(

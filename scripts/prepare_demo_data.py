@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 import json
 
@@ -7,12 +8,21 @@ import rasterio
 
 ROOT = Path(__file__).resolve().parents[1]
 
+REGION = sys.argv[1] if len(sys.argv) > 1 else "darjeeling"
+
+DSM_FILENAMES = {
+    "darjeeling": "Darjeeling_OpenTopography_DSM.tif",
+    "kolkata": "Kolkata_Copernicus_GLO30_DSM_cropped.tif",
+    "bardhaman": "Bardhaman_Copernicus_GLO30_DSM_cropped.tif",
+    "sundarbans": "Sundarbans_Copernicus_GLO30_DSM_cropped.tif",
+}
+
 DSM_PATH = (
     ROOT
     / "data"
     / "elevation"
-    / "darjeeling"
-    / "Darjeeling_OpenTopography_DSM.tif"
+    / REGION
+    / DSM_FILENAMES[REGION]
 )
 
 OUTPUT_DIR = (
@@ -20,7 +30,7 @@ OUTPUT_DIR = (
     / "frontend"
     / "public"
     / "data"
-    / "darjeeling"
+    / REGION
 )
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
