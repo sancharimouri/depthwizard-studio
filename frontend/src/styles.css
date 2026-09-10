@@ -1022,22 +1022,76 @@ kbd {
 }
 
 
-.page-2-content {
+/* ============================================================
+   WORKBENCH (page 2) — asymmetric grid, layout skeleton
+============================================================ */
+
+.workbench-grid {
+    box-sizing: border-box;
     height: 100%;
+
+    display: grid;
+    grid-template-columns: minmax(220px, 300px) 1fr;
+    gap: 16px;
+
+    padding: 24px 24px 24px 80px;
+}
+
+.workbench-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    min-height: 0;
+}
+
+.workbench-right {
+    position: relative;
+
+    min-height: 0;
+}
+
+.workbench-box {
+    box-sizing: border-box;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    padding-left: 56px;
+    border: 1px dashed rgba(255,255,255,0.20);
+    border-radius: 12px;
+
+    background: rgba(5, 12, 10, 0.45);
+    color: rgba(255,255,255,0.45);
+
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
 }
 
-.page-2-content h1 {
-    margin: 0;
+.workbench-left .workbench-box {
+    flex: 1;
+}
 
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
+.workbench-pipeline {
+    width: 100%;
+    height: 100%;
 
-    color: rgba(255,255,255,0.85);
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    padding: 16px;
+}
+
+.workbench-viewer {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+
+    width: 220px;
+    height: 150px;
+
+    background: rgba(5, 12, 10, 0.7);
 }
