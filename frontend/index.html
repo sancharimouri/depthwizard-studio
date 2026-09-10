@@ -481,16 +481,58 @@
 
                 <div
                     id="scene-input-box"
-                    class="workbench-box"
+                    class="workbench-box scene-input-box"
                 >
-                    Scene Input
+
+                    <div class="panel-title">SCENE INPUT</div>
+
+                    <div class="scene-input-hint">
+                        Search a location, area of interest, and date range
+                        for a Sentinel-2 scene to reconstruct.
+                    </div>
+
+                    <button
+                        id="scene-search-trigger"
+                        class="secondary-button scene-search-trigger"
+                    >
+                        + SEARCH FOR SCENE
+                    </button>
+
                 </div>
 
                 <div
                     id="preview-box"
-                    class="workbench-box"
+                    class="workbench-box preview-box"
                 >
-                    Preview
+
+                    <div class="panel-title">PREVIEW</div>
+
+                    <div
+                        id="preview-empty"
+                        class="preview-empty"
+                    >
+                        No scene selected yet
+                    </div>
+
+                    <div
+                        id="preview-content"
+                        class="preview-content"
+                        hidden
+                    >
+
+                        <img
+                            id="preview-image"
+                            class="preview-image"
+                            alt="Selected scene preview"
+                        />
+
+                        <div
+                            id="preview-meta"
+                            class="preview-meta"
+                        ></div>
+
+                    </div>
+
                 </div>
 
             </div>
@@ -511,6 +553,126 @@
                     </div>
 
                 </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Scene search modal (mock flow) -->
+
+        <div
+            id="scene-search-modal"
+            class="upload-modal"
+            hidden
+        >
+
+            <div
+                id="scene-search-backdrop"
+                class="upload-backdrop"
+            ></div>
+
+            <div class="upload-panel scene-search-panel">
+
+                <div class="panel-title">SEARCH FOR SCENE</div>
+
+                <div class="scene-search-form">
+
+                    <label class="scene-field">
+                        <span class="scene-field-label">Location</span>
+                        <input
+                            id="scene-location"
+                            type="text"
+                            class="scene-input"
+                            placeholder="Place name or lat, lng"
+                            value="Darjeeling, India"
+                        />
+                    </label>
+
+                    <label class="scene-field">
+                        <span class="scene-field-label">Area of Interest</span>
+                        <select
+                            id="scene-aoi"
+                            class="scene-input"
+                        >
+                            <option value="5">5 × 5 km</option>
+                            <option value="10" selected>10 × 10 km</option>
+                            <option value="20">20 × 20 km</option>
+                        </select>
+                    </label>
+
+                    <div class="scene-field-row">
+
+                        <label class="scene-field">
+                            <span class="scene-field-label">From</span>
+                            <input
+                                id="scene-date-from"
+                                type="date"
+                                class="scene-input"
+                                value="2025-11-01"
+                            />
+                        </label>
+
+                        <label class="scene-field">
+                            <span class="scene-field-label">To</span>
+                            <input
+                                id="scene-date-to"
+                                type="date"
+                                class="scene-input"
+                                value="2025-12-01"
+                            />
+                        </label>
+
+                    </div>
+
+                    <label class="scene-field">
+                        <span class="scene-field-label">Max Cloud Cover</span>
+                        <div class="scene-input-suffix-wrap">
+                            <input
+                                id="scene-cloud"
+                                type="number"
+                                min="0"
+                                max="100"
+                                value="20"
+                                class="scene-input"
+                            />
+                            <span class="scene-input-suffix">%</span>
+                        </div>
+                    </label>
+
+                </div>
+
+                <div class="upload-note">
+                    Prototype flow — mocks a Copernicus STAC catalog search
+                    (location, AOI, date range, cloud cover) with sample
+                    results. No live catalog is queried yet.
+                </div>
+
+                <button
+                    id="scene-search-button"
+                    class="run-reconstruction-button scene-search-submit"
+                >
+                    SEARCH
+                </button>
+
+                <div
+                    id="scene-search-status"
+                    class="scene-search-status"
+                    hidden
+                ></div>
+
+                <div
+                    id="scene-search-results"
+                    class="scene-search-results"
+                    hidden
+                ></div>
+
+                <button
+                    id="scene-search-cancel"
+                    class="upload-cancel"
+                >
+                    CANCEL
+                </button>
 
             </div>
 

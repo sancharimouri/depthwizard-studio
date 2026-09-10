@@ -597,6 +597,143 @@ document.addEventListener("keydown", event => {
 
 
 // ============================================================
+// MOCK SCENE SEARCH (Workbench "Scene Input" prototype flow)
+// ============================================================
+
+const MOCK_SCENES = [
+    {
+        id: "S2A_MSIL2A_KOLKATA_20251118",
+        thumb: "/data/kolkata/satellite.png",
+        date: "2025-11-18",
+        cloud: 8,
+    },
+    {
+        id: "S2B_MSIL2A_BARDHAMAN_20251103",
+        thumb: "/data/bardhaman/satellite.png",
+        date: "2025-11-03",
+        cloud: 14,
+    },
+];
+
+const sceneSearchTrigger = document.getElementById("scene-search-trigger");
+const sceneSearchModal = document.getElementById("scene-search-modal");
+const sceneSearchBackdrop = document.getElementById("scene-search-backdrop");
+const sceneSearchCancel = document.getElementById("scene-search-cancel");
+const sceneSearchButton = document.getElementById("scene-search-button");
+const sceneSearchStatus = document.getElementById("scene-search-status");
+const sceneSearchResults = document.getElementById("scene-search-results");
+
+const previewEmpty = document.getElementById("preview-empty");
+const previewContent = document.getElementById("preview-content");
+const previewImage = document.getElementById("preview-image");
+const previewMeta = document.getElementById("preview-meta");
+
+function openSceneSearchModal() {
+    if (sceneSearchModal) {
+        sceneSearchModal.hidden = false;
+    }
+    if (sceneSearchStatus) {
+        sceneSearchStatus.hidden = true;
+    }
+    if (sceneSearchResults) {
+        sceneSearchResults.hidden = true;
+        sceneSearchResults.innerHTML = "";
+    }
+    if (sceneSearchButton) {
+        sceneSearchButton.disabled = false;
+        sceneSearchButton.textContent = "SEARCH";
+    }
+}
+
+function closeSceneSearchModal() {
+    if (sceneSearchModal) {
+        sceneSearchModal.hidden = true;
+    }
+}
+
+function selectScene(scene) {
+    if (previewImage) {
+        previewImage.src = scene.thumb;
+    }
+    if (previewMeta) {
+        previewMeta.textContent =
+            `${scene.id} · ${scene.date} · ${scene.cloud}% cloud · ` +
+            `prototype pick, not a live STAC query`;
+    }
+    if (previewEmpty) {
+        previewEmpty.hidden = true;
+    }
+    if (previewContent) {
+        previewContent.hidden = false;
+    }
+
+    closeSceneSearchModal();
+}
+
+function renderSceneResults(scenes) {
+    if (!sceneSearchResults) {
+        return;
+    }
+
+    sceneSearchResults.innerHTML = "";
+
+    scenes.forEach(scene => {
+        const card = document.createElement("button");
+        card.className = "scene-result-card";
+        card.innerHTML = `
+            <img class="scene-result-thumb" src="${scene.thumb}" alt="${scene.id} thumbnail" />
+            <div>
+                <div class="scene-result-name">${scene.id}</div>
+                <div class="scene-result-sub">${scene.date} · ${scene.cloud}% cloud · 10m</div>
+            </div>
+        `;
+        card.addEventListener("click", () => selectScene(scene));
+        sceneSearchResults.appendChild(card);
+    });
+
+    sceneSearchResults.hidden = false;
+}
+
+async function runSceneSearch() {
+    if (sceneSearchButton) {
+        sceneSearchButton.disabled = true;
+        sceneSearchButton.textContent = "SEARCHING…";
+    }
+    if (sceneSearchResults) {
+        sceneSearchResults.hidden = true;
+    }
+    if (sceneSearchStatus) {
+        sceneSearchStatus.hidden = false;
+        sceneSearchStatus.innerHTML =
+            `<span class="scene-search-spinner"></span> Querying Copernicus STAC (mock)…`;
+    }
+
+    await sleep(1100);
+
+    if (sceneSearchStatus) {
+        sceneSearchStatus.hidden = true;
+    }
+    if (sceneSearchButton) {
+        sceneSearchButton.disabled = false;
+        sceneSearchButton.textContent = "SEARCH";
+    }
+
+    renderSceneResults(MOCK_SCENES);
+}
+
+sceneSearchTrigger?.addEventListener("click", openSceneSearchModal);
+sceneSearchCancel?.addEventListener("click", closeSceneSearchModal);
+sceneSearchBackdrop?.addEventListener("click", closeSceneSearchModal);
+sceneSearchButton?.addEventListener("click", runSceneSearch);
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && sceneSearchModal && !sceneSearchModal.hidden) {
+        closeSceneSearchModal();
+    }
+});
+
+
+// ============================================================
 // PAGE NAVIGATION (collapsible left icon rail)
 // ============================================================
 
