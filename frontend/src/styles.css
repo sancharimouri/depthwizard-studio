@@ -3,6 +3,19 @@
 }
 
 
+/* Self-hosted (no Next.js font loader in this Vite setup) — variable
+   weight file covers 100-900 in one request. Used only for numeric
+   readouts (stats, elevation ranges, coordinates, log numbers), never
+   body text or headings — see .numeric-mono and its call sites. */
+@font-face {
+    font-family: "Geist Mono";
+    src: url("/fonts/GeistMono-Variable.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+
 html,
 body {
     margin: 0;
@@ -17,7 +30,7 @@ body {
         "Segoe UI",
         sans-serif;
 
-    background: #07100d;
+    background: #08160e;
     color: white;
 }
 
@@ -48,8 +61,8 @@ body {
     background:
         linear-gradient(
             to bottom,
-            rgba(5, 12, 10, 0.95),
-            rgba(5, 12, 10, 0.65),
+            rgba(8, 22, 14, 0.95),
+            rgba(8, 22, 14, 0.65),
             transparent
         );
 
@@ -209,7 +222,7 @@ body {
     border-radius: 12px;
 
     background:
-        rgba(5, 12, 10, 0.65);
+        rgba(8, 22, 14, 0.65);
 
     backdrop-filter:
         blur(14px);
@@ -259,6 +272,17 @@ body {
 
     color:
         rgba(255,255,255,0.85);
+}
+
+
+/* Shared by every numeric readout across both pages — stat tiles,
+   elevation ranges, coordinates, generating percent, log numbers —
+   never body text or headings. */
+.numeric-mono,
+#elevation-value,
+#final-demo-elevation-value {
+    font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
 }
 
 
@@ -327,7 +351,7 @@ kbd {
     border-radius: 12px;
 
     background:
-        rgba(5, 12, 10, 0.65);
+        rgba(8, 22, 14, 0.65);
 
     backdrop-filter:
         blur(14px);
@@ -571,7 +595,7 @@ kbd {
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: 12px;
 
-    background: rgba(5, 12, 10, 0.65);
+    background: rgba(8, 22, 14, 0.65);
     backdrop-filter: blur(14px);
 }
 
@@ -986,7 +1010,7 @@ kbd {
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: 12px;
 
-    background: rgba(5, 12, 10, 0.65);
+    background: rgba(8, 22, 14, 0.65);
     backdrop-filter: blur(14px);
 }
 
@@ -999,6 +1023,7 @@ kbd {
 
 
 .stat-value {
+    font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
     font-size: 16px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -1075,7 +1100,7 @@ kbd {
     display: flex;
     flex-direction: column;
 
-    background-color: rgba(5, 12, 10, 0.4);
+    background-color: rgba(8, 22, 14, 0.4);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
     background-repeat: repeat;
     background-size: 140px 140px;
@@ -1244,7 +1269,7 @@ kbd {
     border: 1px dashed rgba(255,255,255,0.20);
     border-radius: 12px;
 
-    background: rgba(5, 12, 10, 0.45);
+    background: rgba(8, 22, 14, 0.45);
     color: rgba(255,255,255,0.45);
 
     font-size: 12px;
@@ -1298,7 +1323,7 @@ kbd {
     border-style: solid;
     border-color: rgba(255,255,255,0.10);
 
-    background: rgba(5, 12, 10, 0.65);
+    background: rgba(8, 22, 14, 0.65);
     backdrop-filter: blur(14px);
 
     color: rgba(255,255,255,0.85);
@@ -1527,7 +1552,7 @@ kbd {
     padding: 10px;
 
     border-radius: 8px;
-    background: rgba(5, 12, 10, 0.6);
+    background: rgba(8, 22, 14, 0.6);
 }
 
 .mini3d-generating[hidden] {
@@ -1579,7 +1604,7 @@ kbd {
     overscroll-behavior: contain;
     padding-right: 4px;
 
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
     font-size: 10px;
     line-height: 1.5;
     color: rgba(152, 255, 180, 0.75);
@@ -1612,7 +1637,7 @@ kbd {
 
     border-style: solid;
     border-color: rgba(255,255,255,0.10);
-    background: rgba(5, 12, 10, 0.65);
+    background: rgba(8, 22, 14, 0.65);
 
     overflow: hidden;
 }
@@ -1634,7 +1659,7 @@ kbd {
 /* Native Fullscreen API — exiting restores the grid exactly as it was,
    since the page layout underneath is never touched. */
 .final-demo-box:fullscreen {
-    background: #07100d;
+    background: #08160e;
 }
 
 .final-demo-fullscreen-toggle {
@@ -1652,7 +1677,7 @@ kbd {
     border: 1px solid rgba(255,255,255,0.16);
     border-radius: 6px;
 
-    background: rgba(5, 12, 10, 0.7);
+    background: rgba(8, 22, 14, 0.7);
     color: rgba(255,255,255,0.75);
 
     font-size: 13px;
@@ -1687,6 +1712,7 @@ kbd {
 }
 
 .generating-percent {
+    font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
     font-size: 22px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -1741,7 +1767,7 @@ kbd {
     align-items: center;
     justify-content: center;
 
-    background: rgba(5, 12, 10, 0.78);
+    background: rgba(8, 22, 14, 0.78);
 }
 
 .final-demo-generating[hidden] {

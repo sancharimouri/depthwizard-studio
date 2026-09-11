@@ -595,7 +595,7 @@ function renderGeocodeDetails(result) {
 
     geocodeDetails.innerHTML = `
         <div class="geocode-detail-row"><span>Place</span><span>${result.display_name}</span></div>
-        <div class="geocode-detail-row"><span>Lat, Lng</span><span>${Number(result.lat).toFixed(4)}, ${Number(result.lon).toFixed(4)}</span></div>
+        <div class="geocode-detail-row"><span>Lat, Lng</span><span class="numeric-mono">${Number(result.lat).toFixed(4)}, ${Number(result.lon).toFixed(4)}</span></div>
         <div class="geocode-detail-row"><span>Region</span><span>${regionCountry}</span></div>
     `;
     geocodeDetails.hidden = false;
@@ -745,9 +745,15 @@ function openSceneSearchModal() {
         sceneSearchButton.textContent = "SEARCH";
     }
     if (sceneSearchLocationReadout && selectedGeocodeResult) {
-        sceneSearchLocationReadout.textContent =
-            `📍 ${selectedGeocodeResult.display_name} · ` +
+        const coords = document.createElement("span");
+        coords.className = "numeric-mono";
+        coords.textContent =
             `${Number(selectedGeocodeResult.lat).toFixed(4)}, ${Number(selectedGeocodeResult.lon).toFixed(4)}`;
+
+        sceneSearchLocationReadout.replaceChildren(
+            `📍 ${selectedGeocodeResult.display_name} · `,
+            coords
+        );
     }
 }
 
