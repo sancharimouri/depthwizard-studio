@@ -537,175 +537,108 @@
 
             </div>
 
-            <div class="workbench-right">
+            <div class="workbench-col workbench-col-depth">
 
                 <div
-                    id="pipeline-box"
-                    class="workbench-box workbench-pipeline"
+                    id="depth-preview-box"
+                    class="workbench-box preview-box"
                 >
+                    <div class="panel-title">RELATIVE DEPTH</div>
 
-                    <div class="panel-title">RECONSTRUCTION PIPELINE</div>
-
-                    <div class="pipeline-subnote">
-                        Proposed architecture — a future direction, not what
-                        currently runs. Today's demo visualizes a real DSM
-                        directly (see the pipeline log on Explore).
-                    </div>
-
-                    <div
-                        id="pipeline-caption"
-                        class="pipeline-caption"
-                    >
-                        Hover or focus a stage for details.
-                    </div>
+                    <img
+                        class="preview-image"
+                        src="/data/darjeeling/relative_depth.png"
+                        alt="Darjeeling relative depth map"
+                    />
 
                     <div
-                        id="pipeline-diagram"
-                        class="pipeline-diagram"
-                    >
+                        class="staged-caption"
+                        data-lines='["Depth Anything V2 (ViT-Large)","Frozen weights · 1.17s inference"]'
+                    ></div>
+                </div>
 
-                        <svg
-                            id="pipeline-connectors"
-                            class="pipeline-connectors"
-                        >
-                            <defs>
-                                <marker
-                                    id="pipeline-arrow"
-                                    viewBox="0 0 10 10"
-                                    refX="8"
-                                    refY="5"
-                                    markerWidth="6"
-                                    markerHeight="6"
-                                    orient="auto-start-reverse"
-                                >
-                                    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.45)" />
-                                </marker>
-                                <marker
-                                    id="pipeline-arrow-aux"
-                                    viewBox="0 0 10 10"
-                                    refX="8"
-                                    refY="5"
-                                    markerWidth="6"
-                                    markerHeight="6"
-                                    orient="auto-start-reverse"
-                                >
-                                    <path d="M0,0 L10,5 L0,10 z" fill="rgba(98,217,139,0.65)" />
-                                </marker>
-                            </defs>
-                        </svg>
+                <div
+                    id="elevation-preview-box"
+                    class="workbench-box preview-box"
+                >
+                    <div class="panel-title">ELEVATION</div>
 
-                        <button
-                            type="button"
-                            class="pipeline-node pn-input"
-                            data-desc="Sentinel-2 · 10 m, 3-band RGB tile for the selected region."
-                        >
-                            <span class="pipeline-node-num">1</span>
-                            <span>Sentinel-2 RGB Input</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-preprocess"
-                            data-desc="Reprojects and aligns the tile to a common grid before inference."
-                        >
-                            <span class="pipeline-node-num">2</span>
-                            <span>Preprocess &amp; Geo-Register</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-dav2"
-                            data-desc="Depth Anything V2's relative-depth output — a shape cue, not absolute elevation on its own."
-                        >
-                            <span class="pipeline-node-num">3A</span>
-                            <span>DAv2 Relative-Depth Prior</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-dem"
-                            data-desc="OpenTopography / Copernicus GLO-30 DEM for the same footprint, providing ground elevation."
-                        >
-                            <span class="pipeline-node-num">3B</span>
-                            <span>Terrain Reference (DEM)</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-anchors"
-                            data-desc="Sparse ICESat-2 ground-truth points, where track coverage exists, anchoring absolute scale."
-                        >
-                            <span class="pipeline-node-num">3C</span>
-                            <span>Sparse ICESat-2 Anchors</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-fusion"
-                            data-desc="Trainable fusion network (RDAH-Net / Prior2DSM-style) — the untrained piece of this pipeline; see the research log for why."
-                        >
-                            <span class="pipeline-node-num">4</span>
-                            <span>Correction / Fusion Head</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-ndsm"
-                            data-desc="Predicted height-above-ground — still relative until combined with terrain."
-                        >
-                            <span class="pipeline-node-num">5</span>
-                            <span>Predicted nDSM</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-combine"
-                            data-desc="nDSM + DEM = absolute surface height."
-                        >
-                            <span class="pipeline-node-num">6</span>
-                            <span>+ Terrain DEM</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-calibrate"
-                            data-desc="Detrends and corrects bias — the step that would need to fix the correlation flip seen on Darjeeling."
-                        >
-                            <span class="pipeline-node-num">7</span>
-                            <span>Calibration / Spatial Correction</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-finaldsm"
-                            data-desc="Absolute-elevation digital surface model, ready for visualization."
-                        >
-                            <span class="pipeline-node-num">8</span>
-                            <span>Final Metric DSM</span>
-                        </button>
-
-                        <button
-                            type="button"
-                            class="pipeline-node pn-validate"
-                            data-desc="Flags failure modes — checkerboard artifacts, correlation flips — before they reach the viewer."
-                        >
-                            <span class="pipeline-node-num">9</span>
-                            <span>Validation / Failure Detector</span>
-                        </button>
-
-                    </div>
-
-                    <div class="pipeline-final-label">
-                        → 3D VISUALIZATION
-                    </div>
+                    <img
+                        class="preview-image"
+                        src="/data/darjeeling/elevation.png"
+                        alt="Darjeeling elevation map"
+                    />
 
                     <div
-                        id="viewer-box"
-                        class="workbench-box workbench-viewer"
-                    >
-                        3D Viewer
-                    </div>
+                        class="staged-caption"
+                        data-lines='["Proposed: terrain DEM + RDAH / Prior2DSM-style correction head","+ sparse ICESat-2 anchors — not yet trained, see Explore’s pipeline log"]'
+                    ></div>
+                </div>
 
+            </div>
+
+            <div class="workbench-col workbench-col-3d">
+
+                <div
+                    id="dsm-3d-box"
+                    class="workbench-box mini-3d-box"
+                >
+                    <div class="panel-title">DSM</div>
+
+                    <canvas
+                        id="dsm-3d-canvas"
+                        class="mini-3d-canvas"
+                    ></canvas>
+
+                    <div
+                        class="staged-caption"
+                        data-lines='["361×325 vertex grid · 10 m resolution","Elevation 557–2478 m (OpenTopography DSM)"]'
+                    ></div>
+                </div>
+
+                <div
+                    id="metric-elevation-3d-box"
+                    class="workbench-box mini-3d-box"
+                >
+                    <div class="panel-title">METRIC ELEVATION</div>
+
+                    <canvas
+                        id="metric-elevation-3d-canvas"
+                        class="mini-3d-canvas"
+                    ></canvas>
+
+                    <div
+                        class="staged-caption"
+                        data-lines='["Spatial-trend validation (Darjeeling)","Correlation +0.60 → −0.41 after detrending"]'
+                    ></div>
+                </div>
+
+            </div>
+
+            <div class="workbench-col workbench-col-logs">
+
+                <div
+                    id="calc-logs-box"
+                    class="workbench-box calc-logs-box"
+                >
+                    <div class="panel-title">CALCULATION LOGS</div>
+
+                    <div
+                        id="calc-log-scroll"
+                        class="calc-log-scroll"
+                    ></div>
+                </div>
+
+                <div
+                    id="final-demo-box"
+                    class="workbench-box final-demo-box"
+                >
+                    <div
+                        id="final-demo-mount"
+                        class="final-demo-mount"
+                    >
+                        3D VIEWER MOUNTS HERE
+                    </div>
                 </div>
 
             </div>
