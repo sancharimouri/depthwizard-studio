@@ -1318,6 +1318,46 @@ async function runFinalDemoReconstruction() {
     }, 800);
 }
 
+// ============================================================
+// WORKBENCH THEME TOGGLE (light/dark — Workbench only, Explore and the
+// shared page-nav rail are untouched since they never receive a
+// [data-theme] attribute). Every color in styles.css reads from the
+// custom properties #page-2[data-theme="light"] overrides, so flipping
+// this one attribute repaints the whole page; the only piece CSS can't
+// reach is the Final Demo viewer's THREE.js scene background (UI
+// chrome, not imagery), updated here via viewer.setBackground().
+// ============================================================
+
+const WORKBENCH_THEME_BG_HEX = {
+    dark: 0x08160e,
+    light: 0xf4e9d2,
+};
+
+let workbenchTheme = "dark";
+
+function applyWorkbenchTheme(theme) {
+    workbenchTheme = theme;
+
+    const page2 = document.getElementById("page-2");
+    if (page2) {
+        page2.dataset.theme = theme;
+    }
+
+    const toggle = document.getElementById("workbench-theme-toggle");
+    if (toggle) {
+        const isLight = theme === "light";
+        toggle.setAttribute("aria-checked", String(isLight));
+        toggle.setAttribute("aria-label", `Switch Workbench to ${isLight ? "dark" : "light"} mode`);
+        toggle.title = `Switch to ${isLight ? "dark" : "light"} mode`;
+    }
+
+    finalDemoViewer?.setBackground(WORKBENCH_THEME_BG_HEX[theme]);
+}
+
+document.getElementById("workbench-theme-toggle")?.addEventListener("click", () => {
+    applyWorkbenchTheme(workbenchTheme === "dark" ? "light" : "dark");
+});
+
 // Creates the viewer, wires every control, and loads Darjeeling. Returns
 // the loadFinalDemoRegion() promise so callers can await real asset load
 // alongside the box's minimum "generating" duration.
@@ -1333,7 +1373,10 @@ function initFinalDemoViewer() {
         return Promise.resolve();
     }
 
-    finalDemoViewer = createTerrainViewer(canvas, { rigOffsetY: 0 });
+    finalDemoViewer = createTerrainViewer(canvas, {
+        rigOffsetY: 0,
+        backgroundColor: WORKBENCH_THEME_BG_HEX[workbenchTheme],
+    });
 
     finalDemoFlythrough = createFlythroughController({
         camera: finalDemoViewer.camera,
