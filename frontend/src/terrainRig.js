@@ -133,7 +133,18 @@ export function createTerrainRig(domElement, baseYaw = 0) {
         event.stopImmediatePropagation();
 
         yaw -= event.deltaX * WHEEL_YAW_SENSITIVITY;
-        pitch = THREE.MathUtils.clamp(pitch + event.deltaY * WHEEL_PITCH_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT);
+        // Negated relative to drag's `pitch + dy`, same as yaw above is
+        // negated relative to drag's `yaw += dx` — a trackpad's reported
+        // deltaY for a given physical two-finger swipe is the opposite
+        // sign of what an equal-magnitude pointer drag's dy would be, so
+        // the mapping has to invert here to keep the *visual* rotation
+        // consistent between dragging and scrolling. Confirmed by
+        // dispatching equal-magnitude synthetic drags and wheel scrolls
+        // and reading the rig's actual rotation before/after: scroll and
+        // drag now produce the same-sign rotation for the same physical
+        // gesture direction (previously they matched on raw sign instead,
+        // which is what made this read as inverted).
+        pitch = THREE.MathUtils.clamp(pitch - event.deltaY * WHEEL_PITCH_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT);
 
         applyRotation();
     }
