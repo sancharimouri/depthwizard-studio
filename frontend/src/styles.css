@@ -1209,12 +1209,11 @@ kbd {
     height: 100%;
 
     display: grid;
-    /* Column 1 (Scene Input / Preview) is locked to a fixed share of
-       the grid's own width — independent of columns 2-4, which just
-       split whatever remains evenly — so it stays a stable ~30-33% of
-       the full page width (grid width + the nav rail's reserved 80px)
-       regardless of what those columns render. */
-    grid-template-columns: minmax(300px, 34%) repeat(3, 1fr);
+    /* All 4 columns split the grid width evenly, so every box (except
+       the logs/final-demo pair's intentional 1.6:1 split below) reads
+       as roughly square rather than column 1 running wide and columns
+       2-4 running tall/thin. */
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
 
     padding: 24px 24px 24px 80px;
@@ -1310,10 +1309,137 @@ kbd {
     color: rgba(255,255,255,0.5);
 }
 
-.scene-search-trigger {
+/* Box 1 (Scene Input) needs room for the location field, its live
+   autocomplete dropdown, resolved-place details, and two action
+   buttons — more than reliably fits the grid's roughly-square cell, so
+   this box alone scrolls its own overflow instead of clipping it. */
+.workbench-box.scene-input-box {
+    overflow-y: auto;
+}
+
+.geocode-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.geocode-dropdown {
+    display: flex;
+    flex-direction: column;
+
+    max-height: 150px;
+    overflow-y: auto;
+
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 8px;
+
+    background: rgba(8, 18, 14, 0.96);
+}
+
+.geocode-dropdown[hidden] {
+    display: none;
+}
+
+.geocode-result {
+    padding: 8px 10px;
+
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.geocode-result:last-child {
+    border-bottom: none;
+}
+
+.geocode-result:hover {
+    background: rgba(98,217,139,0.10);
+    color: white;
+}
+
+.geocode-status {
+    padding: 8px 10px;
+
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.45);
+}
+
+.geocode-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    padding: 8px 10px;
+
+    border: 1px solid rgba(98,217,139,0.25);
+    border-radius: 8px;
+
+    background: rgba(98,217,139,0.06);
+}
+
+.geocode-details[hidden] {
+    display: none;
+}
+
+.geocode-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+
+    font-size: 10.5px;
+    line-height: 1.4;
+}
+
+.geocode-detail-row span:first-child {
+    flex-shrink: 0;
+
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+}
+
+.geocode-detail-row span:last-child {
+    color: rgba(255,255,255,0.85);
+    text-align: right;
+}
+
+.scene-input-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.scene-input-actions .secondary-button {
+    flex: 1;
+    text-align: center;
+}
+
+.start-generation-button {
     width: 100%;
     margin-top: auto;
     text-align: center;
+}
+
+.scene-search-location-readout {
+    padding: 8px 10px;
+
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 8px;
+
+    background: rgba(255,255,255,0.03);
+
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.7);
 }
 
 .preview-empty {

@@ -412,58 +412,6 @@
         </div>
 
 
-        <!-- Upload modal (mock flow) -->
-
-        <div
-            id="upload-modal"
-            class="upload-modal"
-            hidden
-        >
-
-            <div
-                id="upload-backdrop"
-                class="upload-backdrop"
-            ></div>
-
-            <div class="upload-panel">
-
-                <div class="panel-title">
-                    UPLOAD SATELLITE IMAGE
-                </div>
-
-                <label
-                    id="upload-dropzone"
-                    class="upload-dropzone"
-                    for="upload-input"
-                >
-                    <div class="upload-dropzone-glyph">⇧</div>
-                    <div class="upload-dropzone-text">
-                        Drop an image, or click to browse
-                    </div>
-                    <input
-                        id="upload-input"
-                        type="file"
-                        accept="image/*"
-                        hidden
-                    />
-                </label>
-
-                <div class="upload-note">
-                    Prototype flow — any image resolves to the selected region's demo reconstruction below.
-                </div>
-
-                <button
-                    id="upload-cancel"
-                    class="upload-cancel"
-                >
-                    CANCEL
-                </button>
-
-            </div>
-
-        </div>
-
-
     </main>
 
     </div>
@@ -487,15 +435,61 @@
                     <div class="panel-title">SCENE INPUT</div>
 
                     <div class="scene-input-hint">
-                        Search a location, area of interest, and date range
-                        for a Sentinel-2 scene to reconstruct.
+                        Search a location, then a Sentinel-2 scene to
+                        reconstruct — or upload an image directly.
+                    </div>
+
+                    <div class="geocode-field">
+
+                        <span class="scene-field-label">Location</span>
+
+                        <input
+                            id="geocode-location-input"
+                            type="text"
+                            class="scene-input"
+                            placeholder="Search a place name…"
+                            autocomplete="off"
+                        />
+
+                        <div
+                            id="geocode-dropdown"
+                            class="geocode-dropdown"
+                            hidden
+                        ></div>
+
+                    </div>
+
+                    <div
+                        id="geocode-details"
+                        class="geocode-details"
+                        hidden
+                    ></div>
+
+                    <div class="scene-input-actions">
+
+                        <button
+                            id="scene-search-trigger"
+                            class="secondary-button scene-search-trigger"
+                            disabled
+                        >
+                            + SEARCH FOR SCENE
+                        </button>
+
+                        <button
+                            id="scene-upload-trigger"
+                            class="secondary-button scene-upload-trigger"
+                        >
+                            + UPLOAD IMAGE
+                        </button>
+
                     </div>
 
                     <button
-                        id="scene-search-trigger"
-                        class="secondary-button scene-search-trigger"
+                        id="start-generation-button"
+                        class="run-reconstruction-button start-generation-button"
+                        disabled
                     >
-                        + SEARCH FOR SCENE
+                        ▶ START GENERATION
                     </button>
 
                 </div>
@@ -545,16 +539,22 @@
                 >
                     <div class="panel-title">RELATIVE DEPTH</div>
 
-                    <img
-                        class="preview-image"
-                        src="/data/darjeeling/relative_depth.png"
-                        alt="Darjeeling relative depth map"
-                    />
+                    <div class="preview-empty">Awaiting generation</div>
 
-                    <div
-                        class="staged-caption"
-                        data-lines='["Depth Anything V2 (ViT-Large)","Frozen weights · 1.17s inference"]'
-                    ></div>
+                    <div class="preview-content" hidden>
+
+                        <img
+                            class="preview-image"
+                            src="/data/darjeeling/relative_depth.png"
+                            alt="Darjeeling relative depth map"
+                        />
+
+                        <div
+                            class="staged-caption"
+                            data-lines='["Depth Anything V2 (ViT-Large)","Frozen weights · 1.17s inference"]'
+                        ></div>
+
+                    </div>
                 </div>
 
                 <div
@@ -563,16 +563,22 @@
                 >
                     <div class="panel-title">ELEVATION</div>
 
-                    <img
-                        class="preview-image"
-                        src="/data/darjeeling/elevation.png"
-                        alt="Darjeeling elevation map"
-                    />
+                    <div class="preview-empty">Awaiting generation</div>
 
-                    <div
-                        class="staged-caption"
-                        data-lines='["Proposed: terrain DEM + RDAH / Prior2DSM-style correction head","+ sparse ICESat-2 anchors — not yet trained, see Explore’s pipeline log"]'
-                    ></div>
+                    <div class="preview-content" hidden>
+
+                        <img
+                            class="preview-image"
+                            src="/data/darjeeling/elevation.png"
+                            alt="Darjeeling elevation map"
+                        />
+
+                        <div
+                            class="staged-caption"
+                            data-lines='["Proposed: terrain DEM + RDAH / Prior2DSM-style correction head","+ sparse ICESat-2 anchors — not yet trained, see Explore’s pipeline log"]'
+                        ></div>
+
+                    </div>
                 </div>
 
             </div>
@@ -673,16 +679,10 @@
 
                 <div class="scene-search-form">
 
-                    <label class="scene-field">
-                        <span class="scene-field-label">Location</span>
-                        <input
-                            id="scene-location"
-                            type="text"
-                            class="scene-input"
-                            placeholder="Place name or lat, lng"
-                            value="Darjeeling, India"
-                        />
-                    </label>
+                    <div
+                        id="scene-search-location-readout"
+                        class="scene-search-location-readout"
+                    ></div>
 
                     <label class="scene-field">
                         <span class="scene-field-label">Area of Interest</span>
@@ -764,6 +764,59 @@
 
                 <button
                     id="scene-search-cancel"
+                    class="upload-cancel"
+                >
+                    CANCEL
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Direct upload modal (Workbench "Scene Input" mock flow) -->
+
+        <div
+            id="scene-upload-modal"
+            class="upload-modal"
+            hidden
+        >
+
+            <div
+                id="scene-upload-backdrop"
+                class="upload-backdrop"
+            ></div>
+
+            <div class="upload-panel">
+
+                <div class="panel-title">
+                    UPLOAD SATELLITE IMAGE
+                </div>
+
+                <label
+                    id="scene-upload-dropzone"
+                    class="upload-dropzone"
+                    for="scene-upload-input"
+                >
+                    <div class="upload-dropzone-glyph">⇧</div>
+                    <div class="upload-dropzone-text">
+                        Drop an image, or click to browse
+                    </div>
+                    <input
+                        id="scene-upload-input"
+                        type="file"
+                        accept="image/*"
+                        hidden
+                    />
+                </label>
+
+                <div class="upload-note">
+                    Prototype flow — any image becomes the scene preview
+                    below, standing in for a live upload pipeline.
+                </div>
+
+                <button
+                    id="scene-upload-cancel"
                     class="upload-cancel"
                 >
                     CANCEL

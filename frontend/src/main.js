@@ -427,71 +427,227 @@ floodButton?.addEventListener("click", () => {
 
 
 // ============================================================
-// MOCK UPLOAD FLOW
+// WORKBENCH — DIRECT UPLOAD (Scene Input box 1, alternative to scene
+// search). Was previously wired to a "upload-trigger" button that got
+// deleted from Page 1's markup in an earlier cleanup, leaving this
+// modal/logic as dead code with nothing to open it — rebuilt here as
+// Workbench's actual upload entry point instead.
 // ============================================================
 
-const uploadTrigger = document.getElementById("upload-trigger");
-const uploadModal = document.getElementById("upload-modal");
-const uploadBackdrop = document.getElementById("upload-backdrop");
-const uploadCancel = document.getElementById("upload-cancel");
-const uploadDropzone = document.getElementById("upload-dropzone");
-const uploadInput = document.getElementById("upload-input");
+const sceneUploadTrigger = document.getElementById("scene-upload-trigger");
+const sceneUploadModal = document.getElementById("scene-upload-modal");
+const sceneUploadBackdrop = document.getElementById("scene-upload-backdrop");
+const sceneUploadCancel = document.getElementById("scene-upload-cancel");
+const sceneUploadDropzone = document.getElementById("scene-upload-dropzone");
+const sceneUploadInput = document.getElementById("scene-upload-input");
 
-function openUploadModal() {
-    if (uploadModal) {
-        uploadModal.hidden = false;
+function openSceneUploadModal() {
+    if (sceneUploadModal) {
+        sceneUploadModal.hidden = false;
     }
 }
 
-function closeUploadModal() {
-    if (uploadModal) {
-        uploadModal.hidden = true;
+function closeSceneUploadModal() {
+    if (sceneUploadModal) {
+        sceneUploadModal.hidden = true;
     }
-    uploadDropzone?.classList.remove("drag-over");
+    sceneUploadDropzone?.classList.remove("drag-over");
 }
 
-async function handleUploadedFile(file) {
+function handleUploadedFile(file) {
     if (!file) {
         return;
     }
 
-    closeUploadModal();
-
-    await runReconstruction();
+    closeSceneUploadModal();
+    selectUploadedScene(file);
 }
 
-uploadTrigger?.addEventListener("click", openUploadModal);
-uploadCancel?.addEventListener("click", closeUploadModal);
-uploadBackdrop?.addEventListener("click", closeUploadModal);
+sceneUploadTrigger?.addEventListener("click", openSceneUploadModal);
+sceneUploadCancel?.addEventListener("click", closeSceneUploadModal);
+sceneUploadBackdrop?.addEventListener("click", closeSceneUploadModal);
 
-uploadInput?.addEventListener("change", () => {
-    handleUploadedFile(uploadInput.files?.[0]);
+sceneUploadInput?.addEventListener("change", () => {
+    handleUploadedFile(sceneUploadInput.files?.[0]);
 });
 
-uploadDropzone?.addEventListener("dragover", event => {
+sceneUploadDropzone?.addEventListener("dragover", event => {
     event.preventDefault();
-    uploadDropzone.classList.add("drag-over");
+    sceneUploadDropzone.classList.add("drag-over");
 });
 
-uploadDropzone?.addEventListener("dragleave", () => {
-    uploadDropzone.classList.remove("drag-over");
+sceneUploadDropzone?.addEventListener("dragleave", () => {
+    sceneUploadDropzone.classList.remove("drag-over");
 });
 
-uploadDropzone?.addEventListener("drop", event => {
+sceneUploadDropzone?.addEventListener("drop", event => {
     event.preventDefault();
-    uploadDropzone.classList.remove("drag-over");
+    sceneUploadDropzone.classList.remove("drag-over");
     handleUploadedFile(event.dataTransfer?.files?.[0]);
 });
 
 document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && uploadModal && !uploadModal.hidden) {
-        closeUploadModal();
+    if (event.key === "Escape" && sceneUploadModal && !sceneUploadModal.hidden) {
+        closeSceneUploadModal();
     }
 });
 
 
 // ============================================================
-// MOCK SCENE SEARCH (Workbench "Scene Input" prototype flow)
+// LIVE LOCATION AUTOCOMPLETE (OpenStreetMap Nominatim, no API key)
+// ============================================================
+
+const GEOCODE_DEBOUNCE_MS = 400;
+const GEOCODE_MIN_QUERY_LENGTH = 3;
+
+const geocodeInput = document.getElementById("geocode-location-input");
+const geocodeDropdown = document.getElementById("geocode-dropdown");
+const geocodeDetails = document.getElementById("geocode-details");
+
+let selectedGeocodeResult = null;
+let geocodeDebounceTimer = null;
+let geocodeRequestId = 0;
+
+async function queryNominatim(query) {
+    const url =
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&q=` +
+        encodeURIComponent(query);
+
+    const response = await fetch(url, {
+        headers: { "Accept": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Nominatim request failed: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+function renderGeocodeStatus(text) {
+    if (!geocodeDropdown) {
+        return;
+    }
+    geocodeDropdown.innerHTML = `<div class="geocode-status">${text}</div>`;
+    geocodeDropdown.hidden = false;
+}
+
+function renderGeocodeResults(results) {
+    if (!geocodeDropdown) {
+        return;
+    }
+
+    if (!results || results.length === 0) {
+        renderGeocodeStatus("No matches");
+        return;
+    }
+
+    geocodeDropdown.innerHTML = "";
+
+    results.forEach(result => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "geocode-result";
+        item.textContent = result.display_name;
+        item.addEventListener("click", () => selectGeocodeResult(result));
+        geocodeDropdown.appendChild(item);
+    });
+
+    geocodeDropdown.hidden = false;
+}
+
+function renderGeocodeDetails(result) {
+    if (!geocodeDetails) {
+        return;
+    }
+
+    const address = result.address ?? {};
+    const region = address.state || address.region || address.county || "";
+    const regionCountry = [region, address.country].filter(Boolean).join(", ") || "—";
+
+    geocodeDetails.innerHTML = `
+        <div class="geocode-detail-row"><span>Place</span><span>${result.display_name}</span></div>
+        <div class="geocode-detail-row"><span>Lat, Lng</span><span>${Number(result.lat).toFixed(4)}, ${Number(result.lon).toFixed(4)}</span></div>
+        <div class="geocode-detail-row"><span>Region</span><span>${regionCountry}</span></div>
+    `;
+    geocodeDetails.hidden = false;
+}
+
+function selectGeocodeResult(result) {
+    selectedGeocodeResult = result;
+
+    if (geocodeInput) {
+        geocodeInput.value = result.display_name;
+    }
+    if (geocodeDropdown) {
+        geocodeDropdown.hidden = true;
+        geocodeDropdown.innerHTML = "";
+    }
+
+    renderGeocodeDetails(result);
+
+    if (sceneSearchTrigger) {
+        sceneSearchTrigger.disabled = false;
+    }
+}
+
+geocodeInput?.addEventListener("input", () => {
+    const query = geocodeInput.value.trim();
+    const requestId = ++geocodeRequestId;
+
+    selectedGeocodeResult = null;
+    if (geocodeDetails) {
+        geocodeDetails.hidden = true;
+    }
+    if (sceneSearchTrigger) {
+        sceneSearchTrigger.disabled = true;
+    }
+
+    if (geocodeDebounceTimer) {
+        clearTimeout(geocodeDebounceTimer);
+    }
+
+    if (query.length < GEOCODE_MIN_QUERY_LENGTH) {
+        if (geocodeDropdown) {
+            geocodeDropdown.hidden = true;
+        }
+        return;
+    }
+
+    geocodeDebounceTimer = setTimeout(async () => {
+        renderGeocodeStatus("Searching…");
+
+        try {
+            const results = await queryNominatim(query);
+            if (requestId !== geocodeRequestId) {
+                return; // a newer keystroke has already superseded this lookup
+            }
+            renderGeocodeResults(results);
+        } catch (error) {
+            if (requestId !== geocodeRequestId) {
+                return;
+            }
+            console.error("Nominatim lookup failed:", error);
+            renderGeocodeStatus("Lookup failed — try again");
+        }
+    }, GEOCODE_DEBOUNCE_MS);
+});
+
+document.addEventListener("click", event => {
+    if (
+        geocodeDropdown && !geocodeDropdown.hidden &&
+        event.target !== geocodeInput && !geocodeDropdown.contains(event.target)
+    ) {
+        geocodeDropdown.hidden = true;
+    }
+});
+
+
+// ============================================================
+// MOCK SCENE SEARCH (Workbench "Scene Input" prototype flow) —
+// AOI / date range / cloud cover stay mocked (no live Copernicus STAC
+// query yet, that needs OAuth credentials this project doesn't have),
+// but now searches around the real coordinates resolved above.
 // ============================================================
 
 const MOCK_SCENES = [
@@ -516,11 +672,23 @@ const sceneSearchCancel = document.getElementById("scene-search-cancel");
 const sceneSearchButton = document.getElementById("scene-search-button");
 const sceneSearchStatus = document.getElementById("scene-search-status");
 const sceneSearchResults = document.getElementById("scene-search-results");
+const sceneSearchLocationReadout = document.getElementById("scene-search-location-readout");
 
 const previewEmpty = document.getElementById("preview-empty");
 const previewContent = document.getElementById("preview-content");
 const previewImage = document.getElementById("preview-image");
 const previewMeta = document.getElementById("preview-meta");
+
+const startGenerationButton = document.getElementById("start-generation-button");
+
+let sceneSelected = false;
+
+function markSceneSelected() {
+    sceneSelected = true;
+    if (startGenerationButton) {
+        startGenerationButton.disabled = false;
+    }
+}
 
 function openSceneSearchModal() {
     if (sceneSearchModal) {
@@ -536,6 +704,11 @@ function openSceneSearchModal() {
     if (sceneSearchButton) {
         sceneSearchButton.disabled = false;
         sceneSearchButton.textContent = "SEARCH";
+    }
+    if (sceneSearchLocationReadout && selectedGeocodeResult) {
+        sceneSearchLocationReadout.textContent =
+            `📍 ${selectedGeocodeResult.display_name} · ` +
+            `${Number(selectedGeocodeResult.lat).toFixed(4)}, ${Number(selectedGeocodeResult.lon).toFixed(4)}`;
     }
 }
 
@@ -561,7 +734,28 @@ function selectScene(scene) {
         previewContent.hidden = false;
     }
 
+    markSceneSelected();
     closeSceneSearchModal();
+}
+
+function selectUploadedScene(file) {
+    const objectUrl = URL.createObjectURL(file);
+
+    if (previewImage) {
+        previewImage.src = objectUrl;
+    }
+    if (previewMeta) {
+        previewMeta.textContent =
+            `${file.name} · uploaded directly · prototype pick, not a live reconstruction`;
+    }
+    if (previewEmpty) {
+        previewEmpty.hidden = true;
+    }
+    if (previewContent) {
+        previewContent.hidden = false;
+    }
+
+    markSceneSelected();
 }
 
 function renderSceneResults(scenes) {
@@ -598,8 +792,13 @@ async function runSceneSearch() {
     }
     if (sceneSearchStatus) {
         sceneSearchStatus.hidden = false;
+
+        const center = selectedGeocodeResult
+            ? `${Number(selectedGeocodeResult.lat).toFixed(4)}, ${Number(selectedGeocodeResult.lon).toFixed(4)}`
+            : "the selected location";
+
         sceneSearchStatus.innerHTML =
-            `<span class="scene-search-spinner"></span> Querying Copernicus STAC (mock)…`;
+            `<span class="scene-search-spinner"></span> Querying Copernicus STAC near ${center} (mock)…`;
     }
 
     await sleep(1100);
@@ -624,6 +823,13 @@ document.addEventListener("keydown", event => {
     if (event.key === "Escape" && sceneSearchModal && !sceneSearchModal.hidden) {
         closeSceneSearchModal();
     }
+});
+
+// Placeholder — enabled once a scene is selected via search or upload.
+// Intentionally a no-op for now; wiring it to actually run the box 2-8
+// reconstruction sequence is next-prompt scope.
+startGenerationButton?.addEventListener("click", () => {
+    console.log("START GENERATION clicked — pipeline wiring not yet implemented.");
 });
 
 
@@ -962,20 +1168,12 @@ function initWorkbenchGrid() {
     }
     workbenchGridInitialized = true;
 
+    // Only the box chrome fades in on arrival — boxes 2-8's actual content
+    // (captions, calc log, mini 3D previews, Final Demo viewer) stays idle
+    // until START GENERATION drives it. That wiring is next-prompt scope;
+    // revealAllStagedCaptions() / runCalcLog() / initFinalDemoViewer() /
+    // createMiniPreview() below are left defined for it to call.
     staggerGridEntrance();
-    revealAllStagedCaptions();
-    runCalcLog();
-    initFinalDemoViewer();
-
-    const dsmCanvas = document.getElementById("dsm-3d-canvas");
-    const metricCanvas = document.getElementById("metric-elevation-3d-canvas");
-
-    if (dsmCanvas) {
-        createMiniPreview(dsmCanvas, "dsm-3d");
-    }
-    if (metricCanvas) {
-        createMiniPreview(metricCanvas, "elevation-3d");
-    }
 }
 
 
