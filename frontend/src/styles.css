@@ -506,7 +506,8 @@ kbd {
 ============================================================ */
 
 .run-panel,
-.post-run-panel {
+.post-run-panel,
+.always-on-controls {
     display: flex;
     flex-direction: column;
 
