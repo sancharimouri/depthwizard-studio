@@ -16,11 +16,14 @@
 ============================================================ */
 
 :root {
-    /* surfaces, darkest to lightest */
-    --bg-rgb: 8, 22, 14;
-    --bg-alt-rgb: 8, 18, 14;
-    --bg-strong-rgb: 10, 24, 16;
-    --bg-strong-hover-rgb: 18, 42, 27;
+    /* surfaces, darkest to lightest — neutral warm charcoal, not a
+       colored black. Tried #0d0c0b (too close to pure black to read as
+       an intentional softening) and #141210 (started to read as its
+       own "brown" tint) before landing on #110f0e. */
+    --bg-rgb: 17, 15, 14;
+    --bg-alt-rgb: 15, 14, 13;
+    --bg-strong-rgb: 20, 18, 16;
+    --bg-strong-hover-rgb: 36, 31, 26;
 
     /* body/label text and borders derived from it */
     --text-rgb: 255, 255, 255;
@@ -204,6 +207,26 @@ body {
     right: 0;
     bottom: 0;
     left: 56px;
+}
+
+
+/* Soft vignette over both 3D viewers — Explore's main canvas and
+   Workbench's embedded Final Demo box (.final-demo-box is defined
+   further down, sharing this one declaration rather than repeating
+   it). Sits above the bare canvas but below every UI layer (stat
+   panels, controls, the generating overlay), which all use explicit
+   z-index while this — and the canvas itself — stay at the default
+   stacking level, painted in DOM order; pointer-events:none keeps
+   drag/orbit input passing straight through to the canvas below. */
+.viewer::after,
+.final-demo-box::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.4) 100%);
 }
 
 

@@ -19,7 +19,7 @@ export function createTerrainViewer(canvas, options = {}) {
         // Workbench's light/dark toggle is allowed to swap it (via
         // setBackground() below) while Explore's instance never calls
         // that and stays on this dark default.
-        backgroundColor = 0x08160e,
+        backgroundColor = 0x110f0e,
     } = options;
 
     const renderer = new THREE.WebGLRenderer({

@@ -1329,7 +1329,7 @@ async function runFinalDemoReconstruction() {
 // ============================================================
 
 const WORKBENCH_THEME_BG_HEX = {
-    dark: 0x08160e,
+    dark: 0x110f0e,
     light: 0xf4e9d2,
 };
 
