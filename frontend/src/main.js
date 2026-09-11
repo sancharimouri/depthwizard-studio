@@ -1142,6 +1142,12 @@ let finalDemoFloodActive = false;
 let finalDemoFlythrough = null;
 let finalDemoInitialized = false;
 
+// Workbench's Final Demo box stays locked to whatever scene the box 1-7
+// sequence generated — no region switcher, unlike Explore's own viewer.
+// Gated with this flag (rather than a forked copy of initFinalDemoViewer)
+// since the two instances share the same createTerrainViewer component.
+const FINAL_DEMO_REGION_SWITCHER_ENABLED = false;
+
 function updateFinalDemoStats(regionKey, terrain, terrainData) {
     const region = REGIONS[regionKey];
 
@@ -1334,19 +1340,23 @@ function initFinalDemoViewer() {
         button.addEventListener("click", () => { selectFinalDemoLayer(button.dataset.layer); });
     });
 
-    // [data-region] excludes nothing here (no "Build Your Own" card in
-    // this copy), but kept for parity with Explore's own selector.
-    document.querySelectorAll("#final-demo-box .region-card[data-region]").forEach(card => {
-        card.addEventListener("click", async () => {
-            const region = card.dataset.region;
+    if (FINAL_DEMO_REGION_SWITCHER_ENABLED) {
+        // [data-region] excludes nothing here (no "Build Your Own" card in
+        // this copy), but kept for parity with Explore's own selector.
+        document.querySelectorAll("#final-demo-box .region-card[data-region]").forEach(card => {
+            card.addEventListener("click", async () => {
+                const region = card.dataset.region;
 
-            if (finalDemoRunning || region === finalDemoCurrentRegionKey) {
-                return;
-            }
+                if (finalDemoRunning || region === finalDemoCurrentRegionKey) {
+                    return;
+                }
 
-            await loadFinalDemoRegion(region);
+                await loadFinalDemoRegion(region);
+            });
         });
-    });
+    } else {
+        document.querySelector("#final-demo-box .region-panel")?.remove();
+    }
 
     document.getElementById("final-demo-run-button")?.addEventListener("click", runFinalDemoReconstruction);
     document.getElementById("final-demo-run-again-button")?.addEventListener("click", runFinalDemoReconstruction);

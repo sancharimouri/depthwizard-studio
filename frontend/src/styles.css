@@ -1750,14 +1750,17 @@ kbd {
 
 
 /* ============================================================
-   FINAL DEMO — full controls (region rail, stats, layer switching,
-   RUN RECONSTRUCTION, FLYTHROUGH, DANGER ZONES). Reuses Explore's own
-   panel classes (.region-panel, .layer-panel, .run-panel, etc.) for
-   guaranteed visual parity — only these positioning wrappers are new,
-   since Explore's .overlay/.left-rail/.right-rail are position:fixed
-   to the viewport and can't be reused inside a grid cell. Scaled down
-   to fit the grid cell by default; full size once fullscreened, where
-   this box's own bounds equal what Explore's fixed overlays target. */
+   FINAL DEMO — full controls (stats, layer switching, RUN
+   RECONSTRUCTION, FLYTHROUGH, DANGER ZONES). Reuses Explore's own
+   panel classes (.layer-panel, .run-panel, etc.) for guaranteed visual
+   parity — only these positioning wrappers are new, since Explore's
+   .overlay/.left-rail/.right-rail are position:fixed to the viewport
+   and can't be reused inside a grid cell.
+
+   At the box's embedded grid-cell size there isn't room for the full
+   menu, so only the fullscreen-toggle button (.final-demo-fullscreen-
+   toggle, positioned independently, always visible) shows — the rails
+   themselves stay hidden until the box is actually fullscreened. */
 
 .final-demo-controls {
     position: absolute;
@@ -1773,16 +1776,21 @@ kbd {
 
 .final-demo-left-rail,
 .final-demo-right-rail {
+    display: none;
     position: absolute;
     max-height: calc(100% - 20px);
 
-    display: flex;
     flex-direction: column;
     gap: 8px;
 
     overflow-y: auto;
     scrollbar-width: none;
     pointer-events: auto;
+}
+
+.final-demo-box:fullscreen .final-demo-left-rail,
+.final-demo-box:fullscreen .final-demo-right-rail {
+    display: flex;
 }
 
 .final-demo-left-rail::-webkit-scrollbar,
@@ -1793,25 +1801,15 @@ kbd {
 .final-demo-left-rail {
     top: 10px;
     left: 10px;
-    width: 150px;
-
-    transform: scale(0.78);
-    transform-origin: top left;
+    width: 250px;
 }
 
 .final-demo-right-rail {
     /* Clears the fullscreen toggle button, which sits at top:10/right:10
        at a higher z-index regardless of controls visibility. */
-    top: 46px;
-    right: 10px;
-    width: 210px;
-
-    transform: scale(0.68);
-    transform-origin: top right;
-}
-
-.final-demo-box:fullscreen .final-demo-right-rail {
     top: 62px;
+    right: 10px;
+    width: clamp(260px, 24vw, 340px);
 }
 
 /* The controls-hint has nowhere to go without overlapping the right
@@ -1820,16 +1818,6 @@ kbd {
    actually has the room Explore's own version relies on. */
 .final-demo-bottom-right {
     display: none;
-}
-
-.final-demo-box:fullscreen .final-demo-left-rail {
-    width: 250px;
-    transform: none;
-}
-
-.final-demo-box:fullscreen .final-demo-right-rail {
-    width: clamp(260px, 24vw, 340px);
-    transform: none;
 }
 
 .final-demo-box:fullscreen .final-demo-bottom-right {
