@@ -672,26 +672,45 @@ document.addEventListener("click", event => {
 
 
 // ============================================================
-// MOCK SCENE SEARCH (Workbench "Scene Input" prototype flow) —
-// AOI / date range / cloud cover stay mocked (no live Copernicus STAC
-// query yet, that needs OAuth credentials this project doesn't have),
-// but now searches around the real coordinates resolved above.
+// LIVE SCENE SEARCH (Workbench "Scene Input" flow) — queries the real
+// Copernicus Data Space Ecosystem (Sentinel Hub Catalog + Process APIs)
+// through our own backend proxy at backend/main.py, which holds the
+// CDSE client secret server-side. AOI / date range / cloud cover here
+// are real request parameters, not mock knobs.
 // ============================================================
 
-const MOCK_SCENES = [
-    {
-        id: "S2A_MSIL2A_KOLKATA_20251118",
-        thumb: "/data/kolkata/satellite.png",
-        date: "2025-11-18",
-        cloud: 8,
-    },
-    {
-        id: "S2B_MSIL2A_BARDHAMAN_20251103",
-        thumb: "/data/bardhaman/satellite.png",
-        date: "2025-11-03",
-        cloud: 14,
-    },
-];
+const CDSE_SEARCH_URL = "/api/cdse/search";
+const CDSE_PREVIEW_URL = "/api/cdse/preview";
+
+const sceneAoiInput = document.getElementById("scene-aoi");
+const sceneDateFromInput = document.getElementById("scene-date-from");
+const sceneDateToInput = document.getElementById("scene-date-to");
+const sceneCloudInput = document.getElementById("scene-cloud");
+
+// The AOI bbox (WGS84) from the most recent search — reused as the crop
+// extent when requesting a true-color preview for a selected scene.
+let currentSearchAoiBbox = null;
+
+async function postJson(url, body) {
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+        let detail = `HTTP ${response.status}`;
+        try {
+            const errorBody = await response.json();
+            detail = errorBody.detail || detail;
+        } catch {
+            // response wasn't JSON — fall back to the status line
+        }
+        throw new Error(detail);
+    }
+
+    return response;
+}
 
 const sceneSearchTrigger = document.getElementById("scene-search-trigger");
 const sceneSearchModal = document.getElementById("scene-search-modal");
@@ -763,15 +782,53 @@ function closeSceneSearchModal() {
     }
 }
 
-function selectScene(scene) {
-    pendingScenePreview = {
-        src: scene.thumb,
-        meta: `${scene.id} · ${scene.date} · ${scene.cloud}% cloud · prototype pick, not a live STAC query`,
-    };
-    sceneSelectionSummary = { type: "search", geocode: selectedGeocodeResult, scene };
+async function selectScene(scene, cardEl) {
+    if (!currentSearchAoiBbox) {
+        return;
+    }
 
-    markSceneSelected();
-    closeSceneSearchModal();
+    document.querySelectorAll(".scene-result-card").forEach(el => {
+        el.disabled = true;
+    });
+    if (cardEl) {
+        cardEl.classList.add("is-loading");
+    }
+    if (sceneSearchStatus) {
+        sceneSearchStatus.hidden = false;
+        sceneSearchStatus.className = "scene-search-status";
+        sceneSearchStatus.innerHTML =
+            `<span class="scene-search-spinner"></span> Requesting true-color preview from Sentinel Hub Process API…`;
+    }
+
+    try {
+        const response = await postJson(CDSE_PREVIEW_URL, {
+            bbox: currentSearchAoiBbox,
+            date: scene.date,
+        });
+        const blob = await response.blob();
+
+        pendingScenePreview = {
+            src: URL.createObjectURL(blob),
+            meta: `${scene.id} · ${scene.date} · ${scene.cloud}% cloud · live Sentinel-2 L2A (CDSE)`,
+        };
+        sceneSelectionSummary = { type: "search", geocode: selectedGeocodeResult, scene };
+
+        markSceneSelected();
+        closeSceneSearchModal();
+    } catch (error) {
+        console.error("CDSE preview request failed:", error);
+        if (sceneSearchStatus) {
+            sceneSearchStatus.hidden = false;
+            sceneSearchStatus.className = "scene-search-status is-error";
+            sceneSearchStatus.textContent = `Preview failed: ${error.message}`;
+        }
+        document.querySelectorAll(".scene-result-card").forEach(el => {
+            el.disabled = false;
+        });
+        if (cardEl) {
+            cardEl.classList.remove("is-loading");
+        }
+    }
 }
 
 function selectUploadedScene(file) {
@@ -795,13 +852,13 @@ function renderSceneResults(scenes) {
         const card = document.createElement("button");
         card.className = "scene-result-card";
         card.innerHTML = `
-            <img class="scene-result-thumb" src="${scene.thumb}" alt="${scene.id} thumbnail" />
+            <div class="scene-result-thumb scene-result-thumb-placeholder">S2</div>
             <div>
                 <div class="scene-result-name">${scene.id}</div>
                 <div class="scene-result-sub">${scene.date} · ${scene.cloud}% cloud · 10m</div>
             </div>
         `;
-        card.addEventListener("click", () => selectScene(scene));
+        card.addEventListener("click", () => selectScene(scene, card));
         sceneSearchResults.appendChild(card);
     });
 
@@ -809,6 +866,10 @@ function renderSceneResults(scenes) {
 }
 
 async function runSceneSearch() {
+    if (!selectedGeocodeResult) {
+        return;
+    }
+
     if (sceneSearchButton) {
         sceneSearchButton.disabled = true;
         sceneSearchButton.textContent = "SEARCHING…";
@@ -818,26 +879,53 @@ async function runSceneSearch() {
     }
     if (sceneSearchStatus) {
         sceneSearchStatus.hidden = false;
+        sceneSearchStatus.className = "scene-search-status";
 
-        const center = selectedGeocodeResult
-            ? `${Number(selectedGeocodeResult.lat).toFixed(4)}, ${Number(selectedGeocodeResult.lon).toFixed(4)}`
-            : "the selected location";
-
+        const center = `${Number(selectedGeocodeResult.lat).toFixed(4)}, ${Number(selectedGeocodeResult.lon).toFixed(4)}`;
         sceneSearchStatus.innerHTML =
-            `<span class="scene-search-spinner"></span> Querying Copernicus STAC near ${center} (mock)…`;
+            `<span class="scene-search-spinner"></span> Querying Copernicus Data Space Ecosystem near ${center}…`;
     }
 
-    await sleep(1100);
+    try {
+        const response = await postJson(CDSE_SEARCH_URL, {
+            lat: Number(selectedGeocodeResult.lat),
+            lon: Number(selectedGeocodeResult.lon),
+            aoi_km: Number(sceneAoiInput?.value ?? 10),
+            date_from: sceneDateFromInput?.value,
+            date_to: sceneDateToInput?.value,
+            max_cloud: Number(sceneCloudInput?.value ?? 20),
+        });
+        const data = await response.json();
 
-    if (sceneSearchStatus) {
-        sceneSearchStatus.hidden = true;
-    }
-    if (sceneSearchButton) {
-        sceneSearchButton.disabled = false;
-        sceneSearchButton.textContent = "SEARCH";
-    }
+        currentSearchAoiBbox = data.bbox;
 
-    renderSceneResults(MOCK_SCENES);
+        if (sceneSearchStatus) {
+            sceneSearchStatus.hidden = true;
+        }
+
+        if (!data.scenes || data.scenes.length === 0) {
+            if (sceneSearchStatus) {
+                sceneSearchStatus.hidden = false;
+                sceneSearchStatus.className = "scene-search-status is-error";
+                sceneSearchStatus.textContent =
+                    "No Sentinel-2 scenes matched — try a wider date range or higher cloud limit.";
+            }
+        } else {
+            renderSceneResults(data.scenes);
+        }
+    } catch (error) {
+        console.error("CDSE catalog search failed:", error);
+        if (sceneSearchStatus) {
+            sceneSearchStatus.hidden = false;
+            sceneSearchStatus.className = "scene-search-status is-error";
+            sceneSearchStatus.textContent = `Search failed: ${error.message}`;
+        }
+    } finally {
+        if (sceneSearchButton) {
+            sceneSearchButton.disabled = false;
+            sceneSearchButton.textContent = "SEARCH";
+        }
+    }
 }
 
 sceneSearchTrigger?.addEventListener("click", openSceneSearchModal);

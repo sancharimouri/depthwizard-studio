@@ -242,6 +242,7 @@ dependencies = [
 [package.optional-dependencies]
 backend = [
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "python-dotenv" },
     { name = "uvicorn" },
 ]
@@ -272,6 +273,7 @@ training = [
 requires-dist = [
     { name = "albumentations", marker = "extra == 'training'" },
     { name = "fastapi", marker = "extra == 'backend'" },
+    { name = "httpx", marker = "extra == 'backend'" },
     { name = "numpy", marker = "extra == 'ml'" },
     { name = "pillow", marker = "extra == 'ml'" },
     { name = "pyproj", marker = "extra == 'ml'" },
