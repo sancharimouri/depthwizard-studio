@@ -1001,6 +1001,10 @@ kbd {
     display: none;
 }
 
+.scene-search-status.is-error {
+    color: rgba(220, 90, 70, 0.9);
+}
+
 .scene-search-spinner {
     width: 10px;
     height: 10px;
@@ -1058,6 +1062,15 @@ kbd {
     border-color: rgba(var(--accent-rgb),0.35);
 }
 
+.scene-result-card:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.scene-result-card.is-loading {
+    opacity: 0.85;
+}
+
 .scene-result-thumb {
     flex-shrink: 0;
     width: 56px;
@@ -1065,6 +1078,18 @@ kbd {
 
     object-fit: cover;
     border-radius: 6px;
+}
+
+.scene-result-thumb-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(var(--accent-rgb),0.14);
+    color: rgba(var(--accent-rgb),0.9);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
 }
 
 .scene-result-name {

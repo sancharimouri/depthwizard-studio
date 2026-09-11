@@ -9,6 +9,6 @@ dependencies = [
 
 [project.optional-dependencies]
 ml = ["torch","transformers","pillow","numpy","scipy","scikit-learn","rasterio","pyproj"]
-backend = ["fastapi","uvicorn","python-dotenv"]
+backend = ["fastapi","uvicorn","python-dotenv","httpx"]
 training = ["torchvision","albumentations"]
 dev = ["pytest","ruff"]
