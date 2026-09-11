@@ -1,67 +1,18 @@
 import * as THREE from "three";
 import { createTerrain } from "./terrain.js";
-import { createControls } from "./controls.js";
-import { createTerrainRig } from "./terrainRig.js";
+import { createTerrainViewer } from "./viewer.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
-const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
-});
+// Explore's main viewer. Vertical-only rig offset so the structure clears
+// the panels occupying the top of the page — no horizontal offset, kept
+// centered on X so it lines up with controls.target's X, which is also the
+// flythrough's zoom pivot; an X mismatch between the two is what drifted
+// the structure sideways as the flythrough zoomed in.
+const exploreViewer = createTerrainViewer(canvas, { rigOffsetY: -10 });
+exploreViewer.resize(window.innerWidth, window.innerHeight);
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x07100d);
-
-const camera = new THREE.PerspectiveCamera(
-    55,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-);
-
-// No base yaw correction — the earlier "tilt it a few degrees" tweak was
-// actually compensating for the camera's steep default angle, not a mesh
-// orientation problem (see the lowered camera elevation below).
-const BASE_YAW = 0;
-
-// terrainRig's wheel listener must attach to domElement before
-// OrbitControls' own (created next) so it can claim plain two-finger
-// scroll for rotation ahead of OrbitControls treating it as a zoom.
-const terrainRig = createTerrainRig(renderer.domElement, BASE_YAW);
-
-// Vertical-only screen offset so the structure clears the panels occupying
-// the top of the page. No horizontal offset — kept centered on X so it
-// lines up with controls.target's X, which is also the flythrough's zoom
-// pivot; an X mismatch between the two is what drifted the structure
-// sideways as the flythrough zoomed in.
-terrainRig.rig.position.set(0, -10, 0);
-scene.add(terrainRig.rig);
-
-const controls = createControls(
-    camera,
-    renderer.domElement,
-    new THREE.Vector3(0, 12, 0)
-);
-
-const ambient = new THREE.HemisphereLight(
-    0xddebd8,
-    0x172018,
-    2.0
-);
-scene.add(ambient);
-
-const sun = new THREE.DirectionalLight(
-    0xffffff,
-    3.0
-);
-sun.position.set(-40, 100, 50);
-sun.castShadow = true;
-scene.add(sun);
+const { scene, camera, renderer, controls, terrainRig } = exploreViewer;
 
 
 // ============================================================
@@ -150,16 +101,6 @@ let currentTerrain = null;
 let currentRegionKey = null;
 let running = false;
 
-function disposeTerrain(terrain) {
-    if (!terrain) {
-        return;
-    }
-
-    terrainRig.rig.remove(terrain.mesh);
-    terrain.mesh.geometry.dispose();
-    terrain.material.dispose();
-}
-
 function activateLayer(layer) {
     if (!currentTerrain) {
         return;
@@ -220,59 +161,10 @@ function updateStatsAndLabels(regionKey, terrain, terrainData) {
 }
 
 async function loadRegion(regionKey) {
-    console.log(`Loading ${regionKey} terrain...`);
-
-    const terrainResponse = await fetch(`/data/${regionKey}/terrain.json`);
-
-    if (!terrainResponse.ok) {
-        throw new Error(`Failed to load terrain: ${terrainResponse.status}`);
-    }
-
-    const terrainData = await terrainResponse.json();
-
-
-    // --------------------------------------------------------
-    // Load visual layers
-    // --------------------------------------------------------
-
-    const textureLoader = new THREE.TextureLoader();
-
-    const satelliteTexture = await textureLoader.loadAsync(`/data/${regionKey}/satellite.png`);
-    const depthTexture = await textureLoader.loadAsync(`/data/${regionKey}/relative_depth.png`);
-    const elevationTexture = await textureLoader.loadAsync(`/data/${regionKey}/elevation.png`);
-
-
-    // --------------------------------------------------------
-    // Swap in the new terrain
-    // --------------------------------------------------------
-
-    disposeTerrain(currentTerrain);
-
-    const terrain = createTerrain(
-        terrainRig.rig,
-        regionKey,
-        terrainData,
-        satelliteTexture,
-        depthTexture,
-        elevationTexture
-    );
+    const { terrain, terrainData } = await exploreViewer.loadRegion(regionKey);
 
     currentTerrain = terrain;
     currentRegionKey = regionKey;
-
-    console.log("Terrain created:", terrain);
-
-
-    // --------------------------------------------------------
-    // Camera
-    // --------------------------------------------------------
-
-    // ~18 degrees above the horizon (was ~34 degrees / a steep bird's-eye
-    // angle) — same viewing distance, just lower and more oblique.
-    camera.position.set(0, 58, 143);
-    controls.target.set(0, 12, 0);
-    controls.update();
-    terrainRig.reset();
 
 
     // --------------------------------------------------------
@@ -976,6 +868,89 @@ function updateMiniPreviews() {
     });
 }
 
+// ---- Final Demo: the same shared, fully-interactive viewer used on
+// Explore (drag/pinch/scroll, idle auto-rotate), defaulting to
+// Darjeeling, with a fullscreen toggle. ----
+
+let finalDemoViewer = null;
+
+function initFinalDemoViewer() {
+    const canvas = document.getElementById("final-demo-canvas");
+
+    if (!canvas) {
+        return;
+    }
+
+    finalDemoViewer = createTerrainViewer(canvas, { rigOffsetY: 0 });
+
+    finalDemoViewer.loadRegion("darjeeling").then(() => {
+        finalDemoViewer.setLayer("satellite-3d");
+        finalDemoViewer.resizeToCanvas();
+    });
+
+    const fullscreenToggle = document.getElementById("final-demo-fullscreen");
+    const finalDemoBox = document.getElementById("final-demo-box");
+
+    fullscreenToggle?.addEventListener("click", () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        } else {
+            finalDemoBox?.requestFullscreen().catch(() => {});
+        }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+        const isFullscreen = document.fullscreenElement === finalDemoBox;
+
+        if (fullscreenToggle) {
+            fullscreenToggle.textContent = isFullscreen ? "⤡" : "⛶";
+            fullscreenToggle.title = isFullscreen ? "Exit fullscreen" : "Expand to fullscreen";
+        }
+
+        // The box's own size changes (viewport-filling vs. its grid
+        // cell), not just the window — resizeToCanvas() picks that up
+        // on the next animate() tick regardless, this just avoids a
+        // one-frame stretch while the fullscreen transition settles.
+        finalDemoViewer?.resizeToCanvas();
+    });
+}
+
+function updateFinalDemoViewer() {
+    if (!finalDemoViewer) {
+        return;
+    }
+
+    finalDemoViewer.resizeToCanvas();
+    finalDemoViewer.update();
+    finalDemoViewer.render();
+}
+
+// ---- Staged grid entrance: the 8 boxes fade/slide in left-to-right,
+// top-to-bottom, one subtle cascade rather than 8 independent panels. ----
+
+const GRID_ENTER_ORDER = [
+    "scene-input-box",
+    "depth-preview-box",
+    "dsm-3d-box",
+    "calc-logs-box",
+    "preview-box",
+    "elevation-preview-box",
+    "metric-elevation-3d-box",
+    "final-demo-box",
+];
+
+function staggerGridEntrance() {
+    GRID_ENTER_ORDER.forEach((id, index) => {
+        const el = document.getElementById(id);
+
+        if (!el) {
+            return;
+        }
+
+        setTimeout(() => el.classList.add("grid-enter-visible"), index * 80);
+    });
+}
+
 // ---- Init (first Workbench visit only — avoids re-creating WebGL
 // contexts or re-running the staged reveals on every tab switch). ----
 
@@ -987,8 +962,10 @@ function initWorkbenchGrid() {
     }
     workbenchGridInitialized = true;
 
+    staggerGridEntrance();
     revealAllStagedCaptions();
     runCalcLog();
+    initFinalDemoViewer();
 
     const dsmCanvas = document.getElementById("dsm-3d-canvas");
     const metricCanvas = document.getElementById("metric-elevation-3d-canvas");
@@ -1011,6 +988,7 @@ function animate() {
 
     if (activePageId === "page-2") {
         updateMiniPreviews();
+        updateFinalDemoViewer();
         return;
     }
 
@@ -1030,9 +1008,7 @@ function animate() {
 // ============================================================
 
 window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    exploreViewer.resize(window.innerWidth, window.innerHeight);
 });
 
 

@@ -1247,6 +1247,18 @@ kbd {
     letter-spacing: 0.04em;
     text-transform: uppercase;
     text-align: center;
+
+    /* One subtle staged entrance for the whole grid (JS adds
+       grid-enter-visible in left-to-right, top-to-bottom order) rather
+       than 8 panels each doing their own thing. */
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.workbench-box.grid-enter-visible {
+    opacity: 1;
+    transform: none;
 }
 
 .workbench-left .workbench-box,
@@ -1407,6 +1419,10 @@ kbd {
     gap: 3px;
 
     overflow-y: auto;
+    /* Stops scrolling to the end of the log from chaining into the
+       page's own scroll (there isn't one, but this is what keeps a
+       wheel gesture here from ever leaking past this panel). */
+    overscroll-behavior: contain;
     padding-right: 4px;
 
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -1436,6 +1452,63 @@ kbd {
     color: rgba(255,255,255,0.35);
 }
 
-.final-demo-mount {
-    padding: 0 16px;
+.final-demo-box {
+    position: relative;
+    padding: 0;
+
+    border-style: solid;
+    border-color: rgba(255,255,255,0.10);
+    background: rgba(5, 12, 10, 0.65);
+
+    overflow: hidden;
+}
+
+.final-demo-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+
+    cursor: grab;
+}
+
+.final-demo-canvas:active {
+    cursor: grabbing;
+}
+
+/* Native Fullscreen API — exiting restores the grid exactly as it was,
+   since the page layout underneath is never touched. */
+.final-demo-box:fullscreen {
+    background: #07100d;
+}
+
+.final-demo-fullscreen-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+
+    width: 28px;
+    height: 28px;
+
+    display: grid;
+    place-items: center;
+
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 6px;
+
+    background: rgba(5, 12, 10, 0.7);
+    color: rgba(255,255,255,0.75);
+
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.final-demo-fullscreen-toggle:hover {
+    background: rgba(98,217,139,0.15);
+    border-color: rgba(98,217,139,0.4);
 }
