@@ -351,6 +351,12 @@ kbd {
 
 .layer-button {
     flex: 1;
+    /* Without this, a flex item won't shrink below its longest unbreakable
+       word's intrinsic width — harmless at Explore's own right-rail width,
+       but at Final Demo's narrower compact-mode copy of this same panel
+       it was forcing the whole row (and the rail around it) wider than
+       its box, overflowing past final-demo-box's edge. */
+    min-width: 0;
 
     padding: 9px 8px;
 
@@ -1492,10 +1498,15 @@ kbd {
    (static image, same treatment as the Scene Input preview). DSM /
    Metric Elevation are small non-interactive 3D renders instead. */
 
-.mini-3d-canvas {
-    width: 100%;
+.mini3d-stage {
+    position: relative;
     flex: 1;
     min-height: 0;
+}
+
+.mini-3d-canvas {
+    width: 100%;
+    height: 100%;
 
     display: block;
     border-radius: 8px;
@@ -1504,6 +1515,23 @@ kbd {
     /* Belt-and-suspenders: no OrbitControls are attached to these
        mini renderers, and this also blocks any stray pointer capture. */
     pointer-events: none;
+}
+
+.mini3d-generating {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+
+    border-radius: 8px;
+    background: rgba(5, 12, 10, 0.6);
+}
+
+.mini3d-generating[hidden] {
+    display: none;
 }
 
 /* Staged text reveal — used under boxes 3-6 (Relative Depth, Elevation,
@@ -1613,7 +1641,7 @@ kbd {
     position: absolute;
     top: 10px;
     right: 10px;
-    z-index: 2;
+    z-index: 3;
 
     width: 28px;
     height: 28px;
@@ -1637,4 +1665,176 @@ kbd {
 .final-demo-fullscreen-toggle:hover {
     background: rgba(98,217,139,0.15);
     border-color: rgba(98,217,139,0.4);
+}
+
+
+/* ============================================================
+   "GENERATING" ANIMATION (shared by boxes 2-6 and 8 during the
+   START GENERATION sequence — a percent counter, a status line that
+   steps through real facts about what's happening, and a sweeping
+   scan bar, so each box reads as live computation rather than a
+   static spinner)
+============================================================ */
+
+.generating-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    width: 100%;
+    max-width: 220px;
+}
+
+.generating-percent {
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+
+    color: rgba(152, 255, 180, 0.9);
+}
+
+.generating-status {
+    min-height: 28px;
+
+    font-size: 10.5px;
+    line-height: 1.4;
+
+    color: rgba(255,255,255,0.55);
+}
+
+.generating-scanbar {
+    position: relative;
+    width: 100%;
+    height: 3px;
+
+    border-radius: 2px;
+    overflow: hidden;
+
+    background: rgba(255,255,255,0.08);
+}
+
+.generating-scanbar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40%;
+
+    background: linear-gradient(90deg, transparent, rgba(98,217,139,0.9), transparent);
+
+    animation: generating-sweep 1.1s ease-in-out infinite;
+}
+
+@keyframes generating-sweep {
+    0% { left: -40%; }
+    100% { left: 100%; }
+}
+
+.final-demo-generating {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(5, 12, 10, 0.78);
+}
+
+.final-demo-generating[hidden] {
+    display: none;
+}
+
+
+/* ============================================================
+   FINAL DEMO — full controls (region rail, stats, layer switching,
+   RUN RECONSTRUCTION, FLYTHROUGH, DANGER ZONES). Reuses Explore's own
+   panel classes (.region-panel, .layer-panel, .run-panel, etc.) for
+   guaranteed visual parity — only these positioning wrappers are new,
+   since Explore's .overlay/.left-rail/.right-rail are position:fixed
+   to the viewport and can't be reused inside a grid cell. Scaled down
+   to fit the grid cell by default; full size once fullscreened, where
+   this box's own bounds equal what Explore's fixed overlays target. */
+
+.final-demo-controls {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+
+    pointer-events: none;
+}
+
+.final-demo-controls[hidden] {
+    display: none;
+}
+
+.final-demo-left-rail,
+.final-demo-right-rail {
+    position: absolute;
+    max-height: calc(100% - 20px);
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    overflow-y: auto;
+    scrollbar-width: none;
+    pointer-events: auto;
+}
+
+.final-demo-left-rail::-webkit-scrollbar,
+.final-demo-right-rail::-webkit-scrollbar {
+    display: none;
+}
+
+.final-demo-left-rail {
+    top: 10px;
+    left: 10px;
+    width: 150px;
+
+    transform: scale(0.78);
+    transform-origin: top left;
+}
+
+.final-demo-right-rail {
+    /* Clears the fullscreen toggle button, which sits at top:10/right:10
+       at a higher z-index regardless of controls visibility. */
+    top: 46px;
+    right: 10px;
+    width: 210px;
+
+    transform: scale(0.68);
+    transform-origin: top right;
+}
+
+.final-demo-box:fullscreen .final-demo-right-rail {
+    top: 62px;
+}
+
+/* The controls-hint has nowhere to go without overlapping the right
+   rail's run/danger-zone panels at the compact grid-cell size — it's the
+   one piece of parity deprioritized there, and shown once fullscreen
+   actually has the room Explore's own version relies on. */
+.final-demo-bottom-right {
+    display: none;
+}
+
+.final-demo-box:fullscreen .final-demo-left-rail {
+    width: 250px;
+    transform: none;
+}
+
+.final-demo-box:fullscreen .final-demo-right-rail {
+    width: clamp(260px, 24vw, 340px);
+    transform: none;
+}
+
+.final-demo-box:fullscreen .final-demo-bottom-right {
+    display: block;
+    position: absolute;
+    right: 10px;
+    bottom: 44px;
 }

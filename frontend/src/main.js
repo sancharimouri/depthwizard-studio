@@ -25,8 +25,8 @@ function sleep(ms) {
     });
 }
 
-function layerDescriptionText(layer) {
-    const source = REGIONS[currentRegionKey]?.elevationSource ?? "DSM";
+function layerDescriptionText(layer, regionKey = currentRegionKey) {
+    const source = REGIONS[regionKey]?.elevationSource ?? "DSM";
 
     switch (layer) {
         case "satellite-flat":
@@ -108,7 +108,11 @@ function activateLayer(layer) {
 
     currentTerrain.setLayer(layer);
 
-    document.querySelectorAll(".layer-button").forEach(button => {
+    // Scoped to #page-1 — Final Demo's box 8 reuses the same .layer-button
+    // class for visual parity with Explore, and has its own independent
+    // activateFinalDemoLayer() below; an unscoped selector here would
+    // cross-wire the two viewers' active states.
+    document.querySelectorAll("#page-1 .layer-button").forEach(button => {
         button.classList.toggle("active", button.dataset.layer === layer);
     });
 
@@ -173,7 +177,7 @@ async function loadRegion(regionKey) {
 
     updateStatsAndLabels(regionKey, terrain, terrainData);
 
-    document.querySelectorAll(".region-card").forEach(card => {
+    document.querySelectorAll("#page-1 .region-card").forEach(card => {
         card.classList.toggle("active", card.dataset.region === regionKey);
     });
 
@@ -188,7 +192,7 @@ async function loadRegion(regionKey) {
 // LAYER BUTTONS
 // ============================================================
 
-document.querySelectorAll(".layer-button").forEach(button => {
+document.querySelectorAll("#page-1 .layer-button").forEach(button => {
     button.addEventListener("click", () => { selectLayer(button.dataset.layer); });
 });
 
@@ -199,7 +203,7 @@ document.querySelectorAll(".layer-button").forEach(button => {
 
 // [data-region] excludes the "Build Your Own" card — it reuses
 // .region-card for consistent styling but isn't a region to load.
-document.querySelectorAll(".region-card[data-region]").forEach(card => {
+document.querySelectorAll("#page-1 .region-card[data-region]").forEach(card => {
     card.addEventListener("click", async () => {
         const region = card.dataset.region;
 
@@ -339,69 +343,93 @@ runAgainButton?.addEventListener("click", runReconstruction);
 // FLYTHROUGH
 // (one-shot camera dolly-in — no loop back out — the terrain rig
 // keeps auto-rotating underneath it via its own render-loop update)
+//
+// Factored into a reusable controller so Workbench's Final Demo box
+// (box 8) can offer the same feature on its own independent viewer,
+// camera, and terrain rig without sharing state with Explore's.
 // ============================================================
 
-let flythrough = null;
-
 const FLYTHROUGH_ROTATE_SPEED_MULTIPLIER = 2;
+const FLYTHROUGH_DURATION_MS = 9500;
 
-function resetFlythrough() {
-    flythrough = null;
-    terrainRig.setSpeedMultiplier(1);
+function createFlythroughController({ camera: flCamera, controls: flControls, terrainRig: flRig, button }) {
+    let flythrough = null;
 
-    if (flythroughButton) {
-        flythroughButton.disabled = false;
-        flythroughButton.textContent = "◎ FLYTHROUGH";
+    function reset() {
+        flythrough = null;
+        flRig.setSpeedMultiplier(1);
+
+        if (button) {
+            button.disabled = false;
+            button.textContent = "◎ FLYTHROUGH";
+        }
     }
+
+    function start() {
+        if (flythrough || !button || button.disabled) {
+            return;
+        }
+
+        const startDistance = flCamera.position.distanceTo(flControls.target);
+        const endDistance = Math.max(flControls.minDistance, startDistance * 0.5);
+
+        flythrough = {
+            startDistance,
+            endDistance,
+            startTime: performance.now(),
+            duration: FLYTHROUGH_DURATION_MS,
+        };
+
+        // 2x idle rotation speed for the zoom-in and for the continued
+        // rotation afterward — stays elevated until the next reset.
+        flRig.setSpeedMultiplier(FLYTHROUGH_ROTATE_SPEED_MULTIPLIER);
+
+        button.disabled = true;
+        button.textContent = "FLYING THROUGH…";
+    }
+
+    function update() {
+        if (!flythrough) {
+            return;
+        }
+
+        const t = Math.min(1, (performance.now() - flythrough.startTime) / flythrough.duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+
+        const distance = flythrough.startDistance + (flythrough.endDistance - flythrough.startDistance) * eased;
+
+        const offset = flCamera.position.clone().sub(flControls.target);
+        offset.setLength(distance);
+        flCamera.position.copy(flControls.target).add(offset);
+
+        if (t >= 1) {
+            flythrough = null;
+
+            if (button) {
+                button.textContent = "✓ FLYTHROUGH";
+            }
+        }
+    }
+
+    button?.addEventListener("click", start);
+
+    return { start, update, reset };
 }
 
-function startFlythrough() {
-    if (flythrough || !flythroughButton || flythroughButton.disabled) {
-        return;
-    }
+const exploreFlythrough = createFlythroughController({
+    camera,
+    controls,
+    terrainRig,
+    button: flythroughButton,
+});
 
-    const startDistance = camera.position.distanceTo(controls.target);
-    const endDistance = Math.max(controls.minDistance, startDistance * 0.5);
-
-    flythrough = {
-        startDistance,
-        endDistance,
-        startTime: performance.now(),
-        duration: 9500,
-    };
-
-    // 2x idle rotation speed for the zoom-in and for the continued
-    // rotation afterward — stays elevated until the next reset.
-    terrainRig.setSpeedMultiplier(FLYTHROUGH_ROTATE_SPEED_MULTIPLIER);
-
-    flythroughButton.disabled = true;
-    flythroughButton.textContent = "FLYING THROUGH…";
+function resetFlythrough() {
+    exploreFlythrough.reset();
 }
 
 function updateFlythrough() {
-    if (!flythrough) {
-        return;
-    }
-
-    const t = Math.min(1, (performance.now() - flythrough.startTime) / flythrough.duration);
-    const eased = 1 - Math.pow(1 - t, 3);
-
-    const distance = flythrough.startDistance + (flythrough.endDistance - flythrough.startDistance) * eased;
-
-    const offset = camera.position.clone().sub(controls.target);
-    offset.setLength(distance);
-    camera.position.copy(controls.target).add(offset);
-
-    if (t >= 1) {
-        flythrough = null;
-
-        if (flythroughButton) {
-            flythroughButton.textContent = "✓ FLYTHROUGH";
-        }
-    }
+    exploreFlythrough.update();
 }
-
-flythroughButton?.addEventListener("click", startFlythrough);
 
 
 // ============================================================
@@ -683,6 +711,17 @@ const startGenerationButton = document.getElementById("start-generation-button")
 
 let sceneSelected = false;
 
+// Populated on selection (search pick or direct upload), but not shown
+// until the box 2 (Preview) step of the START GENERATION sequence reveals
+// it — selecting a scene only enables the button, boxes 2-8 stay idle
+// until it's clicked.
+let pendingScenePreview = null;
+
+// What box 1 actually did, for Calculation Logs (box 7) to open with —
+// it starts from this project's own process rather than jumping straight
+// into the generic reconstruction trace.
+let sceneSelectionSummary = null;
+
 function markSceneSelected() {
     sceneSelected = true;
     if (startGenerationButton) {
@@ -719,41 +758,22 @@ function closeSceneSearchModal() {
 }
 
 function selectScene(scene) {
-    if (previewImage) {
-        previewImage.src = scene.thumb;
-    }
-    if (previewMeta) {
-        previewMeta.textContent =
-            `${scene.id} · ${scene.date} · ${scene.cloud}% cloud · ` +
-            `prototype pick, not a live STAC query`;
-    }
-    if (previewEmpty) {
-        previewEmpty.hidden = true;
-    }
-    if (previewContent) {
-        previewContent.hidden = false;
-    }
+    pendingScenePreview = {
+        src: scene.thumb,
+        meta: `${scene.id} · ${scene.date} · ${scene.cloud}% cloud · prototype pick, not a live STAC query`,
+    };
+    sceneSelectionSummary = { type: "search", geocode: selectedGeocodeResult, scene };
 
     markSceneSelected();
     closeSceneSearchModal();
 }
 
 function selectUploadedScene(file) {
-    const objectUrl = URL.createObjectURL(file);
-
-    if (previewImage) {
-        previewImage.src = objectUrl;
-    }
-    if (previewMeta) {
-        previewMeta.textContent =
-            `${file.name} · uploaded directly · prototype pick, not a live reconstruction`;
-    }
-    if (previewEmpty) {
-        previewEmpty.hidden = true;
-    }
-    if (previewContent) {
-        previewContent.hidden = false;
-    }
+    pendingScenePreview = {
+        src: URL.createObjectURL(file),
+        meta: `${file.name} · uploaded directly · prototype pick, not a live reconstruction`,
+    };
+    sceneSelectionSummary = { type: "upload", file };
 
     markSceneSelected();
 }
@@ -825,12 +845,7 @@ document.addEventListener("keydown", event => {
     }
 });
 
-// Placeholder — enabled once a scene is selected via search or upload.
-// Intentionally a no-op for now; wiring it to actually run the box 2-8
-// reconstruction sequence is next-prompt scope.
-startGenerationButton?.addEventListener("click", () => {
-    console.log("START GENERATION clicked — pipeline wiring not yet implemented.");
-});
+startGenerationButton?.addEventListener("click", runGenerationSequence);
 
 
 // ============================================================
@@ -908,16 +923,14 @@ function revealStagedCaption(container) {
     });
 }
 
-function revealAllStagedCaptions() {
-    document.querySelectorAll(".staged-caption").forEach(revealStagedCaption);
-}
-
 // ---- Calculation log: a running technical trace pulled from real
 // facts elsewhere in this project's code/data that aren't already used
 // as a caption above (CRS reprojection, per-region mesh sizes, the
 // vertical-exaggeration formula and its real per-region outputs, edge-
 // erosion / spike-smoothing parameters). Timestamps are the actual
-// elapsed time since the log started, not staged numbers. ----
+// elapsed time since the log started, not staged numbers. It opens with
+// what box 1 actually did (the location lookup/scene pick or the direct
+// upload), not the generic trace. ----
 
 const CALC_LOG_LINES = [
     "Sentinel-2 RGB tiles loaded — 4 regions, 10 m, EPSG:32645",
@@ -962,7 +975,39 @@ function appendCalcLogLine(scrollEl, text) {
     scrollEl.scrollTop = scrollEl.scrollHeight;
 }
 
-function runCalcLog() {
+function buildCalcLogLines() {
+    const opening = [];
+
+    if (sceneSelectionSummary?.type === "search") {
+        const geocode = sceneSelectionSummary.geocode;
+        const scene = sceneSelectionSummary.scene;
+
+        if (geocode) {
+            opening.push(
+                `Location resolved via Nominatim: ${geocode.display_name}`,
+                `Coordinates: ${Number(geocode.lat).toFixed(4)}, ${Number(geocode.lon).toFixed(4)}`
+            );
+        }
+        if (scene) {
+            opening.push(`Selected scene ${scene.id} · ${scene.date} · ${scene.cloud}% cloud`);
+        }
+    } else if (sceneSelectionSummary?.type === "upload") {
+        const file = sceneSelectionSummary.file;
+        opening.push(
+            `Direct upload received: ${file.name} (${Math.max(1, Math.round(file.size / 1024))} KB)`,
+            `No STAC lookup for a direct upload — prototype pipeline defaults to Darjeeling reference data`
+        );
+    }
+
+    opening.push("Handing off to reconstruction pipeline…");
+
+    return [...opening, ...CALC_LOG_LINES];
+}
+
+// totalDurationMs paces the log to span roughly the same window as the
+// box-by-box sequence driving it, so it reads as running alongside that
+// work rather than being dumped out ahead of or behind it.
+function runCalcLog(totalDurationMs) {
     const scrollEl = document.getElementById("calc-log-scroll");
 
     if (!scrollEl || scrollEl.dataset.started === "true") {
@@ -972,8 +1017,11 @@ function runCalcLog() {
 
     calcLogStartTime = Date.now();
 
-    CALC_LOG_LINES.forEach((text, index) => {
-        setTimeout(() => appendCalcLogLine(scrollEl, text), 200 + index * 420);
+    const lines = buildCalcLogLines();
+    const interval = totalDurationMs / lines.length;
+
+    lines.forEach((text, index) => {
+        setTimeout(() => appendCalcLogLine(scrollEl, text), 200 + index * interval);
     });
 }
 
@@ -1074,24 +1122,240 @@ function updateMiniPreviews() {
     });
 }
 
-// ---- Final Demo: the same shared, fully-interactive viewer used on
-// Explore (drag/pinch/scroll, idle auto-rotate), defaulting to
-// Darjeeling, with a fullscreen toggle. ----
+// ---- Final Demo (box 8): the same shared, fully-interactive viewer
+// used on Explore (drag/pinch/scroll, idle auto-rotate), now with full
+// parity with Explore's own controls too — region rail, stats, 6-view
+// layer switching, RUN RECONSTRUCTION, FLYTHROUGH, DANGER ZONES. All
+// lookups below are scoped to #final-demo-box: the markup reuses
+// Explore's exact classes (.region-card, .layer-button, etc.) for
+// visual parity, and Explore's own equivalents are scoped to #page-1
+// (see activateLayer / the region-rail bindings above) so the two
+// viewers' independent state never cross-wires. Deferred until box 8's
+// turn in the START GENERATION sequence — initFinalDemoViewer() below
+// only runs once, the first time that happens. ----
 
 let finalDemoViewer = null;
+let finalDemoCurrentTerrain = null;
+let finalDemoCurrentRegionKey = null;
+let finalDemoRunning = false;
+let finalDemoFloodActive = false;
+let finalDemoFlythrough = null;
+let finalDemoInitialized = false;
 
+function updateFinalDemoStats(regionKey, terrain, terrainData) {
+    const region = REGIONS[regionKey];
+
+    const elevationElement = document.getElementById("final-demo-elevation-value");
+    if (elevationElement) {
+        elevationElement.textContent = `${Math.round(terrain.elevationMin)}–${Math.round(terrain.elevationMax)} m`;
+    }
+
+    const sourceElement = document.getElementById("final-demo-terrain-source-value");
+    if (sourceElement) {
+        sourceElement.textContent = region.elevationSource;
+    }
+
+    const inferenceStat = document.getElementById("final-demo-stat-inference");
+    if (inferenceStat) {
+        inferenceStat.textContent = region.inferenceTime;
+    }
+
+    const resolutionStat = document.getElementById("final-demo-stat-resolution");
+    if (resolutionStat) {
+        resolutionStat.textContent = region.resolution;
+    }
+
+    const gridStat = document.getElementById("final-demo-stat-grid");
+    if (gridStat) {
+        gridStat.textContent = `${terrainData.width}×${terrainData.height}`;
+    }
+
+    const epsgStat = document.getElementById("final-demo-stat-epsg");
+    if (epsgStat) {
+        epsgStat.textContent = region.crsEpsg;
+    }
+}
+
+function activateFinalDemoLayer(layer) {
+    if (!finalDemoCurrentTerrain) {
+        return;
+    }
+
+    finalDemoCurrentTerrain.setLayer(layer);
+
+    document.querySelectorAll("#final-demo-box .layer-button").forEach(button => {
+        button.classList.toggle("active", button.dataset.layer === layer);
+    });
+
+    const description = document.getElementById("final-demo-layer-description");
+    if (description) {
+        description.textContent = layerDescriptionText(layer, finalDemoCurrentRegionKey);
+    }
+}
+
+function setFinalDemoFloodActive(active) {
+    finalDemoFloodActive = active;
+
+    document.getElementById("final-demo-flood-button")?.classList.toggle("active", finalDemoFloodActive);
+    finalDemoCurrentTerrain?.setFloodOverlay(finalDemoFloodActive);
+}
+
+function selectFinalDemoLayer(layer) {
+    if (finalDemoFloodActive) {
+        setFinalDemoFloodActive(false);
+    }
+    activateFinalDemoLayer(layer);
+}
+
+function resetFinalDemoRunState() {
+    finalDemoRunning = false;
+
+    const runPanelEl = document.getElementById("final-demo-run-panel");
+    const postRunPanelEl = document.getElementById("final-demo-post-run-panel");
+    const runButtonEl = document.getElementById("final-demo-run-button");
+    const progressBarEl = document.getElementById("final-demo-pipeline-progress");
+    const progressFillEl = document.getElementById("final-demo-pipeline-progress-fill");
+
+    if (runPanelEl) runPanelEl.hidden = false;
+    if (postRunPanelEl) postRunPanelEl.hidden = true;
+    if (runButtonEl) {
+        runButtonEl.disabled = false;
+        runButtonEl.textContent = "▶ RUN RECONSTRUCTION";
+    }
+    if (progressBarEl) progressBarEl.hidden = true;
+    if (progressFillEl) progressFillEl.style.width = "0%";
+
+    setFinalDemoFloodActive(false);
+    finalDemoFlythrough?.reset();
+}
+
+async function loadFinalDemoRegion(regionKey) {
+    const { terrain, terrainData } = await finalDemoViewer.loadRegion(regionKey);
+
+    finalDemoCurrentTerrain = terrain;
+    finalDemoCurrentRegionKey = regionKey;
+
+    updateFinalDemoStats(regionKey, terrain, terrainData);
+
+    document.querySelectorAll("#final-demo-box .region-card").forEach(card => {
+        card.classList.toggle("active", card.dataset.region === regionKey);
+    });
+
+    activateFinalDemoLayer("satellite-3d");
+    resetFinalDemoRunState();
+
+    return terrain;
+}
+
+// Mirrors Explore's runReconstruction() exactly (same STAGES/STAGE_TOTAL_MS),
+// just targeting box 8's own elements.
+async function runFinalDemoReconstruction() {
+    if (finalDemoRunning) {
+        return;
+    }
+    finalDemoRunning = true;
+
+    setFinalDemoFloodActive(false);
+    finalDemoFlythrough?.reset();
+
+    const runPanelEl = document.getElementById("final-demo-run-panel");
+    const postRunPanelEl = document.getElementById("final-demo-post-run-panel");
+    const runButtonEl = document.getElementById("final-demo-run-button");
+    const progressBarEl = document.getElementById("final-demo-pipeline-progress");
+    const progressFillEl = document.getElementById("final-demo-pipeline-progress-fill");
+    const description = document.getElementById("final-demo-layer-description");
+
+    if (postRunPanelEl) postRunPanelEl.hidden = true;
+    if (runPanelEl) runPanelEl.hidden = false;
+    if (runButtonEl) {
+        runButtonEl.disabled = true;
+        runButtonEl.textContent = "PROCESSING…";
+    }
+    if (progressBarEl) progressBarEl.hidden = false;
+
+    let elapsed = 0;
+
+    for (const stage of STAGES) {
+        activateFinalDemoLayer(stage.layer);
+
+        if (description) {
+            description.textContent = stage.caption;
+        }
+
+        await sleep(stage.duration);
+
+        elapsed += stage.duration;
+
+        if (progressFillEl) {
+            progressFillEl.style.width = `${Math.round((elapsed / STAGE_TOTAL_MS) * 100)}%`;
+        }
+    }
+
+    if (description) {
+        description.textContent = "Reconstruction complete";
+    }
+
+    setTimeout(() => {
+        if (progressBarEl) progressBarEl.hidden = true;
+        if (progressFillEl) progressFillEl.style.width = "0%";
+
+        finalDemoRunning = false;
+
+        if (runPanelEl) runPanelEl.hidden = true;
+        if (postRunPanelEl) postRunPanelEl.hidden = false;
+    }, 800);
+}
+
+// Creates the viewer, wires every control, and loads Darjeeling. Returns
+// the loadFinalDemoRegion() promise so callers can await real asset load
+// alongside the box's minimum "generating" duration.
 function initFinalDemoViewer() {
+    if (finalDemoInitialized) {
+        return Promise.resolve();
+    }
+    finalDemoInitialized = true;
+
     const canvas = document.getElementById("final-demo-canvas");
 
     if (!canvas) {
-        return;
+        return Promise.resolve();
     }
 
     finalDemoViewer = createTerrainViewer(canvas, { rigOffsetY: 0 });
 
-    finalDemoViewer.loadRegion("darjeeling").then(() => {
-        finalDemoViewer.setLayer("satellite-3d");
-        finalDemoViewer.resizeToCanvas();
+    finalDemoFlythrough = createFlythroughController({
+        camera: finalDemoViewer.camera,
+        controls: finalDemoViewer.controls,
+        terrainRig: finalDemoViewer.terrainRig,
+        button: document.getElementById("final-demo-flythrough-button"),
+    });
+
+    document.querySelectorAll("#final-demo-box .layer-button").forEach(button => {
+        button.addEventListener("click", () => { selectFinalDemoLayer(button.dataset.layer); });
+    });
+
+    // [data-region] excludes nothing here (no "Build Your Own" card in
+    // this copy), but kept for parity with Explore's own selector.
+    document.querySelectorAll("#final-demo-box .region-card[data-region]").forEach(card => {
+        card.addEventListener("click", async () => {
+            const region = card.dataset.region;
+
+            if (finalDemoRunning || region === finalDemoCurrentRegionKey) {
+                return;
+            }
+
+            await loadFinalDemoRegion(region);
+        });
+    });
+
+    document.getElementById("final-demo-run-button")?.addEventListener("click", runFinalDemoReconstruction);
+    document.getElementById("final-demo-run-again-button")?.addEventListener("click", runFinalDemoReconstruction);
+
+    document.getElementById("final-demo-flood-button")?.addEventListener("click", () => {
+        if (!finalDemoFloodActive) {
+            activateFinalDemoLayer("dsm-3d");
+        }
+        setFinalDemoFloodActive(!finalDemoFloodActive);
     });
 
     const fullscreenToggle = document.getElementById("final-demo-fullscreen");
@@ -1119,6 +1383,8 @@ function initFinalDemoViewer() {
         // one-frame stretch while the fullscreen transition settles.
         finalDemoViewer?.resizeToCanvas();
     });
+
+    return loadFinalDemoRegion("darjeeling");
 }
 
 function updateFinalDemoViewer() {
@@ -1127,9 +1393,279 @@ function updateFinalDemoViewer() {
     }
 
     finalDemoViewer.resizeToCanvas();
+    finalDemoFlythrough?.update();
     finalDemoViewer.update();
     finalDemoViewer.render();
 }
+
+// ============================================================
+// START GENERATION SEQUENCE
+// Drives boxes 2-8 one at a time (grid/box-number order) after the
+// button in box 1 is clicked — nothing in them renders before that.
+// Each box gets a real-feeling "generating" animation (a live percent
+// counter and a status line stepping through what's actually happening,
+// grounded in this project's real facts) for a minimum of ~4.5s before
+// settling into its final state. Box 7 (Calculation Logs) isn't part of
+// this one-at-a-time queue — it starts filling immediately alongside it
+// and keeps appending lines, paced to span the same total window.
+// ============================================================
+
+const BOX_GENERATE_MS = 4500;
+
+// Sequential box count (excludes box 7, which runs continuously in
+// parallel instead) — used to pace Calculation Logs to the same span.
+const SEQUENTIAL_BOX_COUNT = 6;
+const TOTAL_PIPELINE_MS = BOX_GENERATE_MS * SEQUENTIAL_BOX_COUNT;
+
+function generatingOverlayMarkup() {
+    return `
+        <div class="generating-overlay">
+            <div class="generating-percent">0%</div>
+            <div class="generating-status"></div>
+            <div class="generating-scanbar"></div>
+        </div>
+    `;
+}
+
+// Ticks a percent counter and steps a status line through `steps`,
+// evenly spaced across durationMs — the actual visual of "something is
+// being calculated." Resolves once durationMs has elapsed.
+async function animateGenerating({ percentEl, statusEl, steps, durationMs }) {
+    const tickMs = 120;
+    const stepIntervalMs = durationMs / Math.max(1, steps.length);
+
+    // Tracks real elapsed time (performance.now()) rather than assuming
+    // each tick took exactly tickMs — a backgrounded/throttled tab can
+    // delay individual setTimeout ticks well past 120ms, and accumulating
+    // a fixed increment per tick would make the whole animation run far
+    // longer in wall-clock time than durationMs in that case.
+    const startTime = performance.now();
+    let elapsed = 0;
+    let stepIndex = -1;
+
+    function setStep(index) {
+        if (index === stepIndex) {
+            return;
+        }
+        stepIndex = index;
+        if (statusEl && steps[index] !== undefined) {
+            statusEl.textContent = steps[index];
+        }
+    }
+
+    setStep(0);
+
+    while (elapsed < durationMs) {
+        await sleep(tickMs);
+        elapsed = performance.now() - startTime;
+
+        if (percentEl) {
+            percentEl.textContent = `${Math.min(100, Math.round((elapsed / durationMs) * 100))}%`;
+        }
+
+        setStep(Math.min(steps.length - 1, Math.floor(elapsed / stepIntervalMs)));
+    }
+}
+
+// ---- Box 2 (Preview): reveals whatever was selected/uploaded in box 1,
+// which was held back until now. ----
+
+async function generatePreviewBox() {
+    const emptyEl = document.getElementById("preview-empty");
+    const contentEl = document.getElementById("preview-content");
+
+    if (!emptyEl || !contentEl || !pendingScenePreview) {
+        return;
+    }
+
+    emptyEl.innerHTML = generatingOverlayMarkup();
+
+    await animateGenerating({
+        percentEl: emptyEl.querySelector(".generating-percent"),
+        statusEl: emptyEl.querySelector(".generating-status"),
+        steps: [
+            "Registering scene footprint…",
+            "Validating against Sentinel-2 tiling grid…",
+            "Preparing reconstruction inputs…",
+        ],
+        durationMs: BOX_GENERATE_MS,
+    });
+
+    if (previewImage) {
+        previewImage.src = pendingScenePreview.src;
+    }
+    if (previewMeta) {
+        previewMeta.textContent = pendingScenePreview.meta;
+    }
+
+    emptyEl.hidden = true;
+    contentEl.hidden = false;
+}
+
+// ---- Boxes 3 (Relative Depth) / 4 (Elevation): the image + caption
+// were already in the DOM, just held behind .preview-empty — swap that
+// for a real-feeling generating readout, then reveal both. ----
+
+async function generateCaptionPreviewBox(boxId, steps) {
+    const box = document.getElementById(boxId);
+
+    if (!box) {
+        return;
+    }
+
+    const emptyEl = box.querySelector(".preview-empty");
+    const contentEl = box.querySelector(".preview-content");
+    const captionEl = box.querySelector(".staged-caption");
+
+    if (emptyEl) {
+        emptyEl.innerHTML = generatingOverlayMarkup();
+    }
+
+    await animateGenerating({
+        percentEl: emptyEl?.querySelector(".generating-percent"),
+        statusEl: emptyEl?.querySelector(".generating-status"),
+        steps,
+        durationMs: BOX_GENERATE_MS,
+    });
+
+    if (emptyEl) {
+        emptyEl.hidden = true;
+    }
+    if (contentEl) {
+        contentEl.hidden = false;
+    }
+    if (captionEl) {
+        revealStagedCaption(captionEl);
+    }
+}
+
+// ---- Boxes 5 (DSM) / 6 (Metric Elevation): the generating overlay runs
+// for at least BOX_GENERATE_MS *and* until the real (shared, memoized)
+// terrain asset fetch actually resolves, whichever is longer. ----
+
+async function generateMiniPreviewBox(boxId, canvasId, layer, steps) {
+    const box = document.getElementById(boxId);
+    const canvas = document.getElementById(canvasId);
+
+    if (!box || !canvas) {
+        return;
+    }
+
+    const overlay = box.querySelector(".mini3d-generating");
+    const captionEl = box.querySelector(".staged-caption");
+
+    if (overlay) {
+        overlay.hidden = false;
+    }
+
+    createMiniPreview(canvas, layer);
+
+    await Promise.all([
+        animateGenerating({
+            percentEl: overlay?.querySelector(".generating-percent"),
+            statusEl: overlay?.querySelector(".generating-status"),
+            steps,
+            durationMs: BOX_GENERATE_MS,
+        }),
+        loadMiniPreviewAssets(),
+    ]);
+
+    if (overlay) {
+        overlay.hidden = true;
+    }
+    if (captionEl) {
+        revealStagedCaption(captionEl);
+    }
+}
+
+// ---- Box 8 (Final Demo): builds the full interactive viewer + controls
+// (only once — initFinalDemoViewer() is itself idempotent) alongside the
+// generating animation, then reveals both. ----
+
+async function generateFinalDemoBox() {
+    const overlay = document.getElementById("final-demo-generating");
+    const controlsEl = document.getElementById("final-demo-controls");
+    const fullscreenToggle = document.getElementById("final-demo-fullscreen");
+
+    if (overlay) {
+        overlay.hidden = false;
+    }
+
+    await Promise.all([
+        animateGenerating({
+            percentEl: overlay?.querySelector(".generating-percent"),
+            statusEl: overlay?.querySelector(".generating-status"),
+            steps: [
+                "Compiling interactive viewer…",
+                "Wiring OrbitControls + layer shaders…",
+                "Loading RUN RECONSTRUCTION, FLYTHROUGH, DANGER ZONES…",
+            ],
+            durationMs: BOX_GENERATE_MS,
+        }),
+        initFinalDemoViewer(),
+    ]);
+
+    if (overlay) {
+        overlay.hidden = true;
+    }
+    if (controlsEl) {
+        controlsEl.hidden = false;
+    }
+    if (fullscreenToggle) {
+        fullscreenToggle.hidden = false;
+    }
+}
+
+let generationStarted = false;
+
+async function runGenerationSequence() {
+    if (generationStarted) {
+        return;
+    }
+    generationStarted = true;
+
+    if (startGenerationButton) {
+        startGenerationButton.disabled = true;
+        startGenerationButton.textContent = "▶ GENERATING…";
+    }
+
+    // Starts filling immediately and keeps appending in parallel with
+    // whichever box below is currently generating.
+    runCalcLog(TOTAL_PIPELINE_MS);
+
+    await generatePreviewBox();
+
+    await generateCaptionPreviewBox("depth-preview-box", [
+        "Loading Sentinel-2 RGB tiles…",
+        "Running Depth Anything V2 (ViT-Large)…",
+        "Inference complete — 1.17s, frozen weights…",
+    ]);
+
+    await generateCaptionPreviewBox("elevation-preview-box", [
+        "Evaluating terrain DEM + correction head…",
+        "Checking sparse ICESat-2 anchors…",
+        "Correction head not yet trained — flat DEM elevation shown…",
+    ]);
+
+    await generateMiniPreviewBox("dsm-3d-box", "dsm-3d-canvas", "dsm-3d", [
+        "Reprojecting DSM → EPSG:32645…",
+        "Extruding 361×325 vertex grid…",
+        "Applying vertical exaggeration 1.07x…",
+    ]);
+
+    await generateMiniPreviewBox("metric-elevation-3d-box", "metric-elevation-3d-canvas", "elevation-3d", [
+        "Running spatial-trend validation…",
+        "Detrending elevation vs. position…",
+        "Correlation +0.60 → −0.41 after detrending…",
+    ]);
+
+    await generateFinalDemoBox();
+
+    if (startGenerationButton) {
+        startGenerationButton.textContent = "✓ GENERATION COMPLETE";
+    }
+}
+
 
 // ---- Staged grid entrance: the 8 boxes fade/slide in left-to-right,
 // top-to-bottom, one subtle cascade rather than 8 independent panels. ----
@@ -1169,10 +1705,7 @@ function initWorkbenchGrid() {
     workbenchGridInitialized = true;
 
     // Only the box chrome fades in on arrival — boxes 2-8's actual content
-    // (captions, calc log, mini 3D previews, Final Demo viewer) stays idle
-    // until START GENERATION drives it. That wiring is next-prompt scope;
-    // revealAllStagedCaptions() / runCalcLog() / initFinalDemoViewer() /
-    // createMiniPreview() below are left defined for it to call.
+    // stays idle until the START GENERATION sequence above drives it.
     staggerGridEntrance();
 }
 

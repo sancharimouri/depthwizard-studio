@@ -591,10 +591,22 @@
                 >
                     <div class="panel-title">DSM</div>
 
-                    <canvas
-                        id="dsm-3d-canvas"
-                        class="mini-3d-canvas"
-                    ></canvas>
+                    <div class="mini3d-stage">
+
+                        <canvas
+                            id="dsm-3d-canvas"
+                            class="mini-3d-canvas"
+                        ></canvas>
+
+                        <div class="mini3d-generating" hidden>
+                            <div class="generating-overlay">
+                                <div class="generating-percent">0%</div>
+                                <div class="generating-status"></div>
+                                <div class="generating-scanbar"></div>
+                            </div>
+                        </div>
+
+                    </div>
 
                     <div
                         class="staged-caption"
@@ -608,10 +620,22 @@
                 >
                     <div class="panel-title">METRIC ELEVATION</div>
 
-                    <canvas
-                        id="metric-elevation-3d-canvas"
-                        class="mini-3d-canvas"
-                    ></canvas>
+                    <div class="mini3d-stage">
+
+                        <canvas
+                            id="metric-elevation-3d-canvas"
+                            class="mini-3d-canvas"
+                        ></canvas>
+
+                        <div class="mini3d-generating" hidden>
+                            <div class="generating-overlay">
+                                <div class="generating-percent">0%</div>
+                                <div class="generating-status"></div>
+                                <div class="generating-scanbar"></div>
+                            </div>
+                        </div>
+
+                    </div>
 
                     <div
                         class="staged-caption"
@@ -644,12 +668,195 @@
                         class="final-demo-canvas"
                     ></canvas>
 
+                    <div
+                        id="final-demo-generating"
+                        class="final-demo-generating"
+                        hidden
+                    >
+                        <div class="generating-overlay">
+                            <div class="generating-percent">0%</div>
+                            <div class="generating-status"></div>
+                            <div class="generating-scanbar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Full-parity controls with Explore's page-1 viewer:
+                         region rail, stats, layer switching, RUN
+                         RECONSTRUCTION, FLYTHROUGH, DANGER ZONES. Reuses
+                         the exact same CSS classes as Explore so the two
+                         stay visually identical; JS scopes all lookups to
+                         #final-demo-box so the two viewers never cross-wire. -->
+                    <div
+                        id="final-demo-controls"
+                        class="final-demo-controls"
+                        hidden
+                    >
+
+                        <div class="final-demo-left-rail">
+
+                            <div class="region-panel">
+
+                                <div class="panel-title">REGIONS</div>
+
+                                <div class="region-list">
+
+                                    <button class="region-card active" data-region="darjeeling">
+                                        <div class="region-name">Darjeeling</div>
+                                        <div class="region-meta">West Bengal · 10×10 km</div>
+                                    </button>
+
+                                    <button class="region-card" data-region="kolkata">
+                                        <div class="region-name">Kolkata</div>
+                                        <div class="region-meta">West Bengal · 10×10 km</div>
+                                    </button>
+
+                                    <button class="region-card" data-region="bardhaman">
+                                        <div class="region-name">Bardhaman</div>
+                                        <div class="region-meta">West Bengal · 10×10 km</div>
+                                    </button>
+
+                                    <button class="region-card" data-region="sundarbans">
+                                        <div class="region-name">Sundarbans</div>
+                                        <div class="region-meta">West Bengal · 10×10 km</div>
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <div class="stats-strip">
+
+                                <div class="stat-tile">
+                                    <div id="final-demo-stat-inference" class="stat-value">1.17s</div>
+                                    <div class="stat-label">DAv2 INFERENCE</div>
+                                </div>
+
+                                <div class="stat-tile">
+                                    <div id="final-demo-stat-resolution" class="stat-value">10m</div>
+                                    <div class="stat-label">RESOLUTION</div>
+                                </div>
+
+                                <div class="stat-tile">
+                                    <div id="final-demo-stat-grid" class="stat-value">361×325</div>
+                                    <div class="stat-label">MESH GRID</div>
+                                </div>
+
+                                <div class="stat-tile">
+                                    <div id="final-demo-stat-epsg" class="stat-value">32645</div>
+                                    <div class="stat-label">EPSG</div>
+                                </div>
+
+                            </div>
+
+                            <div class="terrain-card">
+
+                                <div class="metric">
+                                    <span class="metric-label">ELEVATION RANGE</span>
+                                    <span id="final-demo-elevation-value">—</span>
+                                </div>
+
+                                <div class="metric metric-stacked">
+                                    <span class="metric-label">TERRAIN SOURCE</span>
+                                    <span id="final-demo-terrain-source-value">OpenTopography DSM</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="final-demo-right-rail">
+
+                            <div class="layer-panel">
+
+                                <div class="panel-title">VISUALIZATION LAYER</div>
+
+                                <div class="layer-buttons-grid">
+
+                                    <div class="layer-buttons-row">
+                                        <button class="layer-button" data-layer="satellite-flat">SATELLITE</button>
+                                        <button class="layer-button" data-layer="depth-flat">RELATIVE DEPTH</button>
+                                        <button class="layer-button" data-layer="elevation-flat">ELEVATION</button>
+                                    </div>
+
+                                    <div class="layer-buttons-row">
+                                        <button class="layer-button" data-layer="dsm-3d">DSM</button>
+                                        <button class="layer-button" data-layer="elevation-3d">METRIC ELEVATION</button>
+                                        <button class="layer-button active" data-layer="satellite-3d">TRUE COLOR</button>
+                                    </div>
+
+                                </div>
+
+                                <div id="final-demo-layer-description" class="layer-description">
+                                    Sentinel-2 RGB draped on extruded terrain
+                                </div>
+
+                                <div
+                                    id="final-demo-pipeline-progress"
+                                    class="pipeline-progress"
+                                    hidden
+                                >
+                                    <div id="final-demo-pipeline-progress-fill" class="pipeline-progress-fill"></div>
+                                </div>
+
+                            </div>
+
+                            <div id="final-demo-run-panel" class="run-panel">
+                                <button id="final-demo-run-button" class="run-reconstruction-button">
+                                    ▶ RUN RECONSTRUCTION
+                                </button>
+                            </div>
+
+                            <div id="final-demo-post-run-panel" class="post-run-panel" hidden>
+
+                                <button id="final-demo-run-again-button" class="run-reconstruction-button">
+                                    ↻ RUN AGAIN
+                                </button>
+
+                                <button id="final-demo-flythrough-button" class="secondary-button">
+                                    ◎ FLYTHROUGH
+                                </button>
+
+                                <div class="danger-zone-panel">
+
+                                    <div class="panel-title">DANGER ZONES</div>
+
+                                    <div class="danger-zone-buttons">
+
+                                        <button id="final-demo-flood-button" class="danger-button">
+                                            FLOOD
+                                        </button>
+
+                                        <button id="final-demo-earthquake-button" class="danger-button" disabled>
+                                            EARTHQUAKE
+                                            <span class="coming-soon-tag">SOON</span>
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="final-demo-bottom-right">
+                            <div class="controls-hint">
+                                <div><kbd>drag</kbd><kbd>scroll</kbd></div>
+                                <span>Rotate</span>
+                                <div><kbd>pinch</kbd></div>
+                                <span>Zoom</span>
+                            </div>
+                        </div>
+
+                    </div>
+
                     <button
                         id="final-demo-fullscreen"
                         class="final-demo-fullscreen-toggle"
                         type="button"
                         aria-label="Expand to fullscreen"
                         title="Expand to fullscreen"
+                        hidden
                     >
                         ⛶
                     </button>
