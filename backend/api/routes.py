@@ -30,7 +30,9 @@ def cdse_search(req: SceneSearchRequest) -> SceneSearchResponse:
 @router.post("/preview")
 def cdse_preview(req: ScenePreviewRequest) -> Response:
     try:
-        png_bytes = fetch_true_color_png(bbox=req.bbox, date=req.date)
+        png_bytes = fetch_true_color_png(
+            bbox=req.bbox, date=req.date, width=req.width, height=req.height
+        )
     except CDSEAuthError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except CDSEUpstreamError as exc:

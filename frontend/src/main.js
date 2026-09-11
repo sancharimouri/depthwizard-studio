@@ -730,10 +730,8 @@ const startGenerationButton = document.getElementById("start-generation-button")
 
 let sceneSelected = false;
 
-// Populated on selection (search pick or direct upload), but not shown
-// until the box 2 (Preview) step of the START GENERATION sequence reveals
-// it — selecting a scene only enables the button, boxes 2-8 stay idle
-// until it's clicked.
+// Populated on selection (search pick or direct upload). Box 2 (Preview)
+// reveals it immediately — only boxes 3-8 stay idle until START GENERATION.
 let pendingScenePreview = null;
 
 // What box 1 actually did, for Calculation Logs (box 7) to open with —
@@ -741,11 +739,30 @@ let pendingScenePreview = null;
 // into the generic reconstruction trace.
 let sceneSelectionSummary = null;
 
+function revealScenePreview() {
+    if (!pendingScenePreview) {
+        return;
+    }
+    if (previewImage) {
+        previewImage.src = pendingScenePreview.src;
+    }
+    if (previewMeta) {
+        previewMeta.textContent = pendingScenePreview.meta;
+    }
+    if (previewEmpty) {
+        previewEmpty.hidden = true;
+    }
+    if (previewContent) {
+        previewContent.hidden = false;
+    }
+}
+
 function markSceneSelected() {
     sceneSelected = true;
     if (startGenerationButton) {
         startGenerationButton.disabled = false;
     }
+    revealScenePreview();
 }
 
 function openSceneSearchModal() {
@@ -841,6 +858,37 @@ function selectUploadedScene(file) {
     markSceneSelected();
 }
 
+const SCENE_THUMB_PX = 96;
+
+// The Catalog (STAC) response has no thumbnail/quicklook asset — its
+// "data" asset is an S3 directory href, not a fetchable image — so each
+// result's thumbnail is a small real Process API crop of that scene over
+// the search AOI, not a fabricated placeholder image.
+async function loadSceneThumbnail(scene, thumbEl) {
+    if (!currentSearchAoiBbox || !thumbEl) {
+        return;
+    }
+
+    try {
+        const response = await postJson(CDSE_PREVIEW_URL, {
+            bbox: currentSearchAoiBbox,
+            date: scene.date,
+            width: SCENE_THUMB_PX,
+            height: SCENE_THUMB_PX,
+        });
+        const blob = await response.blob();
+
+        const img = document.createElement("img");
+        img.className = "scene-result-thumb";
+        img.src = URL.createObjectURL(blob);
+        img.alt = `${scene.id} quicklook`;
+        thumbEl.replaceWith(img);
+    } catch (error) {
+        console.error(`Thumbnail request failed for ${scene.id}:`, error);
+        // Leave the placeholder tile in place — no fabricated imagery.
+    }
+}
+
 function renderSceneResults(scenes) {
     if (!sceneSearchResults) {
         return;
@@ -860,6 +908,8 @@ function renderSceneResults(scenes) {
         `;
         card.addEventListener("click", () => selectScene(scene, card));
         sceneSearchResults.appendChild(card);
+
+        loadSceneThumbnail(scene, card.querySelector(".scene-result-thumb"));
     });
 
     sceneSearchResults.hidden = false;
@@ -1559,9 +1609,10 @@ function updateFinalDemoViewer() {
 
 const BOX_GENERATE_MS = 4500;
 
-// Sequential box count (excludes box 7, which runs continuously in
-// parallel instead) — used to pace Calculation Logs to the same span.
-const SEQUENTIAL_BOX_COUNT = 6;
+// Sequential box count (excludes box 2, which now reveals at selection
+// time, and box 7, which runs continuously in parallel instead) — used
+// to pace Calculation Logs to the same span.
+const SEQUENTIAL_BOX_COUNT = 5;
 const TOTAL_PIPELINE_MS = BOX_GENERATE_MS * SEQUENTIAL_BOX_COUNT;
 
 function generatingOverlayMarkup() {
@@ -1614,40 +1665,8 @@ async function animateGenerating({ percentEl, statusEl, steps, durationMs }) {
     }
 }
 
-// ---- Box 2 (Preview): reveals whatever was selected/uploaded in box 1,
-// which was held back until now. ----
-
-async function generatePreviewBox() {
-    const emptyEl = document.getElementById("preview-empty");
-    const contentEl = document.getElementById("preview-content");
-
-    if (!emptyEl || !contentEl || !pendingScenePreview) {
-        return;
-    }
-
-    emptyEl.innerHTML = generatingOverlayMarkup();
-
-    await animateGenerating({
-        percentEl: emptyEl.querySelector(".generating-percent"),
-        statusEl: emptyEl.querySelector(".generating-status"),
-        steps: [
-            "Registering scene footprint…",
-            "Validating against Sentinel-2 tiling grid…",
-            "Preparing reconstruction inputs…",
-        ],
-        durationMs: BOX_GENERATE_MS,
-    });
-
-    if (previewImage) {
-        previewImage.src = pendingScenePreview.src;
-    }
-    if (previewMeta) {
-        previewMeta.textContent = pendingScenePreview.meta;
-    }
-
-    emptyEl.hidden = true;
-    contentEl.hidden = false;
-}
+// ---- Box 2 (Preview) reveals at selection time now (see
+// revealScenePreview() above), not as part of the generation sequence. ----
 
 // ---- Boxes 3 (Relative Depth) / 4 (Elevation): the image + caption
 // were already in the DOM, just held behind .preview-empty — swap that
@@ -1779,8 +1798,6 @@ async function runGenerationSequence() {
     // Starts filling immediately and keeps appending in parallel with
     // whichever box below is currently generating.
     runCalcLog(TOTAL_PIPELINE_MS);
-
-    await generatePreviewBox();
 
     await generateCaptionPreviewBox("depth-preview-box", [
         "Loading Sentinel-2 RGB tiles…",
