@@ -305,7 +305,9 @@ document.querySelectorAll(".layer-button").forEach(button => {
 // REGION RAIL — switching
 // ============================================================
 
-document.querySelectorAll(".region-card").forEach(card => {
+// [data-region] excludes the "Build Your Own" card — it reuses
+// .region-card for consistent styling but isn't a region to load.
+document.querySelectorAll(".region-card[data-region]").forEach(card => {
     card.addEventListener("click", async () => {
         const region = card.dataset.region;
 
@@ -756,7 +758,7 @@ function setActivePage(pageId) {
     });
 
     if (pageId === "page-2") {
-        requestAnimationFrame(drawPipelineConnectors);
+        requestAnimationFrame(initWorkbenchGrid);
     }
 }
 
@@ -776,202 +778,228 @@ document.getElementById("build-your-own-card")?.addEventListener("click", () => 
 
 
 // ============================================================
-// RECONSTRUCTION PIPELINE DIAGRAM (Workbench, static/placeholder)
+// WORKBENCH RECONSTRUCTION GRID (columns 2-4, static/placeholder)
 // ============================================================
 
-const pipelineDiagram = document.getElementById("pipeline-diagram");
-const pipelineSvg = document.getElementById("pipeline-connectors");
-const pipelineCaption = document.getElementById("pipeline-caption");
-const pipelineViewerBox = document.getElementById("viewer-box");
+// ---- Staged caption reveal: boxes 3-6 (Relative Depth, Elevation,
+// DSM, Metric Elevation) show a couple of lines that fade in one at a
+// time rather than appearing all at once. ----
 
-const PIPELINE_CAPTION_DEFAULT = "Hover or focus a stage for details.";
+function revealStagedCaption(container) {
+    if (!container || container.dataset.revealed === "true") {
+        return;
+    }
+    container.dataset.revealed = "true";
 
-// [from, to, style] — "aux" marks the DEM feeding forward into the
-// nDSM+DEM combine step, reused from earlier in the graph rather than
-// following the main left-to-right flow.
-const PIPELINE_EDGES = [
-    ["pn-input", "pn-preprocess", "main"],
-    ["pn-preprocess", "pn-dav2", "main"],
-    ["pn-preprocess", "pn-dem", "main"],
-    ["pn-preprocess", "pn-anchors", "main"],
-    ["pn-dav2", "pn-fusion", "main"],
-    ["pn-dem", "pn-fusion", "main"],
-    ["pn-anchors", "pn-fusion", "main"],
-    ["pn-fusion", "pn-ndsm", "wrap"],
-    ["pn-dem", "pn-combine", "aux"],
-    ["pn-ndsm", "pn-combine", "main"],
-    ["pn-combine", "pn-calibrate", "main"],
-    ["pn-calibrate", "pn-finaldsm", "main"],
-    ["pn-finaldsm", "pn-validate", "main"],
+    let lines = [];
+    try {
+        lines = JSON.parse(container.dataset.lines ?? "[]");
+    } catch {
+        lines = [];
+    }
+
+    lines.forEach((text, index) => {
+        const line = document.createElement("div");
+        line.className = "staged-line";
+        line.textContent = text;
+        container.appendChild(line);
+
+        setTimeout(() => {
+            requestAnimationFrame(() => line.classList.add("visible"));
+        }, 350 + index * 450);
+    });
+}
+
+function revealAllStagedCaptions() {
+    document.querySelectorAll(".staged-caption").forEach(revealStagedCaption);
+}
+
+// ---- Calculation log: a running technical trace pulled from real
+// facts elsewhere in this project's code/data that aren't already used
+// as a caption above (CRS reprojection, per-region mesh sizes, the
+// vertical-exaggeration formula and its real per-region outputs, edge-
+// erosion / spike-smoothing parameters). Timestamps are the actual
+// elapsed time since the log started, not staged numbers. ----
+
+const CALC_LOG_LINES = [
+    "Sentinel-2 RGB tiles loaded — 4 regions, 10 m, EPSG:32645",
+    "Darjeeling elevation source: OpenTopography DSM (native CRS)",
+    "Kolkata / Bardhaman / Sundarbans source: Copernicus GLO-30 (EPSG:4326)",
+    "Reprojecting Copernicus GLO-30 DEM → EPSG:32645 to align with Sentinel-2 grid",
+    "Mesh grid — Darjeeling 361×325, Kolkata 367×330",
+    "Mesh grid — Bardhaman 365×328, Sundarbans 368×332",
+    "verticalExaggeration = 0.02 × clamp(1 + 4·log10(0.2 / reliefRatio), 1, 10)",
+    "Darjeeling relief ratio 0.192 → exaggeration 1.07x",
+    "Kolkata relief ratio 0.0041 → exaggeration 7.74x",
+    "Bardhaman relief ratio 0.0031 → exaggeration 8.25x",
+    "Sundarbans relief ratio 0.0010 → exaggeration 10.00x (ceiling clamp)",
+    "Edge erosion — Kolkata: seed 1337, noiseScale 5, amount 0.06",
+    "Edge erosion — Sundarbans: seed 2701, noiseScale 7, amount 0.08",
+    "Edge erosion — Bardhaman: seed 8161, noiseScale 4, amount 0.06",
+    "Spike smoothing — Kolkata / Bardhaman: median k=3, slope cap 0.6, 4 iterations",
+    "Spike smoothing — Sundarbans: median k=3, slope cap 0.5, 4 iterations",
+    "Darjeeling mesh uses real DSM coverage — no edge erosion / spike smoothing applied",
+    "RDAH-Net (Swiss/HK building-height checkpoint), zero-shot on Sentinel-2 terrain: rejected — checkerboard artifacts",
+    "── end of trace ──",
 ];
 
-function pipelineRect(el, containerRect) {
-    const r = el.getBoundingClientRect();
-    const left = r.left - containerRect.left;
-    const top = r.top - containerRect.top;
+let calcLogStartTime = 0;
 
-    return {
-        left,
-        top,
-        right: left + r.width,
-        bottom: top + r.height,
-        cx: left + r.width / 2,
-        cy: top + r.height / 2,
+function appendCalcLogLine(scrollEl, text) {
+    const elapsedSeconds = (Date.now() - calcLogStartTime) / 1000;
+    const minutes = Math.floor(elapsedSeconds / 60);
+    const seconds = (elapsedSeconds % 60).toFixed(2).padStart(5, "0");
+    const timestamp = `${String(minutes).padStart(2, "0")}:${seconds}`;
+
+    const line = document.createElement("div");
+    line.className = "calc-log-line";
+
+    const timestampSpan = document.createElement("span");
+    timestampSpan.className = "calc-log-timestamp";
+    timestampSpan.textContent = `[${timestamp}]`;
+
+    line.appendChild(timestampSpan);
+    line.appendChild(document.createTextNode(text));
+    scrollEl.appendChild(line);
+    scrollEl.scrollTop = scrollEl.scrollHeight;
+}
+
+function runCalcLog() {
+    const scrollEl = document.getElementById("calc-log-scroll");
+
+    if (!scrollEl || scrollEl.dataset.started === "true") {
+        return;
+    }
+    scrollEl.dataset.started = "true";
+
+    calcLogStartTime = Date.now();
+
+    CALC_LOG_LINES.forEach((text, index) => {
+        setTimeout(() => appendCalcLogLine(scrollEl, text), 200 + index * 420);
+    });
+}
+
+// ---- Mini 3D previews: DSM / Metric Elevation. Gently auto-rotating,
+// no OrbitControls attached (no drag/zoom), sharing one fetch of
+// Darjeeling's terrain data + textures across both. ----
+
+const miniPreviews = [];
+let miniPreviewAssetsPromise = null;
+
+function loadMiniPreviewAssets() {
+    if (!miniPreviewAssetsPromise) {
+        miniPreviewAssetsPromise = (async () => {
+            const terrainResponse = await fetch("/data/darjeeling/terrain.json");
+            const terrainData = await terrainResponse.json();
+
+            const textureLoader = new THREE.TextureLoader();
+            const satelliteTexture = await textureLoader.loadAsync("/data/darjeeling/satellite.png");
+            const depthTexture = await textureLoader.loadAsync("/data/darjeeling/relative_depth.png");
+            const elevationTexture = await textureLoader.loadAsync("/data/darjeeling/elevation.png");
+
+            return { terrainData, satelliteTexture, depthTexture, elevationTexture };
+        })();
+    }
+
+    return miniPreviewAssetsPromise;
+}
+
+function resizeMiniPreview(preview) {
+    const width = preview.canvas.clientWidth;
+    const height = preview.canvas.clientHeight;
+
+    if (width === 0 || height === 0 || (width === preview.lastWidth && height === preview.lastHeight)) {
+        return;
+    }
+
+    preview.lastWidth = width;
+    preview.lastHeight = height;
+
+    preview.camera.aspect = width / height;
+    preview.camera.updateProjectionMatrix();
+    preview.renderer.setSize(width, height, false);
+}
+
+function createMiniPreview(canvas, layer) {
+    const miniScene = new THREE.Scene();
+
+    // Same fixed 100-unit terrain height (and tuned camera framing) as
+    // the main viewer — createTerrain() always builds at that scale
+    // regardless of region aspect ratio.
+    const miniCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
+    miniCamera.position.set(0, 58, 143);
+    miniCamera.lookAt(0, 12, 0);
+
+    const miniRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    miniScene.add(new THREE.HemisphereLight(0xddebd8, 0x172018, 2.0));
+
+    const miniSun = new THREE.DirectionalLight(0xffffff, 3.0);
+    miniSun.position.set(-40, 100, 50);
+    miniScene.add(miniSun);
+
+    const group = new THREE.Group();
+    miniScene.add(group);
+
+    const preview = {
+        canvas,
+        scene: miniScene,
+        camera: miniCamera,
+        renderer: miniRenderer,
+        group,
+        ready: false,
+        lastWidth: 0,
+        lastHeight: 0,
     };
+
+    loadMiniPreviewAssets().then(({ terrainData, satelliteTexture, depthTexture, elevationTexture }) => {
+        const terrain = createTerrain(group, "darjeeling", terrainData, satelliteTexture, depthTexture, elevationTexture);
+        terrain.setLayer(layer);
+        preview.ready = true;
+        resizeMiniPreview(preview);
+    });
+
+    miniPreviews.push(preview);
 }
 
-function pipelineEdgePoint(from, to) {
-    const dx = to.cx - from.cx;
-    const dy = to.cy - from.cy;
-
-    if (Math.abs(dx) >= Math.abs(dy)) {
-        return dx >= 0
-            ? { x: from.right, y: from.cy }
-            : { x: from.left, y: from.cy };
-    }
-
-    return dy >= 0
-        ? { x: from.cx, y: from.bottom }
-        : { x: from.cx, y: from.top };
-}
-
-function pipelineElbowPath(fromRect, toRect) {
-    const start = pipelineEdgePoint(fromRect, toRect);
-    const end = pipelineEdgePoint(toRect, fromRect);
-
-    if (Math.abs(start.x - end.x) < 2 || Math.abs(start.y - end.y) < 2) {
-        return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-    }
-
-    const midX = start.x + (end.x - start.x) / 2;
-    return `M ${start.x} ${start.y} L ${midX} ${start.y} L ${midX} ${end.y} L ${end.x} ${end.y}`;
-}
-
-function pipelineCurvePath(fromRect, toRect) {
-    const start = pipelineEdgePoint(fromRect, toRect);
-    const end = pipelineEdgePoint(toRect, fromRect);
-    const midY = start.y + (end.y - start.y) / 2;
-
-    return `M ${start.x} ${start.y} C ${start.x} ${midY}, ${end.x} ${midY}, ${end.x} ${end.y}`;
-}
-
-// Forces a bottom-of-from → top-of-to elbow, used for the row-wrap
-// transition (fusion head down into the second pipeline row). A generic
-// nearest-edge anchor would land on fusion's left edge and ndsm's right
-// edge — the same edge ndsm uses for its own outgoing arrow — reading as
-// a false bidirectional arrow.
-function pipelineWrapPath(fromRect, toRect) {
-    const start = { x: fromRect.cx, y: fromRect.bottom };
-    const end = { x: toRect.cx, y: toRect.top };
-    const midY = start.y + (end.y - start.y) / 2;
-
-    return `M ${start.x} ${start.y} L ${start.x} ${midY} L ${end.x} ${midY} L ${end.x} ${end.y}`;
-}
-
-function drawPipelineConnectors() {
-    if (!pipelineSvg || !pipelineDiagram || activePageId !== "page-2") {
-        return;
-    }
-
-    pipelineSvg.querySelectorAll("path.pipeline-edge").forEach(path => path.remove());
-
-    const containerRect = pipelineDiagram.getBoundingClientRect();
-
-    if (containerRect.width === 0) {
-        return;
-    }
-
-    PIPELINE_EDGES.forEach(([fromKey, toKey, style]) => {
-        const fromEl = pipelineDiagram.querySelector(`.${fromKey}`);
-        const toEl = pipelineDiagram.querySelector(`.${toKey}`);
-
-        if (!fromEl || !toEl) {
+function updateMiniPreviews() {
+    miniPreviews.forEach(preview => {
+        if (!preview.ready) {
             return;
         }
 
-        const fromRect = pipelineRect(fromEl, containerRect);
-        const toRect = pipelineRect(toEl, containerRect);
+        resizeMiniPreview(preview);
 
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("class", "pipeline-edge");
-        path.setAttribute("fill", "none");
-
-        if (style === "aux") {
-            path.setAttribute("d", pipelineCurvePath(fromRect, toRect));
-            path.setAttribute("stroke", "rgba(98,217,139,0.55)");
-            path.setAttribute("stroke-dasharray", "4 3");
-            path.setAttribute("marker-end", "url(#pipeline-arrow-aux)");
-        } else if (style === "wrap") {
-            path.setAttribute("d", pipelineWrapPath(fromRect, toRect));
-            path.setAttribute("stroke", "rgba(255,255,255,0.35)");
-            path.setAttribute("marker-end", "url(#pipeline-arrow)");
-        } else {
-            path.setAttribute("d", pipelineElbowPath(fromRect, toRect));
-            path.setAttribute("stroke", "rgba(255,255,255,0.35)");
-            path.setAttribute("marker-end", "url(#pipeline-arrow)");
-        }
-
-        path.setAttribute("stroke-width", "1.5");
-        pipelineSvg.appendChild(path);
+        preview.group.rotation.y += 0.0025;
+        preview.renderer.render(preview.scene, preview.camera);
     });
-
-    if (pipelineViewerBox) {
-        const validateEl = pipelineDiagram.querySelector(".pn-validate");
-
-        if (validateEl) {
-            const validateRect = pipelineRect(validateEl, containerRect);
-            const viewerRect = pipelineRect(pipelineViewerBox, containerRect);
-
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("class", "pipeline-edge");
-            path.setAttribute("fill", "none");
-            path.setAttribute("d", pipelineElbowPath(validateRect, viewerRect));
-            path.setAttribute("stroke", "rgba(255,255,255,0.35)");
-            path.setAttribute("stroke-width", "1.5");
-            path.setAttribute("marker-end", "url(#pipeline-arrow)");
-            pipelineSvg.appendChild(path);
-        }
-    }
 }
 
-pipelineDiagram?.addEventListener("mouseover", event => {
-    const node = event.target.closest(".pipeline-node");
+// ---- Init (first Workbench visit only — avoids re-creating WebGL
+// contexts or re-running the staged reveals on every tab switch). ----
 
-    if (node && pipelineCaption) {
-        pipelineCaption.textContent = node.dataset.desc ?? PIPELINE_CAPTION_DEFAULT;
+let workbenchGridInitialized = false;
+
+function initWorkbenchGrid() {
+    if (workbenchGridInitialized) {
+        return;
     }
-});
+    workbenchGridInitialized = true;
 
-pipelineDiagram?.addEventListener("mouseout", event => {
-    const node = event.target.closest(".pipeline-node");
-    const toNode = event.relatedTarget?.closest?.(".pipeline-node");
+    revealAllStagedCaptions();
+    runCalcLog();
 
-    if (node && !toNode && pipelineCaption) {
-        pipelineCaption.textContent = PIPELINE_CAPTION_DEFAULT;
+    const dsmCanvas = document.getElementById("dsm-3d-canvas");
+    const metricCanvas = document.getElementById("metric-elevation-3d-canvas");
+
+    if (dsmCanvas) {
+        createMiniPreview(dsmCanvas, "dsm-3d");
     }
-});
-
-pipelineDiagram?.addEventListener("focusin", event => {
-    const node = event.target.closest(".pipeline-node");
-
-    if (node && pipelineCaption) {
-        pipelineCaption.textContent = node.dataset.desc ?? PIPELINE_CAPTION_DEFAULT;
+    if (metricCanvas) {
+        createMiniPreview(metricCanvas, "elevation-3d");
     }
-});
-
-pipelineDiagram?.addEventListener("focusout", event => {
-    const node = event.target.closest(".pipeline-node");
-
-    if (node && pipelineCaption) {
-        pipelineCaption.textContent = PIPELINE_CAPTION_DEFAULT;
-    }
-});
-
-window.addEventListener("resize", () => {
-    if (activePageId === "page-2") {
-        drawPipelineConnectors();
-    }
-});
+}
 
 
 // ============================================================
@@ -980,6 +1008,11 @@ window.addEventListener("resize", () => {
 
 function animate() {
     requestAnimationFrame(animate);
+
+    if (activePageId === "page-2") {
+        updateMiniPreviews();
+        return;
+    }
 
     if (activePageId !== "page-1") {
         return;

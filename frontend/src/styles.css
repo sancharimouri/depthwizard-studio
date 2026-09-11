@@ -1201,7 +1201,7 @@ kbd {
 
 
 /* ============================================================
-   WORKBENCH (page 2) — asymmetric grid, layout skeleton
+   WORKBENCH (page 2) — 4-column reconstruction grid
 ============================================================ */
 
 .workbench-grid {
@@ -1209,22 +1209,22 @@ kbd {
     height: 100%;
 
     display: grid;
-    grid-template-columns: minmax(220px, 300px) 1fr;
+    /* Column 1 (Scene Input / Preview) is locked to a fixed share of
+       the grid's own width — independent of columns 2-4, which just
+       split whatever remains evenly — so it stays a stable ~30-33% of
+       the full page width (grid width + the nav rail's reserved 80px)
+       regardless of what those columns render. */
+    grid-template-columns: minmax(300px, 34%) repeat(3, 1fr);
     gap: 16px;
 
     padding: 24px 24px 24px 80px;
 }
 
-.workbench-left {
+.workbench-left,
+.workbench-col {
     display: flex;
     flex-direction: column;
     gap: 16px;
-
-    min-height: 0;
-}
-
-.workbench-right {
-    position: relative;
 
     min-height: 0;
 }
@@ -1249,12 +1249,27 @@ kbd {
     text-align: center;
 }
 
-.workbench-left .workbench-box {
+.workbench-left .workbench-box,
+.workbench-col .workbench-box {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Column 4 is the one asymmetric row split — logs visibly taller than
+   the final-demo mount below it. Columns 1-3 keep their two boxes
+   at equal (flex: 1) height via the rule above. */
+.workbench-col-logs .calc-logs-box {
+    flex: 1.6;
+}
+
+.workbench-col-logs .final-demo-box {
     flex: 1;
 }
 
 .workbench-box.scene-input-box,
-.workbench-box.preview-box {
+.workbench-box.preview-box,
+.workbench-box.mini-3d-box,
+.workbench-box.calc-logs-box {
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -1335,166 +1350,92 @@ kbd {
     color: rgba(255,255,255,0.5);
 }
 
-.workbench-pipeline {
-    position: relative;
+/* Relative Depth / Elevation reuse .preview-box + .preview-image as-is
+   (static image, same treatment as the Scene Input preview). DSM /
+   Metric Elevation are small non-interactive 3D renders instead. */
+
+.mini-3d-canvas {
     width: 100%;
-    height: 100%;
-
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-
-    padding: 16px 18px;
-
-    border-style: solid;
-    border-color: rgba(255,255,255,0.10);
-    background: rgba(5, 12, 10, 0.55);
-
-    text-align: left;
-    text-transform: none;
-    font-weight: 400;
-
-    overflow: hidden;
-}
-
-.pipeline-subnote {
-    margin-top: -4px;
-    margin-bottom: 12px;
-
-    font-size: 10.5px;
-    line-height: 1.5;
-    color: rgba(255,255,255,0.4);
-}
-
-.pipeline-caption {
-    min-height: 14px;
-    margin-bottom: 12px;
-
-    font-size: 10.5px;
-    line-height: 1.4;
-    color: rgba(98,217,139,0.8);
-}
-
-.pipeline-diagram {
-    position: relative;
     flex: 1;
     min-height: 0;
-    width: 100%;
 
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    grid-template-rows: repeat(3, auto) auto;
-    column-gap: 22px;
-    row-gap: 12px;
+    display: block;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.10);
 
-    align-content: center;
-
-    /* Reserves the bottom-right corner for the 3D Viewer skeleton box
-       and its label, so the validation node/arrow never sits under it. */
-    padding-right: 250px;
-}
-
-.pipeline-connectors {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-
-    overflow: visible;
+    /* Belt-and-suspenders: no OrbitControls are attached to these
+       mini renderers, and this also blocks any stray pointer capture. */
     pointer-events: none;
 }
 
-.pipeline-node {
+/* Staged text reveal — used under boxes 3-6 (Relative Depth, Elevation,
+   DSM, Metric Elevation). Lines are appended by JS and fade/slide in
+   one at a time rather than appearing all at once. */
+
+.staged-caption {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 32px;
+}
+
+.staged-line {
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.55);
+
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.staged-line.visible {
+    opacity: 1;
+    transform: none;
+}
+
+.calc-logs-box {
     position: relative;
-    z-index: 1;
+}
+
+.calc-log-scroll {
+    flex: 1;
+    min-height: 0;
 
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 3px;
 
-    padding: 8px 10px;
+    overflow-y: auto;
+    padding-right: 4px;
 
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 8px;
-
-    background: rgba(255,255,255,0.04);
-    color: rgba(255,255,255,0.85);
-
-    font-family: inherit;
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    line-height: 1.25;
-    text-align: left;
-    text-transform: none;
-
-    cursor: default;
-    pointer-events: auto;
-
-    transition: background 0.15s ease, border-color 0.15s ease;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    line-height: 1.5;
+    color: rgba(152, 255, 180, 0.75);
 }
 
-.pipeline-node:hover,
-.pipeline-node:focus-visible {
-    background: rgba(98,217,139,0.12);
-    border-color: rgba(98,217,139,0.4);
-    outline: none;
+.calc-log-line {
+    opacity: 0;
+    animation: calc-log-in 0.25s ease forwards;
 }
 
-.pipeline-node-num {
-    flex-shrink: 0;
-
-    display: grid;
-    place-items: center;
-
-    width: 17px;
-    height: 17px;
-
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.25);
-
-    font-size: 8px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.6);
+@keyframes calc-log-in {
+    from {
+        opacity: 0;
+        transform: translateY(3px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
-.pipeline-node:hover .pipeline-node-num,
-.pipeline-node:focus-visible .pipeline-node-num {
-    border-color: rgba(98,217,139,0.6);
-    color: rgba(98,217,139,0.95);
+.calc-log-timestamp {
+    margin-right: 6px;
+    color: rgba(255,255,255,0.35);
 }
 
-.pn-input      { grid-column: 1; grid-row: 1 / 4; align-self: center; }
-.pn-preprocess { grid-column: 2; grid-row: 1 / 4; align-self: center; }
-.pn-dav2       { grid-column: 3; grid-row: 1; align-self: end; }
-.pn-dem        { grid-column: 3; grid-row: 2; align-self: center; }
-.pn-anchors    { grid-column: 3; grid-row: 3; align-self: start; }
-.pn-fusion     { grid-column: 4; grid-row: 1 / 4; align-self: center; }
-
-.pn-ndsm      { grid-column: 1; grid-row: 4; }
-.pn-combine   { grid-column: 2; grid-row: 4; }
-.pn-calibrate { grid-column: 3; grid-row: 4; }
-.pn-finaldsm  { grid-column: 4; grid-row: 4; }
-.pn-validate  { grid-column: 5; grid-row: 4; }
-
-.pipeline-final-label {
-    position: absolute;
-    right: 16px;
-    bottom: 172px;
-
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: rgba(255,255,255,0.4);
-}
-
-.workbench-viewer {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
-
-    width: 220px;
-    height: 150px;
-
-    background: rgba(5, 12, 10, 0.7);
+.final-demo-mount {
+    padding: 0 16px;
 }
