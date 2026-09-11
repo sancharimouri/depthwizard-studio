@@ -27,3 +27,5 @@ class SceneSearchResponse(BaseModel):
 class ScenePreviewRequest(BaseModel):
     bbox: list[float]
     date: str
+    width: int = 512
+    height: int = 512
