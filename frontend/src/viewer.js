@@ -26,7 +26,7 @@ export function createTerrainViewer(canvas, options = {}) {
     renderer.shadowMap.enabled = true;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x07100d);
+    scene.background = new THREE.Color(0x08160e);
 
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
 
