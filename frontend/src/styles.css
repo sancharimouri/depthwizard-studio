@@ -1570,7 +1570,7 @@ kbd {
 
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 9px;
 
     overflow-y: auto;
     /* Stops scrolling to the end of the log from chaining into the
