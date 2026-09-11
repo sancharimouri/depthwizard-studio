@@ -15,6 +15,11 @@ export function createTerrainViewer(canvas, options = {}) {
         // such overlap, so it defaults to centered.
         rigOffsetY = 0,
         cameraTarget = new THREE.Vector3(0, 12, 0),
+        // The void behind the terrain mesh — UI chrome, not imagery, so
+        // Workbench's light/dark toggle is allowed to swap it (via
+        // setBackground() below) while Explore's instance never calls
+        // that and stays on this dark default.
+        backgroundColor = 0x08160e,
     } = options;
 
     const renderer = new THREE.WebGLRenderer({
@@ -26,7 +31,7 @@ export function createTerrainViewer(canvas, options = {}) {
     renderer.shadowMap.enabled = true;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x08160e);
+    scene.background = new THREE.Color(backgroundColor);
 
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
 
@@ -109,6 +114,10 @@ export function createTerrainViewer(canvas, options = {}) {
         currentTerrain?.setFloodOverlay(active);
     }
 
+    function setBackground(color) {
+        scene.background = new THREE.Color(color);
+    }
+
     function resize(width, height) {
         if (width === 0 || height === 0) {
             return;
@@ -159,6 +168,7 @@ export function createTerrainViewer(canvas, options = {}) {
         loadRegion,
         setLayer,
         setFloodOverlay,
+        setBackground,
         resize,
         resizeToCanvas,
         update,
