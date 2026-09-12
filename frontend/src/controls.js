@@ -16,10 +16,14 @@ const AUTO_ROTATE_RADIANS_PER_SEC = 0.0018 * 60;
 // elevation angle (not the literal horizon).
 const PITCH_LIMIT = THREE.MathUtils.degToRad(72 * 0.3);
 
-// Sensitivity for the manual pinch/ctrl-scroll dolly below, tuned to land
-// in the same ballpark as camera-controls' own internal dolly formula
-// (dollyScale = 0.95^(-delta * dollySpeed)).
-const PINCH_DOLLY_SENSITIVITY = 0.02;
+// Matches the old OrbitControls-based zoom: a fixed ~5% distance change
+// per wheel event regardless of the event's raw deltaY magnitude (that
+// magnitude varies wildly across trackpads/browsers — scaling by it made
+// zoom crawl, ~1% per pinch, on trackpads that report small deltaY).
+// OrbitControls' own default (zoomSpeed=1) applies this same fixed
+// per-event 0.95 either direction, which is why "like before" means
+// sign-only here, not magnitude-scaled.
+const PINCH_DOLLY_SCALE = 0.95;
 
 // Camera orbits a fixed terrain (NASA-Eyes-style), replacing the old
 // terrainRig's approach of spinning the terrain group under a fixed
@@ -55,6 +59,12 @@ export function createControls(camera, domElement, target, homePosition = new TH
     // Negating azimuthRotateSpeed restores that same feel here, for both
     // drag and wheel-rotate (both route through the same internal call).
     controls.azimuthRotateSpeed = -1;
+
+    // Same reasoning, vertical axis: camera-controls' default polar sign
+    // tilts the opposite way from the old rig's pitch for a given
+    // drag/scroll-down — confirmed backwards in actual use. Negating
+    // polarRotateSpeed fixes drag and wheel-rotate together (both use it).
+    controls.polarRotateSpeed = -1;
 
     // Weighted coast: tighter follow while actively dragging so the camera
     // doesn't feel laggy mid-gesture, a longer glide once released so a
@@ -122,13 +132,21 @@ export function createControls(camera, domElement, target, homePosition = new TH
         event.stopImmediatePropagation();
         pauseAutoRotate();
 
-        // Negated deltaY: a pinch-out / scroll-up (deltaY < 0) should zoom
-        // in (closer), matching the standard ctrl-scroll page-zoom
-        // convention and the old OrbitControls-based zoom it replaces —
-        // confirmed by dispatching a synthetic ctrlKey wheel event and
-        // checking which way distance moved.
-        const dollyScale = Math.pow(0.95, -event.deltaY * PINCH_DOLLY_SENSITIVITY * controls.dollySpeed);
-        const nextDistance = THREE.MathUtils.clamp(controls.distance * dollyScale, controls.minDistance, controls.maxDistance);
+        // Sign only, not scaled by |deltaY| — see PINCH_DOLLY_SCALE above.
+        // Pinch-out / scroll-up (deltaY < 0) zooms in (closer), matching
+        // the standard ctrl-scroll page-zoom convention and the old
+        // OrbitControls-based zoom it replaces.
+        if (event.deltaY === 0) {
+            return;
+        }
+        // Based on the pending target radius (_sphericalEnd), not the
+        // public `distance` getter (the damped, currently-rendered value,
+        // which lags behind during a fast multi-event pinch/scroll under
+        // smoothTime damping) — basing it on the lagging value meant
+        // rapid-fire wheel events each recomputed off the same stale
+        // number instead of compounding, which is what made zoom crawl.
+        const dollyScale = event.deltaY < 0 ? PINCH_DOLLY_SCALE : 1 / PINCH_DOLLY_SCALE;
+        const nextDistance = THREE.MathUtils.clamp(controls._sphericalEnd.radius * dollyScale, controls.minDistance, controls.maxDistance);
         controls.dollyTo(nextDistance, true);
     }
 
