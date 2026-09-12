@@ -1,13 +1,11 @@
 import * as THREE from "three";
 import { createTerrain } from "./terrain.js";
 import { createControls } from "./controls.js";
-import { createTerrainRig } from "./terrainRig.js";
 
 // Shared interactive 3D terrain viewer — one instance drives Explore's
 // main canvas, a second drives Workbench's Final Demo box. Each instance
-// owns its own scene/camera/renderer/controls/terrainRig, so multiple
-// viewers can run side by side with fully independent camera state and
-// gesture handling.
+// owns its own scene/camera/renderer/controls, so multiple viewers can run
+// side by side with fully independent camera state and gesture handling.
 export function createTerrainViewer(canvas, options = {}) {
     const {
         // Explore's canvas sits under fixed screen panels, so its rig is
@@ -35,12 +33,12 @@ export function createTerrainViewer(canvas, options = {}) {
 
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1000);
 
-    // terrainRig's wheel listener must attach to domElement before
-    // OrbitControls' own (created next) so it can claim plain two-finger
-    // scroll for rotation ahead of OrbitControls treating it as a zoom.
-    const terrainRig = createTerrainRig(renderer.domElement, 0);
-    terrainRig.rig.position.set(0, rigOffsetY, 0);
-    scene.add(terrainRig.rig);
+    // Holds the terrain mesh — camera-controls orbits the camera around it
+    // instead of this group rotating under a fixed camera, so it only ever
+    // carries the static per-instance layout offset, never a rotation.
+    const terrainGroup = new THREE.Group();
+    terrainGroup.position.set(0, rigOffsetY, 0);
+    scene.add(terrainGroup);
 
     const controls = createControls(camera, renderer.domElement, cameraTarget);
 
@@ -61,7 +59,7 @@ export function createTerrainViewer(canvas, options = {}) {
             return;
         }
 
-        terrainRig.rig.remove(terrain.mesh);
+        terrainGroup.remove(terrain.mesh);
         terrain.mesh.geometry.dispose();
         terrain.material.dispose();
     }
@@ -84,7 +82,7 @@ export function createTerrainViewer(canvas, options = {}) {
         disposeTerrain(currentTerrain);
 
         const terrain = createTerrain(
-            terrainRig.rig,
+            terrainGroup,
             regionKey,
             terrainData,
             satelliteTexture,
@@ -98,10 +96,7 @@ export function createTerrainViewer(canvas, options = {}) {
         // ~18 degrees above the horizon, same distance regardless of
         // region — createTerrain() always builds at a fixed 100-unit
         // terrain height, so this framing holds across all regions.
-        camera.position.set(0, 58, 143);
-        controls.target.copy(cameraTarget);
-        controls.update();
-        terrainRig.reset();
+        controls.reset();
 
         return { terrain, terrainData };
     }
@@ -145,7 +140,6 @@ export function createTerrainViewer(canvas, options = {}) {
     }
 
     function update() {
-        terrainRig.update();
         controls.update();
     }
 
@@ -158,7 +152,6 @@ export function createTerrainViewer(canvas, options = {}) {
         camera,
         renderer,
         controls,
-        terrainRig,
         get currentTerrain() {
             return currentTerrain;
         },

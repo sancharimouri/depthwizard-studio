@@ -12,7 +12,7 @@ const canvas = document.getElementById("terrain-canvas");
 const exploreViewer = createTerrainViewer(canvas, { rigOffsetY: -10 });
 exploreViewer.resize(window.innerWidth, window.innerHeight);
 
-const { scene, camera, renderer, controls, terrainRig } = exploreViewer;
+const { scene, camera, renderer, controls } = exploreViewer;
 
 
 // ============================================================
@@ -341,23 +341,24 @@ runAgainButton?.addEventListener("click", runReconstruction);
 
 // ============================================================
 // FLYTHROUGH
-// (one-shot camera dolly-in — no loop back out — the terrain rig
-// keeps auto-rotating underneath it via its own render-loop update)
+// (one-shot camera dolly-in — no loop back out — auto-rotate keeps
+// spinning the camera around the terrain underneath it via controls' own
+// render-loop update)
 //
 // Factored into a reusable controller so Workbench's Final Demo box
-// (box 8) can offer the same feature on its own independent viewer,
-// camera, and terrain rig without sharing state with Explore's.
+// (box 8) can offer the same feature on its own independent viewer and
+// controls without sharing state with Explore's.
 // ============================================================
 
 const FLYTHROUGH_ROTATE_SPEED_MULTIPLIER = 2;
 const FLYTHROUGH_DURATION_MS = 9500;
 
-function createFlythroughController({ camera: flCamera, controls: flControls, terrainRig: flRig, button }) {
+function createFlythroughController({ controls: flControls, button }) {
     let flythrough = null;
 
     function reset() {
         flythrough = null;
-        flRig.setSpeedMultiplier(1);
+        flControls.setSpeedMultiplier(1);
 
         if (button) {
             button.disabled = false;
@@ -370,7 +371,7 @@ function createFlythroughController({ camera: flCamera, controls: flControls, te
             return;
         }
 
-        const startDistance = flCamera.position.distanceTo(flControls.target);
+        const startDistance = flControls.distance;
         const endDistance = Math.max(flControls.minDistance, startDistance * 0.5);
 
         flythrough = {
@@ -382,7 +383,7 @@ function createFlythroughController({ camera: flCamera, controls: flControls, te
 
         // 2x idle rotation speed for the zoom-in and for the continued
         // rotation afterward — stays elevated until the next reset.
-        flRig.setSpeedMultiplier(FLYTHROUGH_ROTATE_SPEED_MULTIPLIER);
+        flControls.setSpeedMultiplier(FLYTHROUGH_ROTATE_SPEED_MULTIPLIER);
 
         button.disabled = true;
         button.textContent = "FLYING THROUGH…";
@@ -398,9 +399,10 @@ function createFlythroughController({ camera: flCamera, controls: flControls, te
 
         const distance = flythrough.startDistance + (flythrough.endDistance - flythrough.startDistance) * eased;
 
-        const offset = flCamera.position.clone().sub(flControls.target);
-        offset.setLength(distance);
-        flCamera.position.copy(flControls.target).add(offset);
+        // Immediate (no transition): this loop already supplies its own
+        // cubic ease, and letting controls' own damping smooth it too
+        // would double up and lag behind the intended curve.
+        flControls.dollyTo(distance, false);
 
         if (t >= 1) {
             flythrough = null;
@@ -417,9 +419,7 @@ function createFlythroughController({ camera: flCamera, controls: flControls, te
 }
 
 const exploreFlythrough = createFlythroughController({
-    camera,
     controls,
-    terrainRig,
     button: flythroughButton,
 });
 
@@ -1517,9 +1517,7 @@ function initFinalDemoViewer() {
     });
 
     finalDemoFlythrough = createFlythroughController({
-        camera: finalDemoViewer.camera,
         controls: finalDemoViewer.controls,
-        terrainRig: finalDemoViewer.terrainRig,
         button: document.getElementById("final-demo-flythrough-button"),
     });
 
@@ -1892,7 +1890,6 @@ function animate() {
     }
 
     updateFlythrough();
-    terrainRig.update();
     controls.update();
     renderer.render(scene, camera);
 }
