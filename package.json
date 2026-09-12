@@ -1,0 +1,13 @@
+{
+  "name": "depthwizard2",
+  "private": true,
+  "description": "Root dev orchestrator: one command to run the frontend (vite) + backend (FastAPI proxy) together.",
+  "scripts": {
+    "dev": "node scripts/dev-check.mjs && concurrently -n BACKEND,FRONTEND -c blue,green --kill-others-on-fail \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "uv run uvicorn backend.main:app --reload --port 8000",
+    "dev:frontend": "npm run dev --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
