@@ -76,8 +76,14 @@ in order:
 6. **Sentinel-2 benchmark** (`data/sentinel2_benchmark/`) — separate validation dataset,
    32 real tiles (8 each: agricultural/coastal/hilly/urban), selected/QC'd via real
    ICESat-2 ATL08 ground-photon coverage (`manifest.csv`, `REPORT.md` — "CLOSED, complete").
-   Infrastructure exists; frozen-backbone comparisons against it (e.g. DAv2 vs. other
-   priors) are run per-task, not yet a standing pipeline.
+7. **Frozen-backbone comparison: DAv2 vs. DINOv3** (SAT493M+CHMv2) on the Sentinel-2
+   benchmark, against real per-photon ICESat-2 ground heights (not the coverage-only
+   counts) — CLOSED, DINOv3 won outright per its stated decision rule (pooled Pearson
+   +0.3037 / Spearman +0.3490 vs. DAv2's +0.0403 / -0.0484). Important caveat: DAv2 is
+   still the better raw correlate specifically in agricultural and hilly terrain —
+   DINOv3's pooled win is driven by urban. Full writeup, per-tile/per-category numbers,
+   and the HF-checkpoint state-dict conversion needed to get SAT493M running:
+   `docs/method-audit/sentinel2/backbone-comparison.md`.
 
 `00-audit-log.md` and `final-comparison.md` in `docs/method-audit/` are still empty stubs
 — don't treat their absence of content as "nothing happened," the per-method docs are
