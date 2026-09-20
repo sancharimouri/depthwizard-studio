@@ -34,29 +34,36 @@ TORCH_HUB_CACHE = PROJECT_ROOT / "models" / "hub"
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 
+# DAv2's own pipeline (backend/depth/depth_engine.py) resizes to a fixed
+# 518x518 for the model forward pass, then bicubic-upsamples the output
+# back to source resolution -- full source-resolution ViT-L attention on
+# CPU is computationally intractable (>25min/tile, unbounded for 32 tiles).
+# Matching that same input-resolution handling here keeps both backbones'
+# procedures parallel rather than introducing an asymmetry.
+DINOV3_INPUT_SIZE = 518
+
 
 def parse_args():
     p = argparse.ArgumentParser(description="Run frozen DINOv3 SAT493M+CHMv2 on the benchmark manifest.")
     p.add_argument("--manifest", required=True)
     p.add_argument("--output-dir", required=True)
     p.add_argument(
-        "--backbone-weights",
-        default=None,
-        help="Local .pth path or signed URL for the gated SAT493M backbone. "
-        "Omit to use Meta's public (gated) fbaipublicfiles URL, which will "
-        "403 without prior access.",
+        "--hf-safetensors",
+        default=str(PROJECT_ROOT / "models" / "hub" / "hf_dinov3_sat493m" / "model.safetensors"),
+        help="Path to the SAT493M backbone downloaded from the gated "
+        "facebook/dinov3-vitl16-pretrain-sat493m HF repo (requires approved "
+        "access). Converted in-memory to the original repo's state-dict "
+        "format; see scripts/lib_dinov3_sat493m_loader.py.",
     )
     return p.parse_args()
 
 
-def load_model(backbone_weights: str | None):
+def load_model(hf_safetensors: str):
     torch.hub.set_dir(str(TORCH_HUB_CACHE))
-    kwargs = {}
-    if backbone_weights:
-        kwargs["backbone_weights"] = backbone_weights
-    model = torch.hub.load(str(DINOV3_REPO), "dinov3_vitl16_chmv2", source="local", pretrained=True, **kwargs)
-    model.eval()
-    return model
+    sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+    from lib_dinov3_sat493m_loader import load_dinov3_chmv2_depther
+
+    return load_dinov3_chmv2_depther(Path(hf_safetensors))
 
 
 def load_rgb(path: Path) -> Image.Image:
@@ -74,6 +81,7 @@ def preprocess(image: Image.Image) -> torch.Tensor:
     transform = v2.Compose(
         [
             v2.ToImage(),
+            v2.Resize((DINOV3_INPUT_SIZE, DINOV3_INPUT_SIZE)),
             v2.ToDtype(torch.float32, scale=True),
             v2.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
         ]
@@ -102,7 +110,7 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("Loading DINOv3 SAT493M + CHMv2 depther (frozen, no training)...")
-    model = load_model(args.backbone_weights)
+    model = load_model(args.hf_safetensors)
     print("Loaded.\n")
 
     successes, skipped, errors = 0, 0, 0
