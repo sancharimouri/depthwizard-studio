@@ -1,6 +1,10 @@
 # Frozen-backbone comparison: DAv2 vs DINOv3 (SAT493M + CHMv2)
 
-**Status: IN PROGRESS — DAv2 side complete, DINOv3 side blocked on gated model access.**
+**Status: COMPLETE. Winner: DINOv3 (SAT493M + CHMv2)** — higher pooled Pearson
+AND Spearman across all 32 tiles than DAv2, so the decision rule resolves
+outright with no tie-break needed. See "Step 1.3 — decision" for the full
+numbers and important category-level caveats before treating this as
+unconditional.
 
 Goal: decide which frozen backbone (no calibration/fine-tuning) correlates better
 with real elevation, on real Sentinel-2 + real ICESat-2 ground truth, across the
@@ -171,41 +175,155 @@ Full CSV: `data/sentinel2_benchmark/dav2_depth/dav2_correlation_per_tile.csv`.
   have real bathymetry/topography contrast, and pooling amplifies the
   disagreement between them rather than averaging it out.
 
-## Step 1.2 — DINOv3 (blocked)
+## Step 1.2 — DINOv3 (complete)
 
-Identified Meta's actual intended tool for a satellite-domain monocular
-height probe: `dinov3_vitl16_chmv2` (from `facebookresearch/dinov3`,
-vendored unmodified at `external/dinov3/`) — the **SAT493M** (MAXAR-pretrained)
+Used Meta's actual intended tool for a satellite-domain monocular height
+probe: `dinov3_vitl16_chmv2` (from `facebookresearch/dinov3`, vendored
+unmodified at `external/dinov3/`) — the **SAT493M** (MAXAR-pretrained)
 backbone paired with Meta's own official **CHMv2** (Canopy Height Model v2)
 DPT decoder head. This is a better fit than the generic SYNTHMIX depth head
-(which is only released for the general-purpose LVD1689M backbone): CHMv2 is
-itself a satellite-imagery absolute-height regression head, pretrained by
-Meta, loaded and run frozen with no training and no custom readout, per the
-task's methodology (`scripts/run_dinov3_batch.py`).
+(only released for the general-purpose LVD1689M backbone): CHMv2 is itself
+a satellite-imagery absolute-height regression head, pretrained by Meta,
+loaded and run frozen with no training and no custom readout to it — the
+DPT head's weights are used exactly as Meta shipped them.
 
-**Blocker:** the SAT493M backbone weights are Meta-license-gated —
-`facebook/dinov3-vitl16-pretrain-sat493m` on Hugging Face shows
-`gated: manual` (requires Meta's manual approval, not instant), and the
-direct `fbaipublicfiles.com` CDN URL 403s without prior access. (The CHMv2
-head weights themselves, 135MB, are public — only the backbone is gated.)
-Confirmed the rest of the pipeline runs cleanly up to that download step.
+### Backbone access — resolved, with a wrinkle worth recording
 
-Waiting on backbone access (HF approval or a signed download URL) before
-Step 1.2 can run. `scripts/run_dinov3_batch.py --backbone-weights <path-or-url>`
-is ready to go once access is available; `scripts/run_dinov3_correlation.py`
-reuses the exact same photon-sampling/correlation module as DAv2 for a
-directly comparable result.
+`facebook/dinov3-vitl16-pretrain-sat493m` on Hugging Face is `gated: manual`.
+Once the user's HF access request was approved (`HF_TOKEN` in `.env`), the
+Hugging Face download worked directly — but Meta's own
+`fbaipublicfiles.com` CDN URL that `torch.hub`'s `dinov3_vitl16_chmv2`
+entrypoint calls internally **still 403s**, even with that same approval;
+it appears to be a separate, unresolved gate from the HF one. Worked around
+it by downloading the HF-hosted checkpoint and converting its state dict
+into the original repo's parameter naming (`scripts/lib_dinov3_sat493m_loader.py`)
+— same pretrained weights, same architecture, two independent
+re-implementations (`transformers`' port vs. the original research repo's
+code) with different key names. This is a pure key/shape translation, not
+a re-derivation: fused-qkv concatenation of HF's split q/k/v projections,
+a zero-filled k-bias segment + a deterministic `bias_mask` buffer (both
+verified as fixed, non-learned values from the target code, not
+approximations), and a tensor reshape for `mask_token`. No weight values
+were invented or altered. The public CHMv2 head weights (135MB, not gated)
+loaded normally from `fbaipublicfiles.com`.
 
-## Step 1.3 — comparison and decision (pending)
+### Input resolution — matched to DAv2's own precedent
 
-Cannot be completed until Step 1.2 runs. Decision rule (stated in advance,
-per the task spec): the backbone with higher **pooled** Pearson AND Spearman
-across all 32 tiles wins outright; if split, report both explicitly and
-break the tie by whichever backbone wins in more of the 4 terrain
-categories.
+Full source-resolution (1000x1000) inference on CPU (this machine has no
+CUDA; the vendored `Depther` class has no MPS path) took over 25 minutes
+for a single tile and was killed as intractable for 32 tiles. DAv2's own
+pipeline (`backend/depth/depth_engine.py`) already resizes to a fixed
+518x518 for the model forward pass and bicubic-upsamples the output back to
+source resolution — the same handling was applied here
+(`DINOV3_INPUT_SIZE = 518` in `run_dinov3_batch.py`), which is matching an
+existing precedent, not introducing a new asymmetry between the two
+backbones' procedures. Runtime: 95.3s/tile mean, 32/32 succeeded, 0 errors.
 
-DAv2's pooled numbers to beat: **Pearson +0.0403, Spearman -0.0484** — note
-these already disagree in sign, so DAv2 may itself force a "split" outcome
-under the stated decision rule regardless of what DINOv3 scores; if DINOv3
-also splits, or if DINOv3 is unambiguously positive on both while DAv2 is
-mixed, resolve per the category tie-break as specified.
+Sanity-checked visually against DAv2's output for `manali` (hilly): same
+dark central valley structure, plus scattered bright canopy-like clusters
+consistent with CHMv2 predicting canopy height rather than raw elevation
+(see interpretation note below).
+
+### Per-tile results
+
+| tile | category | n | pearson | spearman |
+|---|---|---:|---:|---:|
+| bathinda | agricultural | 1,194,195 | -0.1211 | -0.0938 |
+| fatehpur | agricultural | 559,803 | +0.1329 | +0.0749 |
+| hisar | agricultural | 552,384 | +0.0284 | +0.0537 |
+| karnal | agricultural | 352,982 | -0.0788 | -0.2001 |
+| kota | agricultural | 624,582 | -0.0861 | -0.0374 |
+| kurnool | agricultural | 220,429 | +0.3384 | +0.2311 |
+| nizamabad | agricultural | 721,319 | +0.3462 | +0.1970 |
+| vidisha | agricultural | 503,498 | +0.1656 | +0.2353 |
+| amalapuram | coastal | 1,060,205 | +0.2070 | +0.3294 |
+| bhitarkanika | coastal | 434,280 | +0.2161 | +0.1087 |
+| digha | coastal | 727,088 | +0.4516 | +0.5669 |
+| goa_estuary | coastal | 728,473 | +0.4348 | +0.4125 |
+| kakinada | coastal | 586,309 | +0.3004 | +0.3869 |
+| kutch | coastal | 1,061,324 | +0.2350 | +0.3120 |
+| nagapattinam | coastal | 587,493 | +0.2453 | +0.4389 |
+| vembanad | coastal | 325,335 | +0.5548 | +0.0491 |
+| almora | hilly | 122,628 | +0.1039 | -0.0190 |
+| dehradun | hilly | 24,273 | +0.4491 | +0.5215 |
+| dharamshala | hilly | 56,878 | +0.6125 | +0.4790 |
+| kohima | hilly | 75,182 | +0.1541 | +0.2072 |
+| manali | hilly | 169,397 | -0.1393 | -0.1760 |
+| nainital | hilly | 43,410 | +0.2911 | +0.4744 |
+| ooty | hilly | 102,095 | +0.2058 | +0.2248 |
+| shimla | hilly | 41,423 | +0.1844 | +0.1917 |
+| bengaluru | urban | 141,770 | +0.2373 | +0.2800 |
+| chennai | urban | 280,990 | +0.6583 | +0.7087 |
+| delhi | urban | 68,961 | -0.0426 | +0.0071 |
+| hyderabad | urban | 236,072 | -0.1007 | -0.1830 |
+| jaipur | urban | 331,252 | -0.0886 | -0.1527 |
+| kochi_city | urban | 373,853 | +0.4380 | +0.2958 |
+| mumbai | urban | 137,172 | +0.2240 | +0.4053 |
+| pune | urban | 158,228 | -0.1621 | -0.1898 |
+
+Full CSV: `data/sentinel2_benchmark/dinov3_depth/dinov3_correlation_per_tile.csv`.
+
+### Pooled results
+
+| scope | n | pearson | spearman |
+|---|---:|---:|---:|
+| **pooled (all 32 tiles)** | 12,603,283 | **+0.3037** | **+0.3490** |
+| agricultural | 4,729,192 | -0.3097 | -0.4948 |
+| coastal | 5,510,507 | -0.0951 | -0.1528 |
+| hilly | 635,286 | +0.0032 | +0.1422 |
+| urban | 1,728,298 | +0.3314 | +0.4382 |
+
+## Step 1.3 — comparison and decision
+
+**Decision rule** (stated in advance, per the task spec): the backbone with
+higher pooled Pearson AND Spearman across all 32 tiles wins outright.
+
+| backbone | pooled pearson | pooled spearman |
+|---|---:|---:|
+| DAv2 | +0.0403 | -0.0484 |
+| **DINOv3 (SAT493M+CHMv2)** | **+0.3037** | **+0.3490** |
+
+**DINOv3 wins outright** — higher on both pooled metrics, no split, no
+tie-break needed. DINOv3 becomes the frozen prior going forward per the
+decision rule as stated.
+
+### Category breakdown (informational — not needed for the decision, since it already resolved outright)
+
+| category | DAv2 pearson/spearman | DINOv3 pearson/spearman | better on this category |
+|---|---:|---:|---|
+| agricultural | +0.3367 / +0.4448 | -0.3097 / -0.4948 | DAv2, clearly |
+| coastal | -0.1856 / -0.1454 | -0.0951 / -0.1528 | roughly tied (DINOv3 less-negative Pearson, DAv2 marginally better Spearman) |
+| hilly | +0.3422 / +0.2215 | +0.0032 / +0.1422 | DAv2, clearly |
+| urban | +0.1054 / +0.2081 | +0.3314 / +0.4382 | DINOv3, clearly |
+
+**This is the important caveat to the "DINOv3 wins" headline:** DINOv3's
+pooled win is driven almost entirely by urban (its strongest category by
+far) and by not being as badly wrong as DAv2 in coastal/hilly, while DAv2
+is actually the better raw correlate in agricultural and hilly terrain
+specifically. A backbone selection based on the single pooled number would
+be reasonable per the stated rule, but a per-category or per-use-case
+choice might not pick DINOv3 uniformly — flag this if "frozen prior going
+forward" gets applied to a specific terrain type rather than pooled
+general use.
+
+### Why DINOv3 is more sign-stable here, most likely
+
+DAv2's per-tile signs flip essentially at random across scenes (the
+project's known finding this demo's framing is built on). DINOv3's
+per-tile signs are still not perfectly consistent, but noticeably less
+scattered, and CHMv2 is trained specifically as an absolute-height
+regression head (Canopy Height Model) rather than a general relative-depth
+estimator — it's plausible that even though its target quantity (canopy /
+object height above local ground, not terrain elevation) is not exactly
+what we're correlating against, that supervision target is closer to
+"real physical height in meters" than DAv2's inverse-depth-style training
+objective, giving it a more consistent sign relationship with true ground
+elevation. This is a plausible explanation, not a verified mechanism —
+it's not something this comparison itself proves.
+
+### Reused caveat (from Step 1)
+
+Same ICESat-2 geolocation-accuracy caveat applies here: ~6.5m positional
+noise against 10m pixels affects both backbones' correlations equally, so
+neither number should be read as a hard ceiling on what real signal is
+present.
