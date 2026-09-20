@@ -4,11 +4,27 @@ version = "0.1.0"
 description = "SIH 2026 single-view height estimation and 3D terrain reconstruction"
 requires-python = ">=3.11"
 dependencies = [
+    "pyproj>=3.7.2",
     "rasterio>=1.4.4",
+    "sliderule>=5.6.1",
 ]
 
 [project.optional-dependencies]
-ml = ["torch","transformers","pillow","numpy","scipy","scikit-learn","rasterio","pyproj"]
+ml = [
+    "torch",
+    "transformers",
+    "pillow",
+    "numpy",
+    "scipy",
+    "scikit-learn",
+    "rasterio",
+    "pyproj",
+    "torchmetrics>=1.9.0",
+    "omegaconf>=2.3.1",
+    "ftfy>=6.3.1",
+    "termcolor>=3.3.0",
+    "submitit>=1.5.4",
+]
 backend = ["fastapi","uvicorn","python-dotenv","httpx"]
 training = ["torchvision","albumentations"]
 dev = ["pytest","ruff"]
