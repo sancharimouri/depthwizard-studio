@@ -16,27 +16,72 @@ approaches, just pick one and note it in the commit message rather than asking.
 
 ## What this project actually is
 
-Depth Wizard turns satellite RGB into 3D terrain visualization. The backstory:
-we tried to build a real ML pipeline that converts satellite RGB → absolute elevation
-using Depth Anything V2 (DAv2). It failed: DAv2's raw relative-depth output on nadir
-(top-down) satellite imagery does not reliably correlate with real elevation once you
-control for spatial trend (on Darjeeling, correlation flipped from +0.6 to -0.4 after
-detrending). We also tried RDAH-Net checkpoints (trained on Swiss/HK building height)
-zero-shot on our Sentinel-2 terrain tiles — it produced checkerboard artifacts, rejected.
+Depth Wizard turns satellite RGB into 3D terrain visualization. There are **two active
+tracks** in this repo — don't collapse them into one story:
 
-**Decision made: the ML pipeline is FROZEN. This project is a polished demo/prototype
-UI, not a working metric-elevation system.** Real data is used throughout (real Sentinel-2
-imagery, real DAv2 relative-depth output, real DSMs as the terrain source), but the
-"satellite → absolute elevation" claim is honestly framed as a future research direction,
-not a working capability. Never let the UI imply the current pipeline computes real
-elevation from RGB — a real DSM is the terrain source; DAv2 output is shown as
-relative-depth *visualization*, not as the thing that produced the terrain.
+1. **Frontend/demo track** — a polished demo/prototype UI, not a working metric-elevation
+   system. Real data is used throughout (real Sentinel-2 imagery, real DAv2 relative-depth
+   output, real DSMs as the terrain source), but the "satellite → absolute elevation" claim
+   is honestly framed as a future research direction, not a working capability in the demo.
+   Never let the UI imply the current pipeline computes real elevation from RGB — a real
+   DSM is the terrain source; DAv2 output is shown as relative-depth *visualization*, not
+   as the thing that produced the terrain. This framing rule is not stale — keep it.
+   Early smoke tests here found DAv2's raw relative-depth output on nadir satellite imagery
+   doesn't reliably correlate with real elevation once you control for spatial trend (on
+   Darjeeling, correlation flipped from +0.6 to -0.4 after detrending), and zero-shot
+   RDAH-Net produced checkerboard artifacts — those findings motivated the demo framing
+   above, and are seeded into the frontend's pipeline log as real research history.
+2. **ML research track** — a separate, active, ongoing investigation (`docs/method-audit/`,
+   `data/dfc2019/`, `data/sentinel2_benchmark/`, `external/RDAH-Net/`, `external/SynRS3D/`,
+   `scripts/evaluate_*.py`, `scripts/fit_dav2_calibration.py`) into whether a real
+   metric-elevation correction on top of DAv2 is achievable. **Not frozen, not out of
+   scope.** See "ML research track status" below for where it actually stands. When asked
+   to work on this track, follow whatever the task specifies — the "don't touch ML
+   pipeline" rule below applies only to the frontend/demo track's own asset-generation
+   process, not to this track.
 
-**Frontend and asset-generation work only. Do not modify DAv2 inference logic, add any
-correction/calibration/fine-tuning attempt, or otherwise change the ML pipeline itself.**
-The one exception, specific to Session 2: you may *run* the existing, already-used
+**For the frontend/demo track specifically: frontend and asset-generation work only.**
+Do not modify DAv2 inference logic, add any correction/calibration/fine-tuning attempt
+to the demo's pipeline, or otherwise change the ML pipeline the demo uses. The one
+exception, specific to Session 2: you may *run* the existing, already-used
 asset-generation process (DAv2 inference + DSM crop/reproject) unmodified, to produce
 visualization assets for new regions — that's reusing a frozen process, not changing it.
+
+## ML research track status (as of 2026-09-20)
+
+Full audit trail: `PROJECT_STATUS_REPORT.md` (repo root) and `docs/method-audit/`
+(one numbered subfolder per method, each with `summary.md`/`verdict.md`). Methods tried,
+in order:
+
+1. **Global DEM-stat calibration** (`01-dem-stat-anchoring`) — CLOSED, no real improvement.
+2. **Sparse-anchor / GCP regression** (`02-gcp-regression`, many variants: Grid/Random/
+   Spatial × OLS/Huber/RANSAC) — CLOSED as standalone; RANSAC failed twice; best
+   deployable was Grid+Huber+20 anchors.
+3. **Semantic prior** (`03-semantic-prior`, building-probability term) — CLOSED, overfit,
+   didn't generalize spatially.
+4. **Learned CNN scale-modulation** (`04-learned-scale-modulation`) — **current best
+   result.** `phase2_building_rank_v2` (dense coverage + building-probability channel +
+   rank loss) on the DFC2019 benchmark: MAE 2.8803m / RMSE 4.7751m / Pearson 0.5835 /
+   Spearman 0.5438, vs. per-tile-OLS baseline MAE 3.3924m / RMSE 4.5787m / Pearson 0.5824
+   / Spearman 0.5093 — beats baseline on 3/4 metrics (first config ever to beat baseline
+   Pearson); RMSE gap narrowed from >13% to 4.3% but still not beaten. Full table:
+   `docs/method-audit/04-learned-scale-modulation/v2-results.md`.
+5. **RDAH-Net fusion** (`05-rdah-net-fusion`) — zero-shot rejected (checkerboard artifacts
+   on Sentinel-2; the RS3DAda comparison was separately found contaminated, 49/50 DFC2019
+   benchmark tiles were in its own training split — see `stage0-gates/rs3dada-audit.md`).
+   A fine-tuned run (`RDAH-FT-1`, 4-fold spatial CV) produced real numbers — pooled MAE
+   2.906m / RMSE 6.659m / Pearson 0.513 / Spearman 0.527, unstable across folds (Pearson
+   0.254–0.607) — genuinely unfinished, not accepted or rejected. `verdict.md`/`summary.md`
+   for this method are still empty stub templates.
+6. **Sentinel-2 benchmark** (`data/sentinel2_benchmark/`) — separate validation dataset,
+   32 real tiles (8 each: agricultural/coastal/hilly/urban), selected/QC'd via real
+   ICESat-2 ATL08 ground-photon coverage (`manifest.csv`, `REPORT.md` — "CLOSED, complete").
+   Infrastructure exists; frozen-backbone comparisons against it (e.g. DAv2 vs. other
+   priors) are run per-task, not yet a standing pipeline.
+
+`00-audit-log.md` and `final-comparison.md` in `docs/method-audit/` are still empty stubs
+— don't treat their absence of content as "nothing happened," the per-method docs are
+where the real record is.
 
 ## What actually exists right now
 
