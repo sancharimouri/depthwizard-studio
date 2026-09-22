@@ -2574,3 +2574,142 @@ existing `run_frequency_fusion_sentinel2.py` is unchanged by this test.
   functions unchanged. `... losing4` for the 4 target tiles, `... all25`
   for the full accepted set. Writes
   `data/sentinel2_benchmark/yats0x7_ground_trend_results/results_*.csv`.
+
+# 2026-09-22 (continued) — Semantic-prior phase 2.3: building-aware frequency fusion, tested against all 4 focus tiles — neither approach helps
+
+**Status: COMPLETE. Result: clean negative — Approach A (building-aware
+confidence weighting) is inert, Approach B (Open Buildings height blending)
+is net-harmful with one unexplained exception. Neither flips any of
+frequency fusion's 4 losing tiles (bathinda, amalapuram, kutch, chennai),
+and neither flips any of the 21 winning tiles to a loss either.** No CNN
+involved — both are closed-form combinations on top of frequency fusion's
+existing `dem_lowpass`/`dav2_highpass` signals, so Method 4's
+interpolation-memorization failure mode (the reason CNN correction was
+closed off, item 7 above) structurally cannot apply here.
+
+## What this is
+
+Real building-presence/height signals, prepared from scratch for this
+project's own 25-tile Sentinel-2 benchmark (a different tile set from the
+old Method3 demo-track cities, even where a city name coincides):
+
+- **Step 2** (`scripts/prepare_semantic_benchmark_footprints.py`): Microsoft
+  GlobalMLBuildingFootprints `building_fraction`, quadkey-matched and
+  rasterized onto each tile's exact UTM grid. Reuses
+  `repair_method3_coverage.py`'s AOI/partition-selection machinery and
+  `prepare_method3_semantic_inputs.py`'s GeoJSONL parsing, not reimplemented.
+  A new coverage-gap QC (nonzero-pixel spatial-extent test) replaces the
+  contiguous-blank-region detector gaps-and-fixes.md called for but never
+  implemented. 24/25 tiles OK; **kohima has zero Microsoft partition
+  coverage at all** (a real data-absence finding for that remote Nagaland
+  location, not a bug — Step 4 falls back to Open Buildings presence there).
+- **Step 3** (`scripts/prepare_semantic_benchmark_openbuildings.py`):
+  Google Open Buildings 2.5D Temporal height + presence, same public
+  unauthenticated GCS bucket approach already used for Method 4's 8-urban-tile
+  Test B (`prepare_method4_openbuildings_data.py`), extended to all 25 tiles.
+  The 8 urban tiles were already fetched onto an identical grid by that
+  earlier work and were reused rather than re-fetched
+  (`scripts/_reuse_urban_openbuildings.py`, verified bit-identical
+  transform/shape/crs). 24/25 at 100% OB coverage; **kurnool at 82.4%** (a
+  real partial gap, left as-is rather than filled).
+
+## Two integration approaches, both fixed a priori (not tuned against the test metric)
+
+- **Approach A — building-aware confidence weighting**:
+  `final_A = dem_lowpass + (1 + alpha * building_prob) * dav2_highpass`,
+  `alpha=1.0` fixed before looking at results (buildings get up to 2x DAv2
+  high-frequency weight). `building_prob` = Step 2's `building_fraction`,
+  falling back to Step 3's OB presence for kohima (Step 2's one gap).
+- **Approach B — direct supplementary height source**: at OB-confident
+  building pixels (`presence > 0.5`, matching Method 4 Test B's own
+  threshold), `final_B = dem_lowpass + 0.5*dav2_highpass + 0.5*ob_height`
+  (an equal blend of DAv2's detail signal and Open Buildings' own measured
+  AGL height); unchanged elsewhere.
+
+Both implemented in a new script, `scripts/run_frequency_fusion_semantic.py`,
+importing `run_frequency_fusion_sentinel2.py`'s helpers unchanged rather
+than modifying that script — it stays the reproducible standing baseline.
+Evaluated with the identical held-out-DEM (50%, seed 42) + independent-
+ICESat-2 protocol, all 25 tiles. Full results:
+`data/sentinel2_benchmark/frequency_fusion_semantic_results/results.csv`.
+
+## Results
+
+**Approach A is a genuine no-op.** Max |delta| vs. frequency fusion's own
+ICESat-2 %-of-range across all 25 tiles: **0.0005 percentage points**. Zero
+tiles move by more than 0.05pp in either direction. `dav2_highpass`'s
+absolute magnitude is simply too small relative to the elevation range for
+a 2x local reweighting to register.
+
+**Approach B is net-harmful, one unexplained exception.** 15/25 tiles worse
+by >0.01pp, only 1 improved by >0.01pp:
+
+| tile | category | ob_confident_pct | base | B | delta |
+|---|---|---:|---:|---:|---:|
+| hyderabad | urban | 32.76% | 3.66% | 4.26% | **+0.599pp (worst)** |
+| chennai | urban | 23.85% | 5.67% | 5.96% | +0.286pp |
+| bengaluru | urban | 28.43% | 5.82% | 6.10% | +0.278pp |
+| kakinada | coastal | 7.87% | 4.94% | 5.17% | +0.231pp |
+| kochi_city | urban | 8.87% | 4.94% | 5.13% | +0.185pp |
+| mumbai | urban | 16.31% | 2.48% | 2.08% | **-0.399pp (only improvement)** |
+| dharamshala | hilly | 2.45% | 0.269% | 0.267% | -0.002pp (noise-level) |
+
+Regression size tracks `ob_confident_pct` closely (the 5 worst regressions
+are exactly the 5 tiles with the highest confident-building coverage) — the
+mechanism is almost certainly that Open Buildings' rooftop AGL height
+overshoots what ICESat-2 ATL08 photons actually measure at most
+building-pixel locations, so blending it in moves predictions further from
+ground truth on average. **Mumbai is a real exception, not noise** (-0.40pp
+is the largest single delta after hyderabad's regression, and mumbai has
+the second-highest `ob_confident_pct` at 16.31%) — nothing in this data
+explains why mumbai's OB heights land closer to ICESat-2 while
+hyderabad/chennai/bengaluru/kochi_city's don't at even higher confident-pixel
+counts. Flagged as unexplained rather than hand-waved; worth revisiting only
+if this integration approach is picked up again with per-tile diagnostics.
+
+## Focus tiles (bathinda, amalapuram, kutch, chennai) — none flip to a win
+
+| tile | base | A | B |
+|---|---:|---:|---:|
+| bathinda | 3.568% | 3.568% (no-op) | 3.598% (worse) |
+| amalapuram | 8.540% | 8.540% (no-op) | 8.542% (worse, negligible) |
+| kutch | 5.879% | 5.879% (exact no-op — 0% OB coverage, no building fraction) | 5.879% (exact no-op) |
+| **chennai** | 5.672% | 5.672% (no-op) | **5.958% (worse — the largest chennai-specific regression after hyderabad)** |
+
+Chennai was the tile hypothesized most likely to benefit from a
+building-aware signal (dense urban, 23.85% confident OB coverage) — it is
+unchanged under A and gets measurably **worse** under B, directly
+contradicting that hypothesis. Kutch's exact no-op under both approaches is
+mechanically forced: Step 2 found essentially zero real buildings there
+(1 footprint in the whole 10km tile) and Step 3 found 0.0% confident OB
+coverage, so `building_prob` and the confident-pixel mask are both empty —
+there is no semantic signal for either approach to act on at this location,
+consistent with frequency fusion's existing loss there being a flat/coastal
+low-relief issue, not a missing-buildings issue.
+
+**No previously-winning tile flips to a loss either** — frequency fusion's
+margins over the linear baseline are large enough (often 2-10x) that even
+Approach B's worst regressions (hyderabad, chennai, bengaluru) don't erase
+the win against linear calibration.
+
+## Verdict
+
+**Neither approach adopted.** Approach A doesn't do anything measurable;
+Approach B actively hurts more tiles than it helps and doesn't touch any of
+the 4 tiles it was meant to fix. This closes phase 2.3 as a clean negative
+result — semantic building information, at least in this form (confidence
+weighting or direct height blending), is not the lever that moves frequency
+fusion's remaining 4 losses. Consistent with how Method 4's CNN attempts and
+the GSD-FiLM ablation were reported elsewhere in this project: a clean "no"
+is reported honestly rather than reframed as a win.
+
+## Reproducing this
+
+- `scripts/prepare_semantic_benchmark_footprints.py` — Step 2 (Microsoft
+  footprints). `scripts/prepare_semantic_benchmark_openbuildings.py` +
+  `scripts/_reuse_urban_openbuildings.py` — Step 3 (Open Buildings).
+  `scripts/run_frequency_fusion_semantic.py` — Step 4 (both approaches,
+  evaluation). Outputs: `data/sentinel2_benchmark/semantic/` (per-tile
+  `building_fraction.tif`/`ob_height.tif`/`ob_presence.tif`, plus
+  `coverage_report.csv` and `openbuildings_coverage_report.csv`),
+  `data/sentinel2_benchmark/frequency_fusion_semantic_results/results.csv`.
