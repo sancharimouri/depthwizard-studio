@@ -3579,3 +3579,135 @@ per tile, so all 25 tiles are included.
   report.
 - Median SURFACE-IS2 RMSE drops from ~5.0 m to ~4.5 m for the DEM-only control on the stricter
   segments, as expected: better-supported segments are less noisy.
+
+## A2 / A3 / A4 / A5 — PRE-REGISTRATION (committed before any of their numbers exist)
+
+### Facts established before pre-registering (read, not assumed)
+
+- **FABDEM** (Hawker et al. 2022, *Environ. Res. Lett.* 17 024016):
+  - GLO-30 with forests and buildings removed by a random forest trained on "LiDAR DTMs from 12
+    countries".
+  - **Vertical datum EGM2008**: "reprojected ... to the COPDEM30 vertical coordinates (EGM2008)".
+  - **ICESat-2** ATL08 `h_canopy`/`h_canopy_mean` was a *predictor* **only north of 52°N**. All 32
+    tiles here are at 9–33°N, so **FABDEM vs. ICESat-2 is independent on this benchmark**.
+  - ICESat (not ICESat-2) was validation-only.
+  - **GEDI was a predictor** (forest canopy height), and GEDI covers ≤ 51.6°N. So **FABDEM vs.
+    GEDI is NOT independent** here. This reverses the task's expectation to "lean on GEDI":
+    ICESat-2 is the independent reference for FABDEM.
+  - Licence: data CC BY-NC-SA 4.0 (FABDEM data portal / GEE community catalog; the article itself
+    is CC BY 4.0). Fine for SIH, recorded.
+  - Access: Earth Engine `projects/sat-io/open-datasets/FABDEM` (band `b1`, 1° tiles, EPSG:4326).
+- **ETH GCH 2020** was trained on GEDI rh98, so ETH vs. GEDI is not independent.
+- **CHMv2** outputs exist for all 32 tiles.
+
+### A2 — DEM-only baselines on all 32 tiles
+
+**Rule, verbatim:**
+
+> GLO-30 is confirmed as the Tier-1 surface baseline if it beats SRTM on 32 tiles (Wilcoxon p<0.05,
+> at least 20/32 wins) under R4. If the 25-tile and 32-tile conclusions differ, report both
+> prominently.
+
+**Operationalization:**
+- **Products:** raw SRTM (EGM96), raw GLO-30 (EGM2008) and raw FABDEM (EGM2008), each bilinear onto
+  the tile's 10 m RGB grid.
+- **References**, each as a per-10 m-pixel median:
+  - GROUND: ICESat-2 ground photons
+  - SURFACE-IS2: 20 m segments, Phase 4 filter, `h_te_median + h_max_canopy`
+  - SURFACE-GEDI: `elev_lowestmode + rh98`, rh98 ≤ 80
+- **Geoid (primary): per point.** N from each DEM's own geoid (EPSG:5773 for SRTM, EPSG:3855 for
+  GLO-30/FABDEM), evaluated at every reference point's lat/lon. The Phase 1/4 tile-centre-constant
+  version is reported as secondary (A0 finding).
+- **Per-tile metrics:** RMSE; % of SRTM elevation range (fixed denominator per tile); bias =
+  mean(DEM − ref); bias-removed RMSE = std(DEM − ref); median |DEM − ref|.
+- **"Tier-1 surface baseline" is decided on SURFACE-IS2** (independent for all three DEMs).
+  GROUND and SURFACE-GEDI are reported.
+- **Pass (R4):** GLO-30 beats SRTM with two-sided Wilcoxon p < 0.05 AND ≥ 20/32 wins, on **both**
+  RMSE and bias-removed RMSE.
+- **Tile sets:** 32 tiles (decisive) and the 25-tile subset (reported), each per category.
+- **CIs:** tile bootstrap (10,000, seed 0) of the median per-tile RMSE and of the median paired
+  difference.
+- **Surface data for the 7 sign-flip-excluded tiles** (fatehpur, hisar, karnal, bhitarkanika,
+  nainital, ooty, shimla) is fetched with the Phase 3 scripts and settings unchanged. The only
+  change is a flag to include all manifest tiles.
+
+### A3 — FABDEM
+
+**Rules, verbatim:**
+
+> - FABDEM becomes the recommended TERRAIN baseline if it beats GLO-30 on ground photons (Wilcoxon
+>   p<0.05, at least 20/32 wins, R4).
+> - A FABDEM + canopy model becomes the recommended SURFACE product if it beats raw GLO-30 on
+>   ICESat-2 surface heights under the same rule, with Holm correction across the two canopy
+>   sources.
+> - Otherwise raw GLO-30 remains the surface baseline.
+
+**Operationalization:**
+- **TERRAIN test:** FABDEM vs. GLO-30 on GROUND, 32 tiles, per-point EGM2008. Pass needs
+  p < 0.05 AND ≥ 20/32 on both RMSE and bias-removed RMSE. SRTM is reported alongside.
+- **SURFACE test:** `FABDEM + ETH` and `FABDEM + CHMv2` (canopy in metres added directly, no
+  fitting) vs. raw GLO-30 on SURFACE-IS2, 32 tiles.
+  - Pass needs Holm-adjusted p (m = 2) < 0.05 AND ≥ 20/32 wins, on both RMSE and bias-removed RMSE.
+  - SURFACE-GEDI is reported and **flagged non-independent for both**: ETH was trained on GEDI, and
+    FABDEM used GEDI as a predictor.
+- **ETH for the 7 extra tiles** is fetched with `scripts/fetch_eth_canopy.py` (all-tiles flag).
+
+### A4 — direct height-above-ground test (no DEM)
+
+**Rule, verbatim:**
+
+> a model "predicts height above ground at 10 m" if its pooled Spearman vs ICESat-2 relative canopy
+> height is ≥ 0.30 AND it is positive on at least 18/25 tiles (one-sided sign test).
+
+**Operationalization:**
+- **Reference field:** `h_max_canopy`, the PhoREAL maximum canopy height above `h_te_median`
+  (`use_abs_h=False`), from the Phase 3 20 m segments. Filter: `gnd_ph_count > 0`,
+  `landcover ≠ 255`, 0 ≤ `h_max_canopy` ≤ 60. `h_max_canopy` is the field used; `h_canopy` is
+  saved too.
+- **Sampling:** the candidate is read at the 10 m pixel containing each segment centre.
+- **GEDI:** rh98 against the candidate's mean over pixels whose centres fall within 12.5 m of the
+  footprint.
+- **Candidates**, all in metres, no fitting: CHMv2, ETH (GEDI comparison flagged
+  non-independent), and RDAH on Darjeeling only (A5).
+- **Tiles:** the 25 accepted tiles, for the sign-test count as written (18/25). The 32-tile
+  version is reported.
+- **"Pooled Spearman"** = Spearman over all segments of all 25 tiles pooled. "Positive on a tile"
+  = per-tile Spearman > 0. The one-sided sign test (p for ≥ 18/25 = 0.022) is reported.
+- **Also reported:** per category; vegetated-only (`h_max_canopy > 2 m`); GEDI rh98 equivalents.
+- **Wording consequence** (from the task):
+  - ETH passes A4 but fails A3 → "10 m height signal exists; combining it with a DEM is the
+    failure."
+  - Nothing passes A4 → "no 10 m model tested predicts height above ground against independent
+    lidar."
+
+### A5 — RDAH Darjeeling rerun
+
+**Reading of Phase 2, logged explicitly:** neither Phase 2 close condition fired (the 8× ratio
+missed by 0.0006, and the checkerboard test was later invalidated), and a preprocessing mismatch
+*was* found (Sentinel-2 renders 2–4× darker). The pre-registered rule therefore selected the
+**rerun branch**, not closure. The Phase 2 "closed via default clause" rested on a post-hoc
+"not graceful" judgment. This rerun replaces it.
+
+**Rule, verbatim:**
+
+> - RDAH on Sentinel-2 reopens only if the primary run reaches Spearman ≥ 0.30 against BOTH
+>   references on Darjeeling.
+> - If it reopens, the next step is RDAH on all 25 tiles under A4, with its own rule committed
+>   first.
+> - Otherwise RDAH on Sentinel-2 is closed by the pre-registered rule. Record that this replaces
+>   the earlier post-hoc closure.
+
+**Operationalization:**
+- **Run once.** Swiss checkpoint, the committed Darjeeling RGB (1007×1002) and its cached DAv2
+  depth.
+- **Padding:** reflect-pad to 1024, crop back.
+- **Depth:** ×255, not normalized (matches `loaddata`).
+- **RGB:**
+  - **Primary:** per-image min-max stretch to 0–255, literally as `loaddata.py`'s uint16 branch
+    does: `(image-minv)/(maxv-minv+1e-7)` then `*255` and `uint8`.
+  - Then `/255` and ImageNet `Normalize`, which training applies (Phase 2a).
+  - **Secondary** (sensitivity, can't pass): a 2–98 percentile stretch.
+- **Scoring:** A4's direct test on Darjeeling, i.e. Spearman of RDAH output vs. `h_max_canopy`
+  (ICESat-2, 5,991 segments) and vs. GEDI rh98 (4,189 shots).
+- **Reopen** only if the primary run's Spearman is ≥ 0.30 against **both** references.
+- FFT is reported descriptively, not as a criterion.
