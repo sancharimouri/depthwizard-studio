@@ -701,3 +701,32 @@ checkpoints, and **seed 43's** are used here, inference only. No training is don
 - These curves show that models **trained on VHR imagery degrade** as input resolution coarsens.
 - They do **not** show an information limit at 10 m; only A4 may speak to that.
 - Any "threshold" statement must state the tile count and model count behind it.
+
+### §13 results — B1: RDAH resolution curve on all 50 DFC2019 tiles
+
+Outputs: `data/dfc2019/experiments/rdah_zeroshot/resolution_sweep_50/{summary.json, per_tile.json}`,
+`resolution_sweep_50_stdout.txt`; bootstrap in `data/dfc2019/experiments/resolution_curves_bootstrap.json`
+(`scripts/resolution_curve_bootstrap.py`).
+- Model: Swiss checkpoint, zero-shot, depth ×255; DAv2 re-run on the downsampled RGB.
+- DAv2 re-run at 1× reproduces the cached depth exactly.
+- CIs: 10,000-resample tile bootstrap.
+
+| factor | GSD | pooled Pearson [95% CI] | pooled variance ratio [CI] | mean per-tile Spearman [CI] | median CB (FFT, descriptive) |
+|---:|---:|---|---|---|---:|
+| 1× | 0.3 m | 0.490 [0.457, 0.540] | 0.486 [0.321, 0.814] | 0.460 [0.416, 0.502] | 4,708 |
+| 2× | 0.6 m | **0.581** [0.547, 0.627] | 0.714 [0.497, 1.113] | 0.533 [0.489, 0.573] | 1,272 |
+| 4× | 1.2 m | 0.537 [0.475, 0.595] | 0.852 [0.612, 1.302] | 0.496 [0.456, 0.534] | 891 |
+| 8× | 2.4 m | **0.330** [0.262, 0.405] | 1.060 [0.718, 1.716] | 0.386 [0.344, 0.429] | 612 |
+
+**On 50 tiles the drop is milder than on the Phase 2 8-tile sample.** The 8×/1× pooled Pearson
+ratio is **0.672** (Phase 2, 8 Jacksonville-only tiles: 0.5006). The sorted-ID tile selection
+over-represented tiles that degrade steeply.
+- It's still a clear decline: −43% from the 2× peak (0.581) to 8× (0.330), with non-overlapping CIs.
+- Phase 2's close-condition wouldn't have fired on 50 tiles either (0.672 > 0.5).
+- None of this changes RDAH's status on Sentinel-2. That rests on A5's direct test (Spearman ≈ 0
+  at 10 m), not on this curve.
+
+**Wording (per the pre-registered rule):**
+- This curve shows that **one model (RDAH-Net Swiss) trained on sub-metre imagery loses about 43%
+  of its correlation with LiDAR AGL between 0.6 m and 2.4 m input GSD, on 50 DFC2019 tiles**.
+- It says nothing about whether 10 m imagery contains height information.

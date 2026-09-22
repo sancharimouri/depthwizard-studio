@@ -50,6 +50,14 @@ GSD_1X_M = 0.3  # DFC2019 Track1 RGB (WorldView-3); the file's own transform car
 OUT = ROOT / "data/dfc2019/experiments/rdah_zeroshot/resolution_sweep"
 
 
+def suff_stats(ss: list[dict]) -> tuple[float, float]:
+    """Exact pooled Pearson and variance ratio var(p)/var(y) from per-tile sums."""
+    n = sum(s["n"] for s in ss); sp = sum(s["sp"] for s in ss); sy = sum(s["sy"] for s in ss)
+    spp = sum(s["spp"] for s in ss); syy = sum(s["syy"] for s in ss); spy = sum(s["spy"] for s in ss)
+    vp, vy, cov = spp / n - (sp / n) ** 2, syy / n - (sy / n) ** 2, spy / n - (sp / n) * (sy / n)
+    return float(cov / np.sqrt(vp * vy)), float(vp / vy)
+
+
 def block_mean(a: np.ndarray, f: int, valid: np.ndarray | None = None, min_frac=0.5):
     if f == 1:
         return a.copy(), (valid.copy() if valid is not None else None)
@@ -67,7 +75,10 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     tiles_all = rq.load_manifest_tiles()
     folds = rs.make_spatial_folds(tiles_all)
-    tiles = [t for k in range(4) for t in sorted(folds[k])[:2]]
+    all_tiles = "--all-tiles" in sys.argv  # Part B1 (2026-09-23): all 50 tiles
+    tiles = sorted(tiles_all) if all_tiles else [t for k in range(4) for t in sorted(folds[k])[:2]]
+    out = OUT.parent / "resolution_sweep_50" if all_tiles else OUT
+    out.mkdir(parents=True, exist_ok=True)
     device = rq.select_device("auto")
     model_cls, PE = rq.import_rdah_model_class()
     ckpt = torch.load(rq.SWISS_CHECKPOINT, map_location="cpu")
@@ -110,12 +121,15 @@ def main():
                        "variance_ratio": float(np.var(p) / np.var(y)),
                        "pred_mean": float(p.mean()), "pred_std": float(p.std()),
                        "cb": float(max(fft[q]["peak_to_background"] for q in cb_periods)),
+                       "suff": {"n": int(len(p)), "sp": float(p.sum()), "sy": float(y.sum()), "spp": float((p * p).sum()),
+                                "syy": float((y * y).sum()), "spy": float((p * y).sum())},
                        "fft": {q: fft[q]["peak_to_background"] for q in fft if int(q) <= n // 2}}
                 if f == 1 and vname == "dav2_rerun":
                     rec["dav2_rerun_vs_cached_maxabs"] = repro
                 records.append(rec)
-                pooled[vname][f][0].append(p)
-                pooled[vname][f][1].append(y)
+                if not all_tiles:
+                    pooled[vname][f][0].append(p)
+                    pooled[vname][f][1].append(y)
                 print(f"{tile} x{f} ({n}px) {vname:14s} r={rec['pearson']:+.3f} rho={rec['spearman']:+.3f} "
                       f"vr={rec['variance_ratio']:.3f} CB={rec['cb']:.3g}", flush=True)
 
@@ -123,12 +137,14 @@ def main():
     for vname in pooled:
         rows = {}
         for f in FACTORS:
-            P = np.concatenate(pooled[vname][f][0]); Y = np.concatenate(pooled[vname][f][1])
             recs = [r for r in records if r["depth"] == vname and r["factor"] == f]
-            rows[str(f)] = {"px": 1024 // f, "gsd_m": GSD_1X_M * f,
-                            "pooled_pearson": float(stats.pearsonr(P, Y)[0]),
-                            "pooled_spearman": float(stats.spearmanr(P, Y)[0]),
-                            "pooled_variance_ratio": float(np.var(P) / np.var(Y)),
+            pr, vr = suff_stats([r["suff"] for r in recs])
+            rows[str(f)] = {"px": 1024 // f, "gsd_m": GSD_1X_M * f, "n_tiles": len(recs),
+                            "pooled_pearson": pr,
+                            "pooled_spearman": (float(stats.spearmanr(np.concatenate(pooled[vname][f][0]), np.concatenate(pooled[vname][f][1]))[0])
+                                                if not all_tiles else None),
+                            "pooled_variance_ratio": vr,
+                            "mean_tile_spearman": float(np.mean([r["spearman"] for r in recs])),
                             "mean_tile_pearson": float(np.mean([r["pearson"] for r in recs])),
                             "median_cb": float(np.median([r["cb"] for r in recs]))}
         r1, r8 = rows["1"], rows["8"]
@@ -138,8 +154,8 @@ def main():
                             "close_cb": bool(r8["median_cb"] > 10 * r1["median_cb"])}
         summary["by_variant"][vname] = rows
     summary["dav2_rerun_1x_vs_cached_maxabs"] = max(r.get("dav2_rerun_vs_cached_maxabs", 0) for r in records)
-    (OUT / "per_tile.json").write_text(json.dumps(records, indent=1) + "\n")
-    (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    (out / "per_tile.json").write_text(json.dumps(records, indent=1) + "\n")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary, indent=1))
 
 
