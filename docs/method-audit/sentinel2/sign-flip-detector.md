@@ -3142,3 +3142,42 @@ over:
 - The conservative-test note applies: ICESat-2's ~6.5 m geolocation noise shrinks r_HF toward 0.
   A true r_HF this small would still be of little practical value, as the fusion-vs-low-pass RMSE
   differences (≤0.017 pp) show directly.
+
+## Phase 2 — PRE-REGISTRATION (committed before any Phase 2 number was computed)
+
+**Decision rule, verbatim:**
+
+> - CLOSE RDAH on native Sentinel-2 input ("out of distribution for resolution, mechanism
+>   shown") if, at 8x, Pearson is below half its 1x value OR the FFT checkerboard peaks rise more
+>   than 10x relative to 1x.
+> - Only if the curve degrades gracefully AND 2a/2c found a real preprocessing mismatch: rerun
+>   Darjeeling ONCE with training-exact preprocessing, scored against the Phase 3 surface
+>   reference plus the FFT check.
+> - Otherwise close RDAH on Sentinel-2. No further RDAH work.
+
+**Operationalization, fixed now, before results:**
+- **Tiles.** "2 per quadrant" means 2 whole 1024² DFC2019 tiles from each of RDAH's 4 geographic
+  tile folds (`train_rdah_spatial_cv.make_spatial_folds`): the first 2 in sorted order per fold,
+  8 tiles total. Whole tiles are needed so 8× gives 128 px, a multiple of 128.
+- **Model/preprocessing.** Exactly `scripts/diag/diag_swiss_zeroshot_per_fold.py`'s path:
+  - Swiss checkpoint, `train_rdah_quadrant_cv.load_full_sample` loading, `evaluate_samples`
+    forward, depth ×255.
+  - `PositionalEncoding` is rebuilt with `build_resized_positional_encoding` at bottleneck N/16
+    for input size N (64, 32, 16, 8). The 512² quadrant precedent did the same at 32.
+- **Downsampling** 1×/2×/4×/8× = 1024/512/256/128 px. RGB and AGL are block-averaged (AGL via
+  NaN-aware mean; a block counts as valid if ≥ 50% of it is valid). **Primary depth: DAv2 re-run
+  on the downsampled RGB** through `backend/depth/depth_engine.py`, normalized exactly as the
+  cached depths were; this is what a coarser sensor would give DAv2. Secondary: block-averaged
+  1× cached depth.
+- **Metrics per factor.**
+  - Primary: Pearson of raw RDAH output vs. AGL, pooled over the 8 tiles' valid pixels. Also
+    Spearman, mean of per-tile Pearson, and variance ratio.
+  - FFT: `rdah_sentinel2_zeroshot.periodic_score` on each tile's N×N output, periods ≤ N/2.
+    **Checkerboard statistic CB** = max peak-to-background over periods {2, 4, 8, 16}, median
+    over the 8 tiles.
+- **GSD** from the DFC2019 RGB transform, ×factor.
+- **Close if** pooled Pearson(8×) < 0.5 × pooled Pearson(1×), OR CB(8×) > 10 × CB(1×). Primary
+  depth variant only. The secondary is reported, not used for the decision.
+- **Known limitation, stated in advance.** Even 8× (~2.4 m if the native GSD is ~0.3 m) stays far
+  short of Sentinel-2's 10 m (~33×), because 32× would be 32 px, below RDAH's 128 px minimum. The
+  sweep tests the *trend*. A graceful curve to 8× wouldn't prove 10 m works.
