@@ -3874,3 +3874,36 @@ even though it ranks heights.
 **"10 m height signal exists; combining it with a DEM is the failure."** It carries the post-hoc
 qualifier: *the signal is mostly between landscapes; within a scene it is weak (Spearman
 0.23–0.28 against ICESat-2).*
+
+## A5 — results: RDAH on Sentinel-2 closed by the pre-registered rule (replaces the post-hoc closure)
+
+Script: `scripts/rdah_darjeeling_rerun.py`, run once. Output:
+`data/sentinel2_benchmark/rdah_zeroshot/darjeeling_a5/result.json` (rasters `*.npy` in the same
+directory), stdout `darjeeling_a5_stdout.txt`.
+
+**Pre-check, stated plainly.** The committed Darjeeling render already spans **0–255 in every
+band** (0.16% of pixels saturated at 255). The literal `loaddata.py` min-max stretch is therefore
+effectively an **identity** here: max |ΔRGB| = 1, from its float→uint8 truncation. The
+pre-registered *primary* run is, in substance, the earlier pad ×255 condition. The *secondary* 2–98
+percentile stretch (joint p2 = 10 → 0, p98 = 79 → 255; max |ΔRGB| = 176) is the variant that
+actually corrects the 2–4× darkness found in Phase 2a. It can't reopen RDAH by pre-registration,
+but it's reported.
+
+Direct height test, Darjeeling (A4 method):
+
+| run | Spearman vs. ICESat-2 `h_max_canopy` (n = 5,990) | Spearman vs. GEDI rh98 (n = 4,185) | vegetated-only IS2 | output median / p98 / max |
+|---|---:|---:|---:|---|
+| **primary** (literal min-max) | **+0.026** | **−0.010** | +0.029 | 0.017 / 0.33 / 8.06 |
+| secondary (p2–p98 stretch) | +0.001 | −0.009 | +0.003 | 0.017 / 0.40 / 6.67 |
+
+**Decision: NOT reopened** (needs ≥ 0.30 against both). **RDAH on Sentinel-2 is closed by the
+pre-registered rule.** This replaces the Phase 2 closure, which rested on a post-hoc "not graceful"
+judgment through the default clause.
+- The brightness fix (secondary) doesn't help either, so the preprocessing mismatch isn't what
+  stands between RDAH and a usable Sentinel-2 signal.
+- For contrast, on the 25 benchmark tiles the 10 m canopy models reach median per-tile Spearman
+  0.22–0.25 against the same kind of reference (A4). RDAH at ~0 carries no height-above-ground
+  signal at 10 m.
+- **FFT, descriptive only:** period-2/4/8/16/32 peak-to-background 6,914 / 1,563 / 164 / 10.9 /
+  18.0, the same as the Step 2 pad ×255 run. The checkerboard remains intrinsic and isn't a
+  criterion.
