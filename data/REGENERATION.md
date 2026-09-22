@@ -1,7 +1,7 @@
 # Regenerating large uncommitted artifacts
 
 Created 2026-09-23. SHA-256 for every file below is in `data/REGENERATION_sha256.csv` (path, bytes,
-sha256; 109 files). **A regenerated file will not necessarily hash-match.** ICESat-2 and GEDI
+sha256). **A regenerated file will not necessarily hash-match.** ICESat-2 and GEDI
 server-side processing, and PROJ/EE versions, can change the output. The hashes identify the exact
 versions behind the committed results. A mismatch means "different inputs", not "broken
 pipeline".
@@ -16,6 +16,11 @@ All commands run from the repo root with the project venv (`.venv/bin/python`).
 | `data/icesat2_segments20m/<tile>.csv` | **yes** (committed 2026-09-23, largest 6 MB) | `python scripts/fetch_icesat2_segments20m.py [tile ...]` | Hashes kept anyway. See below. |
 | `data/gedi_l2a/<tile>.csv` | **yes** | `python scripts/fetch_gedi_l2a.py` | EE `LARSE/GEDI/GEDI02_A_002_MONTHLY`. |
 | `data/dfc2019/experiments/method6_height_balanced_seed{43,44}/fold*.pt` | no (~100 MB each) | `bash scripts/run_method6_seeds.sh` (**training**) | C3 seed runs. |
+| `data/sentinel2_benchmark/fabdem/<tile>_fabdem.npy` (32 × 4 MB) | no | `python scripts/fetch_fabdem.py` | EE `projects/sat-io/open-datasets/FABDEM`, mosaic with the **native projection restored** (see the script comment; the default 1° mosaic projection is a bug trap). Data licence CC BY-NC-SA 4.0. |
+| ETH for the 7 sign-flip-excluded tiles | no | `python scripts/fetch_eth_canopy.py --all-tiles` | Same asset as above. |
+| ICESat-2 segments / GEDI for the 7 extra tiles | yes | `python scripts/fetch_icesat2_segments20m.py --all-tiles`, `python scripts/fetch_gedi_l2a.py --all-tiles` | |
+| `data/dfc2019/experiments/dav2_calibration/calibration_samples.csv` (41 MB) | no | Method 1's calibration run (`data/dfc2019/experiments/dav2_calibration/config.json`) | Raw pixel samples; the summaries are committed. |
+| `data/sentinel2_benchmark/dem_baselines_32/` inputs | — | `python scripts/dem_baselines_32.py` | **Sets `PROJ_NETWORK=ON` before importing pyproj**; asserts \|N\| > 1 m. |
 
 ## ICESat-2 20 m segments: what was actually used, and what failed
 
