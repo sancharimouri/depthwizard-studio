@@ -204,3 +204,21 @@ calibration (`summary.md` §10). It was **not run** this session. The zero-shot 
 script and result JSON also weren't found in the repo, so that row is unverified against an
 artifact. Until the check runs, RDAH-Net stays **open, not rejected**. Only the FT-2 recipe is
 closed.
+
+## 7. 2026-09-23 (later) — rescued artifacts resolve half of the open question
+
+- **The zero-shot row is now backed by a saved file.** `data/dfc2019/experiments/rdah_zeroshot/rdah_x255_zeroshot_fold_results.csv`
+  reproduces 2.231/4.566/0.716/0.655. It came from **Track1**, and ×255 was picked on 4 probe
+  tiles, 3 of which are in Track1's own training list. The clean Swiss re-derivation is a broad
+  plateau (×200–×1000) and picked ×255 or ×300 per fold. The constant is robust; its original
+  selection was not clean.
+- **"Fine-tuning damages the model": RESOLVED, no.** Swiss zero-shot on FT-2's exact true-test
+  samples scores MAE 3.033 / RMSE 6.421 / Pearson 0.492 / Spearman 0.542 (mean of folds). FT-2
+  beats it on every metric in 4/4 folds.
+- **Contamination: consistent with, not proven.** Track1 0.716 vs. Swiss 0.492 Pearson fits a
+  training-data advantage, but protocol differs and "memorised tiles" vs. "in-domain sensor/city"
+  are confounded. Track1 on its 9 unseen vs. 41 seen tiles would separate them. Open, low
+  priority, inference only.
+- **The Sentinel-2 §5 resolution is partly corrected.** Its correlation criterion used terrain
+  references for an above-ground-height model, so that half was uninformative. The checkerboard
+  half stands. See `summary.md` §11 and the sign-flip-detector 2026-09-23 follow-up entries.

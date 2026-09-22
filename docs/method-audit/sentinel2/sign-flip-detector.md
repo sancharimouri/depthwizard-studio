@@ -2890,6 +2890,14 @@ It isn't a test of RDAH's own nDSM accuracy, and no nDSM ground truth exists for
 
 ## Step 2 — Darjeeling check: STOP CONDITION MET (clean negative)
 
+> **CORRECTION (2026-09-23, later).** The correlation half of this stop condition is
+> **uninformative**. It correlates RDAH, which predicts height *above ground*, with *terrain*
+> references (the DEM and ground photons), where a working nDSM model would also score ~0. This
+> caveat was flagged a priori in Step 1 and should have removed the criterion rather than only
+> annotating it. **The checkerboard half (FFT) stands on its own.** RDAH on Sentinel-2 is
+> re-tested under Phase 2 of the "(continued)" follow-up entry below, with a mechanism test
+> (resolution sweep) and, where available, a surface reference.
+
 Ran `python scripts/rdah_sentinel2_zeroshot.py darjeeling --rgb
 data/diagnostics/darjeeling/Darjeeling_RGB_committed_660ecb6.tif` (the committed RGB, extracted
 unchanged from commit `660ecb6`). Everything matched the original run except two factors, varied

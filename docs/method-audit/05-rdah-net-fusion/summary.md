@@ -586,3 +586,65 @@ under the quadrant protocol, with the same per-fold affine calibration**. If it 
 2.23/0.72, contamination doesn't explain the zero-shot score and fine-tuning is the problem. If it
 lands at or below FT-2, the zero-shot number was inflated by contamination. **Not run this
 session** (documentation-only).
+
+## 11. 2026-09-23 (later) — rescued artifacts: where ×255 came from, and Swiss zero-shot on DFC2019
+
+_Sourced from session `fa0035ab`'s scratchpad (under `/private/tmp`, cleared on reboot), now
+copied to `scripts/diag/` and `data/dfc2019/experiments/rdah_zeroshot/` (see its `README.md`).
+Files marked TRANSCRIBED come from the session transcript, because those scripts printed their
+results instead of saving them._
+
+**§10's "artifact not located" is resolved.** The 50-tile Track1 zero-shot run is
+`scripts/diag/diag_rdah_x255_fullcv.py`. Its saved per-fold CSV,
+`rdah_x255_zeroshot_fold_results.csv`, reproduces **2.231 / 4.566 / 0.716 / 0.655** exactly
+(mean of folds). Pearson and Spearman there are computed on *uncalibrated* predictions pooled
+within each fold; only MAE/RMSE use the per-fold affine calibration.
+
+**Provenance of ×255: picked on Track1, on tiles Track1 trained on.**
+- `diag_rdah_scale_corr.py` swept ×1–×1000 on 4 probe tiles with `CHECKPOINT` imported from
+  `run_rdah_probe.py`, which is `104best_model.pth` (Track1). Output in `scale_corr_stdout.txt`.
+- Three of those probe tiles (JAX_004_006, JAX_264_013, OMA_248_029) are in `Track1-train.txt`;
+  JAX_149_006 is in `Track1-test.txt`.
+- FT-2's clean re-derivation (Swiss, training quadrants only, probe tiles excluded) sits on a
+  **broad plateau, not a sharp peak**. Fold 0's sweep reads ×200 +0.437, ×255 +0.469,
+  ×300 +0.456, ×500 +0.469, ×1000 +0.436.
+- Per fold it chose ×255 for folds 0–1 and ×300 for folds 2–3. Only fold 0's full sweep line
+  survives. Fold 3's selected Pearson (+0.4212) is assigned by elimination.
+
+**Swiss zero-shot on DFC2019** (`diag_swiss_zeroshot_per_fold.py`, run 2026-09-22 19:37 UTC,
+never previously written up). Setup: quadrant protocol, per-fold scale, **FT-2's own 25-sample
+true-test halves**, raw output with no calibration. Source: `swiss_zeroshot_fold_results.csv`,
+TRANSCRIBED.
+
+| Fold | scale | MAE | RMSE | Pearson | Spearman | var. ratio | FT-2 Pearson (same samples) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 0 | ×255 | 2.486 | 5.915 | 0.505 | 0.529 | 0.72 | 0.580 |
+| 1 | ×255 | 3.127 | 6.660 | 0.482 | 0.571 | 1.02 | 0.607 |
+| 2 | ×300 | 3.369 | 6.746 | 0.484 | 0.487 | 0.84 | 0.503 |
+| 3 | ×300 | 3.149 | 6.364 | 0.499 | 0.579 | 0.93 | 0.593 |
+| **mean of folds** | | **3.033** | **6.421** | **0.492** | **0.542** | | 0.571 |
+
+**FT-2 improves on Swiss zero-shot on all four metrics in 4/4 folds, on identical samples.**
+The "fine-tuning damages the pretrained model" branch of §10's open question is **resolved: no.**
+
+The zero-shot variance ratio of 0.72–1.02 against FT-2's 0.19–0.23 is informative in its own
+right. Fine-tuning *compressed* the output's variance while improving every accuracy metric,
+consistent with the SmoothL1 + rank loss trading dispersion for error.
+
+**Contamination.** Track1 zero-shot Pearson 0.716 vs. Swiss 0.492 is consistent with a
+training-data advantage for Track1, but the comparison isn't clean:
+- The protocols differ: tile-level folds vs. quadrant halves.
+- Track1's advantage mixes two things: memorised tiles, and in-domain training (the same
+  WorldView sensor and the same two cities).
+
+Separating those two needs Track1 zero-shot on its 9 `Track1-test` tiles vs. its 41
+`Track1-train` tiles. The per-tile predictions were never saved, so that is a fresh inference
+run. **Open, low priority.** Not a training run.
+
+**Correction to the 2026-09-23 Sentinel-2 entry** (`sentinel2/sign-flip-detector.md`, "RDAH-Net
+zero-shot on Sentinel-2", Step 2). That step's correlation criterion correlated RDAH output with
+**terrain** references (the DEM and ground-classified ICESat-2 photons). RDAH predicts **height
+above ground**, so that half of the stop condition is **uninformative**: a working nDSM model
+would also score ~0 there. The entry flagged this caveat a priori but still applied the
+criterion. **The checkerboard half stands** on its own. Revisited under Phase 2 of the same
+day's follow-up (sign-flip-detector.md, 2026-09-23 "(continued)" entries).
