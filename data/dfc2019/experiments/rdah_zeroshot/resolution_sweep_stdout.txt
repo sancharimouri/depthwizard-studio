@@ -1,0 +1,170 @@
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 7493.79it/s]
+JAX_004_006 x1 (1024px) dav2_rerun     r=+0.596 rho=+0.620 vr=0.901 CB=1.88e+03
+JAX_004_006 x1 (1024px) depth_blockavg r=+0.596 rho=+0.620 vr=0.901 CB=1.88e+03
+JAX_004_006 x2 (512px) dav2_rerun     r=+0.643 rho=+0.646 vr=0.986 CB=812
+JAX_004_006 x2 (512px) depth_blockavg r=+0.653 rho=+0.644 vr=1.132 CB=1.04e+03
+JAX_004_006 x4 (256px) dav2_rerun     r=+0.663 rho=+0.603 vr=1.057 CB=701
+JAX_004_006 x4 (256px) depth_blockavg r=+0.629 rho=+0.571 vr=1.335 CB=1.29e+03
+JAX_004_006 x8 (128px) dav2_rerun     r=+0.314 rho=+0.435 vr=2.166 CB=1e+03
+JAX_004_006 x8 (128px) depth_blockavg r=+0.306 rho=+0.402 vr=1.618 CB=1.83e+03
+JAX_004_014 x1 (1024px) dav2_rerun     r=+0.707 rho=+0.700 vr=1.262 CB=2.65e+03
+JAX_004_014 x1 (1024px) depth_blockavg r=+0.707 rho=+0.700 vr=1.262 CB=2.65e+03
+JAX_004_014 x2 (512px) dav2_rerun     r=+0.710 rho=+0.686 vr=1.431 CB=2.02e+03
+JAX_004_014 x2 (512px) depth_blockavg r=+0.711 rho=+0.687 vr=1.383 CB=1.39e+03
+JAX_004_014 x4 (256px) dav2_rerun     r=+0.619 rho=+0.589 vr=1.265 CB=1.63e+03
+JAX_004_014 x4 (256px) depth_blockavg r=+0.618 rho=+0.585 vr=1.450 CB=1.43e+03
+JAX_004_014 x8 (128px) dav2_rerun     r=+0.261 rho=+0.343 vr=0.719 CB=1.05e+03
+JAX_004_014 x8 (128px) depth_blockavg r=+0.303 rho=+0.354 vr=0.926 CB=2.34e+03
+JAX_004_016 x1 (1024px) dav2_rerun     r=+0.685 rho=+0.679 vr=1.178 CB=1.99e+03
+JAX_004_016 x1 (1024px) depth_blockavg r=+0.685 rho=+0.679 vr=1.178 CB=1.99e+03
+JAX_004_016 x2 (512px) dav2_rerun     r=+0.698 rho=+0.689 vr=1.654 CB=1.26e+03
+JAX_004_016 x2 (512px) depth_blockavg r=+0.702 rho=+0.687 vr=1.654 CB=1.28e+03
+JAX_004_016 x4 (256px) dav2_rerun     r=+0.598 rho=+0.592 vr=1.405 CB=1.14e+03
+JAX_004_016 x4 (256px) depth_blockavg r=+0.578 rho=+0.564 vr=1.325 CB=492
+JAX_004_016 x8 (128px) dav2_rerun     r=+0.215 rho=+0.274 vr=1.272 CB=2.07e+03
+JAX_004_016 x8 (128px) depth_blockavg r=+0.220 rho=+0.259 vr=1.606 CB=2.1e+03
+JAX_149_025 x1 (1024px) dav2_rerun     r=+0.152 rho=+0.172 vr=0.167 CB=2.17e+05
+JAX_149_025 x1 (1024px) depth_blockavg r=+0.152 rho=+0.172 vr=0.167 CB=2.17e+05
+JAX_149_025 x2 (512px) dav2_rerun     r=+0.403 rho=+0.464 vr=0.765 CB=6.65e+03
+JAX_149_025 x2 (512px) depth_blockavg r=+0.399 rho=+0.462 vr=0.823 CB=7.48e+03
+JAX_149_025 x4 (256px) dav2_rerun     r=+0.569 rho=+0.534 vr=1.198 CB=677
+JAX_149_025 x4 (256px) depth_blockavg r=+0.550 rho=+0.522 vr=1.312 CB=495
+JAX_149_025 x8 (128px) dav2_rerun     r=+0.443 rho=+0.427 vr=1.357 CB=155
+JAX_149_025 x8 (128px) depth_blockavg r=+0.469 rho=+0.412 vr=1.910 CB=605
+JAX_214_015 x1 (1024px) dav2_rerun     r=+0.674 rho=+0.473 vr=0.085 CB=4.7e+03
+JAX_214_015 x1 (1024px) depth_blockavg r=+0.674 rho=+0.473 vr=0.085 CB=4.7e+03
+JAX_214_015 x2 (512px) dav2_rerun     r=+0.776 rho=+0.726 vr=0.213 CB=2.47e+03
+JAX_214_015 x2 (512px) depth_blockavg r=+0.757 rho=+0.727 vr=0.175 CB=3.54e+03
+JAX_214_015 x4 (256px) dav2_rerun     r=+0.688 rho=+0.666 vr=0.232 CB=974
+JAX_214_015 x4 (256px) depth_blockavg r=+0.723 rho=+0.686 vr=0.177 CB=791
+JAX_214_015 x8 (128px) dav2_rerun     r=+0.531 rho=+0.628 vr=0.124 CB=198
+JAX_214_015 x8 (128px) depth_blockavg r=+0.567 rho=+0.657 vr=0.148 CB=192
+JAX_264_013 x1 (1024px) dav2_rerun     r=+0.519 rho=+0.445 vr=0.527 CB=5.36e+03
+JAX_264_013 x1 (1024px) depth_blockavg r=+0.519 rho=+0.445 vr=0.527 CB=5.36e+03
+JAX_264_013 x2 (512px) dav2_rerun     r=+0.637 rho=+0.515 vr=0.599 CB=1.07e+03
+JAX_264_013 x2 (512px) depth_blockavg r=+0.665 rho=+0.531 vr=0.769 CB=1.19e+03
+JAX_264_013 x4 (256px) dav2_rerun     r=+0.680 rho=+0.551 vr=0.729 CB=491
+JAX_264_013 x4 (256px) depth_blockavg r=+0.557 rho=+0.496 vr=0.592 CB=536
+JAX_264_013 x8 (128px) dav2_rerun     r=+0.281 rho=+0.260 vr=1.205 CB=186
+JAX_264_013 x8 (128px) depth_blockavg r=+0.338 rho=+0.300 vr=1.221 CB=301
+JAX_214_023 x1 (1024px) dav2_rerun     r=+0.722 rho=+0.446 vr=0.070 CB=7.91e+03
+JAX_214_023 x1 (1024px) depth_blockavg r=+0.722 rho=+0.446 vr=0.070 CB=7.91e+03
+JAX_214_023 x2 (512px) dav2_rerun     r=+0.708 rho=+0.709 vr=0.133 CB=2.61e+03
+JAX_214_023 x2 (512px) depth_blockavg r=+0.709 rho=+0.723 vr=0.126 CB=3.65e+03
+JAX_214_023 x4 (256px) dav2_rerun     r=+0.634 rho=+0.693 vr=0.207 CB=6.17e+03
+JAX_214_023 x4 (256px) depth_blockavg r=+0.677 rho=+0.740 vr=0.220 CB=3.19e+03
+JAX_214_023 x8 (128px) dav2_rerun     r=+0.576 rho=+0.670 vr=0.069 CB=235
+JAX_214_023 x8 (128px) depth_blockavg r=+0.548 rho=+0.687 vr=0.122 CB=373
+JAX_224_025 x1 (1024px) dav2_rerun     r=+0.683 rho=+0.489 vr=0.653 CB=4.11e+03
+JAX_224_025 x1 (1024px) depth_blockavg r=+0.683 rho=+0.489 vr=0.653 CB=4.11e+03
+JAX_224_025 x2 (512px) dav2_rerun     r=+0.755 rho=+0.577 vr=1.825 CB=2.56e+03
+JAX_224_025 x2 (512px) depth_blockavg r=+0.756 rho=+0.572 vr=1.385 CB=1.4e+03
+JAX_224_025 x4 (256px) dav2_rerun     r=+0.691 rho=+0.541 vr=0.870 CB=411
+JAX_224_025 x4 (256px) depth_blockavg r=+0.724 rho=+0.537 vr=1.386 CB=1.34e+03
+JAX_224_025 x8 (128px) dav2_rerun     r=+0.519 rho=+0.500 vr=0.780 CB=685
+JAX_224_025 x8 (128px) depth_blockavg r=+0.437 rho=+0.395 vr=2.093 CB=2.55e+03
+{
+ "tiles": [
+  "JAX_004_006",
+  "JAX_004_014",
+  "JAX_004_016",
+  "JAX_149_025",
+  "JAX_214_015",
+  "JAX_264_013",
+  "JAX_214_023",
+  "JAX_224_025"
+ ],
+ "gsd_1x_m_assumed": 0.3,
+ "scale": 255.0,
+ "by_variant": {
+  "dav2_rerun": {
+   "1": {
+    "px": 1024,
+    "gsd_m": 0.3,
+    "pooled_pearson": 0.4832312186155722,
+    "pooled_spearman": 0.48847017298009154,
+    "pooled_variance_ratio": 0.25534112892077243,
+    "mean_tile_pearson": 0.5922279659622718,
+    "median_cb": 4407.423896881591
+   },
+   "2": {
+    "px": 512,
+    "gsd_m": 0.6,
+    "pooled_pearson": 0.5886432606141497,
+    "pooled_spearman": 0.6125522904507888,
+    "pooled_variance_ratio": 0.42772876337481086,
+    "mean_tile_pearson": 0.6661854504073204,
+    "median_cb": 2247.509707845457
+   },
+   "4": {
+    "px": 256,
+    "gsd_m": 1.2,
+    "pooled_pearson": 0.5894954387781597,
+    "pooled_spearman": 0.5870430397439101,
+    "pooled_variance_ratio": 0.4394329109410551,
+    "mean_tile_pearson": 0.6426793688597101,
+    "median_cb": 837.6292729106723
+   },
+   "8": {
+    "px": 128,
+    "gsd_m": 2.4,
+    "pooled_pearson": 0.24189531758960228,
+    "pooled_spearman": 0.3421699959600046,
+    "pooled_variance_ratio": 0.43023647843282387,
+    "mean_tile_pearson": 0.3924838111350324,
+    "median_cb": 459.9752837985471
+   },
+   "decision": {
+    "pearson_8x_over_1x": 0.5005788290802434,
+    "cb_8x_over_1x": 0.10436374956445554,
+    "close_pearson": false,
+    "close_cb": false
+   }
+  },
+  "depth_blockavg": {
+   "1": {
+    "px": 1024,
+    "gsd_m": 0.3,
+    "pooled_pearson": 0.4832312186155722,
+    "pooled_spearman": 0.48847017298009154,
+    "pooled_variance_ratio": 0.25534112892077243,
+    "mean_tile_pearson": 0.5922279659622718,
+    "median_cb": 4407.423896881591
+   },
+   "2": {
+    "px": 512,
+    "gsd_m": 0.6,
+    "pooled_pearson": 0.5767197369620372,
+    "pooled_spearman": 0.6181257556129723,
+    "pooled_variance_ratio": 0.4081737147385137,
+    "mean_tile_pearson": 0.6688041954108859,
+    "median_cb": 1394.9425783829715
+   },
+   "4": {
+    "px": 256,
+    "gsd_m": 1.2,
+    "pooled_pearson": 0.5664296307912726,
+    "pooled_spearman": 0.5660242123515132,
+    "pooled_variance_ratio": 0.460389196459322,
+    "mean_tile_pearson": 0.6319092522539363,
+    "median_cb": 1042.8176283586256
+   },
+   "8": {
+    "px": 128,
+    "gsd_m": 2.4,
+    "pooled_pearson": 0.23375514522313232,
+    "pooled_spearman": 0.28996202812164107,
+    "pooled_variance_ratio": 0.5658498578933151,
+    "mean_tile_pearson": 0.3985847525175329,
+    "median_cb": 1217.2532012063277
+   },
+   "decision": {
+    "pearson_8x_over_1x": 0.48373353421334503,
+    "cb_8x_over_1x": 0.2761824661493481,
+    "close_pearson": true,
+    "close_cb": false
+   }
+  }
+ },
+ "dav2_rerun_1x_vs_cached_maxabs": 0.0
+}

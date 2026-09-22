@@ -3181,3 +3181,97 @@ over:
 - **Known limitation, stated in advance.** Even 8× (~2.4 m if the native GSD is ~0.3 m) stays far
   short of Sentinel-2's 10 m (~33×), because 32× would be 32 px, below RDAH's 128 px minimum. The
   sweep tests the *trend*. A graceful curve to 8× wouldn't prove 10 m works.
+
+## Phase 2 — results: RDAH closed on Sentinel-2, via the rule's default clause; the checkerboard turns out to be intrinsic
+
+**2a. Preprocessing (read-only).**
+- `loaddata.getTrainingData` composes `ToTensor(), Lighting(0.1, …), ColorJitter(brightness=0.4,
+  contrast=0.4, saturation=0.4), Normalize(__imagenet_stats['mean'], __imagenet_stats['std'])`
+  with `__imagenet_stats = {'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225]}`.
+  `getTestingData` composes `ToTensor(), Normalize(...)` with the same stats.
+- `nyu_transform.Normalize.__call__` normalizes **`image` only**: `image = self.normalize(image,
+  self.mean, self.std)`; depth and rel_depth pass through unchanged.
+- `ToTensor.__call__`: `image = self.to_tensor(image)/255`, `rel_depth = self.to_tensor(rel_depth)`.
+- **So ImageNet normalization is applied in training, and `backend/rdah/rdah_engine.py` matches
+  it.** No mismatch there.
+- **RGB intensity: a real mismatch.** Per-channel p2/p50/p98:
+
+| image | R | G | B |
+|---|---|---|---|
+| Darjeeling S2 render (committed) | 10/21/84 | 17/39/82 | 10/21/64 |
+| S2 bench manali / delhi / bathinda (R) | 2/24/133, 14/39/121, 22/54/121 | | |
+| DFC2019 JAX_004_006 | 32/87/186 | 25/88/183 | 49/94/184 |
+| DFC2019 JAX_149_006 | 33/83/219 | 31/82/213 | 51/90/212 |
+| DFC2019 OMA_248_029 | 62/154/255 | 85/150/255 | 95/157/255 |
+
+  The Sentinel-2 renders are **2–4× darker at the median** and never approach 255 at p98. GF-7
+  training input went through a per-image min-max stretch (`loaddata.py`, uint16 branch), which
+  fills 0–255 by construction. **Flagged: a real preprocessing mismatch.**
+
+**2c. Figshare.** The deposit (`api.figshare.com/v2/articles/31986864/files`) holds 5 files:
+- 3 checkpoints (65.5 MB each)
+- `HK_crop.rar` (2,200 MB)
+- `Swiss_crop.rar` (14,743 MB)
+
+There are no single Swiss files, only one large archive. **2c skipped**, as specified, so the
+Swiss depth convention and a Swiss positive control remain unverified.
+
+**2b. Resolution sweep.** Script `scripts/rdah_resolution_sweep.py`; outputs
+`data/dfc2019/experiments/rdah_zeroshot/resolution_sweep/{summary.json, per_tile.json}`, plus
+`resolution_sweep_stdout.txt`.
+- Tiles, 2 per `make_spatial_folds` fold: JAX_004_006, JAX_004_014, JAX_004_016, JAX_149_025,
+  JAX_214_015, JAX_264_013, JAX_214_023, JAX_224_025. Sorted-ID selection yielded **Jacksonville
+  only, no Omaha**. That's a limitation of the pre-registered selection, recorded rather than
+  re-picked.
+- DAv2 re-run at 1× reproduces the cached depth exactly (max |diff| 0.0).
+- GSD at 1× is taken as 0.3 m (DFC2019 Track1 WorldView-3; the files carry no georeferencing).
+
+| factor | px | GSD | pooled Pearson | pooled Spearman | pooled var. ratio | mean per-tile Pearson | median CB |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1× | 1024 | 0.3 m | 0.483 | 0.489 | 0.255 | 0.592 | 4,407 |
+| 2× | 512 | 0.6 m | 0.589 | 0.613 | 0.428 | 0.666 | 2,248 |
+| 4× | 256 | 1.2 m | 0.590 | 0.587 | 0.439 | 0.643 | 838 |
+| **8×** | 128 | 2.4 m | **0.242** | 0.342 | 0.430 | 0.392 | 460 |
+
+Primary: DAv2 re-run on the downsampled RGB. The secondary (block-averaged 1× depth) gives
+0.483 / 0.577 / 0.566 / **0.234**, CB 4,407 / 1,395 / 1,043 / 1,217.
+
+**Applying the pre-registered rule mechanically:**
+- **Pearson criterion: does NOT fire, by 0.0006.** Pooled Pearson(8×) / Pearson(1×) = **0.5006**
+  against the 0.5 cutoff. The secondary depth variant would fire (0.484), but it was
+  pre-registered as non-decisive. Per tile, only 2/8 fall below half their 1× value. The pooled
+  ratio is a knife-edge and shouldn't be over-read either way.
+- **Checkerboard criterion: does NOT fire.** CB(8×)/CB(1×) = 0.10. The periodic peaks *fall*
+  with downsampling.
+- **The "rerun Darjeeling" branch requires "the curve degrades gracefully AND a real
+  preprocessing mismatch".** The mismatch is present (2a). "Gracefully" was not operationalized
+  in advance. **Reading, stated as a post-hoc judgment:** a curve that holds flat or improves to
+  4× and then loses 59% of its Pearson in one 2× step (0.590 → 0.242) is a cliff, not a graceful
+  decline. On that reading the branch doesn't apply, and the rule's **default clause, "Otherwise
+  close RDAH on Sentinel-2. No further RDAH work.", applies.**
+- The closure therefore rests on the *default* clause, not on the "mechanism shown" clause.
+  Someone who reads the curve as graceful would instead be owed exactly one Darjeeling re-run
+  with min-max-stretched RGB, scored against a surface reference. That is recorded here and
+  **not run**, per the rule's "no further RDAH work".
+
+**Two substantive findings, beyond the rule:**
+1. **The checkerboard is intrinsic to RDAH (Swiss) output, not a Sentinel-2 or out-of-domain
+   signature.** On in-domain DFC2019 at native 1×, where the model reaches pooled Pearson 0.48,
+   the median period-2/period-4 peak-to-background is **1,576 / 3,758**. That's the same order as
+   Darjeeling's scale-fixed output (6,972 / 1,592).
+   - The earlier Sentinel-2 entry's "checkerboard persists → reject" half is therefore **also not
+     diagnostic**: the artifact coexists with working predictions.
+   - Together with Phase 0's correction of the terrain-correlation half, **neither half of that
+     entry's stop condition was valid evidence of failure.** Its verdict (close) happens to agree
+     with this phase's, but for a different, weaker-than-stated reason.
+   - What Darjeeling does show beyond DFC2019 is higher peaks at periods 8/32 (163 / 17.9 vs.
+     60 / 5.1 median on DFC2019 1×).
+2. **The resolution trend points strongly against 10 m.** Correlation collapses between 1.2 m and
+   2.4 m. Sentinel-2's 10 m is another ~4× beyond the coarsest point tested, and RDAH's 128 px
+   minimum makes it untestable on DFC2019 tiles. This is an extrapolation, not a measurement.
+
+**Consistency check.** Pooled 1× Pearson 0.483 on these 8 whole tiles matches the Swiss zero-shot
+per-fold figure on quadrant halves (mean 0.492, 05 summary §11).
+
+**Verdict (Phase 2): RDAH is CLOSED on Sentinel-2**, zero-shot or fine-tuned, via the rule's
+default clause. Excluded from Phase 4.
