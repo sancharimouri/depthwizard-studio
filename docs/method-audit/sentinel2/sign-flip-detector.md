@@ -3366,3 +3366,105 @@ Per-tile counts are in `data/sentinel2_benchmark/surface_reference_counts.csv`.
   agricultural 0.6–1 m / 2.4–2.9 m.
 - `h_max_canopy` = 0.00 at median on four coastal tiles and kochi_city: those segments carry no
   canopy photons.
+
+## Phase 4 — results: no detail source passes any reference; the ETH ceiling fires
+
+Script: `scripts/detail_source_bakeoff.py {srtm,glo30}`. Outputs:
+`data/sentinel2_benchmark/detail_source_bakeoff/{per_tile_srtm.csv, summary_srtm.json,
+per_tile_glo30.csv, summary_glo30.json}`; stdout in `phase4_{srtm,glo30}_stdout.txt`.
+- Candidate inputs: DAv2 @1008 via `scripts/run_dav2_1008.py`; its outputs correlate 0.81–0.97
+  with @518, so they are genuinely different. ETH via `scripts/fetch_eth_canopy.py`: hilly tiles
+  median 18–28 m, agricultural 0 m.
+- All 25 tiles are included on every reference (every tile ≥ 200 valid pixels).
+- Holm adjustment is across the 4 candidates within each reference.
+
+**Primary (SRTM DEM, pre-registered decisive).** "A" = product beats `dem_lowpass`; "B" = r_HF
+adds signal. RMSE is median per-tile (m) at reference pixels.
+
+| reference | candidate | product vs. control RMSE | wins | Holm p (A) | **A** | median r_HF | r_HF > 0 | Holm p (B) | **B** | **PASS** |
+|---|---|---|---:|---:|:-:|---:|---:|---:|:-:|:-:|
+| ground | DAv2 @518 | 3.398 vs 3.398 | 9/25 | 1 | – | −0.037 | 8 | 1 | – | **no** |
+| ground | DAv2 @1008 | 3.397 vs 3.398 | 15/25 | 0.94 | – | −0.008 | 10 | 1 | – | **no** |
+| ground | DINOv3-CHMv2 | 3.398 vs 3.398 | 12/25 | 1 | – | −0.003 | 10 | 1 | – | **no** |
+| ground | ETH GCH 2020 | 4.053 vs 3.398 | 0/25 | 2.4e-7 (worse) | – | −0.027 | 2 | 1 | – | **no** |
+| surface-IS2 | DAv2 @518 | 4.987 vs 4.997 | 15/25 | 0.38 | – | +0.026 | 16 | 0.23 | – | **no** |
+| surface-IS2 | DAv2 @1008 | 4.975 vs 4.997 | 18/25 | 0.044 | ✓ | +0.069 | 21 | 0.0018 | – | **no** |
+| surface-IS2 | DINOv3-CHMv2 | 4.980 vs 4.997 | 22/25 | 2.1e-5 | ✓ | +0.006 | 15 | 0.23 | – | **no** |
+| surface-IS2 | ETH GCH 2020 | **8.322** vs 4.997 | 5/25 | 7.5e-4 (worse) | – | +0.031 | 21 | 0.0018 | – | **no** |
+| surface-GEDI | DAv2 @518 | 9.164 vs 9.166 | 20/25 | 8.6e-4 | ✓ | +0.056 | 19 | 0.015 | – | **no** |
+| surface-GEDI | DAv2 @1008 | 9.159 vs 9.166 | 22/25 | 2.6e-4 | ✓ | +0.089 | 21 | 0.0018 | – | **no** |
+| surface-GEDI | DINOv3-CHMv2 | 9.151 vs 9.166 | 25/25 | 2.4e-7 | ✓ | +0.012 | 17 | 0.054 | – | **no** |
+| surface-GEDI | ETH GCH 2020 | 8.458 vs 9.166 | 19/25 | 0.016 | ✓ | +0.065 | 20 | 0.0061 | – | **no** |
+
+**Every B fails on the magnitude bar**: no median r_HF exceeds 0.10 (max 0.089). **No candidate
+passes any reference.** The GLO-30 secondary (`summary_glo30.json`) shows the same result: no
+PASS anywhere, max median r_HF 0.079, and the ETH ceiling fires.
+
+**Reading the A passes honestly:**
+- **DINOv3-CHMv2 passes A through a bias shift, not detail.** Its outputs are 0.01–0.25 m
+  everywhere, i.e. it predicts "no canopy" on 10 m input. Adding a near-constant positive amount
+  slightly reduces the DEM low-pass's systematic underestimate of surface height (25/25 wins
+  against GEDI). Its r_HF is ~0 (+0.006 / +0.012). This is exactly why the rule requires A *and* B.
+- **DAv2's A passes on the surface references are real but negligible.** The effect is
+  0.007–0.022 m of RMSE out of 5–9 m.
+- **DAv2 @1008 is the only consistent near-miss.** It is positive on 21/25 tiles against both
+  surface references, with median r_HF 0.069 / 0.089. Higher DAv2 input resolution helps
+  directionally (@518: 0.026 / 0.056), still below the bar.
+- **Per category, exploratory:**
+  - hilly DAv2 @1008 against ground reaches median r_HF +0.208 (5/5 positive; @518: +0.134, the
+    Phase 1 exception).
+  - coastal against GEDI is 7/7 wins with r_HF ~0.09 for both DAv2 variants.
+  - Not pre-registered subgroups, so no claim is made.
+
+**ETH ceiling check: FIRES.** ETH passes neither surface reference.
+- **Against ICESat-2 surface**, adding ETH canopy to the SRTM low-pass makes things much worse
+  (8.32 vs. 5.00 m, 5/25). The most likely mechanism is **double counting**: SRTM's C-band phase
+  centre already sits partly inside the canopy. The GLO-30 run shows the same (7.49 vs. 4.82 m,
+  5/25).
+- **Against GEDI surface**, ETH passes A (19/25). That result is **not independent**: ETH GCH
+  2020 was *trained on GEDI rh98 labels*.
+- Per the pre-registered rule: **a Sentinel-2 model trained on GEDI labels (which ETH GCH 2020
+  is, trained globally at scale) doesn't pass the surface reference here. A model trained on this
+  project's data is unlikely to beat it, and the learned route is recommended against.**
+
+## Phase 5 — checkpoint report (then STOP)
+
+- **Did any detail source pass, and against which reference?** **None, against any reference**
+  (ground, ICESat-2 20 m surface, GEDI surface), under either DEM. DAv2 @1008 against the surface
+  references is the only near-miss: consistent sign, below-threshold magnitude.
+- **Best deployable Sentinel-2 baseline now: DEM-only, raw Copernicus GLO-30** on the 10 m grid,
+  EGM2008. Ground-photon median 2.32% of range, beating current fusion on 23/25 tiles (Phase 1).
+  - Fusion, i.e. SRTM low-pass + DAv2 high-pass, is retired as the recommendation. Its result was
+    the SRTM low-pass (Phase 1).
+  - No surface product (DEM + detail source) is recommended.
+- **Is RDAH closed, and by what mechanism?** **Closed on Sentinel-2** (Phase 2), through the
+  pre-registered rule's *default* clause. The "mechanism shown" clause missed by 0.0006 (8×/1×
+  Pearson 0.5006).
+  - Substantively: correlation collapses between 1.2 m and 2.4 m GSD on DFC2019 itself, 4× short
+    of Sentinel-2's 10 m.
+  - The checkerboard turned out to be intrinsic to RDAH output, present in-domain, so it is *not*
+    the mechanism.
+  - On DFC2019, RDAH stays open only for the low-priority Track1 seen-vs-unseen contamination
+    split (05 verdict §7).
+- **Learned route (Sentinel-2 + GEDI labels over many India tiles outside the benchmark, with a
+  buffer, evaluated on the 25 tiles against ICESat-2): NOT recommended now, per the ETH ceiling
+  rule.** For the record, the route would address both earlier failure modes, and neither is the
+  reason it's not recommended:
+  1. **Per-tile data volume.** It trains across many tiles with a sparse-label loss. There are
+     ~345–11,700 quality-filtered GEDI shots per 10 km tile here, so a few hundred tiles give
+     ~10⁵–10⁶ direct labels, instead of ~300–1,000 patches from one tile's DEM. The per-tile
+     ceiling no longer applies.
+  2. **Memorisation of an interpolated target.** GEDI rh98 is a direct lidar measurement at
+     sparse footprints, not a resampled DEM. Train and test tiles would be disjoint with a spatial
+     buffer, and scoring uses an independent sensor (ICESat-2). There is no interpolated target to
+     memorise, and no train/test target leakage.
+
+  The reason against is the ceiling. ETH GCH 2020 *is* that route, trained globally on far more
+  data, and it adds no detail signal meeting the bar against an independent surface reference,
+  and actively worsens the ICESat-2 surface product through double counting with SRTM.
+  - **Gate to reopen:** new evidence that a canopy/object-height source can pass Test B against
+    ICESat-2 surface. One candidate is the product form `bare-earth DTM + canopy height` (e.g.
+    FABDEM + ETH) instead of `SRTM + canopy`, which would remove the double counting. It is
+    untested here and *not* started.
+
+**STOP.** No training was started in this session.

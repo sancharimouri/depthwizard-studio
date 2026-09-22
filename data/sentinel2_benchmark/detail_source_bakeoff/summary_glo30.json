@@ -1,0 +1,499 @@
+{
+  "dem": "glo30",
+  "min_px": 200,
+  "by_reference": {
+    "ground": {
+      "dav2_518": {
+        "n_tiles": 25,
+        "wins": 8,
+        "wins_needed": 15,
+        "median_rmse_product": 3.1078675832140097,
+        "median_rmse_control": 3.0974459631088194,
+        "wilcoxon_p": 0.7111607789993286,
+        "median_rhf": -0.037192346416955305,
+        "rhf_positive": 7,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.9926833510398865,
+        "median_rhf_spearman": -0.013630222714719836,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 1,
+            "median_rhf": -0.012838992951413398
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 0,
+            "median_rhf": -0.06658170678083569
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.10197100510835463
+          },
+          "urban": {
+            "n": 8,
+            "wins": 2,
+            "median_rhf": -0.04121644980372515
+          }
+        },
+        "wilcoxon_p_holm": 1.0,
+        "sign_p_holm": 1.0,
+        "pass_A": false,
+        "pass_B": false,
+        "PASS": false
+      },
+      "dav2_1008": {
+        "n_tiles": 25,
+        "wins": 11,
+        "wins_needed": 15,
+        "median_rmse_product": 3.11037119520698,
+        "median_rmse_control": 3.0974459631088194,
+        "wilcoxon_p": 0.8739878535270691,
+        "median_rhf": -0.021237071359943478,
+        "rhf_positive": 10,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.885238528251648,
+        "median_rhf_spearman": -0.02237386160787917,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 2,
+            "median_rhf": 6.165473892622529e-05
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 0,
+            "median_rhf": -0.05451421515199874
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.21352223258261624
+          },
+          "urban": {
+            "n": 8,
+            "wins": 4,
+            "median_rhf": -0.03496003727826165
+          }
+        },
+        "wilcoxon_p_holm": 1.0,
+        "sign_p_holm": 1.0,
+        "pass_A": false,
+        "pass_B": false,
+        "PASS": false
+      },
+      "dinov3_chmv2": {
+        "n_tiles": 25,
+        "wins": 9,
+        "wins_needed": 15,
+        "median_rmse_product": 3.0974574215188686,
+        "median_rmse_control": 3.0974459631088194,
+        "wilcoxon_p": 0.49078595638275146,
+        "median_rhf": 0.0012120401858332177,
+        "rhf_positive": 14,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.34501898288726807,
+        "median_rhf_spearman": 0.027491805793945476,
+        "median_raw_vs_resid": -0.2181720037050512,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 1,
+            "median_rhf": -0.04318134841297061
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 2,
+            "median_rhf": -0.021019606229091846
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 4,
+            "median_rhf": 0.015530308086063333
+          },
+          "urban": {
+            "n": 8,
+            "wins": 2,
+            "median_rhf": 0.0029047506476085586
+          }
+        },
+        "wilcoxon_p_holm": 1.0,
+        "sign_p_holm": 1.0,
+        "pass_A": false,
+        "pass_B": false,
+        "PASS": false
+      },
+      "eth_gch2020": {
+        "n_tiles": 25,
+        "wins": 0,
+        "wins_needed": 15,
+        "median_rmse_product": 3.60315198593333,
+        "median_rmse_control": 3.0974459631088194,
+        "wilcoxon_p": 5.960464477539063e-08,
+        "median_rhf": -0.0458056963341493,
+        "rhf_positive": 2,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.9999992251396179,
+        "median_rhf_spearman": -0.019397514984240718,
+        "median_raw_vs_resid": -0.2688719012312265,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 0,
+            "median_rhf": -0.0441134933238035
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 0,
+            "median_rhf": -0.057875389627104395
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 0,
+            "median_rhf": -0.053265086897931815
+          },
+          "urban": {
+            "n": 8,
+            "wins": 0,
+            "median_rhf": -0.042209301720562545
+          }
+        },
+        "wilcoxon_p_holm": 2.384185791015625e-07,
+        "sign_p_holm": 1.0,
+        "pass_A": false,
+        "pass_B": false,
+        "PASS": false
+      }
+    },
+    "surface_is2": {
+      "dav2_518": {
+        "n_tiles": 25,
+        "wins": 14,
+        "wins_needed": 15,
+        "median_rmse_product": 4.813485339524594,
+        "median_rmse_control": 4.818469215203118,
+        "wilcoxon_p": 0.4741646647453308,
+        "median_rhf": 0.028592981065880693,
+        "rhf_positive": 16,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.11476147174835205,
+        "median_rhf_spearman": 0.03064829268688031,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 3,
+            "median_rhf": 0.01618083349712535
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 5,
+            "median_rhf": 0.03702018579171676
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.16003177818827824
+          },
+          "urban": {
+            "n": 8,
+            "wins": 1,
+            "median_rhf": -0.0310067129272849
+          }
+        },
+        "wilcoxon_p_holm": 0.4741646647453308,
+        "sign_p_holm": 0.11476147174835205,
+        "pass_A": false,
+        "pass_B": false,
+        "PASS": false
+      },
+      "dav2_1008": {
+        "n_tiles": 25,
+        "wins": 18,
+        "wins_needed": 15,
+        "median_rmse_product": 4.804763464697763,
+        "median_rmse_control": 4.818469215203118,
+        "wilcoxon_p": 0.02550506591796875,
+        "median_rhf": 0.05563205387007999,
+        "rhf_positive": 20,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.0020386576652526855,
+        "median_rhf_spearman": 0.04140247118282578,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 3,
+            "median_rhf": 0.05282595511683905
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 7,
+            "median_rhf": 0.05272142358694591
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.2383942718765228
+          },
+          "urban": {
+            "n": 8,
+            "wins": 3,
+            "median_rhf": 0.02591337708385546
+          }
+        },
+        "wilcoxon_p_holm": 0.0510101318359375,
+        "sign_p_holm": 0.006115972995758057,
+        "pass_A": false,
+        "pass_B": false,
+        "PASS": false
+      },
+      "dinov3_chmv2": {
+        "n_tiles": 25,
+        "wins": 25,
+        "wins_needed": 15,
+        "median_rmse_product": 4.799086778648313,
+        "median_rmse_control": 4.818469215203118,
+        "wilcoxon_p": 5.960464477539063e-08,
+        "median_rhf": 0.017878046445420508,
+        "rhf_positive": 18,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.021642625331878662,
+        "median_rhf_spearman": 0.0015240838491697173,
+        "median_raw_vs_resid": 0.12134292742847361,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.043018610756566864
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 7,
+            "median_rhf": 0.016601562343872386
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.02230659939942156
+          },
+          "urban": {
+            "n": 8,
+            "wins": 8,
+            "median_rhf": 0.00694524942556315
+          }
+        },
+        "wilcoxon_p_holm": 2.384185791015625e-07,
+        "sign_p_holm": 0.043285250663757324,
+        "pass_A": true,
+        "pass_B": false,
+        "PASS": false
+      },
+      "eth_gch2020": {
+        "n_tiles": 25,
+        "wins": 5,
+        "wins_needed": 15,
+        "median_rmse_product": 7.494180516548967,
+        "median_rmse_control": 4.818469215203118,
+        "wilcoxon_p": 0.00032907724380493164,
+        "median_rhf": 0.035120076796600716,
+        "rhf_positive": 21,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.0004552602767944336,
+        "median_rhf_spearman": 0.03975193152955292,
+        "median_raw_vs_resid": 0.07264190623176099,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 2,
+            "median_rhf": 0.0275344866060998
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 0,
+            "median_rhf": 0.04573302273784002
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 0,
+            "median_rhf": 0.040232117582856636
+          },
+          "urban": {
+            "n": 8,
+            "wins": 3,
+            "median_rhf": 0.010220886480606173
+          }
+        },
+        "wilcoxon_p_holm": 0.000987231731414795,
+        "sign_p_holm": 0.0018210411071777344,
+        "pass_A": false,
+        "pass_B": false,
+        "PASS": false
+      }
+    },
+    "surface_gedi": {
+      "dav2_518": {
+        "n_tiles": 25,
+        "wins": 21,
+        "wins_needed": 15,
+        "median_rmse_product": 9.14053945780175,
+        "median_rmse_control": 9.141862686305885,
+        "wilcoxon_p": 7.49826431274414e-05,
+        "median_rhf": 0.047388976669999416,
+        "rhf_positive": 20,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.0020386576652526855,
+        "median_rhf_spearman": 0.05957816265523465,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 3,
+            "median_rhf": 0.047388976669999416
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 7,
+            "median_rhf": 0.08968116566172193
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.053514402717286344
+          },
+          "urban": {
+            "n": 8,
+            "wins": 6,
+            "median_rhf": -0.008046408760293031
+          }
+        },
+        "wilcoxon_p_holm": 0.00019097328186035156,
+        "sign_p_holm": 0.008154630661010742,
+        "pass_A": true,
+        "pass_B": false,
+        "PASS": false
+      },
+      "dav2_1008": {
+        "n_tiles": 25,
+        "wins": 22,
+        "wins_needed": 15,
+        "median_rmse_product": 9.135276553210218,
+        "median_rmse_control": 9.141862686305885,
+        "wilcoxon_p": 6.365776062011719e-05,
+        "median_rhf": 0.07946078695285966,
+        "rhf_positive": 20,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.0020386576652526855,
+        "median_rhf_spearman": 0.0893090125335875,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 2,
+            "median_rhf": -0.011405337824942782
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 7,
+            "median_rhf": 0.1219160218864797
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.07946078695285966
+          },
+          "urban": {
+            "n": 8,
+            "wins": 8,
+            "median_rhf": 0.044333452217682104
+          }
+        },
+        "wilcoxon_p_holm": 0.00019097328186035156,
+        "sign_p_holm": 0.008154630661010742,
+        "pass_A": true,
+        "pass_B": false,
+        "PASS": false
+      },
+      "dinov3_chmv2": {
+        "n_tiles": 25,
+        "wins": 25,
+        "wins_needed": 15,
+        "median_rmse_product": 9.126614465913951,
+        "median_rmse_control": 9.141862686305885,
+        "wilcoxon_p": 5.960464477539063e-08,
+        "median_rhf": 0.029775358263292556,
+        "rhf_positive": 18,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.021642625331878662,
+        "median_rhf_spearman": 0.015374241767124121,
+        "median_raw_vs_resid": 0.16573139449160051,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.04074286392463697
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 7,
+            "median_rhf": 0.034319732128700986
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.015638400794869688
+          },
+          "urban": {
+            "n": 8,
+            "wins": 8,
+            "median_rhf": 0.042799726154132633
+          }
+        },
+        "wilcoxon_p_holm": 2.384185791015625e-07,
+        "sign_p_holm": 0.021642625331878662,
+        "pass_A": true,
+        "pass_B": false,
+        "PASS": false
+      },
+      "eth_gch2020": {
+        "n_tiles": 25,
+        "wins": 22,
+        "wins_needed": 15,
+        "median_rmse_product": 8.39879753185747,
+        "median_rmse_control": 9.141862686305885,
+        "wilcoxon_p": 0.00016230344772338867,
+        "median_rhf": 0.07832396099088697,
+        "rhf_positive": 19,
+        "rhf_positive_needed": 18,
+        "sign_p": 0.007316648960113525,
+        "median_rhf_spearman": 0.087879398574662,
+        "median_raw_vs_resid": 0.21142606358294372,
+        "by_category": {
+          "agricultural": {
+            "n": 5,
+            "wins": 5,
+            "median_rhf": 0.12985742201339823
+          },
+          "coastal": {
+            "n": 7,
+            "wins": 6,
+            "median_rhf": 0.17883555795928957
+          },
+          "hilly": {
+            "n": 5,
+            "wins": 3,
+            "median_rhf": 0.051246979918536065
+          },
+          "urban": {
+            "n": 8,
+            "wins": 8,
+            "median_rhf": -0.019113432420006557
+          }
+        },
+        "wilcoxon_p_holm": 0.00019097328186035156,
+        "sign_p_holm": 0.01463329792022705,
+        "pass_A": true,
+        "pass_B": false,
+        "PASS": false
+      }
+    }
+  },
+  "eth_ceiling_fails_surface": true
+}
