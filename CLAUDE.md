@@ -29,7 +29,8 @@ tracks** in this repo — don't collapse them into one story:
    Early smoke tests here found DAv2's raw relative-depth output on nadir satellite imagery
    doesn't reliably correlate with real elevation once you control for spatial trend (on
    Darjeeling, correlation flipped from +0.6 to -0.4 after detrending), and zero-shot
-   RDAH-Net produced checkerboard artifacts — those findings motivated the demo framing
+   RDAH-Net produced checkerboard artifacts (2026-09-23 note: later shown intrinsic to RDAH,
+   not the reason it fails at 10 m; it carries no height signal there) — those findings motivated the demo framing
    above, and are seeded into the frontend's pipeline log as real research history.
 2. **ML research track** — a separate, active, ongoing investigation (`docs/method-audit/`,
    `data/dfc2019/`, `data/sentinel2_benchmark/`, `external/RDAH-Net/`, `external/SynRS3D/`,
@@ -47,7 +48,7 @@ exception, specific to Session 2: you may *run* the existing, already-used
 asset-generation process (DAv2 inference + DSM crop/reproject) unmodified, to produce
 visualization assets for new regions — that's reusing a frozen process, not changing it.
 
-## ML research track status (as of 2026-09-23, late: incl. DEM-only controls, RDAH resolution sweep, surface-reference bake-off)
+## ML research track status (as of 2026-09-23, final close-out — see `docs/method-audit/final-comparison.md`)
 
 Full audit trail: `PROJECT_STATUS_REPORT.md` (repo root) and `docs/method-audit/`
 (one numbered subfolder per method, each with `summary.md`/`verdict.md`). Methods tried,
@@ -68,185 +69,51 @@ in order:
    — beats it on 3/4 metrics (first config ever to beat baseline Pearson); RMSE gap
    narrowed from >13% to 4.3% but never closed. Full table:
    `docs/method-audit/04-learned-scale-modulation/v2-results.md`.
-5. **RDAH-Net fusion** (`05-rdah-net-fusion`) — zero-shot rejected (checkerboard artifacts
-   on Sentinel-2; the RS3DAda comparison was separately found contaminated, 49/50 DFC2019
-   benchmark tiles were in its own training split — see `stage0-gates/rs3dada-audit.md`).
-   A fine-tuned run (`RDAH-FT-1`, 4-fold spatial CV) produced real numbers — pooled MAE
-   2.906m / RMSE 6.659m / Pearson 0.513 / Spearman 0.527, unstable across folds (Pearson
-   0.254–0.607). A full audit (`summary.md` §1–9) found an input-scale bug: depth was fed at
-   about 1/255 of the intended scale. With the scale corrected, **zero-shot** on DFC2019 gives
-   MAE 2.231 / RMSE 4.566 / Pearson 0.716 / Spearman 0.655, using the Track1 checkpoint, whose
-   training list contains 41/50 benchmark tiles. The run's own artifact isn't in the repo.
-   **RDAH-FT-2** (2026-09-23) used the Swiss checkpoint (0/50 overlap), a per-fold input scale,
-   quadrant folds, a rank loss, and nested selection. It scored MAE 2.500 / RMSE 4.294 /
-   Pearson 0.640 / Spearman 0.506 (per-sample mean, Method 6's aggregation; pixel-pooled RMSE
-   5.598). Fold Pearson range is 0.503–0.607, and the variance ratio of 0.19–0.23 is still
-   severe underdispersion. **FT-2 is NOT ADOPTED**: it loses to Method 6 on all four metrics.
-   **The method itself stays open.** Zero-shot still beats both fine-tuned runs, and the
-   unresolved question is contamination vs. fine-tuning damage. Full detail:
-   `05-rdah-net-fusion/{verdict.md §6, summary.md §10}`, aggregate in
-   `data/dfc2019/experiments/rdah_quadrant_cv/rdah_ft2_aggregate.json`.
-   **RDAH on Sentinel-2 is now CLOSED** (2026-09-23; details in item 7). The original
-   checkerboard run was the Swiss checkpoint, reproduced exactly. The ×255 input fix reduces the
-   artifact but doesn't remove it, and there's no terrain correlation. What stays open is
-   DFC2019-only (contamination vs. fine-tuning damage). The Sentinel-2 test doesn't answer it,
-   because the GSD, sensor and construct gaps are confounded with it.
-   **Later on 2026-09-23 — rescued artifacts and the RDAH resolution sweep.** Files from a
-   `/private/tmp` scratchpad were rescued to `data/dfc2019/experiments/rdah_zeroshot/`.
-   - The zero-shot row is now verified: ×255 was picked on Track1, using 3 tiles from its own
-     training list.
-   - "Fine-tuning damages the model" is **resolved: no.** Swiss zero-shot on FT-2's samples
-     scores Pearson 0.492, and FT-2 beats it in 4/4 folds on every metric.
-   - RDAH on Sentinel-2 is **closed** via a pre-registered resolution sweep: DFC2019 Pearson falls
-     0.589 → 0.242 from 1.2 m to 2.4 m GSD. The checkerboard turned out to be intrinsic (present
-     in-domain) and isn't the reason.
-   - Open, low priority: Track1 on its 9 unseen vs. 41 seen tiles. Details: 05 `summary.md`
-     §11–12, `verdict.md` §7–8.
-6. **Full DAv2-Small fine-tune, twin (mean, log-variance) head**
-   (`06-full-finetune-twin-head`) — **current best result, and the first method in this
-   project's entire audit to beat the oracle per-tile-OLS baseline on all four tracked
-   metrics simultaneously.** Full backbone fine-tune (not frozen-feature scale modulation
-   like Method 4), same 50-tile DFC2019 benchmark and same 4-fold spatial-quadrant
-   holdout: MAE 2.053m / RMSE 3.531m / Pearson 0.737 / Spearman 0.654, vs. the oracle
-   baseline's 2.929m / 4.718m / 0.532 / 0.471 — every fold individually clears both
-   references on every metric, not one lucky fold. Idea sourced by reading (not
-   executing) `external/sih2026-depthwizard`; adapted independently onto this project's
-   own split. Two real implementation bugs found and fixed en route (an LR-warmup
-   omission causing NaN, and a mask-after-compute-instead-of-before bug that surfaced a
-   genuine NaN-in-raw-AGL data issue on DFC2019 tile `JAX_004_016`) — both documented in
-   `verdict.md` with the reasoning, not just the fix. Caveats: single seed/run, no
-   variance-ratio calibration diagnostic computed yet, and — important —
-   **this result is DFC2019-only.** It has since been staged on this project's own
-   Sentinel-2/SRTM benchmark and failed there (item 9 below) — the DFC2019 win does not
-   currently transfer to the Sentinel-2/India domain.
-   Two follow-on ablations (ideas read from, not executed from,
-   `external/DepthWizard-SIH26175`, adapted independently onto this project's own 4-fold
-   split) were tested against this baseline: **GSD-FiLM conditioning** — DFC2019 has no
-   real per-tile GSD variation to condition on, so the FiLM blocks reduce to a fixed
-   per-channel affine; MAE +0.63% / RMSE +0.82% worse, a clean wash, **not adopted**.
-   **Height-balanced loss + sampling** — `CappedHeightWeightedLoss` as an auxiliary term
-   (lambda=0.35) plus a `WeightedRandomSampler` over whole training quadrants (adapted
-   from their crop-anchoring, since Method 6 has no cropping step) weighted toward
-   tall/canopy-heavy quadrants; MAE 1.980m (-3.55%), RMSE 3.492m (-1.09%), improving in
-   4/4 folds individually — **adopted as the current recipe.** Full numbers and
-   reasoning: `docs/method-audit/06-full-finetune-twin-head/verdict.md`.
-7. **Sentinel-2 benchmark** (`data/sentinel2_benchmark/`) — separate validation dataset,
-   32 real tiles (8 each: agricultural/coastal/hilly/urban), selected via real ICESat-2
-   ATL08 ground-photon coverage (`manifest.csv`, `REPORT.md` — "CLOSED, complete").
-   **25 of the 32 tiles are actually used going forward** — the sign-flip detector
-   (`docs/method-audit/sentinel2/sign-flip-detector.md`) flagged 7 as unreliable and a
-   real geoid/datum bug (orthometric-vs-ellipsoidal height mixing) was found and fixed
-   during this work. With that fix, **per-tile linear SRTM/GLO-30 calibration is the
-   working, deployable baseline for this domain** — around 11% median error on the
-   accepted tiles. Three separate CNN-correction attempts on top of that baseline have
-   now all failed, each a different way, all against the same independent ICESat-2 check
-   (not just the DEM itself, which can be gamed — see below):
-   - Method 4 at SRTM's 10m *reprojected* grid: won the DEM check big (RMSE 75.97m vs.
-     linear's 117.87m) but **lost the independent ICESat-2 check** (69.79m vs. 53.40m) —
-     textbook interpolation-memorization, not real signal.
-   - Method 4 retrained at SRTM's true *native* ~30m grid (removing the interpolation
-     opportunity): lost on **both** checks (DEM win count 24/100, ICESat-2 16/100) — plain
-     underperformance from data starvation (patch count/fold dropped ~1000+ → ~300).
-   - Method 4 retrained with **Google Open Buildings 2.5D** (a real, denser building-height
-     source, not SRTM-interpolated) as the target on the 8 urban tiles only: still lost —
-     6/8 tiles beat the training-target check but lost the ICESat-2 check, the same
-     memorization signature as the first attempt, this time with a genuinely different and
-     better target.
-   **CNN-based correction is not pursued further without new evidence pointing at a fix
-   for the per-tile data-volume ceiling all three attempts hit** — this is a stopping
-   point reached deliberately, per a pre-agreed decision rule, not an open thread.
-   **Current best, non-learned: frequency fusion** (real DEM low-frequency trend + DAv2
-   high-frequency detail, matched-filter subtraction, sourced from the competitive-repo
-   audit's `blakc-coffee/depthwizard` and adapted independently onto this project's own
-   25 tiles/DEM/ICESat-2 data) **beats plain per-tile linear calibration on 21/25 tiles,
-   cutting median ICESat-2 error from 10.88% to 3.57% of elevation range** — the largest
-   gains are in hilly terrain (all 5 hilly tiles win, 10-25x). No training involved, so
-   Method 4's memorization failure mode structurally cannot apply. This is now the
-   recommended deployable baseline for this domain, superseding plain linear calibration.
-   Full per-tile table and methodology: `docs/method-audit/sentinel2/
-   sign-flip-detector.md` (2026-09-22 entry).
-   That 21/25 win rate has since been stress-tested rather than taken at face value:
-   **evidence-gating and leave-one-out validation** (ported from `amogh-hub/depthwizard`,
-   competitive-repo-audit list entry #19, cloned fresh) were adapted onto frequency
-   fusion itself, not the superseded linear-calibration pipeline they predate. The
-   evidence gate hooks into frequency fusion's own already-computed per-pixel DEM-coverage
-   confidence map; self-tested to confirm it actually fires, though on this 25-tile
-   benchmark every tile has 100% DEM coverage so it never rejects anything here — a
-   verified safety net for tiles with real DEM voids, not evidence it does nothing. Literal
-   per-pixel LOO is infeasible at ~1M pixels/tile, so it was adapted to leave-one-
-   **block**-out (LOBO: 25 spatial blocks/tile, refit the affine scale on the other ~96%
-   per fold, score every DEM pixel and ICESat-2 photon out-of-fold). Result: 21/25 wins
-   under both the original single-split protocol and LOBO, zero flips, max per-tile
-   difference 0.0004 percentage points — confirms the win rate isn't a split artifact.
-   Details: `docs/method-audit/sentinel2/sign-flip-detector.md` (2026-09-22 entry).
-   **Semantic-prior phase 2.3** then tested whether real building data (Microsoft
-   GlobalMLBuildingFootprints + Google Open Buildings 2.5D, freshly prepared for all 25
-   tiles) could fix the 4 remaining losses (bathinda/amalapuram/kutch/chennai) via two
-   closed-form integrations (no CNN) — **clean negative**. Building-aware confidence
-   weighting is a genuine no-op (max delta 0.0005pp across all 25 tiles); direct Open
-   Buildings height blending is net-harmful (15/25 tiles worse, only mumbai improved,
-   unexplained) and makes chennai — the tile hypothesized most likely to benefit — worse,
-   not better. Neither flips any losing tile to a win or any winning tile to a loss.
-   Neither adopted. **CLOSED**: both follow-up mechanism checks came back clean. Approach A
-   is a genuine physical no-op (`building_prob` is correctly wired, `dav2_highpass` is
-   sub-centimetre), not an integration bug. Approach B has no units/datum mismatch (Open
-   Buildings `building_height` is AGL and is already added to `dem_lowpass`; the full-weight
-   "fix" doubles the ICESat-2 overshoot). The negative stands. Full writeup:
-   `docs/method-audit/sentinel2/sign-flip-detector.md` (2026-09-22, "Semantic-prior phase
-   2.3" entry and its "Re-investigation" subsection).
-   **2026-09-23 (later) — frequency fusion restated: the DEM carries it.** Against its own
-   DEM-only control (SRTM low-pass, DAv2 detail zeroed), fusion wins 10/25 (p = 0.85). DAv2
-   high-pass vs. the ground residual is median r −0.037, positive on 8/25 tiles. **The deployable
-   Sentinel-2 baseline is now raw Copernicus GLO-30 on the 10 m grid (EGM2008)**, median 2.32% of
-   range, beating fusion's 3.57% on 23/25 tiles.
-   - A pre-registered no-training bake-off (DAv2 @518/@1008, DINOv3-CHMv2, ETH canopy height)
-     against ground photons plus new surface references (ICESat-2 20 m segments, GEDI rh98, 25
-     tiles) found **no source passing** (max median r_HF 0.089 < 0.10).
-   - The ETH ceiling check fired, so the learned Sentinel-2 + GEDI route is **not recommended**.
-     It's gated on a source passing against ICESat-2 surface, e.g. a DTM + canopy product form.
-   - Entry: `sign-flip-detector.md`, "2026-09-23 (continued)".
-   **RDAH-Net zero-shot on Sentinel-2 (2026-09-23): clean negative, line closed.** On the
-   Darjeeling tile, the DFC2019 input-scale fix (×255 depth, plus reflect-pad-to-1024 sizing)
-   cuts the checkerboard's FFT peaks by 2–3 orders of magnitude but doesn't remove them
-   (diagonal peaks at periods 8/16/32 persist). Resize vs. pad was ruled out as the cause. The
-   output has no terrain correlation raw or detrended: DEM plane-detrended −0.052/−0.047,
-   ICESat-2 −0.139/−0.132. The DAv2 control reproduces its +0.64→−0.43 flip. The run stopped at
-   Step 2, so there was no benchmark scoring, fusion swap or fine-tuning, and frequency fusion
-   with DAv2 remains the deployable baseline. Entry: `sign-flip-detector.md`, "2026-09-23 —
-   RDAH-Net zero-shot on Sentinel-2"; script `scripts/rdah_sentinel2_zeroshot.py`.
-8. **Frozen-backbone comparison: DAv2 vs. DINOv3** (SAT493M+CHMv2) on the Sentinel-2
-   benchmark, against real per-photon ICESat-2 ground heights (not the coverage-only
-   counts) — CLOSED, DINOv3 won outright per its stated decision rule (pooled Pearson
-   +0.3037 / Spearman +0.3490 vs. DAv2's +0.0403 / -0.0484). Important caveat: DAv2 is
-   still the better raw correlate specifically in agricultural and hilly terrain —
-   DINOv3's pooled win is driven by urban. Full writeup, per-tile/per-category numbers,
-   and the HF-checkpoint state-dict conversion needed to get SAT493M running:
-   `docs/method-audit/sentinel2/backbone-comparison.md`.
-   **2026-09-23 note.** The saved DINOv3-CHMv2 outputs are already in metres, because the head
-   applies its ×8 internally. On 10 m Sentinel-2 they're only 0.01–0.25 m everywhere,
-   effectively a "no canopy" map from a head trained on sub-metre imagery. Treat this
-   comparison's pooled DINOv3 "win" with that in mind: it's a correlation of a near-flat field
-   with terrain elevation. As a detail source, CHMv2 fails every reference in the Phase 4
-   bake-off; r_HF is ~0, and its only RMSE gains come from a small constant offset.
-9. **Method 6 staged on Sentinel-2/SRTM** (same section as item 7,
-   `docs/method-audit/sentinel2/sign-flip-detector.md`, 2026-09-22 entries) — the DFC2019
-   win (item 6) does **not** replicate here: fold 0 alone lost decisively on both the DEM
-   and ICESat-2 checks (1/25 and 2/25 tile wins), plain underperformance, not
-   memorization. Stopped at fold 0 per the pre-agreed staged protocol; folds 1-3 and the
-   planned Open-Buildings-as-target follow-on for Method 6 were not run.
-10. **Competitive repo audit** (`COMPETITIVE_REPO_AUDIT.md`, repo root) — 20 external SIH
-    DepthWizard repos investigated (cloned, code read directly, claimed numbers verified
-    against actual result files). Headline finding:
-    `zaidnansari2011/sih2026-depthwizard`'s full DAv2 fine-tune independently validated
-    the same core idea Method 6 above uses, on its own (non-comparable) split — this is
-    where Method 6's approach was sourced from. Two other repos
-    (`blakc-coffee/depthwizard`, `arpitparashar06/depthwizard`) do genuine real-DEM-low-
-    frequency + model-high-frequency fusion, a mechanism this project has not tried and
-    flagged as worth testing if the Sentinel-2/India track is revisited.
+5. **RDAH-Net fusion** (`05-rdah-net-fusion`) — **closed on Sentinel-2; low-priority open item on DFC2019.**
+   - **DFC2019:**
+     - FT-2 (2.500/4.294/0.640/0.506) is not adopted.
+     - Swiss zero-shot (Pearson 0.492) shows fine-tuning *helps* (4/4 folds).
+     - The strong Track1 zero-shot (0.716) came from a checkpoint trained on 41/50 benchmark
+       tiles, with ×255 picked on its own training tiles.
+   - **Sentinel-2:** closed by a pre-registered rerun (Darjeeling Spearman ≈ 0 vs. ICESat-2/GEDI
+     height above ground). The checkerboard was never a valid reason; it's intrinsic.
+   - **Resolution:** on 50 DFC2019 tiles, correlation falls 0.581 → 0.330 from 0.6 m to 2.4 m GSD.
+     That's one VHR-trained model, not an information limit.
+   - Details: `docs/method-audit/final-comparison.md` §1, §3–5; `05-rdah-net-fusion/verdict.md` §6–9.
+6. **Method 6 — full DAv2-Small fine-tune, twin head, height-balanced** (`06-full-finetune-twin-head`)
+   — **current DFC2019 best: 1.980/3.492/0.745/0.656** (mean of 4 quadrant folds).
+   - Beats the per-tile-OLS oracle (3.392/4.579/0.582/0.509) on all four metrics and on 47–49/50
+     tiles per metric, with tile-bootstrap CIs.
+   - SEEDS-PENDING
+   - **DFC2019-only:** it failed when staged on Sentinel-2.
+   - Details: `final-comparison.md` §1–2; `06-full-finetune-twin-head/verdict.md` §6.
+7. **Sentinel-2 / India** (`data/sentinel2_benchmark/`, 32 tiles, ICESat-2 + GEDI references) —
+   **deployable baselines are plain DEMs.**
+   - **Terrain:** FABDEM, median 1.78 m vs. ICESat-2 ground photons; beats GLO-30 on 32/32 tiles.
+   - **Surface:** raw Copernicus GLO-30, which beats SRTM under the R4 offset guard.
+   - Frequency fusion's old 21/25 headline was the DEM's own result (fusion = its DEM-only
+     control, 10/25).
+   - No depth or canopy model adds detail (Phase 4); no DEM + canopy product helps (A3); three CNN
+     corrections failed.
+   - 10 m canopy models (CHMv2, ETH) do carry a height-above-ground signal, mostly between
+     landscapes (within-tile Spearman 0.23–0.28).
+   - The learned Sentinel-2 + GEDI route is gated (ETH ceiling fired).
+   - Details: `final-comparison.md` §3–4; log `docs/method-audit/sentinel2/sign-flip-detector.md`.
+8. **DAv2 vs. DINOv3 frozen-backbone comparison** (`sentinel2/backbone-comparison.md`) —
+   **superseded.**
+   - Its "DINOv3 is the frozen prior going forward" didn't hold: CHMv2 outputs only 0.01–0.25 m
+     on 10 m imagery, and it fails as a detail source.
+   - Its pooled correlation was with terrain elevation, a construct it doesn't predict.
+   - No backbone is carried forward (dated correction in that doc).
+9. **Method 6 staged on Sentinel-2** — failed at fold 0 (DEM 1/25, ICESat-2 2/25 tile wins).
+   Stopped per protocol. DFC2019 wins don't transfer to 10 m.
+10. **Competitive repo audit** (`COMPETITIVE_REPO_AUDIT.md`) — 20 external repos read. It was the
+   source of Method 6's idea and of frequency fusion; the latter is now retired (dated note in the
+   audit).
 
-`00-audit-log.md` and `final-comparison.md` in `docs/method-audit/` are still empty stubs
-— don't treat their absence of content as "nothing happened," the per-method docs are
-where the real record is.
+`docs/method-audit/final-comparison.md` is the single consolidated record (tables, CIs,
+independence flags, audit corrections). `00-audit-log.md` is the chronological index, with
+result/commit gaps flagged.
 
 **None of the above touches the live demo.** Every method here — including Method 6's
 DFC2019 win — is research-track work, evaluated offline against DFC2019/Sentinel-2
