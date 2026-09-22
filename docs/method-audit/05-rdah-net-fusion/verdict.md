@@ -1,5 +1,10 @@
 # RDAH-Net — Verdict
 
+> **2026-09-23 update:** the combined fine-tune §4 called for (RDAH-FT-2) has run on all 4 folds.
+> **RDAH-FT-2 is NOT ADOPTED.** It loses to Method 6 on all four metrics. The method as a whole
+> stays open: whether zero-shot beats fine-tuning because of contamination or because
+> fine-tuning damages the model is still unresolved. See §6 below.
+
 **Verdict: works conditionally — the prior investigation's "non-functional zero-shot, adapts via
 fine-tuning" narrative is overturned in its most important respect. RDAH-Net is not broken
 zero-shot; it was fed at roughly 1/100-1/255 of its likely intended input scale, on every
@@ -137,3 +142,53 @@ closing that avenue) are unaffected — this audit is entirely about the DFC2019
 investigation and, per the forward-looking note above, raises a testable question about the
 *already-rejected* Sentinel-2 zero-shot test rather than reopening the Sentinel-2 CNN-correction
 question itself.
+
+## 6. 2026-09-23 — RDAH-FT-2 (three fixes stacked): NOT ADOPTED
+
+**Verdict: not adopted. It loses to Method 6 on all four metrics, under every aggregation. It is a
+real improvement on FT-1 in both accuracy and fold stability. It still underdisperses severely.
+And it doesn't close the question of why zero-shot scores better.** Full numbers, derivations and
+sources are in `summary.md` §10. The aggregate comes from
+`data/dfc2019/experiments/rdah_quadrant_cv/rdah_ft2_aggregate.json`
+(`scripts/aggregate_rdah_ft2.py`, arithmetic only).
+
+- **What ran**: Swiss init, per-fold input scale derived from training quadrants only (×255 for
+  folds 0–1, ×300 for folds 2–3), quadrant-level 4-fold holdout matching Methods 4/6, and
+  SmoothL1 + 0.5 × rank-pair loss. Epochs were chosen by nested selection. Before training could
+  start, an `importlib` registration bug (`@dataclass` crashing on an unregistered module) had to
+  be fixed in `import_module()`.
+- **Headline, like-for-like with Method 6's aggregation** (mean of per-sample metrics, then mean
+  of folds): **MAE 2.500 / RMSE 4.294 / Pearson 0.640 / Spearman 0.506.** Pixel-pooled: MAE 2.499 /
+  RMSE 5.598. The mean of fold Pearson/Spearman is 0.571/0.572. A true pooled correlation can't be
+  computed from the saved JSONs.
+- **vs. Method 6 + height-balanced (1.980 / 3.492 / 0.745 / 0.656): loses on all four.** The
+  reason for not adopting FT-2 holds under either aggregation.
+- **vs. the HANDOFF §7 bar (Method 2 Grid+Huber+20, 2.929 / 4.718 / 0.532 / 0.471)**: under
+  per-sample means, which is how that row was computed, **FT-2 clears it on all four metrics,
+  RMSE included.** It fails the RMSE bar only under pixel pooling (5.598). The briefed "fails the
+  oracle bar on RMSE" is therefore an aggregation mismatch, and the JSONs don't support it
+  like-for-like. Against the per-tile-OLS oracle that Methods 4/6's own audits use
+  (3.39 / 4.58 / 0.582 / 0.509), FT-2 wins MAE, RMSE and Pearson, and loses Spearman by 0.003.
+- **Fold instability (HANDOFF §3.1)**: Pearson range narrows from FT-1's 0.254–0.607 to
+  **0.503–0.607**, both pixel-pooled within fold. FT-1's instability doesn't reproduce here.
+- **Nested selection used the held-out quadrant, not inner-train data.** One half of the held-out
+  quadrant chooses the epoch and the disjoint other half is reported. The reported tiles never
+  influence the choice. The oracle epoch and epoch 5 are within 0.5% MAE of the nested choice, so
+  the leakage is negligible. The cost is that every FT-2 number rests on 25 of 50 held-out
+  samples per fold.
+- **Variance ratio 0.186–0.231** (FT-1: 0.02–0.05), with an OLS slope of 0.19–0.23. That's a real
+  improvement, and **still severe underdispersion**: predictions carry about a fifth of the true
+  variance. The worst-RMSE samples in every fold are the same few Jacksonville tiles, with high
+  Pearson (0.69–0.89) but MAE of 6–12 m. That is consistent with **under-prediction of tall
+  structures**. No per-height-bin error was saved, so this is a **hypothesis**, not a finding.
+
+**The open RDAH question, re-scoped.** Zero-shot on DFC2019 (2.231 / 4.566 / 0.716 / 0.655) beats
+both fine-tuned runs. Either fine-tuning damages the pretrained model on this small benchmark, or
+the zero-shot score is inflated by pretraining overlap. The repo's own file lists make (b)
+concrete: the zero-shot run used **Track1**, whose `Track1-train.txt` contains 41/50 benchmark
+tiles, while FT-2 used **Swiss**, whose GF-7 lists contain 0/50. The deciding check is Swiss
+zero-shot at the fold-derived scale, under the quadrant protocol, with the same per-fold affine
+calibration (`summary.md` §10). It was **not run** this session. The zero-shot 50-tile run's own
+script and result JSON also weren't found in the repo, so that row is unverified against an
+artifact. Until the check runs, RDAH-Net stays **open, not rejected**. Only the FT-2 recipe is
+closed.

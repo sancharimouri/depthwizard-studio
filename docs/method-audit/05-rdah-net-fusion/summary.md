@@ -373,3 +373,216 @@ RDAH, properly scaled, is not the project's new best — but it is now a materia
 much stronger candidate than either the PDF's own conclusion or this project's prior
 `PROJECT_STATUS_REPORT.md` summary ("worst RMSE of the entire audit") suggested, and it got
 there with zero epochs of training.
+
+## 10. 2026-09-23 — RDAH-FT-2: the three-fixes-stacked fine-tune, all 4 folds
+
+_Sourced from `scripts/train_rdah_quadrant_cv.py` (read in full), its four per-fold outputs
+`data/dfc2019/experiments/rdah_quadrant_cv/fold{0..3}/result.json` (fold index confirmed from each
+file's own `"fold"` field, not its directory name), and
+`data/dfc2019/experiments/rdah_quadrant_cv/rdah_ft2_aggregate.json`, written by
+`scripts/aggregate_rdah_ft2.py` (arithmetic only: no inference, no retraining). Every number
+below comes from that aggregate JSON. The training run finished last session, but the session hit
+its usage limit before any doc was written, so no earlier FT-2 section exists to extend._
+
+### What changed from FT-1 to FT-2
+
+FT-2 is the "single combined experiment" that `verdict.md` §4 called for. It runs on the same
+50-tile DFC2019 benchmark for 5 epochs at Adam lr 1e-5, and changes four things:
+
+| | RDAH-FT-1 (`train_rdah_spatial_cv.py`) | RDAH-FT-2 (`train_rdah_quadrant_cv.py`) |
+|---|---|---|
+| Init checkpoint | Track1 `104best_model.pth` (41/50 tiles in its own training list, §2) | Swiss `swiss_best_model.pth` (0/50 overlap, see below) |
+| Depth input scale | unscaled `[0,1]` (§1's bug) | per-fold constant from a Pearson sweep on **training quadrants only**, with the 4 original probe tiles excluded: ×255 for folds 0–1, ×300 for folds 2–3 |
+| Holdout | whole-tile geographic folds (17/8/7/18 tiles) | quadrant-level, `quadrant_bounds()` reused from `evaluate_method4.py`, matching Methods 4/6. 150 train / 50 test samples per fold. PositionalEncoding rebuilt at 32×32 for 512² inputs |
+| Loss | masked SmoothL1 only | masked SmoothL1 + 0.5 × `rank_pair_loss` (from Method 4 v2's `phase2_building_rank_v2`, 2000 pairs/patch, margin 0.25) |
+| Checkpoint selection | epoch 5, fixed | nested: select epoch by MAE on one half of the held-out quadrant, report on the other half |
+
+**Nested selection doesn't use inner-train data, and this needs stating plainly.**
+`run_fold()` shuffles the fold's 50 held-out-quadrant samples (seed `42 + fold`), selects the
+epoch by MAE on 25 of them (`inner_val_n = 25`), and reports on the other 25
+(`true_test_n = 25`). The two halves are disjoint tiles, so the reported samples never influence
+selection. But the selection set comes from the held-out quadrant, not from the training
+quadrants. This is the same discipline §7 used for FT-1, not a stricter one. In practice it
+barely matters. The oracle epoch (peeking at the reported half) and the fixed epoch 5 land within
+0.5% MAE of the nested choice:
+
+| | MAE (pixel-weighted) | RMSE (pixel-weighted) | Pearson (mean of folds) | Spearman (mean of folds) |
+|---|---:|---:|---:|---:|
+| nested-selected (reported) | 2.499 | 5.598 | 0.571 | 0.572 |
+| oracle epoch (peeked) | 2.497 | 5.602 | 0.572 | 0.572 |
+| fixed epoch 5 | 2.510 | 5.614 | 0.568 | 0.566 |
+
+**Side effect: every FT-2 number is measured on half of each held-out quadrant** (25 samples,
+about 6.54M valid pixels per fold). Methods 4 and 6 report on all 50 samples. The per-epoch
+`history` entries in each `result.json` use all 50, but those include the selection half.
+
+### The import bug that was fixed
+
+`train_rdah_quadrant_cv.py` loads `evaluate_method4.py`, `evaluate_method4_v2.py` and
+`train_rdah_spatial_cv.py` through `importlib.util.spec_from_file_location`. `evaluate_method4.py`
+uses `@dataclass`. During class construction, `dataclasses` calls
+`sys.modules.get(cls.__module__)`, which returns `None` for a module that hasn't been registered
+yet, and that crashes with `AttributeError`. The fix, `import_module()`, registers
+`sys.modules[name] = mod` **before** `spec.loader.exec_module(mod)`. The script's own comment at
+that function records this. No separate crash log was saved, so this account comes from the fixed
+code and its comment, not from a traceback.
+
+### Per-fold results (nested-selected epoch, true-test half)
+
+| Fold | scale | selected epoch (oracle) | valid px | MAE | RMSE | Pearson | Spearman | variance ratio | OLS slope |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0 | ×255 | 4 (4) | 6,553,024 | 2.012 | 5.375 | 0.580 | 0.560 | 0.192 | 0.192 |
+| 1 | ×255 | 3 (2) | 6,536,997 | 2.359 | 5.490 | 0.607 | 0.612 | 0.186 | 0.198 |
+| 2 | ×300 | 3 (3) | 6,545,567 | 3.042 | 6.063 | 0.503 | 0.499 | 0.196 | 0.228 |
+| 3 | ×300 | 4 (5) | 6,540,036 | 2.585 | 5.435 | 0.593 | 0.618 | 0.231 | 0.221 |
+| **min–max** | | | | 2.012–3.042 | 5.375–6.063 | **0.503–0.607** | 0.499–0.618 | 0.186–0.231 | 0.192–0.228 |
+
+### Aggregate, labelled by method
+
+| Aggregation | MAE | RMSE | Pearson | Spearman |
+|---|---:|---:|---:|---:|
+| Pixel-weighted (MAE = Σn·MAE/Σn, RMSE = √(Σn·RMSE²/Σn); n = 26,175,624) | **2.499** | **5.598** | — | — |
+| Mean of folds (each fold pixel-pooled within fold) | 2.499 | 5.591 | **0.571** | **0.572** |
+| Pixel-count-weighted mean of fold correlations | — | — | 0.571 | 0.572 |
+| **Mean of per-sample metrics, then mean of folds** (Method 6's aggregation) | **2.500** | **4.294** | **0.640** | **0.506** |
+
+A **true pooled Pearson/Spearman can't be computed.** The JSONs store no per-fold means,
+variances, covariance, or predictions. The correlation rows above are means of fold values and
+are labelled that way. The recomputation agrees with last session's in-chat figures on MAE ≈2.50,
+RMSE ≈5.60, Pearson ≈.571 and Spearman ≈.572. **It disagrees on the variance-ratio range.** At the
+selected epochs the range is **0.186–0.231**, not ≈.13–.22. The .13 figure matches fold 1's
+full-quadrant per-epoch `history` (0.117–0.138), which covers different samples. The JSON values
+are the ones used here.
+
+### Fold stability (HANDOFF §3.1's question)
+
+FT-1's fold-level Pearson ranged over 0.254–0.607, a width of 0.353. That is epoch 5, pixel-pooled
+within each fold. FT-2's Pearson range under the same within-fold pooling is **0.503–0.607, a width
+of 0.104**. Spearman narrows from 0.307–0.573 to 0.499–0.618. RMSE narrows from 4.623–7.723 to
+5.375–6.063. **The instability FT-1 showed doesn't reproduce under FT-2's recipe.** Several things
+changed together (quadrant folds of 50 samples instead of tile folds of 7–18 tiles, correct input
+scale, rank loss, a different checkpoint), so this run can't say which one fixed it. The most
+likely single contributor is the fold construction: FT-1's 7- and 8-tile folds are small enough
+for a few tiles to swing a fold's correlation. That attribution is a hypothesis.
+
+### Variance ratio: better, but still severe underdispersion
+
+Going from FT-1's 0.02–0.05 (§8, fold 0) to FT-2's 0.186–0.231 (mean 0.201) is a real
+improvement, roughly 4–11× (0.186/0.050 to 0.231/0.021). The rank term (the fix §8 prescribed) is the most plausible cause.
+**It is still severe underdispersion.** Predicted variance is about a fifth of true variance, and
+the OLS slope of prediction on truth is 0.19–0.23, so the model moves about 0.2 m for every metre
+of real AGL. For comparison, Method 4's CNN had a variance ratio of 0.136 and a slope of 0.187 (§8),
+so FT-2 is only modestly less compressed than the simplest learned model in this audit.
+
+**RMSE is high relative to MAE, and the per-sample data shows where.** The pixel-pooled RMSE/MAE
+ratio is 2.24 (5.598/2.499), while the mean of per-sample RMSEs is only 4.294. That gap means a
+few samples with very large errors dominate the pooled RMSE. In every fold, the three worst-RMSE
+samples come from the same handful of Jacksonville tiles. Those samples have **high correlation
+but large absolute error**:
+
+| Fold | sample | MAE | RMSE | Pearson |
+|---|---|---:|---:|---:|
+| 0 | JAX_166_006_q0 | 9.93 | 17.20 | 0.835 |
+| 0 | JAX_214_023_q0 | 6.77 | 14.71 | 0.745 |
+| 1 | JAX_164_008_q1 | 11.66 | 19.51 | 0.761 |
+| 1 | JAX_214_015_q1 | 6.22 | 10.37 | 0.825 |
+| 2 | JAX_166_006_q2 | 7.22 | 17.15 | 0.887 |
+| 2 | JAX_214_023_q2 | 10.26 | 13.49 | 0.750 |
+| 3 | JAX_214_015_q3 | 6.99 | 14.65 | 0.688 |
+| 3 | JAX_166_006_q3 | 6.31 | 10.18 | 0.744 |
+
+Good ranking with large magnitude error is the signature you'd expect if FT-2 **under-predicts
+tall structures**: a slope of about 0.2 stretched over a large AGL range. **This is a hypothesis,
+not a measured result.** The JSONs contain no per-height-bin error and no per-sample AGL
+distribution, so they can't show that these samples are the tall ones or that the error sits at
+the top of each sample's height range. Testing it needs saved predictions binned by true AGL. That
+is an inference re-run, so it wasn't done this session.
+
+### Comparison against the rest of the project
+
+Aggregation differs across these rows, and mixing them quietly would mislead. Here is what each
+row's own script does:
+- **Method 6**, `evaluate_method6_finetune_twinhead.py` `agg()`: mean of per-tile(-quadrant)
+  metrics within each fold, then mean over folds.
+- **Oracle per-tile-OLS** (Method 3's baseline as re-derived in `04-learned-scale-modulation/
+  summary.md` §1) and **Method 2 Grid+Huber+20** (`evaluate_sparse_anchor_regression.py`): mean of
+  per-tile metrics.
+- **RDAH-FT-1's "pooled" 2.906/6.659/.513/.527** (`evaluate_rdah_pooled_cv.py` →
+  `pooled_cv_epoch5_report.json`): true pixel-level pooling over all 52.4M pixels. Pearson is
+  exact. Spearman is computed on a 2M-pixel deterministic reservoir sample. Recomputing FT-1's
+  pixel-weighted MAE/RMSE from its per-fold files reproduces 2.906/6.659 exactly.
+- **RDAH zero-shot on DFC2019**: equal-weight mean of 4 fold values (§1). The within-fold
+  aggregation isn't recorded, and **the script and result JSON for the 50-tile ×255 run weren't
+  located in the repo** (`run_rdah_scale_sweep.py` is the 4-tile probe sweep, not this run). The
+  numbers come from §1 of this document and are **unverified against an artifact**.
+
+The like-for-like FT-2 row is therefore the **per-sample mean** (2.500/4.294/0.640/0.506). The
+pixel-pooled row is also shown.
+
+| | MAE | RMSE | Pearson | Spearman | aggregation | protocol / checkpoint |
+|---|---:|---:|---:|---:|---|---|
+| **RDAH-FT-2** (per-sample mean) | **2.500** | **4.294** | **0.640** | **0.506** | per-sample mean → fold mean | quadrant, Swiss, 25/50 samples per fold |
+| RDAH-FT-2 (pixel-pooled) | 2.499 | 5.598 | 0.571* | 0.572* | pixel-weighted; *mean of folds | same |
+| RDAH-FT-1 (per-tile mean) | 2.864 | 5.502 | 0.498 | — | per-tile mean → fold mean | tile-level, Track1, unscaled, epoch 5 |
+| RDAH-FT-1 (pooled, as reported) | 2.906 | 6.659 | 0.513 | 0.527 | true pixel pooling | same |
+| RDAH zero-shot on DFC2019, ×255 + per-fold affine | 2.231 | 4.566 | 0.716 | 0.655 | mean of 4 folds; artifact not located | tile-level, **Track1** |
+| Method 6 + height-balanced (`method6_height_balanced/m6_heightbal_results.json`) | 1.980 | 3.492 | 0.745 | 0.656 | per-tile mean → fold mean | quadrant, all 50 samples |
+| Oracle per-tile-OLS (`04-…/summary.md` §1) | 3.39 | 4.58 | 0.582 | 0.509 | per-tile mean | quadrant |
+| Method 2 Grid+Huber+20 (HANDOFF's "oracle" row) | 2.929 | 4.718 | 0.532 | 0.471 | per-tile mean | per-tile anchors, no CV |
+
+**Does FT-2 (per-sample mean) beat each reference?**
+
+| | MAE | RMSE | Pearson | Spearman |
+|---|---|---|---|---|
+| vs. Method 6 (height-balanced) | ✗ | ✗ | ✗ | ✗ |
+| vs. Method 2 Grid+Huber+20 (HANDOFF §7 bar) | ✓ | ✓ | ✓ | ✓ |
+| vs. oracle per-tile-OLS (3.39/4.58/.582/.509) | ✓ | ✓ | ✓ | ✗ (0.506 vs 0.509) |
+
+Three corrections to the numbers this session was briefed with:
+1. **Method 6's height-balanced Pearson/Spearman are 0.7445/0.6563** in its result JSON. The
+   briefed 0.737/0.654 are the original Method 6 recipe's values (2.053/3.531/0.737/0.654). FT-2
+   loses to both.
+2. **"Oracle per-tile-OLS" names two different rows in this project.** CLAUDE.md and HANDOFF use
+   2.929/4.718/.532/.471, which is Method 2's Grid+Huber+20 sparse-anchor result
+   (`02-gcp-regression/summary.md`). The per-tile-OLS oracle that Methods 4 and 6 are compared
+   against in their own audits is 3.39/4.58/.582/.509. Both rows are shown above.
+3. **"FT-2 fails the oracle bar on RMSE" holds only under pixel pooling** (5.598 vs 4.718/4.58).
+   Every baseline row uses per-tile means, and under that aggregation FT-2's RMSE of 4.294 clears
+   both bars. The JSONs support the like-for-like reading, so this document uses it. It doesn't
+   change the verdict, because FT-2 still loses to Method 6 on all four metrics under either
+   aggregation.
+
+### Separating the four RDAH results
+
+1. **Zero-shot on Sentinel-2 (Darjeeling)**: rejected for checkerboard artifacts
+   (`PROJECT_STATUS_REPORT.md`). Probably fed unscaled `[0,1]` depth (`verdict.md` §5). The
+   ×255/×300 rescale has not been re-checked on Sentinel-2.
+2. **Zero-shot on DFC2019, corrected input scale**: 2.231/4.566/0.716/0.655, Track1 checkpoint,
+   tile-level folds, per-fold affine calibration fitted on training tiles. Strong, but it comes
+   from a contaminated checkpoint, and the artifact wasn't located.
+3. **RDAH-FT-1**: 2.906/6.659/0.513/0.527 pooled. Track1, unscaled input, tile folds, epoch 5,
+   unstable across folds.
+4. **RDAH-FT-2**: 2.500/4.294/0.640/0.506 (per-sample mean). Swiss, corrected scale, quadrant
+   folds, rank loss, nested selection. Stable across folds, still underdispersed.
+
+### Open question: why does zero-shot beat both fine-tuned runs?
+
+Result 2 beats FT-2 on MAE, Pearson and Spearman. Two explanations are live:
+- **(a) Fine-tuning damages the pretrained model** on a benchmark this small (150 training
+  samples per fold, 5 epochs).
+- **(b) The zero-shot score is inflated by pretraining overlap with DFC2019.** The repo documents
+  each checkpoint's training data, so this can be read directly without running anything:
+  `external/RDAH-Net/Track1-train.txt` (2,226 lines, DFC2019 JAX/OMA tile pairs) contains **41/50**
+  of this benchmark's tiles, and `Track1-test.txt` contains the other 9. `Swiss-{train,test}.txt`
+  (8,823 / 2,204 lines) and `HK-{train,test}.txt` (1,179 / 293 lines) list GF-7 ortho tiles
+  (`GF07_DLC_…_Ortho_*.tif`), and **0/50** benchmark tiles appear in either. The zero-shot row used
+  Track1 and FT-2 used Swiss. The same pattern appeared for another method: RS3DAda had 49/50
+  benchmark tiles in its training split (`stage0-gates/rs3dada-audit.md`).
+
+This comparison is confounded on three axes at once: checkpoint (Track1 vs. Swiss), protocol
+(tile-level vs. quadrant) and output mapping (per-fold affine calibration vs. raw fine-tuned
+output). The check that separates (a) from (b) is **Swiss zero-shot at the fold-derived scale,
+under the quadrant protocol, with the same per-fold affine calibration**. If it lands near
+2.23/0.72, contamination doesn't explain the zero-shot score and fine-tuning is the problem. If it
+lands at or below FT-2, the zero-shot number was inflated by contamination. **Not run this
+session** (documentation-only).
