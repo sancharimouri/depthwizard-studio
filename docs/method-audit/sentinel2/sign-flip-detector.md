@@ -2703,6 +2703,76 @@ fusion's remaining 4 losses. Consistent with how Method 4's CNN attempts and
 the GSD-FiLM ablation were reported elsewhere in this project: a clean "no"
 is reported honestly rather than reframed as a win.
 
+## Re-investigation: is the negative result genuinely understood? (same day, follow-up — both checks pass, verdict unchanged)
+
+Before trusting the clean-negative verdict above, two specific mechanisms
+were checked rather than assumed: whether Approach A's suspiciously-exact
+0.0005pp max delta is a wiring/scaling bug (dead signal never reaching the
+formula) vs. a genuine physical null, and whether Approach B's height
+blend used Open Buildings' `building_height` in the wrong vertical
+reference frame (the same category of bug already caught three times this
+session: CNN target-framing, EGM96/EGM2008 datum).
+
+**Check A — building_prob wiring, on chennai (highest-confidence tile,
+23.85% OB-confident coverage): real signal, correctly wired, genuine
+null.** Read `building_fraction.tif` directly: real, continuous variation
+(0.0-1.0, std 0.34, 26 distinct quantized levels, mean 0.79 specifically
+at the pixels where `building_prob > 0.5`) — not flat or near-constant.
+Reproduced `process_tile`'s intermediate arrays directly: at those same
+high-confidence pixels, `delta_A = alpha * building_prob * dav2_highpass`
+averages 0.0043m, matching `building_prob`(0.79) x `dav2_highpass`(0.0054m
+there) almost exactly — the formula is reaching real data with the right
+magnitude relationship, not a dead or misscaled wire. The reason it still
+doesn't register in the final metric: **`dav2_highpass` itself is tiny** —
+whole-tile abs-mean 0.0083m (max 0.47m) against a 54.7m elevation range,
+i.e. sub-centimeter on average even before any building-aware reweighting.
+Doubling a signal that's already ~0.015% of the elevation range cannot
+move a percentage-of-range metric by more than the ~0.0005pp actually
+observed. At the ICESat-2 photon locations specifically (not just
+building-flagged pixels), `building_prob` also has real spread (mean
+0.069, std 0.208, 13.4% of photons on nonzero-building pixels) — so
+there's no confound where photons simply never see buildings either.
+**Confirmed: genuine null, not a bug. Nothing to fix; Approach A stands
+as reported.**
+
+**Check B — Open Buildings 2.5D height reference frame: relative (AGL),
+correctly handled by the existing blend, and the hypothesized fix makes
+it measurably worse, not better.** Read Google's own Earth Engine Data
+Catalog entry for the dataset
+(`GOOGLE_Research_open-buildings-temporal_v1`) directly rather than
+trusting this project's own code comments: the `building_height` band is
+documented as **"Building height relative to the terrain in range [0m,
+100m]"** — confirmed AGL, matching what this project's code comments
+already said (`prepare_semantic_benchmark_openbuildings.py`,
+`prepare_method4_openbuildings_data.py`). Approach B's formula,
+`final_B = dem_lowpass + 0.5*dav2_highpass + 0.5*ob_height`, already adds
+`ob_height` on top of `dem_lowpass` (a ground-level reference) rather than
+using it standalone — i.e. it already treats it as relative, not
+absolute. So the specific bug category hypothesized (relative value used
+as if absolute) does **not** apply here; no datum fix was needed.
+
+To be sure rather than assume, the hypothesized "fix" (full, unweighted
+`dem_lowpass + ob_height`, matching how Method 4 Test B added ground +
+AGL height a-priori) was tested directly on chennai's 17,592 ICESat-2
+photons that land on OB-confident building pixels: mean true height
+-83.30m; baseline (frequency fusion, no OB) mean error +0.76m (abs mean
+4.29m); the **existing** half-weighted Approach B blend already overshoots
+worse, mean error +4.52m (abs mean 5.90m); the **hypothesized "corrected"
+full-weight** ground+AGL blend overshoots dramatically more, mean error
++8.28m (abs mean 8.62m) — roughly double the existing blend's error and
+2x the baseline's. This confirms, quantitatively, that Open Buildings'
+rooftop AGL height genuinely overshoots what ICESat-2 ATL08 measures at
+most Indian urban building footprints in this benchmark (ATL08 ground/low
+photons evidently aren't sampling true rooftop returns here), and that the
+existing half-weight dilution was already an unintentional partial
+mitigation of a real physical mismatch, not an underweighted bug waiting
+to be fixed by adding more AGL signal.
+
+**Both checks come back clean. The phase 2.3 negative result is confirmed
+genuinely understood, not an artifact of a wiring or datum bug.** Verdict
+above stands unchanged; no re-test of either approach with a "fix" is
+warranted, and none was applied.
+
 ## Reproducing this
 
 - `scripts/prepare_semantic_benchmark_footprints.py` — Step 2 (Microsoft
