@@ -730,3 +730,36 @@ over-represented tiles that degrade steeply.
 - This curve shows that **one model (RDAH-Net Swiss) trained on sub-metre imagery loses about 43%
   of its correlation with LiDAR AGL between 0.6 m and 2.4 m input GSD, on 50 DFC2019 tiles**.
 - It says nothing about whether 10 m imagery contains height information.
+
+### §13 results — B2: Method 6 resolution curve (seed-43 checkpoints, held-out quadrants)
+
+Outputs: `data/dfc2019/experiments/method6_resolution_sweep/per_quadrant_seed43.json` (800
+records = 4 folds × 50 quadrants × 4 factors), stdout `method6_resolution_sweep_stdout.txt`;
+bootstrap in `data/dfc2019/experiments/resolution_curves_bootstrap.json`.
+- **Inference only**, using checkpoints saved by the C3 seed run. No training was done for B2.
+- **Protocol (pre-registered):** block-average, upsample back to 512², Method 6's normal
+  preprocessing. Prediction and AGL are block-averaged to the factor grid.
+- **Consistency check:** at 1× the mean per-quadrant Spearman is 0.656, which equals seed 43's
+  own reported Spearman (0.6558).
+
+| factor | GSD | pooled Pearson [95% CI] | pooled variance ratio [CI] | mean per-quadrant Spearman [CI] |
+|---:|---:|---|---|---|
+| 1× | 0.3 m | 0.795 [0.770, 0.818] | 0.552 [0.489, 0.661] | 0.656 [0.616, 0.691] |
+| 2× | 0.6 m | 0.791 [0.768, 0.813] | 0.511 [0.452, 0.614] | 0.651 [0.609, 0.689] |
+| 4× | 1.2 m | 0.776 [0.752, 0.798] | 0.470 [0.416, 0.562] | 0.648 [0.606, 0.686] |
+| 8× | 2.4 m | **0.708** [0.673, 0.738] | 0.373 [0.323, 0.451] | 0.605 [0.560, 0.646] |
+
+**Method 6 degrades gracefully:** −11% pooled Pearson from 0.3 m to 2.4 m (RDAH: −33% from 1×,
+−43% from its 2× peak).
+- Its predictions get more mean-compressed as GSD coarsens (variance ratio 0.55 → 0.37).
+- **Caveat on comparability:**
+  - B1 and B2 use different protocols (RDAH is fed the small image directly; Method 6 gets the
+    image upsampled back to 512²).
+  - Both score against block-averaged targets. Averaging smooths the target, which favours
+    correlation at coarse factors.
+  - The two curves are each internally consistent, but not directly comparable to each other.
+
+**Wording (binding):** two models trained on sub-metre imagery (RDAH-Net Swiss; Method 6, 1
+seed), 50 DFC2019 tiles, both degrade as input GSD coarsens from 0.3 to 2.4 m. RDAH degrades
+steeply, Method 6 mildly. **Neither curve says anything about 10 m.** Only the Sentinel-2 direct
+test (A4) speaks to that, and Method 6's failure when staged on Sentinel-2 is recorded separately.

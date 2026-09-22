@@ -176,9 +176,13 @@ resolution coarsens.
 - **RDAH-Net (Swiss), 50 DFC2019 tiles:** pooled Pearson vs. LiDAR AGL 0.490 / 0.581 / 0.537 /
   **0.330** at 0.3 / 0.6 / 1.2 / 2.4 m GSD (CIs in `data/dfc2019/experiments/resolution_curves_bootstrap.json`),
   a 43% drop from the 0.6 m peak to 2.4 m.
-- **Method 6 (seed 43), 50 tiles, held-out quadrants:** PENDING-B2.
+- **Method 6 (seed-43 checkpoints), 50 tiles, held-out quadrants:** pooled Pearson 0.795 / 0.791
+  / 0.776 / **0.708** at the same GSDs, only −11%. Variance ratio 0.55 → 0.37.
+- The two curves use different input protocols (RDAH gets the small image directly; Method 6 gets
+  it upsampled back to 512²) and aren't directly comparable. Details: `05-rdah-net-fusion/summary.md`
+  §13.
 
-That's one to two models on 50 tiles. **The curves do not show an information limit at 10 m.**
+That's two models (RDAH-Net Swiss; Method 6, one seed) on 50 DFC2019 tiles, 0.3–2.4 m GSD. **The curves do not show an information limit at 10 m.**
 
 **What the direct test shows (A4, the only evidence on that question):**
 **"10 m height signal exists; combining it with a DEM is the failure."** Two 10 m canopy models

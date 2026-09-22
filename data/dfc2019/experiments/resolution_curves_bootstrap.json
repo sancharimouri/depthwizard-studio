@@ -102,5 +102,105 @@
         0.42919779187209606
       ]
     }
+  },
+  "B2_method6_seed43": {
+    "model": "Method 6 height-balanced, seed 43, held-out quadrants",
+    "unit": "tile (4 quadrants)",
+    "1": {
+      "n_units": 50,
+      "gsd_m": 0.3,
+      "pooled_pearson": 0.7948654959759883,
+      "pooled_pearson_ci95": [
+        0.7702218942121438,
+        0.818029565113963
+      ],
+      "pooled_variance_ratio": 0.5521694292245022,
+      "pooled_variance_ratio_ci95": [
+        0.4886699305703862,
+        0.6610127179854612
+      ],
+      "mean_unit_pearson": 0.743913356677895,
+      "mean_unit_pearson_ci95": [
+        0.7035500986496404,
+        0.7789847294294343
+      ],
+      "mean_unit_spearman": 0.6557503644593767,
+      "mean_unit_spearman_ci95": [
+        0.6157697674694741,
+        0.6914923320308918
+      ]
+    },
+    "2": {
+      "n_units": 50,
+      "gsd_m": 0.6,
+      "pooled_pearson": 0.7909026862329003,
+      "pooled_pearson_ci95": [
+        0.7679359167567544,
+        0.8131050650115359
+      ],
+      "pooled_variance_ratio": 0.5106985156095025,
+      "pooled_variance_ratio_ci95": [
+        0.4522031099664887,
+        0.614442797798937
+      ],
+      "mean_unit_pearson": 0.7404647489322198,
+      "mean_unit_pearson_ci95": [
+        0.699096653184386,
+        0.7745263989002719
+      ],
+      "mean_unit_spearman": 0.6514566627534252,
+      "mean_unit_spearman_ci95": [
+        0.6088095678531761,
+        0.688913115942914
+      ]
+    },
+    "4": {
+      "n_units": 50,
+      "gsd_m": 1.2,
+      "pooled_pearson": 0.7755230094227603,
+      "pooled_pearson_ci95": [
+        0.7518074498171684,
+        0.7982702171699495
+      ],
+      "pooled_variance_ratio": 0.47032795389805415,
+      "pooled_variance_ratio_ci95": [
+        0.4161667050891277,
+        0.5620642023154265
+      ],
+      "mean_unit_pearson": 0.7243440226671813,
+      "mean_unit_pearson_ci95": [
+        0.6862161617344386,
+        0.7575435233225996
+      ],
+      "mean_unit_spearman": 0.6483333537414124,
+      "mean_unit_spearman_ci95": [
+        0.6062917150601651,
+        0.6863976825283774
+      ]
+    },
+    "8": {
+      "n_units": 50,
+      "gsd_m": 2.4,
+      "pooled_pearson": 0.7077215858452724,
+      "pooled_pearson_ci95": [
+        0.6728015440547104,
+        0.7383407290961072
+      ],
+      "pooled_variance_ratio": 0.3728568144753207,
+      "pooled_variance_ratio_ci95": [
+        0.3229411834804218,
+        0.4507725033842462
+      ],
+      "mean_unit_pearson": 0.6339072272033468,
+      "mean_unit_pearson_ci95": [
+        0.5913178450152915,
+        0.671028294090505
+      ],
+      "mean_unit_spearman": 0.6049807989426597,
+      "mean_unit_spearman_ci95": [
+        0.5602085381952235,
+        0.6455615097604531
+      ]
+    }
   }
 }
