@@ -236,3 +236,22 @@ closed.
 - **RDAH on DFC2019: open only for the low-priority contamination split** (Track1 zero-shot on
   its 9 unseen vs. 41 seen tiles; inference only). "Fine-tuning damages the model" is resolved
   (no). The FT-2 recipe stays not adopted.
+
+## 9. 2026-09-23 (final close-out) — RDAH final status
+
+- **RDAH on Sentinel-2: CLOSED by the pre-registered rule** (A5, `sentinel2/sign-flip-detector.md`
+  "final close-out").
+  - Neither Phase 2 close condition had validly fired, and a preprocessing mismatch had been
+    found, so the rule selected the rerun branch.
+  - The Darjeeling rerun with training-exact preprocessing scores Spearman **+0.026** (ICESat-2
+    canopy height) and **−0.010** (GEDI rh98) against the ≥ 0.30-on-both reopen bar. The
+    brightness-corrected secondary scores ≈ 0 too.
+  - **This replaces §8's closure**, which went through the rule's default clause on a post-hoc
+    "not graceful" judgment.
+  - The checkerboard is intrinsic and was never a valid criterion.
+- **Resolution curve on 50 DFC2019 tiles** (summary §13): pooled Pearson 0.490 / 0.581 / 0.537 /
+  0.330 at 0.3–2.4 m. The 8×/1× ratio is 0.672, milder than the 8-tile 0.5006. This is one
+  VHR-trained model degrading with GSD, not a statement about information at 10 m.
+- **RDAH on DFC2019:** open only for the low-priority Track1 seen-vs-unseen split. FT-2 is not
+  adopted. "Fine-tuning damages" is resolved (no).
+- Consolidated table: `docs/method-audit/final-comparison.md`.
