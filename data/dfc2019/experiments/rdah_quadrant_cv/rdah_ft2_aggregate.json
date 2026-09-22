@@ -1,0 +1,471 @@
+{
+  "experiment": "RDAH-FT-2",
+  "generated_by": "scripts/aggregate_rdah_ft2.py",
+  "sources": {
+    "0": "data/dfc2019/experiments/rdah_quadrant_cv/fold0/result.json",
+    "1": "data/dfc2019/experiments/rdah_quadrant_cv/fold1/result.json",
+    "2": "data/dfc2019/experiments/rdah_quadrant_cv/fold2/result.json",
+    "3": "data/dfc2019/experiments/rdah_quadrant_cv/fold3/result.json"
+  },
+  "top_level_results_file": {
+    "path": "data/dfc2019/experiments/rdah_quadrant_cv/method_rdah_quadrant_cv_results.json",
+    "folds_contained": [
+      3
+    ],
+    "identical_to_per_fold_file": {
+      "3": true
+    },
+    "note": "Overwritten by whichever --fold ran last; not a 4-fold aggregate."
+  },
+  "selection_protocol": {
+    "reported_epoch": "nested-selected epoch per fold",
+    "selection_data": "inner-validation half (25 tiles) of the fold's HELD-OUT quadrant; metrics reported on the disjoint other half (25 tiles). Not inner-train data: selection never sees the reported tiles, but it does see the held-out quadrant.",
+    "scale_selection_data": "fold's training quadrants only, 4 original probe tiles excluded",
+    "source": "scripts/train_rdah_quadrant_cv.py run_fold() and derive_fold_scale()"
+  },
+  "per_fold": [
+    {
+      "fold": 0,
+      "held_out_quadrant": 0,
+      "train_quadrants": [
+        1,
+        2,
+        3
+      ],
+      "checkpoint_init": "swiss_best_model.pth",
+      "input_depth_scale": 255,
+      "selected_epoch": 4,
+      "selection_criterion": "min MAE on inner-validation half of held-out quadrant",
+      "inner_val_n_samples": 25,
+      "true_test_n_samples": 25,
+      "mae": 2.011699015430925,
+      "rmse": 5.3745458855265005,
+      "pearson": 0.5804070853438098,
+      "spearman": 0.5596887241567206,
+      "n": 6553024,
+      "variance_ratio": 0.191606804728508,
+      "ols_slope": 0.19238041214410698,
+      "per_sample_mean": {
+        "mae": 2.0116179917445876,
+        "mae_n_nan": 0,
+        "rmse": 3.8839619490015873,
+        "rmse_n_nan": 0,
+        "pearson": 0.6806261686524752,
+        "pearson_n_nan": 0,
+        "spearman": 0.5121383209745682,
+        "spearman_n_nan": 0,
+        "n_samples": 25
+      },
+      "oracle_epoch": 4,
+      "oracle_true_test": {
+        "mae": 2.011699015430925,
+        "rmse": 5.3745458855265005,
+        "pearson": 0.5804070853438098,
+        "spearman": 0.5596887241567206,
+        "n": 6553024
+      },
+      "default_epoch5_true_test": {
+        "mae": 2.0122626086360897,
+        "rmse": 5.374606126136666,
+        "pearson": 0.5800879091002217,
+        "spearman": 0.5549287902483021,
+        "n": 6553024
+      }
+    },
+    {
+      "fold": 1,
+      "held_out_quadrant": 1,
+      "train_quadrants": [
+        0,
+        2,
+        3
+      ],
+      "checkpoint_init": "swiss_best_model.pth",
+      "input_depth_scale": 255,
+      "selected_epoch": 3,
+      "selection_criterion": "min MAE on inner-validation half of held-out quadrant",
+      "inner_val_n_samples": 25,
+      "true_test_n_samples": 25,
+      "mae": 2.3589858428996067,
+      "rmse": 5.49047553023896,
+      "pearson": 0.6065312027127141,
+      "spearman": 0.6122372322553429,
+      "n": 6536997,
+      "variance_ratio": 0.18608780205249786,
+      "ols_slope": 0.19782047179568021,
+      "per_sample_mean": {
+        "mae": 2.3606748548761214,
+        "mae_n_nan": 0,
+        "rmse": 3.9723671754742056,
+        "rmse_n_nan": 0,
+        "pearson": 0.6293784583847299,
+        "pearson_n_nan": 0,
+        "spearman": 0.4990585279271931,
+        "spearman_n_nan": 0,
+        "n_samples": 25
+      },
+      "oracle_epoch": 2,
+      "oracle_true_test": {
+        "mae": 2.350793807152701,
+        "rmse": 5.508731761745797,
+        "pearson": 0.6119302847777093,
+        "spearman": 0.6125906924948352,
+        "n": 6536997
+      },
+      "default_epoch5_true_test": {
+        "mae": 2.391077719060182,
+        "rmse": 5.5028334254882125,
+        "pearson": 0.6035000745171123,
+        "spearman": 0.6022126377329956,
+        "n": 6536997
+      }
+    },
+    {
+      "fold": 2,
+      "held_out_quadrant": 2,
+      "train_quadrants": [
+        0,
+        1,
+        3
+      ],
+      "checkpoint_init": "swiss_best_model.pth",
+      "input_depth_scale": 300,
+      "selected_epoch": 3,
+      "selection_criterion": "min MAE on inner-validation half of held-out quadrant",
+      "inner_val_n_samples": 25,
+      "true_test_n_samples": 25,
+      "mae": 3.0419891070895058,
+      "rmse": 6.062887797980953,
+      "pearson": 0.5025707253983022,
+      "spearman": 0.49902303161593475,
+      "n": 6545567,
+      "variance_ratio": 0.19633759558200836,
+      "ols_slope": 0.227643876644242,
+      "per_sample_mean": {
+        "mae": 3.044519197233929,
+        "mae_n_nan": 0,
+        "rmse": 4.886666087587543,
+        "rmse_n_nan": 0,
+        "pearson": 0.5683088515947098,
+        "pearson_n_nan": 0,
+        "spearman": 0.44655847234248597,
+        "spearman_n_nan": 0,
+        "n_samples": 25
+      },
+      "oracle_epoch": 3,
+      "oracle_true_test": {
+        "mae": 3.0419891070895058,
+        "rmse": 6.062887797980953,
+        "pearson": 0.5025707253983022,
+        "spearman": 0.49902303161593475,
+        "n": 6545567
+      },
+      "default_epoch5_true_test": {
+        "mae": 3.051025361085391,
+        "rmse": 6.109382120806982,
+        "pearson": 0.4941114699993909,
+        "spearman": 0.48754715013563665,
+        "n": 6545567
+      }
+    },
+    {
+      "fold": 3,
+      "held_out_quadrant": 3,
+      "train_quadrants": [
+        0,
+        1,
+        2
+      ],
+      "checkpoint_init": "swiss_best_model.pth",
+      "input_depth_scale": 300,
+      "selected_epoch": 4,
+      "selection_criterion": "min MAE on inner-validation half of held-out quadrant",
+      "inner_val_n_samples": 25,
+      "true_test_n_samples": 25,
+      "mae": 2.584747801261418,
+      "rmse": 5.435362263558974,
+      "pearson": 0.5925751476132007,
+      "spearman": 0.6182376629228181,
+      "n": 6540036,
+      "variance_ratio": 0.23116782307624817,
+      "ols_slope": 0.22083670826471594,
+      "per_sample_mean": {
+        "mae": 2.5845610862253294,
+        "mae_n_nan": 0,
+        "rmse": 4.43421205908516,
+        "rmse_n_nan": 0,
+        "pearson": 0.6820095898101036,
+        "pearson_n_nan": 0,
+        "spearman": 0.5651095977361279,
+        "spearman_n_nan": 0,
+        "n_samples": 25
+      },
+      "oracle_epoch": 5,
+      "oracle_true_test": {
+        "mae": 2.5843301515166854,
+        "rmse": 5.43657496742289,
+        "pearson": 0.5929679137658818,
+        "spearman": 0.6185086564616779,
+        "n": 6540036
+      },
+      "default_epoch5_true_test": {
+        "mae": 2.5843301515166854,
+        "rmse": 5.43657496742289,
+        "pearson": 0.5929679137658818,
+        "spearman": 0.6185086564616779,
+        "n": 6540036
+      }
+    }
+  ],
+  "aggregate": {
+    "pixel_weighted": {
+      "mae": 2.4992444303091865,
+      "rmse": 5.5976136899891555,
+      "n_pixels": 26175624
+    },
+    "mean_of_folds": {
+      "mae": 2.499355441670364,
+      "rmse": 5.590817869326347,
+      "pearson": 0.5705210402670068,
+      "spearman": 0.5722966627377041
+    },
+    "n_weighted_mean_of_folds": {
+      "pearson": 0.5705074066618726,
+      "spearman": 0.5722702867571051
+    },
+    "mean_of_samples_then_folds": {
+      "mae": 2.500343282519992,
+      "rmse": 4.294301817787124,
+      "pearson": 0.6400807671105047,
+      "spearman": 0.5057162297450938
+    },
+    "variance_ratio_mean_of_folds": 0.2013000063598156,
+    "ols_slope_mean_of_folds": 0.20967036721218626,
+    "true_pooled_correlation": "not computable: JSONs hold no per-fold means/variances/covariance or predictions"
+  },
+  "fold_range": {
+    "mae": {
+      "min": 2.011699015430925,
+      "max": 3.0419891070895058
+    },
+    "rmse": {
+      "min": 5.3745458855265005,
+      "max": 6.062887797980953
+    },
+    "pearson": {
+      "min": 0.5025707253983022,
+      "max": 0.6065312027127141
+    },
+    "spearman": {
+      "min": 0.49902303161593475,
+      "max": 0.6182376629228181
+    },
+    "variance_ratio": {
+      "min": 0.18608780205249786,
+      "max": 0.23116782307624817
+    },
+    "ols_slope": {
+      "min": 0.19238041214410698,
+      "max": 0.227643876644242
+    }
+  },
+  "leakage_check": {
+    "oracle_epoch_pixel_weighted": {
+      "mae": 2.497094232955062,
+      "rmse": 5.602385313418928,
+      "n_pixels": 26175624
+    },
+    "oracle_epoch_mean_of_folds": {
+      "mae": 2.4972030202974542,
+      "rmse": 5.595685103169035,
+      "pearson": 0.5719690023214258,
+      "spearman": 0.5724527761822921
+    },
+    "epoch5_pixel_weighted": {
+      "mae": 2.5095553096058514,
+      "rmse": 5.613571434340116,
+      "n_pixels": 26175624
+    },
+    "epoch5_mean_of_folds": {
+      "mae": 2.509673960074587,
+      "rmse": 5.605849159963687,
+      "pearson": 0.5676668418456516,
+      "spearman": 0.565799308644653
+    }
+  },
+  "per_height_bin_error": "not present in the result JSONs",
+  "worst_rmse_samples_per_fold": {
+    "0": [
+      {
+        "sample": "JAX_166_006_q0",
+        "mae": 9.927811246392192,
+        "rmse": 17.204495334529756,
+        "pearson": 0.8352332393070567
+      },
+      {
+        "sample": "JAX_214_023_q0",
+        "mae": 6.771091297754276,
+        "rmse": 14.707424267930422,
+        "pearson": 0.7448810806985551
+      },
+      {
+        "sample": "JAX_264_013_q0",
+        "mae": 2.6456250285783307,
+        "rmse": 4.864534743447492,
+        "pearson": 0.838044668050653
+      }
+    ],
+    "1": [
+      {
+        "sample": "JAX_164_008_q1",
+        "mae": 11.659763943804636,
+        "rmse": 19.511085859265368,
+        "pearson": 0.7609060927596276
+      },
+      {
+        "sample": "JAX_214_015_q1",
+        "mae": 6.216960861224614,
+        "rmse": 10.366794731960987,
+        "pearson": 0.8249003208232933
+      },
+      {
+        "sample": "JAX_505_016_q1",
+        "mae": 4.2004182815102755,
+        "rmse": 6.384600996293569,
+        "pearson": 0.6347144669716729
+      }
+    ],
+    "2": [
+      {
+        "sample": "JAX_166_006_q2",
+        "mae": 7.219384377379474,
+        "rmse": 17.145097432724725,
+        "pearson": 0.8865854133582877
+      },
+      {
+        "sample": "JAX_214_023_q2",
+        "mae": 10.256728108708526,
+        "rmse": 13.491279343175737,
+        "pearson": 0.7501541065014086
+      },
+      {
+        "sample": "JAX_505_018_q2",
+        "mae": 5.260740747420812,
+        "rmse": 7.599312451650372,
+        "pearson": 0.5490768549812017
+      }
+    ],
+    "3": [
+      {
+        "sample": "JAX_214_015_q3",
+        "mae": 6.990439864625819,
+        "rmse": 14.647033235430165,
+        "pearson": 0.6883439322969549
+      },
+      {
+        "sample": "JAX_166_006_q3",
+        "mae": 6.305320843900365,
+        "rmse": 10.18095302244949,
+        "pearson": 0.7437909685373287
+      },
+      {
+        "sample": "JAX_164_008_q3",
+        "mae": 5.175510311086342,
+        "rmse": 9.417078623510571,
+        "pearson": 0.35088340440369853
+      }
+    ]
+  },
+  "ft1_comparison": {
+    "sources": [
+      "data/dfc2019/experiments/rdah/fold0/result.json",
+      "data/dfc2019/experiments/rdah/fold1/result.json",
+      "data/dfc2019/experiments/rdah/fold2/result.json",
+      "data/dfc2019/experiments/rdah/fold3/result.json",
+      "data/dfc2019/experiments/rdah/pooled_cv_epoch5_report.json"
+    ],
+    "protocol": "tile-level 4-fold spatial CV (17/8/7/18 tiles), Track1 checkpoint, unscaled [0,1] depth, epoch 5 fixed",
+    "per_fold_epoch5_pooled_within_fold": [
+      {
+        "fold": 0,
+        "epoch": 5,
+        "mae": 3.6204701486469757,
+        "rmse": 7.666294015098223,
+        "pearson": 0.6066489695355761,
+        "spearman": 0.5732321523810749,
+        "n": 17806267
+      },
+      {
+        "fold": 1,
+        "epoch": 5,
+        "mae": 2.2069748898101746,
+        "rmse": 4.622797551650654,
+        "pearson": 0.2535224127234729,
+        "spearman": 0.3072193783548456,
+        "n": 8387876
+      },
+      {
+        "fold": 2,
+        "epoch": 5,
+        "mae": 3.199700465300105,
+        "rmse": 7.722582974666372,
+        "pearson": 0.3633529938795022,
+        "spearman": 0.5026403224008252,
+        "n": 7336393
+      },
+      {
+        "fold": 3,
+        "epoch": 5,
+        "mae": 2.427870435775137,
+        "rmse": 5.915233846117714,
+        "pearson": 0.5469853129754514,
+        "spearman": 0.5543908644029943,
+        "n": 18842372
+      }
+    ],
+    "reported_pooled": {
+      "n_pixels": 52372908,
+      "mae": 2.906082432115108,
+      "rmse": 6.65936167926857,
+      "pearson": 0.512906784592847,
+      "spearman": 0.5265760983870929,
+      "spearman_type": "deterministic reservoir sample",
+      "spearman_sample_n": 2000000
+    },
+    "pixel_weighted": {
+      "mae": 2.906082432115108,
+      "rmse": 6.659361679268572,
+      "n_pixels": 52372908
+    },
+    "mean_of_folds": {
+      "mae": 2.863753984883098,
+      "rmse": 6.48172709688324,
+      "pearson": 0.44262742227850066,
+      "spearman": 0.48437067938493505
+    },
+    "mean_of_tiles_then_folds": {
+      "mae": 2.8637811181676813,
+      "rmse": 5.501877853379817,
+      "pearson": 0.4977348701450309,
+      "spearman": "not available per tile"
+    },
+    "fold_range": {
+      "mae": {
+        "min": 2.2069748898101746,
+        "max": 3.6204701486469757
+      },
+      "rmse": {
+        "min": 4.622797551650654,
+        "max": 7.722582974666372
+      },
+      "pearson": {
+        "min": 0.2535224127234729,
+        "max": 0.6066489695355761
+      },
+      "spearman": {
+        "min": 0.3072193783548456,
+        "max": 0.5732321523810749
+      }
+    }
+  }
+}
