@@ -3468,3 +3468,61 @@ PASS anywhere, max median r_HF 0.079, and the ETH ceiling fires.
     untested here and *not* started.
 
 **STOP.** No training was started in this session.
+
+# 2026-09-23 (final close-out) — datum audit, reproducibility, DEM-only baselines on 32 tiles, FABDEM, direct height test, RDAH rerun
+
+Standing rules for this entry:
+- **R2:** every decision rule is committed verbatim before its test runs.
+- **R3:** paired comparisons use two-sided Wilcoxon plus a win count; uncertainty is a
+  tile-level bootstrap (10,000 resamples, seed 0, 95% percentile CI); Holm correction across
+  candidates.
+- **R4 offset guard:** a pass must hold on BOTH RMSE and bias-removed RMSE; bias and median
+  absolute error are also reported.
+
+## A0 — vertical datum audit: GLO-30 was already on EGM2008; the headline stands
+
+**Datums, from source documentation:**
+- **SRTM** (the `srtm_raw/` tiles, 1-arcsecond): orthometric heights on **EGM96**
+  (NASA/USGS SRTMGL1 v003 user guide; also stated in `scripts/run_srtm_comparison.py`'s own
+  docstring: "vertical datum is EGM96, NOT EGM2008").
+- **Copernicus GLO-30:** orthometric heights on **EGM2008**, EPSG:3855 (Copernicus DEM Product
+  Handbook, AIRBUS GEO.2018-1988-2).
+- **ICESat-2** ATL03/ATL08 heights: WGS84-ellipsoidal (ITRF2014 realization).
+- **FABDEM:** inherits GLO-30's EGM2008 (checked in A3).
+
+**How each script converts to ellipsoidal (quoted).** In both scripts, `n = n_egm*(lon, lat)` at
+the **tile centre** is the geoid height *of the ellipsoid*, i.e. n = −N. Ellipsoidal height is
+therefore `orthometric − n`, and orthometric is `ellipsoidal + n`.
+- `scripts/frequency_fusion_controls.py:111`: `"n96": ff.n_egm96(lon, lat), "n08": sc.n_egm2008(lon, lat)`
+- `scripts/frequency_fusion_controls.py:133–135`:
+  `("iii_srtm_raw", t["srtm"], t["n96"]), ("iv_glo30_raw", t["glo"], t["n08"]), ("v_fusion_glo30", fg["fused"], t["n08"])`,
+  applied at `:98` as `sample_depth_at_photons(rgb_path, field_ortho - n, photons)`
+- `scripts/detail_source_bakeoff.py:52`: `g["h_ortho"] = g["h"] + t["n96"]`, with `:94`
+  `t = {**t, "n96": t["n08"]}  # GLO-30 is EGM2008` for the GLO-30 run
+- `sc.n_egm2008` is `Transformer.from_crs("EPSG:4979", "EPSG:3855")`
+  (`run_srtm_comparison.py:47,55`); `ff.n_egm96` uses EPSG:5773.
+
+**GLO-30 was corrected with EGM2008 in every Phase 1 and Phase 4 number. No fix needed; no
+number changes.**
+
+**N at all 33 tile centres** (32 benchmark tiles + Darjeeling), in
+`data/sentinel2_benchmark/geoid_undulation_audit.csv`:
+- Smoke test: `PROJ_NETWORK=ON`; **no zero N** from either transform. Bathinda
+  N_EGM96 = −46.68 m, i.e. the script's n = +46.68, matching the precedent.
+- Script values match `srtm_3way_comparison.csv`'s stored `n_egm96`/`n_egm2008` to 1.4e-14 m
+  (25 tiles).
+- **N_EGM2008 − N_EGM96 ranges from −1.38 m (nagapattinam) to +6.75 m (manali)**, mean +0.76 m.
+  Every hilly tile is +1.25 to +6.75 m. A datum swap *would* have biased GLO-30 by several metres
+  in the hills. It didn't happen.
+
+**New finding: the tile-centre constant.** Geoid variation *within* a 10 km tile, over a 5×5 grid
+of the tile bbox (`geoid_within_tile_range.csv`):
+- median range 0.46 m (EGM2008) / 0.47 m (EGM96)
+- up to **4.56 m (dharamshala, EGM2008)** and 2.4–2.6 m on the other hilly tiles
+
+The Phase 1/4 pipeline applies a single tile-centre N, so hilly-tile errors carry up to about
+±2.3 m of datum approximation. It affects SRTM and GLO-30 similarly, not identically. **Handling
+from here:** A2 onward applies the geoid **per point** (N evaluated at each photon/segment/shot
+location) as primary, and reports the tile-centre version alongside for continuity. That choice
+is pre-registered in A2's rule. Phase 1/4 numbers aren't retroactively changed; they're
+superseded where A2 recomputes them.
