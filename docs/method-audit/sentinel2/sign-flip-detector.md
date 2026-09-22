@@ -2233,3 +2233,125 @@ scaling stands as the project's working method; no change to
   scripts/test_known_height_scale_frequency_fusion.py losing4` for the 4
   target tiles, `... all25` for the full accepted set. Writes
   `data/sentinel2_benchmark/known_height_scale_results/results_*.csv`.
+
+---
+
+# 2026-09-22 (continued) — amogh-hub's evidence-gating and leave-one-out validation, applied to frequency fusion: 21/25 win rate robustly confirmed
+
+**Status: COMPLETE. Result: clean positive — the win rate holds, to
+within floating-point noise.** Applied `amogh-hub/depthwizard`'s
+evidence-gating and leave-one-out validation pattern (list entry #19,
+"strongest one yet" — cloned fresh for this task, `external/
+amogh-hub-depthwizard/`, read directly, never executed) to **frequency
+fusion specifically, not the old linear-calibration pipeline it predates**
+— frequency fusion is this project's current recommended baseline, so
+that's where a robustness check actually matters now.
+
+## What was ported
+
+Both patterns read from `src/depthwizard/calibration/gcp.py`:
+- **Evidence gating** (`_validate_spatial_distribution`): refuses to
+  produce a calibrated result at all when the underlying evidence is too
+  weak (`raise ValueError("insufficient evidence for defensible metric
+  calibration")`) rather than silently degrading. Adapted onto frequency
+  fusion's own already-computed confidence signal — step 5 of
+  `run_frequency_fusion_sentinel2.py`'s own docstring literally calls
+  this the **"CONFIDENCE MAP"** (per-pixel DEM-covered vs. gap/no-data,
+  from `dem_on_grid`'s own validity mask) — this is "the
+  confidence/provenance map already computed" the task pointed at, not
+  something new to build. Ported as a per-tile gate: reject (flag, not
+  silently include) any tile whose DEM coverage falls below a 95% floor.
+- **Leave-one-out validation** (`_affine_leave_one_out_rmse`): holds each
+  control point out one at a time, refits on the rest, scores the
+  held-out point, aggregates — an honest error estimate, not the
+  in-sample fit residual. Frequency fusion has no GCPs; its "evidence" is
+  the ~500k–1.2M valid DEM pixels the existing single 50/50 random split
+  (seed 42) fits the affine scale from. Literal per-pixel LOO is
+  computationally absurd at that N, so this was adapted to a
+  **leave-one-block-out (LOBO)** scheme: each tile partitioned into a 5×5
+  grid of 25 spatial blocks (a granularity comparable to amogh-hub's own
+  typical 6–20 GCP count), each block held out in turn, the affine scale
+  refit on the other ~96% of the tile's pixels every fold (much closer to
+  LOO's "train on everything except the held-out unit" than the existing
+  50/50 split), and every DEM pixel *and* every ICESat-2 photon scored
+  exactly once, under the one fold where its own block was excluded from
+  fitting.
+
+Everything else (native-resolution matched low-pass, DEM low-pass,
+DEM+detail combination) is reused unchanged by importing directly from
+`run_frequency_fusion_sentinel2.py`. Verified algebraically and
+numerically before relying on it: because Gaussian blur is linear and the
+fitted intercept cancels in the high-pass, `highpass(a·x+b) = a·highpass(x)`
+to within `2e-7` — so the raw DAv2 high-pass band is computed once per
+tile, not once per fold, without changing what's being tested.
+
+## Evidence gate: real, verified to fire, but never fires on this benchmark
+
+Self-tested against a synthetic 60% coverage value before trusting it on
+real data (mirrors amogh-hub's own test suite testing the gate itself,
+`tests/test_confidence_gated_training.py`). On the real 25-tile accepted
+set: **every tile has exactly 100.0% DEM coverage** (SRTM has zero nodata
+across this whole benchmark, confirmed earlier in this document) — the
+gate is real and correctly wired, but this specific benchmark gives it
+nothing to reject. Same honest-null pattern as the GSD-FiLM test earlier
+in this document: a real mechanism, kept as a safety net for tiles with
+actual DEM voids (e.g. near coastlines, a documented Copernicus GLO-30
+failure mode noted earlier in this file), not evidence the mechanism does
+nothing.
+
+## LOBO cross-validation: the 21/25 win rate is not a split artifact
+
+Full per-tile comparison, `freqfusion_orig` = the existing single-split
+number already reported earlier in this file, `freqfusion_LOBO` = this
+test's 25-fold leave-one-block-out number:
+
+| | wins vs. linear baseline (single split, existing) | wins vs. linear baseline (LOBO, this test) |
+|---|---:|---:|
+| **Count** | **21/25** | **21/25** |
+
+**Zero tiles flip win/loss status. The largest single-tile difference
+between the original single-split ICESat-2 RMSE-%-of-range and the LOBO
+number is 0.0004 percentage points** (mean absolute difference across all
+25 tiles: 0.00008 points) — indistinguishable from floating-point noise,
+not a real effect in either direction. Full per-tile table (including
+each tile's fitted-slope mean/std across the 25 blocks):
+`data/sentinel2_benchmark/frequency_fusion_loo_results/results.csv`.
+
+**This is a genuinely informative confirmatory result, not a trivial
+one** — the fitted affine slope itself is *not* trivially stable across
+blocks (e.g. almora: 327.89 ± 34.70, an ~11% relative spread; dehradun:
+748.82 ± 35.29; mumbai: 39.09 ± 3.07, ~8%), so this isn't a case of
+"nothing changes because nothing was ever varying." The **mechanism**
+this reveals: the final surface is `dem_lowpass + a·dav2_highpass_raw`,
+where `dem_lowpass` (the real DEM's own coarse trend, untouched by any
+fitting) supplies the dominant share of the surface's magnitude and
+`dav2_highpass_raw`'s own amplitude is small (consistent with this
+file's earlier finding that DAv2's raw fine-scale detail band has std on
+the order of `1e-3` in raw units, see the known-height-scale test above)
+— so even an 8–11% swing in the slope that scales that small detail band
+translates into a comparatively tiny absolute change in the final
+prediction, which is why the ICESat-2 metric barely moves even though the
+fitted parameter itself visibly does. The robustness isn't an accident of
+this particular random split; it's structural, given how little of the
+final surface's magnitude the fitted parameter actually controls.
+
+## Verdict
+
+**The 21/25 win rate holds up under a real held-out protocol.** This is
+not a re-confirmation of the same test with different window dressing —
+LOBO trains on ~96% of each tile's pixels per fold instead of 50%, scores
+every pixel and every photon under a fold that never saw its own
+neighborhood during fitting, and still reproduces the original numbers to
+four decimal places. Frequency fusion's standing recommendation (this
+project's deployable baseline for the Sentinel-2/India domain,
+established earlier in this file) is **strengthened, not merely
+unchanged**, by this check — the original single-split result was already
+trustworthy, not merely lucky.
+
+## Reproducing this
+
+- `scripts/test_frequency_fusion_evidence_gating_loo.py` — evidence gate
+  + leave-one-block-out cross-validation, reusing
+  `run_frequency_fusion_sentinel2.py`'s native-resolution/matched-lowpass
+  functions unchanged. Writes
+  `data/sentinel2_benchmark/frequency_fusion_loo_results/results.csv`.
