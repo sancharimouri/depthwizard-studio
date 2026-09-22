@@ -1,0 +1,51 @@
+DepthWizard2 — Stage 4 Offline Spatial Residual Diagnostic
+====================================================================
+
+OFFLINE ORACLE WARNING: full DFC2019 AGL truth is used to train the residual model.
+A positive result demonstrates residual learnability, not deployment feasibility.
+
+PRIMARY: 4-fold spatial blocked cross-validation against global sparse-anchor affine baseline.
+
+        model  fold_runs  tiles  mae_m_mean  mae_m_median  mae_m_std  mae_m_p05  mae_m_p25  mae_m_p75  mae_m_p95  mae_m_min  mae_m_max  rmse_m_mean  rmse_m_median  rmse_m_std  rmse_m_p05  rmse_m_p25  rmse_m_p75  rmse_m_p95  rmse_m_min  rmse_m_max  pearson_mean  pearson_median  pearson_std  pearson_p05  pearson_p25  pearson_p75  pearson_p95  pearson_min  pearson_max  spearman_mean  spearman_median  spearman_std  spearman_p05  spearman_p25  spearman_p75  spearman_p95  spearman_min  spearman_max  delta_mae_m_mean  delta_mae_m_median  delta_mae_m_std  delta_mae_m_p05  delta_mae_m_p25  delta_mae_m_p75  delta_mae_m_p95  delta_mae_m_min  delta_mae_m_max  delta_rmse_m_mean  delta_rmse_m_median  delta_rmse_m_std  delta_rmse_m_p05  delta_rmse_m_p25  delta_rmse_m_p75  delta_rmse_m_p95  delta_rmse_m_min  delta_rmse_m_max  delta_pearson_mean  delta_pearson_median  delta_pearson_std  delta_pearson_p05  delta_pearson_p25  delta_pearson_p75  delta_pearson_p95  delta_pearson_min  delta_pearson_max  delta_spearman_mean  delta_spearman_median  delta_spearman_std  delta_spearman_p05  delta_spearman_p25  delta_spearman_p75  delta_spearman_p95  delta_spearman_min  delta_spearman_max  improved_mae_folds  improved_rmse_folds  improved_pearson_folds  improved_spearman_folds
+     constant        200     50    3.317236      2.849469   1.812076   1.290582   2.196436   4.045344   6.699511   0.012965  11.367895     4.484780       3.844793    2.491086    1.910339    2.989821    5.395948    9.877624    0.015372   14.475603      0.557875        0.656609     0.313621    -0.087990     0.436966     0.784008     0.898859    -0.621445     0.971578       0.491218         0.548323      0.275612     -0.075350      0.378972      0.684615      0.810558     -0.556988      0.855073         -0.190593           -0.090539         0.478464        -1.127809        -0.366819         0.061432         0.453751        -2.082028         0.893255          -0.138288            -0.043187          0.405961         -0.754187         -0.275973          0.099305          0.378911         -2.055589          0.711534       -9.194034e-19              0.000000       7.945524e-17      -1.110223e-16           0.000000           0.000000       1.110223e-16      -2.220446e-16       2.220446e-16             0.000000               0.000000            0.000000            0.000000            0.000000            0.000000            0.000000            0.000000            0.000000                  70                   81                      39                        0
+global_affine        200     50    3.126643      2.721503   1.729064   1.150780   2.079952   3.836799   6.815820   0.010068   9.904306     4.346492       3.696381    2.407033    1.655598    3.056602    5.007407    9.224881    0.014306   13.306135      0.557875        0.656609     0.313621    -0.087990     0.436966     0.784008     0.898859    -0.621445     0.971578       0.491218         0.548323      0.275612     -0.075350      0.378972      0.684615      0.810558     -0.556988      0.855073          0.000000            0.000000         0.000000         0.000000         0.000000         0.000000         0.000000         0.000000         0.000000           0.000000             0.000000          0.000000          0.000000          0.000000          0.000000          0.000000          0.000000          0.000000        0.000000e+00              0.000000       0.000000e+00       0.000000e+00           0.000000           0.000000       0.000000e+00       0.000000e+00       0.000000e+00             0.000000               0.000000            0.000000            0.000000            0.000000            0.000000            0.000000            0.000000            0.000000                   0                    0                       0                        0
+    linear_xy        200     50    3.065575      2.661309   1.720111   1.197501   1.962632   3.742961   6.239381   0.012831  10.168763     4.214992       3.566496    2.407550    1.725941    2.862587    4.796247    9.634666    0.015643   14.122485      0.567955        0.664258     0.313466    -0.053779     0.430536     0.800712     0.905824    -0.584493     0.968631       0.505288         0.595898      0.287931     -0.049390      0.391829      0.715983      0.814734     -0.585168      0.859546          0.061068            0.025372         0.919727        -1.289087        -0.290120         0.416673         1.636441        -3.516327         3.180470           0.131500             0.099845          0.696287         -0.775085         -0.129159          0.347307          1.317259         -2.458495          2.514112        1.008083e-02              0.008675       1.510429e-01      -2.065259e-01          -0.022555           0.053139       2.378214e-01      -5.981263e-01       6.648172e-01             0.014071               0.007606            0.152268           -0.202517           -0.026306            0.064038            0.215636           -0.772897            0.599318                 108                  120                     118                      114
+ quadratic_xy        200     50    3.481391      2.958695   2.215504   1.212813   2.222626   4.116850   7.284362   0.012721  16.097930     4.656219       3.912939    2.809881    1.829590    3.162839    5.352242   10.136730    0.017347   18.590201      0.511016        0.607164     0.322923    -0.152949     0.338647     0.772168     0.875675    -0.478201     0.936069       0.452935         0.526083      0.285636     -0.110463      0.296394      0.666234      0.802597     -0.386275      0.837356         -0.354749           -0.110561         1.484970        -2.256131        -0.858413         0.346122         1.655542       -10.591459         3.406300          -0.309727            -0.090044          1.203769         -2.479955         -0.582127          0.274339          1.168640         -6.970761          2.289721       -4.685914e-02             -0.013927       1.906978e-01      -3.747669e-01          -0.108092           0.025147       2.064511e-01      -8.094624e-01       6.551354e-01            -0.038282              -0.010964            0.176939           -0.330224           -0.121815            0.037546            0.207892           -0.730681            0.624116                  83                   84                      84                       82
+
+TILE-LEVEL PAIRED DELTAS (positive = spatial residual improvement):
+
+        model              metric  tiles          mean    median          std           p05          p95  positive_tiles
+     constant    delta_mae_m_mean     50 -1.905934e-01 -0.198889 2.910064e-01 -7.372840e-01 2.903023e-01              12
+     constant   delta_rmse_m_mean     50 -1.382880e-01 -0.098818 2.175361e-01 -5.615000e-01 1.194940e-01              13
+     constant  delta_pearson_mean     50 -9.194034e-19  0.000000 4.405597e-17 -6.982262e-17 5.551115e-17              21
+     constant delta_spearman_mean     50  0.000000e+00  0.000000 0.000000e+00  0.000000e+00 0.000000e+00               0
+global_affine    delta_mae_m_mean     50  0.000000e+00  0.000000 0.000000e+00  0.000000e+00 0.000000e+00               0
+global_affine   delta_rmse_m_mean     50  0.000000e+00  0.000000 0.000000e+00  0.000000e+00 0.000000e+00               0
+global_affine  delta_pearson_mean     50  0.000000e+00  0.000000 0.000000e+00  0.000000e+00 0.000000e+00               0
+global_affine delta_spearman_mean     50  0.000000e+00  0.000000 0.000000e+00  0.000000e+00 0.000000e+00               0
+    linear_xy    delta_mae_m_mean     50  6.106796e-02  0.041896 5.646090e-01 -7.749511e-01 9.671612e-01              26
+    linear_xy   delta_rmse_m_mean     50  1.314999e-01  0.158325 4.883781e-01 -5.019390e-01 8.835284e-01              35
+    linear_xy  delta_pearson_mean     50  1.008083e-02  0.011962 1.032704e-01 -1.470297e-01 2.041198e-01              32
+    linear_xy delta_spearman_mean     50  1.407094e-02  0.009095 9.202801e-02 -1.572409e-01 1.582597e-01              33
+ quadratic_xy    delta_mae_m_mean     50 -3.547487e-01 -0.181600 1.083264e+00 -1.329793e+00 7.342017e-01              19
+ quadratic_xy   delta_rmse_m_mean     50 -3.097268e-01 -0.205568 8.773721e-01 -1.247806e+00 6.310061e-01              18
+ quadratic_xy  delta_pearson_mean     50 -4.685914e-02 -0.029072 1.408723e-01 -2.905589e-01 1.614861e-01              17
+ quadratic_xy delta_spearman_mean     50 -3.828208e-02 -0.028529 1.156810e-01 -2.880228e-01 1.318391e-01              20
+
+SPATIAL RESIDUAL AUTOCORRELATION DIAGNOSTICS:
+
+       neighbor_corr_horizontal  neighbor_corr_vertical  neighbor_corr_mean
+count                 50.000000               50.000000           50.000000
+mean                   0.972566                0.971904            0.972235
+std                    0.020350                0.021501            0.020556
+min                    0.875867                0.883656            0.879762
+25%                    0.968119                0.965958            0.968032
+50%                    0.978417                0.980410            0.978823
+75%                    0.983485                0.984145            0.983727
+max                    0.992732                0.994154            0.993443
+
+results.csv: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial_residual/results.csv
+summary.csv: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial_residual/summary.csv
+paired_deltas.csv: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial_residual/paired_deltas.csv
+oracle_in_sample.csv: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial_residual/oracle_in_sample.csv
+spatial_diagnostics.csv: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial_residual/spatial_diagnostics.csv

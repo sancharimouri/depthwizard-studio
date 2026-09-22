@@ -1,0 +1,11 @@
+{
+  "n_tiles": 50,
+  "strict_mae_m_mean": 3.314157717454122,
+  "strict_rmse_m_mean": 5.56237132125394,
+  "strict_pearson_mean": 0.4392389252785495,
+  "strict_spearman_mean": 0.3770272788952455,
+  "all_mae_m_mean": 3.299503488612316,
+  "all_rmse_m_mean": 5.543721750221202,
+  "all_pearson_mean": 0.4415581941237717,
+  "all_spearman_mean": 0.37906023363763164
+}

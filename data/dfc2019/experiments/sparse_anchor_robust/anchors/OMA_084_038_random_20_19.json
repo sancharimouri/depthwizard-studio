@@ -1,0 +1,134 @@
+{
+  "tile_id": "OMA_084_038",
+  "placement": "random",
+  "anchor_count": 20,
+  "repeat": 19,
+  "seed": 3651180149,
+  "selection_notes": "Uniform random sampling over all valid metric pixels.",
+  "buffer_radius_px": 16,
+  "truth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/raw/Truth/Track1-Truth/OMA_084_038_AGL.tif",
+  "depth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/dav2_baseline/depth/OMA_084_038_depth.npy",
+  "synthetic_anchor_warning": "These are synthetic metric anchors sampled from DFC2019 AGL truth. They are NOT surveyed GCPs.",
+  "anchors": [
+    {
+      "row": 920,
+      "col": 447,
+      "agl_m": 12.345795631408691,
+      "dav2": 0.6031193137168884
+    },
+    {
+      "row": 666,
+      "col": 626,
+      "agl_m": 9.780463218688965,
+      "dav2": 0.5708478689193726
+    },
+    {
+      "row": 171,
+      "col": 502,
+      "agl_m": 0.002667549764737487,
+      "dav2": 0.2110394537448883
+    },
+    {
+      "row": 557,
+      "col": 388,
+      "agl_m": 30.241960525512695,
+      "dav2": 0.6788613796234131
+    },
+    {
+      "row": 21,
+      "col": 972,
+      "agl_m": 0.0,
+      "dav2": 0.03535538166761398
+    },
+    {
+      "row": 519,
+      "col": 161,
+      "agl_m": 7.479475498199463,
+      "dav2": 0.7322433590888977
+    },
+    {
+      "row": 753,
+      "col": 606,
+      "agl_m": 0.060138292610645294,
+      "dav2": 0.2919338047504425
+    },
+    {
+      "row": 443,
+      "col": 874,
+      "agl_m": 0.0,
+      "dav2": 0.1524287313222885
+    },
+    {
+      "row": 570,
+      "col": 526,
+      "agl_m": 0.0,
+      "dav2": 0.3621876835823059
+    },
+    {
+      "row": 346,
+      "col": 299,
+      "agl_m": 0.0,
+      "dav2": 0.4511125087738037
+    },
+    {
+      "row": 178,
+      "col": 527,
+      "agl_m": 3.2141661643981934,
+      "dav2": 0.29853007197380066
+    },
+    {
+      "row": 790,
+      "col": 37,
+      "agl_m": 0.0011091816704720259,
+      "dav2": 0.5346350073814392
+    },
+    {
+      "row": 450,
+      "col": 808,
+      "agl_m": 0.0,
+      "dav2": 0.14174343645572662
+    },
+    {
+      "row": 567,
+      "col": 567,
+      "agl_m": 0.3566390872001648,
+      "dav2": 0.4023517072200775
+    },
+    {
+      "row": 882,
+      "col": 219,
+      "agl_m": 6.833898067474365,
+      "dav2": 0.7602482438087463
+    },
+    {
+      "row": 93,
+      "col": 614,
+      "agl_m": 5.858279228210449,
+      "dav2": 0.41558486223220825
+    },
+    {
+      "row": 142,
+      "col": 350,
+      "agl_m": 0.0,
+      "dav2": 0.25559666752815247
+    },
+    {
+      "row": 515,
+      "col": 617,
+      "agl_m": 0.0,
+      "dav2": 0.22563786804676056
+    },
+    {
+      "row": 707,
+      "col": 160,
+      "agl_m": 8.467883110046387,
+      "dav2": 0.6024408340454102
+    },
+    {
+      "row": 541,
+      "col": 356,
+      "agl_m": 0.0,
+      "dav2": 0.3746985197067261
+    }
+  ]
+}

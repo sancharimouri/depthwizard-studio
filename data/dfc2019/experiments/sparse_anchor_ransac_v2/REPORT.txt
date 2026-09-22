@@ -1,0 +1,32 @@
+DepthWizard2 — Sparse-Anchor RANSAC Mini-Study (v2)
+====================================================================
+
+Question: was RANSAC's earlier underperformance a structural
+mismatch (continuous noise) or starvation/mistuning (too few
+anchors, wrong residual_threshold, too few trials)?
+
+RANSAC residual_threshold = 2.1097 m (empirical, from pooled OLS residuals — not sklearn default)
+RANSAC max_trials = 5000
+Placement: grid only. Anchor counts: 10, 20, 30, 50, 100
+
+regressor  anchor_count  tiles  strict_mae_m_mean  strict_mae_m_median  strict_rmse_m_mean  strict_rmse_m_median  strict_bias_m_mean  strict_bias_m_median  strict_pearson_mean  strict_pearson_median  strict_spearman_mean  strict_spearman_median  pearson_lt_0  rmse_gt_10m  ransac_inlier_fraction_mean  ransac_inlier_fraction_median
+    huber            10     50           3.181210             2.869442            5.012662              4.422149           -0.702787             -1.070069             0.504069               0.594529              0.442183                0.546803             4            3                          NaN                            NaN
+      ols            10     50           3.264104             2.894946            4.848531              4.262320           -0.168910             -0.539174             0.482970               0.594529              0.426982                0.546803             6            3                          NaN                            NaN
+   ransac            10     50           3.272279             3.037631            5.454788              5.087198           -1.652346             -1.801024             0.278327               0.510458              0.262131                0.412475            15            3                       0.7460                           0.70
+    huber            20     50           2.928612             2.583746            4.718280              4.264657           -0.895382             -1.087457             0.531802               0.595143              0.470680                0.544625             3            4                          NaN                            NaN
+      ols            20     50           3.130886             2.814389            4.481899              3.936375            0.013820              0.040281             0.525947               0.595143              0.463413                0.544625             3            3                          NaN                            NaN
+   ransac            20     50           3.222500             2.621176            5.591467              4.838530           -2.387100             -2.041245             0.340492               0.557207              0.319872                0.458379            12            5                       0.7170                           0.75
+    huber            30     50           2.893346             2.560612            4.610941              4.031805           -0.859333             -1.084624             0.529261               0.594339              0.458894                0.544792             3            3                          NaN                            NaN
+      ols            30     50           3.090760             2.709557            4.435370              3.729502           -0.049296             -0.035433             0.540070               0.594339              0.470837                0.544792             1            3                          NaN                            NaN
+   ransac            30     50           3.248943             2.776029            5.696859              5.001505           -2.542509             -2.042590             0.365297               0.528507              0.315240                0.442109            11            3                       0.6920                           0.70
+    huber            50     50           2.860703             2.520657            4.599293              4.051589           -0.783094             -0.777158             0.542255               0.591601              0.478709                0.542502             1            3                          NaN                            NaN
+      ols            50     50           3.098313             2.794100            4.389678              3.717097            0.193801              0.156285             0.536880               0.591601              0.472433                0.542502             2            3                          NaN                            NaN
+   ransac            50     50           3.339283             2.664181            5.923500              4.720266           -2.768883             -2.032187             0.403515               0.558051              0.360447                0.455935             9            5                       0.6932                           0.70
+    huber           100     50           2.836653             2.551286            4.680896              4.048325           -1.146476             -1.124774             0.524595               0.597124              0.461389                0.543027             2            3                          NaN                            NaN
+      ols           100     50           3.030650             2.712604            4.344246              3.706837           -0.153696             -0.062637             0.540641               0.597124              0.476340                0.543027             1            3                          NaN                            NaN
+   ransac           100     50           3.360377             2.664974            6.017682              5.152525           -2.928996             -2.366149             0.422832               0.553427              0.381607                0.458564             7            5                       0.6850                           0.68
+
+FILES
+results.csv:      /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_ransac_v2/results.csv
+summary.csv:      /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_ransac_v2/summary.csv
+calibration.json: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_ransac_v2/calibration.json

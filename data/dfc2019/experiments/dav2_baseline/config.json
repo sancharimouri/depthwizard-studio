@@ -1,0 +1,21 @@
+{
+  "experiment": "dfc2019_dav2_baseline",
+  "model": {
+    "name": "Depth-Anything-V2-Large",
+    "frozen": true
+  },
+  "dataset": {
+    "name": "DFC2019",
+    "input": "RGB",
+    "ground_truth": "AGL"
+  },
+  "benchmark": {
+    "target_tiles": 50,
+    "cities": ["JAX", "OMA"],
+    "random_seed": 42
+  },
+  "metrics": [
+    "pearson",
+    "spearman"
+  ]
+}

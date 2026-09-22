@@ -1,0 +1,134 @@
+{
+  "tile_id": "JAX_166_006",
+  "placement": "random",
+  "anchor_count": 20,
+  "repeat": 15,
+  "seed": 383548055,
+  "selection_notes": "Uniform random sampling over all valid metric pixels.",
+  "buffer_radius_px": 16,
+  "truth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/raw/Truth/Track1-Truth/JAX_166_006_AGL.tif",
+  "depth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/dav2_baseline/depth/JAX_166_006_depth.npy",
+  "synthetic_anchor_warning": "These are synthetic metric anchors sampled from DFC2019 AGL truth. They are NOT surveyed GCPs.",
+  "anchors": [
+    {
+      "row": 383,
+      "col": 184,
+      "agl_m": 0.031000137329101562,
+      "dav2": 0.04112854227423668
+    },
+    {
+      "row": 624,
+      "col": 511,
+      "agl_m": 0.0,
+      "dav2": 0.03236261382699013
+    },
+    {
+      "row": 851,
+      "col": 993,
+      "agl_m": 29.516685485839844,
+      "dav2": 0.7791059613227844
+    },
+    {
+      "row": 198,
+      "col": 676,
+      "agl_m": 26.67296600341797,
+      "dav2": 0.4915575683116913
+    },
+    {
+      "row": 196,
+      "col": 701,
+      "agl_m": 26.62057876586914,
+      "dav2": 0.5029230713844299
+    },
+    {
+      "row": 99,
+      "col": 137,
+      "agl_m": 30.271282196044922,
+      "dav2": 0.6362035870552063
+    },
+    {
+      "row": 123,
+      "col": 331,
+      "agl_m": 47.991092681884766,
+      "dav2": 0.5648151636123657
+    },
+    {
+      "row": 738,
+      "col": 941,
+      "agl_m": 10.459999084472656,
+      "dav2": 0.4258511960506439
+    },
+    {
+      "row": 856,
+      "col": 26,
+      "agl_m": 0.0,
+      "dav2": 0.049258310347795486
+    },
+    {
+      "row": 668,
+      "col": 765,
+      "agl_m": 11.001871109008789,
+      "dav2": 0.3140438199043274
+    },
+    {
+      "row": 612,
+      "col": 282,
+      "agl_m": 0.0,
+      "dav2": 0.016444848850369453
+    },
+    {
+      "row": 64,
+      "col": 848,
+      "agl_m": 14.036498069763184,
+      "dav2": 0.38460978865623474
+    },
+    {
+      "row": 273,
+      "col": 514,
+      "agl_m": 1.2259998321533203,
+      "dav2": 0.0607302226126194
+    },
+    {
+      "row": 655,
+      "col": 142,
+      "agl_m": 0.0,
+      "dav2": 0.023683441802859306
+    },
+    {
+      "row": 361,
+      "col": 308,
+      "agl_m": 0.002378670033067465,
+      "dav2": 0.05223312973976135
+    },
+    {
+      "row": 765,
+      "col": 688,
+      "agl_m": 20.037593841552734,
+      "dav2": 0.5184022784233093
+    },
+    {
+      "row": 968,
+      "col": 354,
+      "agl_m": 53.827877044677734,
+      "dav2": 0.4075103998184204
+    },
+    {
+      "row": 492,
+      "col": 573,
+      "agl_m": 0.0017237361753359437,
+      "dav2": 0.03398610278964043
+    },
+    {
+      "row": 438,
+      "col": 76,
+      "agl_m": 45.364200592041016,
+      "dav2": 0.48086732625961304
+    },
+    {
+      "row": 917,
+      "col": 556,
+      "agl_m": 11.217085838317871,
+      "dav2": 0.06988503038883209
+    }
+  ]
+}

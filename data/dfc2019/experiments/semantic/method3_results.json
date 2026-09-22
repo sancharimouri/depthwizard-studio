@@ -1,0 +1,1821 @@
+{
+  "experiment": "DFC2019 Method 3 semantic prior",
+  "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+  "n_tiles": 50,
+  "aggregate_tile_mean": {
+    "baseline": {
+      "mae_m": 3.034858622867614,
+      "rmse_m": 4.2932951840690485,
+      "pearson": 0.5456700378656387,
+      "spearman": 0.4774672386994043
+    },
+    "method3_semantic": {
+      "mae_m": 2.897471218338982,
+      "rmse_m": 4.1230515402703425,
+      "pearson": 0.5842961346766831,
+      "spearman": 0.4900771912316983
+    }
+  },
+  "tiles": [
+    {
+      "tile": "JAX_004_006",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_004_006_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_004_006.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_004_006_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.6831047534942627,
+          "rmse_m": 3.569984337481166,
+          "pearson": 0.7252795696258545,
+          "spearman": 0.6247984067279644,
+          "n_pixels": 1040637
+        },
+        "slope": 22.311113357543945,
+        "intercept": -3.2040653228759766
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.6572544220829317,
+          "rmse_m": 3.555618313283613,
+          "pearson": 0.7278993900065893,
+          "spearman": 0.601289072252394,
+          "n_pixels": 1040637
+        },
+        "coefficients": {
+          "intercept": -3.00283641816929,
+          "dav2": 22.15093526686429,
+          "building": -5.186533379876626,
+          "interaction": 9.795025245713692
+        }
+      }
+    },
+    {
+      "tile": "JAX_004_014",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_004_014_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_004_014.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_004_014_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.2755539417266846,
+          "rmse_m": 3.2332123219238382,
+          "pearson": 0.814292848110199,
+          "spearman": 0.729286882545847,
+          "n_pixels": 1040257
+        },
+        "slope": 28.811264038085938,
+        "intercept": -3.5626134872436523
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.23490868071057,
+          "rmse_m": 3.197360122319385,
+          "pearson": 0.8188428437917343,
+          "spearman": 0.7148904379773587,
+          "n_pixels": 1040257
+        },
+        "coefficients": {
+          "intercept": -3.3799039494093654,
+          "dav2": 28.864923649324783,
+          "building": -0.06019187294719465,
+          "interaction": -9.486618229987993
+        }
+      }
+    },
+    {
+      "tile": "JAX_004_016",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_004_016_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_004_016.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_004_016_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.9056458473205566,
+          "rmse_m": 3.9478907252980093,
+          "pearson": 0.6948263049125671,
+          "spearman": 0.5409900196713091,
+          "n_pixels": 1040838
+        },
+        "slope": 23.48833656311035,
+        "intercept": -3.468074321746826
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.887343764235686,
+          "rmse_m": 3.9412265412328398,
+          "pearson": 0.6960806878334551,
+          "spearman": 0.5411410209027416,
+          "n_pixels": 1040838
+        },
+        "coefficients": {
+          "intercept": -3.6008046320364113,
+          "dav2": 23.873683071306218,
+          "building": 4.7066545788945655,
+          "interaction": -18.410148977485832
+        }
+      }
+    },
+    {
+      "tile": "JAX_018_012",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_018_012_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_018_012.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_018_012_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.5762617588043213,
+          "rmse_m": 3.5926416429431667,
+          "pearson": 0.5813524723052979,
+          "spearman": 0.572151751276735,
+          "n_pixels": 1038943
+        },
+        "slope": 14.779753684997559,
+        "intercept": -2.3544540405273438
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.504712985189939,
+          "rmse_m": 3.4784858097303295,
+          "pearson": 0.6159335588630261,
+          "spearman": 0.5773433051908745,
+          "n_pixels": 1038943
+        },
+        "coefficients": {
+          "intercept": -3.32633823347482,
+          "dav2": 18.583656686757788,
+          "building": -3.1523818309009943,
+          "interaction": -2.422268718284395
+        }
+      }
+    },
+    {
+      "tile": "JAX_022_009",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_022_009_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_022_009.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_022_009_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.853229284286499,
+          "rmse_m": 4.757175246283507,
+          "pearson": 0.16528944671154022,
+          "spearman": 0.1463024810888691,
+          "n_pixels": 1040059
+        },
+        "slope": 4.923329830169678,
+        "intercept": 1.9532279968261719
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 3.8745823013772087,
+          "rmse_m": 4.753551091078663,
+          "pearson": 0.1697116862512463,
+          "spearman": 0.13368869846439338,
+          "n_pixels": 1040059
+        },
+        "coefficients": {
+          "intercept": 1.888530831780915,
+          "dav2": 5.237026726091989,
+          "building": 0.7464058236217432,
+          "interaction": -3.6838786568131185
+        }
+      }
+    },
+    {
+      "tile": "JAX_031_006",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_031_006_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_031_006.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_031_006_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.442866563796997,
+          "rmse_m": 4.397190818479022,
+          "pearson": 0.6267736554145813,
+          "spearman": 0.5528927321150248,
+          "n_pixels": 1041596
+        },
+        "slope": 20.952430725097656,
+        "intercept": -0.8255810737609863
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 3.4379001104644993,
+          "rmse_m": 4.379051227100262,
+          "pearson": 0.6307489862540356,
+          "spearman": 0.5543144526409102,
+          "n_pixels": 1041596
+        },
+        "coefficients": {
+          "intercept": -0.823635598260112,
+          "dav2": 21.455017203700322,
+          "building": -4.655342874322603,
+          "interaction": 4.454226324722748
+        }
+      }
+    },
+    {
+      "tile": "JAX_072_015",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_072_015_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_072_015.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_072_015_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.211782455444336,
+          "rmse_m": 4.1036239239338235,
+          "pearson": 0.3907786011695862,
+          "spearman": 0.31030559554382203,
+          "n_pixels": 1037508
+        },
+        "slope": 8.429527282714844,
+        "intercept": -0.3090646266937256
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 3.006528000065963,
+          "rmse_m": 3.9388951113478297,
+          "pearson": 0.46836648779162304,
+          "spearman": 0.37874309805479206,
+          "n_pixels": 1037508
+        },
+        "coefficients": {
+          "intercept": -0.2508751143284753,
+          "dav2": 6.933618061577072,
+          "building": 2.0445847310621064,
+          "interaction": 4.403297515883974
+        }
+      }
+    },
+    {
+      "tile": "JAX_118_012",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_118_012_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_118_012.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_118_012_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.2899563312530518,
+          "rmse_m": 3.2115694709591565,
+          "pearson": 0.655326247215271,
+          "spearman": 0.4509466264067407,
+          "n_pixels": 1037065
+        },
+        "slope": 16.227935791015625,
+        "intercept": -2.070140838623047
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.1903499983414743,
+          "rmse_m": 3.1258024122727086,
+          "pearson": 0.677878548578771,
+          "spearman": 0.4487339528919091,
+          "n_pixels": 1037065
+        },
+        "coefficients": {
+          "intercept": -1.152958580129377,
+          "dav2": 12.557737700293153,
+          "building": -10.095637199579391,
+          "interaction": 18.669125167632142
+        }
+      }
+    },
+    {
+      "tile": "JAX_118_015",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_118_015_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_118_015.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_118_015_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.0551531314849854,
+          "rmse_m": 2.8568594451394045,
+          "pearson": 0.7433269023895264,
+          "spearman": 0.5507978095784375,
+          "n_pixels": 1037805
+        },
+        "slope": 21.60039520263672,
+        "intercept": -4.463996410369873
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.9899093033516269,
+          "rmse_m": 2.8330526497686095,
+          "pearson": 0.7483057893797769,
+          "spearman": 0.5535401434624146,
+          "n_pixels": 1037805
+        },
+        "coefficients": {
+          "intercept": -3.9387163607979745,
+          "dav2": 19.48034418531798,
+          "building": -0.23957963654893624,
+          "interaction": 3.3212398838623707
+        }
+      }
+    },
+    {
+      "tile": "JAX_149_006",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_149_006_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_149_006.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_149_006_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 4.181548118591309,
+          "rmse_m": 5.295300635141344,
+          "pearson": 0.5532832741737366,
+          "spearman": 0.49641536850673657,
+          "n_pixels": 1039129
+        },
+        "slope": 15.508859634399414,
+        "intercept": 1.3275623321533203
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 4.181321833321833,
+          "rmse_m": 5.269447079648479,
+          "pearson": 0.5593579788253045,
+          "spearman": 0.5049734462850207,
+          "n_pixels": 1039129
+        },
+        "coefficients": {
+          "intercept": 1.5672443305837422,
+          "dav2": 15.261774887386286,
+          "building": -23.048044119072753,
+          "interaction": 50.176214653883136
+        }
+      }
+    },
+    {
+      "tile": "JAX_149_025",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_149_025_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_149_025.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_149_025_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 4.747432231903076,
+          "rmse_m": 5.784624754028724,
+          "pearson": 0.4311355948448181,
+          "spearman": 0.37668363456819964,
+          "n_pixels": 1039764
+        },
+        "slope": 12.753021240234375,
+        "intercept": 1.7968878746032715
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 4.732310101157496,
+          "rmse_m": 5.735629176682236,
+          "pearson": 0.4467780375696985,
+          "spearman": 0.3783548272036679,
+          "n_pixels": 1039764
+        },
+        "coefficients": {
+          "intercept": 1.897581957213296,
+          "dav2": 13.185775171720891,
+          "building": -8.025089920840326,
+          "interaction": 7.715770513379276
+        }
+      }
+    },
+    {
+      "tile": "JAX_161_001",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_161_001_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_161_001.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_161_001_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.6614458560943604,
+          "rmse_m": 2.2560396725162626,
+          "pearson": 0.7733011245727539,
+          "spearman": 0.6060866805718448,
+          "n_pixels": 1035333
+        },
+        "slope": 15.871400833129883,
+        "intercept": -2.391969919204712
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.5219213339462025,
+          "rmse_m": 2.1880390770164,
+          "pearson": 0.7885833655509005,
+          "spearman": 0.6070560676098503,
+          "n_pixels": 1035333
+        },
+        "coefficients": {
+          "intercept": -1.8241250775241067,
+          "dav2": 12.71154280965459,
+          "building": 1.6129444555764199,
+          "interaction": 1.7384711440081542
+        }
+      }
+    },
+    {
+      "tile": "JAX_164_008",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_164_008_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_164_008.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_164_008_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 5.214364528656006,
+          "rmse_m": 8.904718207088658,
+          "pearson": 0.7303012609481812,
+          "spearman": 0.6121367640147166,
+          "n_pixels": 1037467
+        },
+        "slope": 47.95246124267578,
+        "intercept": -5.3421783447265625
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 5.194301461308887,
+          "rmse_m": 8.357082390368022,
+          "pearson": 0.7674461738518559,
+          "spearman": 0.617192571879095,
+          "n_pixels": 1037467
+        },
+        "coefficients": {
+          "intercept": -9.979533863733042,
+          "dav2": 78.25593255136025,
+          "building": 7.210451640528283,
+          "interaction": -44.165128364199624
+        }
+      }
+    },
+    {
+      "tile": "JAX_165_015",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_165_015_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_165_015.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_165_015_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 5.372767448425293,
+          "rmse_m": 7.201422434276738,
+          "pearson": 0.7751327157020569,
+          "spearman": 0.6798232413025631,
+          "n_pixels": 1042118
+        },
+        "slope": 46.50270462036133,
+        "intercept": -5.846753120422363
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 5.032483761065177,
+          "rmse_m": 6.725719186214081,
+          "pearson": 0.8073565623554008,
+          "spearman": 0.679928527523954,
+          "n_pixels": 1042118
+        },
+        "coefficients": {
+          "intercept": -0.8357474298689169,
+          "dav2": 22.57061163978459,
+          "building": -8.790056480037713,
+          "interaction": 35.56787520652729
+        }
+      }
+    },
+    {
+      "tile": "JAX_166_006",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_166_006_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_166_006.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_166_006_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 5.673316478729248,
+          "rmse_m": 10.221999465431852,
+          "pearson": 0.7978183031082153,
+          "spearman": 0.7846072935436703,
+          "n_pixels": 1040568
+        },
+        "slope": 62.91057205200195,
+        "intercept": -2.9588661193847656
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 5.767446564017049,
+          "rmse_m": 9.96504084642979,
+          "pearson": 0.8090480833828704,
+          "spearman": 0.7814971260321415,
+          "n_pixels": 1040568
+        },
+        "coefficients": {
+          "intercept": -4.260816868270636,
+          "dav2": 77.93402523427359,
+          "building": 2.9671611494820134,
+          "interaction": -25.80187832219352
+        }
+      }
+    },
+    {
+      "tile": "JAX_175_002",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_175_002_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_175_002.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_175_002_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.868107318878174,
+          "rmse_m": 5.522179359117882,
+          "pearson": 0.701736569404602,
+          "spearman": 0.6619025089688553,
+          "n_pixels": 1039038
+        },
+        "slope": 21.24114990234375,
+        "intercept": -1.6374316215515137
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.9436274590481677,
+          "rmse_m": 5.128754816022325,
+          "pearson": 0.7497868761474882,
+          "spearman": 0.6592046824962109,
+          "n_pixels": 1039038
+        },
+        "coefficients": {
+          "intercept": -4.103577418999945,
+          "dav2": 34.47531693464214,
+          "building": 44.86471183844567,
+          "interaction": -67.44092455441823
+        }
+      }
+    },
+    {
+      "tile": "JAX_204_005",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_204_005_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_204_005.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_204_005_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.7325940132141113,
+          "rmse_m": 3.724366250627217,
+          "pearson": 0.5588542222976685,
+          "spearman": 0.3748147051086647,
+          "n_pixels": 1037424
+        },
+        "slope": 14.78999137878418,
+        "intercept": -2.961578845977783
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.6867362996963835,
+          "rmse_m": 3.696729072348363,
+          "pearson": 0.5678787451082911,
+          "spearman": 0.4043439026322088,
+          "n_pixels": 1037424
+        },
+        "coefficients": {
+          "intercept": -3.240860790105532,
+          "dav2": 14.891478250501725,
+          "building": 22.046946571844785,
+          "interaction": -5.602516165319937
+        }
+      }
+    },
+    {
+      "tile": "JAX_214_015",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_214_015_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_214_015.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_214_015_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 7.500524044036865,
+          "rmse_m": 10.13579332541115,
+          "pearson": 0.7342641353607178,
+          "spearman": 0.7120337030580546,
+          "n_pixels": 989060
+        },
+        "slope": 58.60218048095703,
+        "intercept": -10.741157531738281
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 6.167325983484549,
+          "rmse_m": 8.717316617119844,
+          "pearson": 0.811855223635257,
+          "spearman": 0.6958964688328316,
+          "n_pixels": 989060
+        },
+        "coefficients": {
+          "intercept": -2.5986055716037804,
+          "dav2": 26.49579596596094,
+          "building": -27.616775820611114,
+          "interaction": 77.61322019244147
+        }
+      }
+    },
+    {
+      "tile": "JAX_214_023",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_214_023_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_214_023.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_214_023_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 6.850273609161377,
+          "rmse_m": 10.537842269171684,
+          "pearson": 0.7222185730934143,
+          "spearman": 0.7446555155017662,
+          "n_pixels": 997338
+        },
+        "slope": 50.075584411621094,
+        "intercept": -5.95509147644043
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 6.827252534797839,
+          "rmse_m": 10.416432680068693,
+          "pearson": 0.7297669402160496,
+          "spearman": 0.7507415676930729,
+          "n_pixels": 997338
+        },
+        "coefficients": {
+          "intercept": -3.5519996604538466,
+          "dav2": 40.88784665196997,
+          "building": -9.342740059561901,
+          "interaction": 21.881020604882814
+        }
+      }
+    },
+    {
+      "tile": "JAX_224_025",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_224_025_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_224_025.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_224_025_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.8253486156463623,
+          "rmse_m": 4.486940932447675,
+          "pearson": 0.5177643299102783,
+          "spearman": 0.41734330576416534,
+          "n_pixels": 1036064
+        },
+        "slope": 13.288991928100586,
+        "intercept": -1.813056468963623
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.7861178436622542,
+          "rmse_m": 4.457231102822706,
+          "pearson": 0.5270108802629794,
+          "spearman": 0.4263385010500201,
+          "n_pixels": 1036064
+        },
+        "coefficients": {
+          "intercept": -1.6740265715369294,
+          "dav2": 12.511811413339947,
+          "building": -2.4379317073471864,
+          "interaction": 10.185789193872854
+        }
+      }
+    },
+    {
+      "tile": "JAX_264_013",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_264_013_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_264_013.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_264_013_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.712167501449585,
+          "rmse_m": 4.797144779733016,
+          "pearson": 0.44475623965263367,
+          "spearman": 0.3120620709765873,
+          "n_pixels": 1027107
+        },
+        "slope": 10.80270004272461,
+        "intercept": -1.313138723373413
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.7266677136878386,
+          "rmse_m": 3.7465838111141965,
+          "pearson": 0.7146262176742134,
+          "spearman": 0.37328305884413665,
+          "n_pixels": 1027107
+        },
+        "coefficients": {
+          "intercept": 1.5762529887391525,
+          "dav2": 0.8041901795998413,
+          "building": -13.968771769482315,
+          "interaction": 34.930242820789154
+        }
+      }
+    },
+    {
+      "tile": "JAX_269_009",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_269_009_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_269_009.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_269_009_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.995220899581909,
+          "rmse_m": 4.441441464515191,
+          "pearson": 0.6078768968582153,
+          "spearman": 0.447543614217891,
+          "n_pixels": 1026618
+        },
+        "slope": 14.188570976257324,
+        "intercept": -1.0937919616699219
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.9812211824715478,
+          "rmse_m": 4.405249598259156,
+          "pearson": 0.6162366856842577,
+          "spearman": 0.44444438444879375,
+          "n_pixels": 1026618
+        },
+        "coefficients": {
+          "intercept": -1.3529307509625155,
+          "dav2": 15.134005612823357,
+          "building": 29.15352188767528,
+          "interaction": -77.3415667262484
+        }
+      }
+    },
+    {
+      "tile": "JAX_416_009",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_416_009_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_416_009.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_416_009_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.5229082107543945,
+          "rmse_m": 3.3896978138959897,
+          "pearson": 0.5576930046081543,
+          "spearman": 0.46710909652803845,
+          "n_pixels": 1040597
+        },
+        "slope": 9.661934852600098,
+        "intercept": -1.092979907989502
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.3075479812502073,
+          "rmse_m": 3.261717157206886,
+          "pearson": 0.6017184766279607,
+          "spearman": 0.48134459219682657,
+          "n_pixels": 1040597
+        },
+        "coefficients": {
+          "intercept": -0.2087934956416806,
+          "dav2": 6.204731605433618,
+          "building": -2.8504371265440027,
+          "interaction": 8.615449131154616
+        }
+      }
+    },
+    {
+      "tile": "JAX_416_022",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_416_022_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_416_022.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_416_022_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.0043463706970215,
+          "rmse_m": 2.973670656060508,
+          "pearson": 0.6725540161132812,
+          "spearman": 0.5959396044871049,
+          "n_pixels": 1040088
+        },
+        "slope": 10.329536437988281,
+        "intercept": -1.030752182006836
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.8992386621196107,
+          "rmse_m": 2.9248695574449646,
+          "pearson": 0.685680111468056,
+          "spearman": 0.5948582089838368,
+          "n_pixels": 1040088
+        },
+        "coefficients": {
+          "intercept": -0.5586122849975621,
+          "dav2": 8.156158052108339,
+          "building": -1.9084009762690362,
+          "interaction": 5.30956694783832
+        }
+      }
+    },
+    {
+      "tile": "JAX_505_016",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_505_016_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_505_016.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_505_016_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 5.57411527633667,
+          "rmse_m": 6.8879167766439116,
+          "pearson": 0.33892250061035156,
+          "spearman": 0.2882780088889841,
+          "n_pixels": 1042341
+        },
+        "slope": 13.147039413452148,
+        "intercept": 0.8347010612487793
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 5.466655198927093,
+          "rmse_m": 6.784317174157495,
+          "pearson": 0.37589138704498837,
+          "spearman": 0.32114565691797686,
+          "n_pixels": 1042341
+        },
+        "coefficients": {
+          "intercept": 0.03152908622616124,
+          "dav2": 15.559936747166292,
+          "building": 8.476262934991006,
+          "interaction": -28.266767443060733
+        }
+      }
+    },
+    {
+      "tile": "JAX_505_018",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/JAX_505_018_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/JAX_505_018.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/JAX_505_018_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 5.470670223236084,
+          "rmse_m": 6.796623558567519,
+          "pearson": 0.2623659074306488,
+          "spearman": 0.2030717933301928,
+          "n_pixels": 1041572
+        },
+        "slope": 9.146951675415039,
+        "intercept": 1.3824057579040527
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 5.353107587058495,
+          "rmse_m": 6.687768595306302,
+          "pearson": 0.31372612493997165,
+          "spearman": 0.24284736211171867,
+          "n_pixels": 1041572
+        },
+        "coefficients": {
+          "intercept": 0.11309234517715705,
+          "dav2": 12.30211309492372,
+          "building": 8.558772651179682,
+          "interaction": -21.342979634493897
+        }
+      }
+    },
+    {
+      "tile": "OMA_042_011",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_042_011_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_042_011.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_042_011_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.4066355228424072,
+          "rmse_m": 4.286326718849446,
+          "pearson": 0.2616443634033203,
+          "spearman": 0.3332881335132009,
+          "n_pixels": 964211
+        },
+        "slope": 8.801523208618164,
+        "intercept": 1.5744881629943848
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 3.3178050903725453,
+          "rmse_m": 4.235269283582086,
+          "pearson": 0.30086226798373983,
+          "spearman": 0.3564000167858936,
+          "n_pixels": 964211
+        },
+        "coefficients": {
+          "intercept": 3.5392530211189523,
+          "dav2": 13.43534185144287,
+          "building": -201.28061447940098,
+          "interaction": -214.15739598865036
+        }
+      }
+    },
+    {
+      "tile": "OMA_084_038",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_084_038_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_084_038.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_084_038_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.0606753826141357,
+          "rmse_m": 4.314642332598607,
+          "pearson": 0.48474591970443726,
+          "spearman": 0.5532596665208052,
+          "n_pixels": 1009428
+        },
+        "slope": 12.664690971374512,
+        "intercept": -1.2461833953857422
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 3.050758827630695,
+          "rmse_m": 4.22009894850366,
+          "pearson": 0.5178203977176891,
+          "spearman": 0.5504116557471986,
+          "n_pixels": 1009428
+        },
+        "coefficients": {
+          "intercept": -0.869923075898583,
+          "dav2": 11.577190139588975,
+          "building": -25.913326044740227,
+          "interaction": 57.24461993344757
+        }
+      }
+    },
+    {
+      "tile": "OMA_134_027",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_134_027_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_134_027.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_134_027_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.3139708042144775,
+          "rmse_m": 3.220951845687285,
+          "pearson": 0.26333093643188477,
+          "spearman": 0.34608199799466843,
+          "n_pixels": 961065
+        },
+        "slope": 3.9033219814300537,
+        "intercept": -0.11577439308166504
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.3122020293572914,
+          "rmse_m": 3.2127999488128403,
+          "pearson": 0.27211754387371734,
+          "spearman": 0.3399468224688066,
+          "n_pixels": 961065
+        },
+        "coefficients": {
+          "intercept": 0.22974596272178172,
+          "dav2": 3.665723204006835,
+          "building": -74.48504304051119,
+          "interaction": 81.08912573441627
+        }
+      }
+    },
+    {
+      "tile": "OMA_144_030",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_144_030_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_144_030.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_144_030_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 0.013405577279627323,
+          "rmse_m": 0.01885395590228469,
+          "pearson": 0.1326562613248825,
+          "spearman": 0.15452459928379172,
+          "n_pixels": 517138
+        },
+        "slope": -0.012578855268657207,
+        "intercept": 0.02778373286128044
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 0.013407094299082269,
+          "rmse_m": 0.018849680525911745,
+          "pearson": 0.13432482513501595,
+          "spearman": 0.1545321919582703,
+          "n_pixels": 517138
+        },
+        "coefficients": {
+          "intercept": 0.030678450748935358,
+          "dav2": -0.016739378978066263,
+          "building": -0.3803876565912424,
+          "interaction": 0.5572939836848354
+        }
+      }
+    },
+    {
+      "tile": "OMA_198_002",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_198_002_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_198_002.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_198_002_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.7111899852752686,
+          "rmse_m": 3.4740123525343893,
+          "pearson": 0.5374934673309326,
+          "spearman": 0.5993547191803882,
+          "n_pixels": 845573
+        },
+        "slope": 11.09833812713623,
+        "intercept": 0.38294219970703125
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.694520821913172,
+          "rmse_m": 3.4535433229533545,
+          "pearson": 0.5452102876527496,
+          "spearman": 0.5954138959822076,
+          "n_pixels": 845573
+        },
+        "coefficients": {
+          "intercept": 0.7817079227965555,
+          "dav2": 10.258560388093029,
+          "building": -5.693418462741882,
+          "interaction": 17.43649553276864
+        }
+      }
+    },
+    {
+      "tile": "OMA_211_032",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_211_032_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_211_032.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_211_032_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.7756212949752808,
+          "rmse_m": 2.9069104828490766,
+          "pearson": 0.1361076831817627,
+          "spearman": 0.24170850913138142,
+          "n_pixels": 871871
+        },
+        "slope": 1.9847698211669922,
+        "intercept": 0.34493690729141235
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.7230866729134395,
+          "rmse_m": 2.8798172878056985,
+          "pearson": 0.1916644857945425,
+          "spearman": 0.2526088730475913,
+          "n_pixels": 871871
+        },
+        "coefficients": {
+          "intercept": 0.3741247633210263,
+          "dav2": 1.725564879875686,
+          "building": 1.583911471899576,
+          "interaction": 4.675790668323582
+        }
+      }
+    },
+    {
+      "tile": "OMA_211_039",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_211_039_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_211_039.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_211_039_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.7586299180984497,
+          "rmse_m": 2.9471868323732973,
+          "pearson": 0.13460657000541687,
+          "spearman": 0.05272302012648711,
+          "n_pixels": 871155
+        },
+        "slope": 2.0108699798583984,
+        "intercept": 0.37006574869155884
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.7347927779608292,
+          "rmse_m": 2.92585185839016,
+          "pearson": 0.1796755535270762,
+          "spearman": 0.11934369935316391,
+          "n_pixels": 871155
+        },
+        "coefficients": {
+          "intercept": 0.14503889082022103,
+          "dav2": 4.549127561928591,
+          "building": 30.022797930467192,
+          "interaction": -351.74582379760085
+        }
+      }
+    },
+    {
+      "tile": "OMA_212_033",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_212_033_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_212_033.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_212_033_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.203596830368042,
+          "rmse_m": 3.2506616359084486,
+          "pearson": 0.4120625853538513,
+          "spearman": 0.18522574072044615,
+          "n_pixels": 807617
+        },
+        "slope": 8.275705337524414,
+        "intercept": -2.210844039916992
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 0.8527002650377048,
+          "rmse_m": 1.8117921615606716,
+          "pearson": 0.8614498872747458,
+          "spearman": 0.33032276694612267,
+          "n_pixels": 807617
+        },
+        "coefficients": {
+          "intercept": 1.0669388366923593,
+          "dav2": -2.0757059258214383,
+          "building": 0.8559803279944703,
+          "interaction": 16.218164252572567
+        }
+      }
+    },
+    {
+      "tile": "OMA_221_034",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_221_034_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_221_034.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_221_034_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.276324510574341,
+          "rmse_m": 4.288959328221781,
+          "pearson": 0.6520290374755859,
+          "spearman": 0.7360174510636511,
+          "n_pixels": 773348
+        },
+        "slope": 16.45028305053711,
+        "intercept": -4.251800060272217
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 3.199680242533156,
+          "rmse_m": 4.205751974118053,
+          "pearson": 0.6687528581264721,
+          "spearman": 0.7423397100452075,
+          "n_pixels": 773348
+        },
+        "coefficients": {
+          "intercept": -4.183901498168653,
+          "dav2": 15.975912262224636,
+          "building": -1.4365962264554542,
+          "interaction": 12.627624158303076
+        }
+      }
+    },
+    {
+      "tile": "OMA_225_001",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_225_001_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_225_001.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_225_001_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.3449912071228027,
+          "rmse_m": 3.1498543175811897,
+          "pearson": 0.47249194979667664,
+          "spearman": 0.399256784152874,
+          "n_pixels": 684360
+        },
+        "slope": 9.084024429321289,
+        "intercept": -1.46183180809021
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.339522579312853,
+          "rmse_m": 3.1459644037686427,
+          "pearson": 0.4745166180427,
+          "spearman": 0.40555936102028867,
+          "n_pixels": 684360
+        },
+        "coefficients": {
+          "intercept": -1.376997872407531,
+          "dav2": 8.759742980150808,
+          "building": -17.37347391111028,
+          "interaction": 55.611176929149615
+        }
+      }
+    },
+    {
+      "tile": "OMA_230_036",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_230_036_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_230_036.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_230_036_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.74895179271698,
+          "rmse_m": 2.5227400344350888,
+          "pearson": 0.5231389999389648,
+          "spearman": 0.439002344030654,
+          "n_pixels": 693067
+        },
+        "slope": 7.965254783630371,
+        "intercept": -0.9089905023574829
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.7132198929287759,
+          "rmse_m": 2.486352014316947,
+          "pearson": 0.5426567242182367,
+          "spearman": 0.45909411418600177,
+          "n_pixels": 693067
+        },
+        "coefficients": {
+          "intercept": -0.9963849490280048,
+          "dav2": 8.566783480671308,
+          "building": 4.588081319797162,
+          "interaction": -18.2521175565603
+        }
+      }
+    },
+    {
+      "tile": "OMA_248_029",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_248_029_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_248_029.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_248_029_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.622952938079834,
+          "rmse_m": 4.756115239523834,
+          "pearson": 0.705208420753479,
+          "spearman": 0.6348753204176067,
+          "n_pixels": 918038
+        },
+        "slope": 24.080066680908203,
+        "intercept": -4.43048620223999
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 3.5557438077243626,
+          "rmse_m": 4.715444957570402,
+          "pearson": 0.7112518537950946,
+          "spearman": 0.6694950868750753,
+          "n_pixels": 918038
+        },
+        "coefficients": {
+          "intercept": -4.511674047265716,
+          "dav2": 23.033315070439077,
+          "building": 2.7556933502838343,
+          "interaction": -1.9745076956443544
+        }
+      }
+    },
+    {
+      "tile": "OMA_248_030",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_248_030_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_248_030.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_248_030_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 3.3330109119415283,
+          "rmse_m": 4.374012644933939,
+          "pearson": 0.7452908754348755,
+          "spearman": 0.6198074269656677,
+          "n_pixels": 914917
+        },
+        "slope": 23.521345138549805,
+        "intercept": -4.232699871063232
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 3.1567719156609897,
+          "rmse_m": 4.263633476268025,
+          "pearson": 0.7600077063543982,
+          "spearman": 0.6267957878653326,
+          "n_pixels": 914917
+        },
+        "coefficients": {
+          "intercept": -3.801590059504957,
+          "dav2": 20.914568242935147,
+          "building": -3.1833149857360845,
+          "interaction": 12.441844521278451
+        }
+      }
+    },
+    {
+      "tile": "OMA_258_020",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_258_020_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_258_020.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_258_020_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.7353839874267578,
+          "rmse_m": 2.7711493711049027,
+          "pearson": 0.08343172073364258,
+          "spearman": -0.039758046030554675,
+          "n_pixels": 962806
+        },
+        "slope": 1.2483454942703247,
+        "intercept": 0.5712407231330872
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.6569241829917953,
+          "rmse_m": 2.7127562869004405,
+          "pearson": 0.21993199090077178,
+          "spearman": 0.16993243620237794,
+          "n_pixels": 962806
+        },
+        "coefficients": {
+          "intercept": -0.5552849866822425,
+          "dav2": 2.4974125224334265,
+          "building": 123.45312008165678,
+          "interaction": -119.91623477016464
+        }
+      }
+    },
+    {
+      "tile": "OMA_269_035",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_269_035_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_269_035.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_269_035_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.4921619892120361,
+          "rmse_m": 2.204298748344776,
+          "pearson": 0.67867511510849,
+          "spearman": 0.647934438457991,
+          "n_pixels": 745088
+        },
+        "slope": 10.81921100616455,
+        "intercept": -1.786010980606079
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.491465217839662,
+          "rmse_m": 2.2014409865895703,
+          "pearson": 0.6797040712074938,
+          "spearman": 0.650491858234867,
+          "n_pixels": 745088
+        },
+        "coefficients": {
+          "intercept": -1.8732517494182868,
+          "dav2": 11.052641254787757,
+          "building": 1.237492052506507,
+          "interaction": -2.6491135178293286
+        }
+      }
+    },
+    {
+      "tile": "OMA_281_002",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_281_002_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_281_002.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_281_002_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.814404010772705,
+          "rmse_m": 4.801229581702568,
+          "pearson": 0.6772717237472534,
+          "spearman": 0.6150275471775345,
+          "n_pixels": 893918
+        },
+        "slope": 35.93872833251953,
+        "intercept": -4.411862850189209
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.3360403319691168,
+          "rmse_m": 4.345494059137752,
+          "pearson": 0.7460439325063528,
+          "spearman": 0.6261525797919808,
+          "n_pixels": 893918
+        },
+        "coefficients": {
+          "intercept": -1.6078918481735536,
+          "dav2": 17.952525988717678,
+          "building": -9.99191427900302,
+          "interaction": 46.14313460061592
+        }
+      }
+    },
+    {
+      "tile": "OMA_281_030",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_281_030_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_281_030.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_281_030_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.905272126197815,
+          "rmse_m": 3.67337057619779,
+          "pearson": 0.8266883492469788,
+          "spearman": 0.6326106636293455,
+          "n_pixels": 893252
+        },
+        "slope": 35.0755729675293,
+        "intercept": -3.8680121898651123
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.8959519178677773,
+          "rmse_m": 3.6638237307658805,
+          "pearson": 0.8276819013829425,
+          "spearman": 0.6298653589537581,
+          "n_pixels": 893252
+        },
+        "coefficients": {
+          "intercept": -3.537717623029731,
+          "dav2": 33.43613131340737,
+          "building": -1.5465596204782754,
+          "interaction": 4.537138719256829
+        }
+      }
+    },
+    {
+      "tile": "OMA_315_019",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_315_019_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_315_019.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_315_019_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.5052363872528076,
+          "rmse_m": 3.18407255913376,
+          "pearson": 0.6646698713302612,
+          "spearman": 0.6272610964252319,
+          "n_pixels": 725575
+        },
+        "slope": 14.094769477844238,
+        "intercept": -2.4270012378692627
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.5058450558972187,
+          "rmse_m": 3.1398143730908044,
+          "pearson": 0.6761629754634758,
+          "spearman": 0.6254199519275054,
+          "n_pixels": 725575
+        },
+        "coefficients": {
+          "intercept": -1.5933061319348485,
+          "dav2": 11.405807189314668,
+          "building": -2.2899182087524617,
+          "interaction": 6.2223862917496735
+        }
+      }
+    },
+    {
+      "tile": "OMA_315_020",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_315_020_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_315_020.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_315_020_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.9716647863388062,
+          "rmse_m": 2.6564741152294395,
+          "pearson": 0.7857155799865723,
+          "spearman": 0.7746063528156129,
+          "n_pixels": 727725
+        },
+        "slope": 15.228187561035156,
+        "intercept": -1.7041599750518799
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.877461666750015,
+          "rmse_m": 2.455134088064237,
+          "pearson": 0.8204600859326985,
+          "spearman": 0.7749127805365766,
+          "n_pixels": 727725
+        },
+        "coefficients": {
+          "intercept": -2.1790140788505568,
+          "dav2": 19.67909687182347,
+          "building": -3.890828103920372,
+          "interaction": 0.1998844595472602
+        }
+      }
+    },
+    {
+      "tile": "OMA_332_037",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_332_037_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_332_037.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_332_037_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.2127389907836914,
+          "rmse_m": 3.4802751583628386,
+          "pearson": 0.2774304449558258,
+          "spearman": 0.3364082188564734,
+          "n_pixels": 917221
+        },
+        "slope": 5.261940956115723,
+        "intercept": -0.7726061344146729
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.2162755307596855,
+          "rmse_m": 3.4729695973888215,
+          "pearson": 0.2843216464140318,
+          "spearman": 0.31538953811315523,
+          "n_pixels": 917221
+        },
+        "coefficients": {
+          "intercept": -0.9722447384900945,
+          "dav2": 5.731646001255431,
+          "building": 5.533112367827349,
+          "interaction": -8.857185088100346
+        }
+      }
+    },
+    {
+      "tile": "OMA_364_003",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_364_003_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_364_003.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_364_003_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.5002143383026123,
+          "rmse_m": 3.461003081171824,
+          "pearson": 0.4051322042942047,
+          "spearman": 0.1532096572806561,
+          "n_pixels": 902411
+        },
+        "slope": 7.582072734832764,
+        "intercept": -0.4003467559814453
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.5008884260750603,
+          "rmse_m": 3.459335598049565,
+          "pearson": 0.4061247481794354,
+          "spearman": 0.15116003763241256,
+          "n_pixels": 902411
+        },
+        "coefficients": {
+          "intercept": -0.4474287718980414,
+          "dav2": 7.667413967536907,
+          "building": 5.515951454004774,
+          "interaction": -8.435082845753305
+        }
+      }
+    },
+    {
+      "tile": "OMA_364_043",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_364_043_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_364_043.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_364_043_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 2.49906063079834,
+          "rmse_m": 3.4463033138076686,
+          "pearson": 0.43397921323776245,
+          "spearman": 0.2194911461107124,
+          "n_pixels": 899253
+        },
+        "slope": 8.298354148864746,
+        "intercept": -0.5509307384490967
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 2.5006058626371934,
+          "rmse_m": 3.4425496886813844,
+          "pearson": 0.4360104658756156,
+          "spearman": 0.21773714465309574,
+          "n_pixels": 899253
+        },
+        "coefficients": {
+          "intercept": -0.4845844345075596,
+          "dav2": 8.31664057416323,
+          "building": -13.619354317679074,
+          "interaction": 17.996990650515638
+        }
+      }
+    },
+    {
+      "tile": "OMA_376_023",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_376_023_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_376_023.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_376_023_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.4467157125473022,
+          "rmse_m": 2.00876057724699,
+          "pearson": 0.7670642733573914,
+          "spearman": 0.6868013774457028,
+          "n_pixels": 788278
+        },
+        "slope": 16.433927536010742,
+        "intercept": -4.0311102867126465
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.1666076171972148,
+          "rmse_m": 1.7211993421345464,
+          "pearson": 0.8353443169347736,
+          "spearman": 0.677824248989124,
+          "n_pixels": 788278
+        },
+        "coefficients": {
+          "intercept": -2.666400513817079,
+          "dav2": 11.467908903675113,
+          "building": -42.63564307496615,
+          "interaction": 125.42333765522653
+        }
+      }
+    },
+    {
+      "tile": "OMA_376_038",
+      "files": {
+        "dav2": "data/dfc2019/experiments/dav2_baseline/depth/OMA_376_038_depth.npy",
+        "building": "data/dfc2019/experiments/semantic/building/OMA_376_038.npy",
+        "truth": "data/dfc2019/raw/Truth/Track1-Truth/OMA_376_038_AGL.tif"
+      },
+      "baseline": {
+        "model": "global_affine_per_tile",
+        "metrics": {
+          "mae_m": 1.8894166946411133,
+          "rmse_m": 2.438724112634799,
+          "pearson": 0.6454116106033325,
+          "spearman": 0.6656645554070968,
+          "n_pixels": 793079
+        },
+        "slope": 13.814916610717773,
+        "intercept": -3.117079734802246
+      },
+      "method3_semantic": {
+        "formula": "AGL = beta0 + beta1*DAv2 + beta2*Pbuilding + beta3*(DAv2*Pbuilding)",
+        "metrics": {
+          "mae_m": 1.7025100224789433,
+          "rmse_m": 2.2919187281734628,
+          "pearson": 0.6961937404445881,
+          "spearman": 0.595574509689749,
+          "n_pixels": 793079
+        },
+        "coefficients": {
+          "intercept": -2.0248949559161455,
+          "dav2": 10.980980201595287,
+          "building": -69.24492033558306,
+          "interaction": 129.045518149301
+        }
+      }
+    }
+  ]
+}

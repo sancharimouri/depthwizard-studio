@@ -1,0 +1,7 @@
+{
+  "n_tiles": 50,
+  "n_samples": 200,
+  "epochs": 12,
+  "height_scale": 16.42696762084961,
+  "total_time_sec": 1028.8774769306183
+}

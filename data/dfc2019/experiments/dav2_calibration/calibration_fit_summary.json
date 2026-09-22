@@ -1,0 +1,15 @@
+{
+  "tiles_requested": 200,
+  "tiles_used": 200,
+  "pixels_per_tile": 10000,
+  "total_samples": 2000000,
+  "random_seed": 42,
+  "linear": {
+    "slope": 13.220505749199361,
+    "intercept": -1.1371663400803849,
+    "r2": 0.14327260609293146
+  },
+  "isotonic": {
+    "threshold_count": 460
+  }
+}

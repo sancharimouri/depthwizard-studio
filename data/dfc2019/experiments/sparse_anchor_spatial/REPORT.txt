@@ -1,0 +1,45 @@
+DepthWizard2 — Stage 3A Spatial Calibration
+====================================================================
+
+Question:
+Does 2x2 quadrant-wise affine calibration outperform
+a single tile-wide affine calibration?
+
+Design:
+- exact Stage-1 grid/20 anchor coordinates reused
+- OLS held fixed
+- same exclusion buffer
+- same evaluation pixels
+- no local fallback model allowed
+
+PRIMARY RESULTS: STRICT SPATIAL HOLDOUT
+
+                  model evaluation  runs  tiles  mae_m_mean  rmse_m_mean  pearson_mean  spearman_mean  pearson_p05  pearson_p95
+quadrant_wise_aggregate        all    50     50    3.341463     5.495054      0.461087       0.391059     0.041191     0.799949
+              tile_wide        all    50     50    3.128543     4.477770      0.525848       0.463475     0.013818     0.792375
+quadrant_wise_aggregate     strict    50     50    3.355629     5.514761      0.458558       0.388801     0.037264     0.799007
+              tile_wide     strict    50     50    3.130886     4.481899      0.525947       0.463413     0.012973     0.791701
+
+PAIRED DELTAS
+Positive delta = quadrant-wise improvement.
+
+            tile_id evaluation  tile_mae_m  tile_rmse_m  tile_pearson  tile_spearman  quadrant_mae_m  quadrant_rmse_m  quadrant_pearson  quadrant_spearman  delta_mae_m  delta_rmse_m  delta_pearson  delta_spearman quadrant_better_mae quadrant_better_rmse quadrant_better_pearson quadrant_better_spearman
+count            50         50   50.000000    50.000000     50.000000      50.000000       50.000000        50.000000         50.000000          50.000000    50.000000     50.000000      50.000000       50.000000                  50                   50                      50                       50
+unique           50          1         NaN          NaN           NaN            NaN             NaN              NaN               NaN                NaN          NaN           NaN            NaN             NaN                   2                    2                       2                        2
+top     JAX_004_006     strict         NaN          NaN           NaN            NaN             NaN              NaN               NaN                NaN          NaN           NaN            NaN             NaN               False                False                   False                    False
+freq              1         50         NaN          NaN           NaN            NaN             NaN              NaN               NaN                NaN          NaN           NaN            NaN             NaN                  26                   34                      28                       29
+mean            NaN        NaN    3.130886     4.481899      0.525947       0.463413        3.355629         5.514761          0.458558           0.388801    -0.224743     -1.032862      -0.067389       -0.074612                 NaN                  NaN                     NaN                      NaN
+std             NaN        NaN    1.537375     2.162819      0.256361       0.236451        1.954142         4.116595          0.267733           0.232311     1.425842      3.705849       0.250483        0.208424                 NaN                  NaN                     NaN                      NaN
+min             NaN        NaN    0.013816     0.021019     -0.280355      -0.337781        0.015458         0.022568         -0.319518          -0.091435    -9.077086    -25.422712      -0.882409       -0.708278                 NaN                  NaN                     NaN                      NaN
+25%             NaN        NaN    2.124866     3.229021      0.418822       0.317980        2.256447         3.682841          0.243108           0.229580    -0.289408     -0.917078      -0.174001       -0.160773                 NaN                  NaN                     NaN                      NaN
+50%             NaN        NaN    2.814389     3.936375      0.595143       0.544625        2.887033         4.454326          0.449955           0.381244    -0.002740     -0.343379      -0.013697       -0.038954                 NaN                  NaN                     NaN                      NaN
+75%             NaN        NaN    3.597653     4.921318      0.718560       0.631759        3.775588         6.597424          0.699514           0.588445     0.305655      0.071204       0.064487        0.046368                 NaN                  NaN                     NaN                      NaN
+max             NaN        NaN    7.945904    11.110722      0.826964       0.783884       12.334884        29.443712          0.832068           0.792955     1.859414      1.366756       0.469249        0.469841                 NaN                  NaN                     NaN                      NaN
+
+FILES
+preflight.csv:      /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial/preflight.csv
+results.csv:        /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial/results.csv
+summary.csv:        /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial/summary.csv
+distributions.csv: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial/distributions.csv
+paired_deltas.csv:  /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial/paired_deltas.csv
+fit_metadata.csv:   /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_spatial/fit_metadata.csv

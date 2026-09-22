@@ -1,0 +1,34 @@
+DepthWizard2 — Stage 2 Sparse-Anchor Regression Study
+====================================================================
+
+Question:
+Does the regression estimator materially affect
+sparse-anchor metric calibration?
+
+Design:
+- exact Stage-1 anchor coordinates reused
+- exact Stage-1 repetitions reused
+- identical evaluation masks across regressors
+- only OLS / Huber / RANSAC changed
+
+PRIMARY COMPARISON: strict spatial holdout
+
+regressor placement  anchor_count  runs  tiles  strict_mae_m_mean  strict_rmse_m_mean  strict_pearson_mean  strict_spearman_mean  strict_pearson_p05  strict_pearson_p95  rmse_gt_10m
+    huber      grid            10    50     50           3.181210            5.012662             0.504069              0.442183           -0.128041            0.792261            3
+    huber      grid            20    50     50           2.928612            4.718280             0.531802              0.470680            0.014258            0.791701            4
+    huber    random            10  1000     50           3.294180            5.133983             0.469833              0.418394           -0.392215            0.797589           80
+    huber    random            20  1000     50           3.028697            4.787215             0.513871              0.456712           -0.134203            0.797265           70
+      ols      grid            10    50     50           3.264104            4.848531             0.482970              0.426982           -0.151559            0.792261            3
+      ols      grid            20    50     50           3.130886            4.481899             0.525947              0.463413            0.012973            0.791701            3
+      ols    random            10  1000     50           3.435058            4.977354             0.472570              0.417450           -0.287023            0.797716           79
+      ols    random            20  1000     50           3.220402            4.607338             0.525610              0.463874            0.126216            0.797248           69
+   ransac      grid            10    50     50           3.434795            6.032649             0.169072              0.154356           -0.701023            0.786266            4
+   ransac      grid            20    50     50           3.291919            5.970181             0.131036              0.135848           -0.742110            0.773264            4
+   ransac    random            10  1000     50           3.561790            6.045896             0.247704              0.235458           -0.725623            0.787522          102
+   ransac    random            20  1000     50           3.330062            5.914723             0.191631              0.192199           -0.733285            0.786631           85
+
+FILES
+results.csv:       /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_regression/results.csv
+summary.csv:       /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_regression/summary.csv
+distributions.csv: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_regression/distributions.csv
+paired_deltas.csv: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_regression/paired_deltas.csv

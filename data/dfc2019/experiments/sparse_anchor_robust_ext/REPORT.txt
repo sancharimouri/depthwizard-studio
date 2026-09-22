@@ -1,0 +1,21 @@
+DepthWizard2 Robust Sparse Anchor Placement Study
+============================================================
+
+Synthetic metric anchors sampled from DFC2019 AGL truth.
+These are NOT surveyed GCPs.
+
+OLS affine calibration was held fixed.
+Only anchor placement/count/repetition was varied.
+
+PRIMARY METRICS: strict evaluation outside the
+anchor exclusion buffer.
+
+placement  anchor_count  runs  tiles  strict_mae_m_mean  strict_rmse_m_mean  strict_pearson_mean  strict_spearman_mean  strict_pearson_p05  strict_pearson_p95  rmse_gt_10m
+     grid            30    50     50           3.090760            4.435370             0.540070              0.470837            0.134981            0.792767            3
+     grid            50    50     50           3.098313            4.389678             0.536880              0.472433            0.133522            0.793327            3
+     grid           100    50     50           3.030650            4.344246             0.540641              0.476340            0.141728            0.793719            3
+
+Detailed results: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust_ext/results.csv
+Summary:          /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust_ext/summary.csv
+Distributions:    /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust_ext/distributions.csv
+Anchors:          /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust_ext/anchors

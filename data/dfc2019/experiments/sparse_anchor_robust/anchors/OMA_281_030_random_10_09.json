@@ -1,0 +1,74 @@
+{
+  "tile_id": "OMA_281_030",
+  "placement": "random",
+  "anchor_count": 10,
+  "repeat": 9,
+  "seed": 4217722619,
+  "selection_notes": "Uniform random sampling over all valid metric pixels.",
+  "buffer_radius_px": 16,
+  "truth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/raw/Truth/Track1-Truth/OMA_281_030_AGL.tif",
+  "depth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/dav2_baseline/depth/OMA_281_030_depth.npy",
+  "synthetic_anchor_warning": "These are synthetic metric anchors sampled from DFC2019 AGL truth. They are NOT surveyed GCPs.",
+  "anchors": [
+    {
+      "row": 343,
+      "col": 496,
+      "agl_m": 1.7655000686645508,
+      "dav2": 0.19188864529132843
+    },
+    {
+      "row": 31,
+      "col": 403,
+      "agl_m": 8.737133026123047,
+      "dav2": 0.20399844646453857
+    },
+    {
+      "row": 201,
+      "col": 251,
+      "agl_m": 0.00034808754571713507,
+      "dav2": 0.12128185480833054
+    },
+    {
+      "row": 138,
+      "col": 285,
+      "agl_m": 0.0007661010604351759,
+      "dav2": 0.12434979528188705
+    },
+    {
+      "row": 650,
+      "col": 141,
+      "agl_m": 0.0,
+      "dav2": 0.09186411648988724
+    },
+    {
+      "row": 645,
+      "col": 913,
+      "agl_m": 12.727640151977539,
+      "dav2": 0.48286715149879456
+    },
+    {
+      "row": 801,
+      "col": 887,
+      "agl_m": 0.0,
+      "dav2": 0.12341058999300003
+    },
+    {
+      "row": 380,
+      "col": 721,
+      "agl_m": 11.082144737243652,
+      "dav2": 0.2046840339899063
+    },
+    {
+      "row": 700,
+      "col": 556,
+      "agl_m": 0.26108887791633606,
+      "dav2": 0.10655530542135239
+    },
+    {
+      "row": 723,
+      "col": 327,
+      "agl_m": 5.2625861167907715,
+      "dav2": 0.1614980399608612
+    }
+  ]
+}

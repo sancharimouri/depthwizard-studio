@@ -1,0 +1,44 @@
+{
+  "tile_id": "OMA_364_003",
+  "placement": "grid",
+  "anchor_count": 5,
+  "repeat": 0,
+  "seed": null,
+  "selection_notes": "Deterministic 3x2 spatial grid; nearest unique valid pixel to each selected cell center.",
+  "buffer_radius_px": 16,
+  "truth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/raw/Truth/Track1-Truth/OMA_364_003_AGL.tif",
+  "depth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/dav2_baseline/depth/OMA_364_003_depth.npy",
+  "synthetic_anchor_warning": "These are synthetic metric anchors sampled from DFC2019 AGL truth. They are NOT surveyed GCPs.",
+  "anchors": [
+    {
+      "row": 171,
+      "col": 256,
+      "agl_m": 0.035431861877441406,
+      "dav2": 0.2114875763654709
+    },
+    {
+      "row": 171,
+      "col": 768,
+      "agl_m": 0.06951537728309631,
+      "dav2": 0.10056833177804947
+    },
+    {
+      "row": 512,
+      "col": 256,
+      "agl_m": 0.01207426842302084,
+      "dav2": 0.25058162212371826
+    },
+    {
+      "row": 513,
+      "col": 769,
+      "agl_m": 0.0026375711895525455,
+      "dav2": 0.19177663326263428
+    },
+    {
+      "row": 853,
+      "col": 256,
+      "agl_m": 0.010001126676797867,
+      "dav2": 0.7480186820030212
+    }
+  ]
+}

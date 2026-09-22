@@ -1,0 +1,74 @@
+{
+  "tile_id": "OMA_248_029",
+  "placement": "spatial_height",
+  "anchor_count": 10,
+  "repeat": 0,
+  "seed": 1529606738,
+  "selection_notes": "10 AGL quantile strata, candidate pool, then farthest-point selection (80% spatial / 20% height).",
+  "buffer_radius_px": 16,
+  "truth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/raw/Truth/Track1-Truth/OMA_248_029_AGL.tif",
+  "depth_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/dav2_baseline/depth/OMA_248_029_depth.npy",
+  "synthetic_anchor_warning": "These are synthetic metric anchors sampled from DFC2019 AGL truth. They are NOT surveyed GCPs.",
+  "anchors": [
+    {
+      "row": 586,
+      "col": 604,
+      "agl_m": -7.757015509923804e-07,
+      "dav2": 0.16880635917186737
+    },
+    {
+      "row": 13,
+      "col": 63,
+      "agl_m": 12.150640487670898,
+      "dav2": 0.7552245259284973
+    },
+    {
+      "row": 975,
+      "col": 13,
+      "agl_m": 0.0,
+      "dav2": 0.5062548518180847
+    },
+    {
+      "row": 52,
+      "col": 1013,
+      "agl_m": 0.0,
+      "dav2": 0.03553352877497673
+    },
+    {
+      "row": 1022,
+      "col": 1018,
+      "agl_m": 4.642693996429443,
+      "dav2": 0.2770726680755615
+    },
+    {
+      "row": 999,
+      "col": 541,
+      "agl_m": 25.037620544433594,
+      "dav2": 0.6169912219047546
+    },
+    {
+      "row": 488,
+      "col": 215,
+      "agl_m": 23.523258209228516,
+      "dav2": 0.928126871585846
+    },
+    {
+      "row": 8,
+      "col": 555,
+      "agl_m": 12.639362335205078,
+      "dav2": 0.535456657409668
+    },
+    {
+      "row": 753,
+      "col": 916,
+      "agl_m": 26.451404571533203,
+      "dav2": 0.5398373603820801
+    },
+    {
+      "row": 564,
+      "col": 1008,
+      "agl_m": 0.03023158758878708,
+      "dav2": 0.08509734272956848
+    }
+  ]
+}

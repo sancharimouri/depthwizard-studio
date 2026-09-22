@@ -1,0 +1,134 @@
+{
+  "tile_id": "JAX_004_006",
+  "anchor_count": 20,
+  "placement": "grid",
+  "buffer_radius_px": 16,
+  "anchor_file": "/Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust/anchors/JAX_004_006_grid_20_00.json",
+  "synthetic_anchor_warning": "Anchors are synthetic metric anchors from DFC2019 AGL truth; they are NOT surveyed GCPs.",
+  "tile_wide": {
+    "slope_m_per_dav2": 27.74577601894782,
+    "intercept_m": -3.7326628222077893,
+    "anchor_rows": [
+      102,
+      102,
+      102,
+      102,
+      307,
+      307,
+      307,
+      307,
+      512,
+      512,
+      512,
+      511,
+      717,
+      717,
+      717,
+      717,
+      922,
+      922,
+      922,
+      921
+    ],
+    "anchor_cols": [
+      128,
+      384,
+      640,
+      896,
+      128,
+      384,
+      640,
+      896,
+      128,
+      384,
+      640,
+      896,
+      128,
+      384,
+      640,
+      896,
+      128,
+      384,
+      640,
+      896
+    ]
+  },
+  "quadrants": {
+    "Q1_TL": {
+      "anchor_count": 4,
+      "slope_m_per_dav2": 17.87835605265216,
+      "intercept_m": 0.3083277960977231,
+      "anchor_rows": [
+        102,
+        102,
+        307,
+        307
+      ],
+      "anchor_cols": [
+        128,
+        384,
+        128,
+        384
+      ]
+    },
+    "Q2_TR": {
+      "anchor_count": 5,
+      "slope_m_per_dav2": 55.00807914458214,
+      "intercept_m": -11.44271853959589,
+      "anchor_rows": [
+        102,
+        102,
+        307,
+        307,
+        511
+      ],
+      "anchor_cols": [
+        640,
+        896,
+        640,
+        896,
+        896
+      ]
+    },
+    "Q3_BL": {
+      "anchor_count": 6,
+      "slope_m_per_dav2": 26.82133741756507,
+      "intercept_m": -2.6982242470108835,
+      "anchor_rows": [
+        512,
+        512,
+        717,
+        717,
+        922,
+        922
+      ],
+      "anchor_cols": [
+        128,
+        384,
+        128,
+        384,
+        128,
+        384
+      ]
+    },
+    "Q4_BR": {
+      "anchor_count": 5,
+      "slope_m_per_dav2": 40.67228495922367,
+      "intercept_m": -8.461666403094593,
+      "anchor_rows": [
+        512,
+        717,
+        717,
+        922,
+        921
+      ],
+      "anchor_cols": [
+        640,
+        640,
+        896,
+        640,
+        896
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "experiment": "dfc2019_dav2_calibration",
+  "model": "Depth-Anything-V2-Large",
+  "model_frozen": true,
+  "calibration_tiles": 200,
+  "jax_tiles": 100,
+  "oma_tiles": 100,
+  "benchmark_manifest": "data/dfc2019/experiments/dav2_baseline/manifest.csv",
+  "calibration_purpose": "Learn DAv2-to-metric-height mappings without using the held-out 50-tile benchmark.",
+  "methods": [
+    "global_linear",
+    "global_monotonic"
+  ]
+}

@@ -1,0 +1,27 @@
+DepthWizard2 Robust Sparse Anchor Placement Study
+============================================================
+
+Synthetic metric anchors sampled from DFC2019 AGL truth.
+These are NOT surveyed GCPs.
+
+OLS affine calibration was held fixed.
+Only anchor placement/count/repetition was varied.
+
+PRIMARY METRICS: strict evaluation outside the
+anchor exclusion buffer.
+
+     placement  anchor_count  runs  tiles  strict_mae_m_mean  strict_rmse_m_mean  strict_pearson_mean  strict_spearman_mean  strict_pearson_p05  strict_pearson_p95  rmse_gt_10m
+          grid             5    50     50           3.781440            5.846469             0.460992              0.406171           -0.304938            0.791295            7
+          grid            10    50     50           3.264104            4.848531             0.482970              0.426982           -0.151559            0.792261            3
+          grid            20    50     50           3.130886            4.481899             0.525947              0.463413            0.012973            0.791701            3
+        random             5  1000     50           3.966124            5.787046             0.389645              0.349209           -0.595195            0.797983          106
+        random            10  1000     50           3.435058            4.977354             0.472570              0.417450           -0.287023            0.797716           79
+        random            20  1000     50           3.220402            4.607338             0.525610              0.463874            0.126216            0.797248           69
+spatial_height             5    50     50           5.934907            7.399900             0.493331              0.424251           -0.219363            0.792221            8
+spatial_height            10    50     50           4.912818            6.073110             0.508186              0.440090           -0.041338            0.793341            6
+spatial_height            20    50     50           4.577611            5.627361             0.529571              0.460470            0.101114            0.792821            4
+
+Detailed results: /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust/results.csv
+Summary:          /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust/summary.csv
+Distributions:    /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust/distributions.csv
+Anchors:          /Users/anweshasaha/projects/DepthWizard2/data/dfc2019/experiments/sparse_anchor_robust/anchors

@@ -1,0 +1,28 @@
+{
+  "overall": {
+    "tiles": 50,
+    "pearson_mean": 0.5394453237186615,
+    "pearson_median": 0.5899483193337423,
+    "pearson_std": 0.21881893320452372,
+    "pearson_min": -0.0469161197758336,
+    "pearson_max": 0.8214816853471711,
+    "spearman_mean": 0.44595745969298634,
+    "spearman_median": 0.48242523288502615,
+    "spearman_std": 0.20498046506283643,
+    "spearman_min": -0.0597087777970178,
+    "spearman_max": 0.7794458422146184
+  },
+  "distribution": {
+    "pearson_ge_0_7": 14,
+    "pearson_0_5_to_0_7": 17,
+    "pearson_lt_0_5": 19,
+    "spearman_ge_0_7": 4,
+    "spearman_0_5_to_0_7": 21,
+    "spearman_lt_0_5": 25
+  },
+  "notes": [
+    "Relative DAv2 output is compared directly with AGL using Pearson and Spearman correlation.",
+    "MAE/RMSE are intentionally omitted at this baseline stage because DAv2 is not yet on a metric height scale.",
+    "This summary is derived from the uploaded metrics.csv."
+  ]
+}
