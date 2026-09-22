@@ -3275,3 +3275,55 @@ per-fold figure on quadrant halves (mean 0.492, 05 summary §11).
 
 **Verdict (Phase 2): RDAH is CLOSED on Sentinel-2**, zero-shot or fine-tuned, via the rule's
 default clause. Excluded from Phase 4.
+
+## Phase 4 — PRE-REGISTRATION (committed before any Phase 4 number was computed; Phase 3 data still downloading)
+
+**Decision rule, verbatim:**
+
+> DECISION RULE (pre-register): the Phase 1 thresholds, applied per candidate and per reference,
+> with Holm correction across candidates.
+> - ETH is the ceiling check. If ETH fails on the surface reference, record that a model trained
+>   on this data is unlikely to beat it, and recommend against a learned route.
+
+**Operationalization, fixed now, before results:**
+- **Candidates:**
+  - (i) DAv2 @518: existing `dav2_depth/`
+  - (ii) DAv2 @1008: new `dav2_depth_1008/`, frozen, engine unmodified except `MODEL_INPUT_SIZE`
+  - (iii) DINOv3-CHMv2: existing `dinov3_depth/`. The head already applies its ×8, so values are
+    metres (0.01–0.25 m on these tiles)
+  - (iv) ETH GCH 2020 10 m: `eth_canopy_2020/`, metres
+  - (v) RDAH: **excluded**, closed in Phase 2
+- **DEM:** SRTM, exactly as Phase 1, so the DEM-only control is Phase 1's (ii), `dem_lowpass`. The
+  same tests on GLO-30 are reported as secondary and are not decisive.
+- **Detail for a candidate:** highpass(S) = S − masked_gaussian(S, σ), with Phase 1's σ.
+  - Relative sources (DAv2): S = a·raw + b, from the same seed-42 train-half OLS against the DEM.
+  - Metric sources (CHMv2, ETH): S = raw metres, no fitting.
+- **References.** Each is aggregated to a per-10 m-pixel median. Ellipsoidal heights are converted
+  to EGM96 orthometric with the tile-centre value as in Phase 1 (h + n).
+  1. **GROUND:** ICESat-2 ground photons (the Phase 1 CSVs).
+  2. **SURFACE-IS2:** 20 m segments with `gnd_ph_count > 0`, `landcover != 255`,
+     `0 ≤ h_max_canopy ≤ 60`; surface = `h_te_median + h_max_canopy`.
+  3. **SURFACE-GEDI:** shots with `rh98 ≤ 80`; surface = `elev_lowestmode + rh98`.
+
+  A tile with < 200 valid pixels for a reference is excluded from that reference, and the n used
+  is reported.
+- **Products compared to the DEM-only control `dem_lowpass`:**
+  - GROUND, any source: `dem_lowpass + highpass(S)`.
+  - SURFACE, relative source: `dem_lowpass + highpass(S)`, the fusion form.
+  - SURFACE, metric source: `dem_lowpass + S`, canopy height added directly in metres.
+- **Test A (product beats DEM-only).** Per-tile RMSE (m) at reference pixels; paired Wilcoxon,
+  two-sided, product vs. `dem_lowpass`. **Pass:** Holm-adjusted p < 0.05 (Holm across the 4
+  candidates within each reference) AND product RMSE lower on ≥ 60% of included tiles (15/25 when
+  n = 25; ⌈0.6·n⌉ otherwise).
+- **Test B (r_HF adds signal).** r_HF = Pearson of highpass(S) at the pixel vs. (reference −
+  `dem_lowpass`). **Pass:** median r_HF > 0.10 AND ≥ 72% of tiles positive (18/25; ⌈0.72·n⌉
+  otherwise), with the one-sided sign-test p Holm-adjusted across candidates < 0.05. Raw-S
+  Pearson vs. the residual is also reported for the metric sources (secondary).
+- **A candidate "passes a reference"** only if A and B both pass.
+- **ETH ceiling:** "ETH fails on the surface reference" = ETH doesn't pass SURFACE-IS2 **and**
+  doesn't pass SURFACE-GEDI.
+- **Tiles:** the 25 accepted. Darjeeling segments/shots were fetched but aren't part of this test,
+  because there is no benchmark DAv2/DINOv3/ETH set for it.
+- **Stated in advance:** the reference epochs differ (GEDI 2019–2023, ICESat-2 2019–2025, ETH
+  2020, Sentinel-2 renders ~2025). Canopy or building change adds noise against every candidate
+  equally.
