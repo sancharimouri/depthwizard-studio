@@ -47,7 +47,7 @@ exception, specific to Session 2: you may *run* the existing, already-used
 asset-generation process (DAv2 inference + DSM crop/reproject) unmodified, to produce
 visualization assets for new regions — that's reusing a frozen process, not changing it.
 
-## ML research track status (as of 2026-09-22)
+## ML research track status (as of 2026-09-23)
 
 Full audit trail: `PROJECT_STATUS_REPORT.md` (repo root) and `docs/method-audit/`
 (one numbered subfolder per method, each with `summary.md`/`verdict.md`). Methods tried,
@@ -73,8 +73,19 @@ in order:
    benchmark tiles were in its own training split — see `stage0-gates/rs3dada-audit.md`).
    A fine-tuned run (`RDAH-FT-1`, 4-fold spatial CV) produced real numbers — pooled MAE
    2.906m / RMSE 6.659m / Pearson 0.513 / Spearman 0.527, unstable across folds (Pearson
-   0.254–0.607) — genuinely unfinished, not accepted or rejected. `verdict.md`/`summary.md`
-   for this method are still empty stub templates.
+   0.254–0.607). A full audit (`summary.md` §1–9) found an input-scale bug: depth was fed at
+   about 1/255 of the intended scale. With the scale corrected, **zero-shot** on DFC2019 gives
+   MAE 2.231 / RMSE 4.566 / Pearson 0.716 / Spearman 0.655, using the Track1 checkpoint, whose
+   training list contains 41/50 benchmark tiles. The run's own artifact isn't in the repo.
+   **RDAH-FT-2** (2026-09-23) used the Swiss checkpoint (0/50 overlap), a per-fold input scale,
+   quadrant folds, a rank loss, and nested selection. It scored MAE 2.500 / RMSE 4.294 /
+   Pearson 0.640 / Spearman 0.506 (per-sample mean, Method 6's aggregation; pixel-pooled RMSE
+   5.598). Fold Pearson range is 0.503–0.607, and the variance ratio of 0.19–0.23 is still
+   severe underdispersion. **FT-2 is NOT ADOPTED**: it loses to Method 6 on all four metrics.
+   **The method itself stays open.** Zero-shot still beats both fine-tuned runs, and the
+   unresolved question is contamination vs. fine-tuning damage. Full detail:
+   `05-rdah-net-fusion/{verdict.md §6, summary.md §10}`, aggregate in
+   `data/dfc2019/experiments/rdah_quadrant_cv/rdah_ft2_aggregate.json`.
 6. **Full DAv2-Small fine-tune, twin (mean, log-variance) head**
    (`06-full-finetune-twin-head`) — **current best result, and the first method in this
    project's entire audit to beat the oracle per-tile-OLS baseline on all four tracked
@@ -160,8 +171,13 @@ in order:
    Buildings height blending is net-harmful (15/25 tiles worse, only mumbai improved,
    unexplained) and makes chennai — the tile hypothesized most likely to benefit — worse,
    not better. Neither flips any losing tile to a win or any winning tile to a loss.
-   Neither adopted. Full writeup: `docs/method-audit/sentinel2/sign-flip-detector.md`
-   (2026-09-22, "Semantic-prior phase 2.3" entry).
+   Neither adopted. **CLOSED**: both follow-up mechanism checks came back clean. Approach A
+   is a genuine physical no-op (`building_prob` is correctly wired, `dav2_highpass` is
+   sub-centimetre), not an integration bug. Approach B has no units/datum mismatch (Open
+   Buildings `building_height` is AGL and is already added to `dem_lowpass`; the full-weight
+   "fix" doubles the ICESat-2 overshoot). The negative stands. Full writeup:
+   `docs/method-audit/sentinel2/sign-flip-detector.md` (2026-09-22, "Semantic-prior phase
+   2.3" entry and its "Re-investigation" subsection).
 8. **Frozen-backbone comparison: DAv2 vs. DINOv3** (SAT493M+CHMv2) on the Sentinel-2
    benchmark, against real per-photon ICESat-2 ground heights (not the coverage-only
    counts) — CLOSED, DINOv3 won outright per its stated decision rule (pooled Pearson
@@ -314,3 +330,5 @@ motion is either one orchestrated moment or a response to user action.
   default rather than stopping to ask.
 - Don't refactor unrelated code. Don't touch ML/model logic — only run the existing
   asset-generation process as-is, per the exception noted above.
+- When session usage crosses 90%, stop experimental work and update docs/HANDOFF.md and
+  CLAUDE.md before anything else.
