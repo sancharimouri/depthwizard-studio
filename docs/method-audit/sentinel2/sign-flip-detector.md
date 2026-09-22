@@ -2460,3 +2460,117 @@ resolves.
 - `scripts/test_shadow_photogrammetry_plausibility.py` — sun-angle fetch
   + ported shadow-length geometry + the empirical probe. Writes
   `data/sentinel2_benchmark/shadow_photogrammetry_plausibility.csv`.
+
+---
+
+# 2026-09-22 (continued) — yats0x7 vs. blakc-coffee: a code-read comparison, and a targeted test of the one real difference it surfaces
+
+**Status: COMPLETE. Result: near-total convergence — the more
+sophisticated design produces essentially the same answer.** Cloned
+`external/yats0x7-depthwizard/` fresh for this task (list entry #7,
+"interesting" — flagged earlier as a similar hybrid-fusion idea never
+compared head-to-head against blakc-coffee's, which frequency fusion is
+sourced from). Read `engine/depthwizard/calibrate/fit.py` directly (never
+executed).
+
+## Architectural comparison
+
+Both are the same idea at the top level — DSM = DEM's low-frequency
+terrain + a scaled high-frequency "structure" band from the depth model —
+but differ in two concrete ways:
+
+1. **What the detail band is extracted relative to.** This project's
+   frequency fusion: `dav2_highpass = dav2_metric − gaussian_blur(dav2_metric)`,
+   a plain SYMMETRIC low-pass. yats0x7's `ground_trend()`: an asymmetric,
+   iteratively-reweighted low-pass (`above_weight=0.08`) that explicitly
+   downweights points *above* the current trend each iteration, so the
+   trend converges toward ground instead of being pulled up by
+   buildings/trees — their own docstring names exactly this bias
+   ("a plain Gaussian pulls the terrain trend up around them"), a real
+   critique of this project's own detail-extraction step that hadn't been
+   raised before.
+2. **What the scale factor is fit against.** This project: OLS between
+   the DEM and the model's RAW, unfiltered signal
+   (`dem ~ a·dav2_raw + b`) — the same fit the known-height-scale test
+   earlier in this file found has near-zero pixel-level correlation with
+   true relief on flat terrain (r=−0.005, bathinda). yats0x7: RANSAC
+   between the DEM and the model's own robust ground trend
+   (`dem ~ a·ground_trend(rel) + b`) — two smooth, already-denoised
+   signals, not raw-vs-real. This is the concretely testable idea the
+   task pointed at.
+
+Both differences plausibly point the same direction (less exposure to
+raw-pixel noise), and both are cheap to test (pure signal processing, no
+training) — ported together as one combined "yats0x7-style" swap of
+frequency fusion's step-1 detail-extraction-and-scale-fit, keeping this
+project's own validated DEM low-pass and combination step unchanged (same
+"swap one targeted component" pattern as every other test in this file).
+
+## The hypothesis didn't survive contact with the data — but not the way expected
+
+The mechanistic story predicted trend-vs-trend correlation should be
+*meaningfully higher* than raw-vs-raw on flat terrain, since ground_trend
+smooths away the fine-scale noise the known-height test already showed
+carries no real signal. **It isn't — `trend_vs_dem_pearson` and
+`raw_vs_dem_pearson` are nearly identical on every single one of the 25
+tiles tested**, not just the 4 flat ones (e.g. manali 0.831 vs 0.831,
+dharamshala 0.783 vs 0.783, bathinda 0.203 vs 0.205). The overall
+pixel-level correlation between DAv2's output and the real DEM is
+dominated by whatever coarse, shared regional gradient both already
+carry — smoothing away DAv2's fine-scale noise barely moves that number,
+because that noise was already contributing ~zero correlation either way
+(consistent with, not contradicting, the earlier known-height finding —
+noise correlates with nothing, so removing it doesn't change a
+correlation number much).
+
+**The fitted scale itself does differ substantially per tile** (kutch:
+2.58 → 1.39; amalapuram: 3.66 → 3.00; chennai: 15.21 → 16.53) — this
+isn't a case of the two pipelines silently reducing to the same
+computation. But the *combined* effect of (different detail band ×
+different scale) on the final surface is, empirically, nearly
+parameter-invariant here: the different clipping/weighting inside
+`structure` and the different fitted `a` appear to renormalize against
+each other.
+
+## Result: 21/25 wins under both designs, zero flips
+
+Full 25-tile comparison (existing single-split frequency fusion vs. this
+yats0x7-style variant, both vs. the linear baseline):
+
+| | wins vs. linear baseline |
+|---|---:|
+| Existing frequency fusion | **21/25** |
+| yats0x7-style detail+scale | **21/25** |
+
+**Zero tiles flip win/loss status.** Max per-tile difference in ICESat-2
+RMSE-%-of-range: **0.090 percentage points** (manali, still tiny relative
+to its 0.48% baseline). Mean absolute difference across all 25 tiles:
+**0.009 percentage points**. No tile shows a difference exceeding 0.1
+points in either direction. Full per-tile table (including RANSAC
+`r2`/inlier counts and both correlation diagnostics):
+`data/sentinel2_benchmark/yats0x7_ground_trend_results/results_all25.csv`.
+
+## Verdict
+
+**No adoption warranted — yats0x7's added sophistication (asymmetric
+ground-tracking trend, RANSAC fit) does not handle frequency fusion's 4
+flat-terrain losses, or any of the other 21 tiles, differently in
+outcome from the existing simpler design**, despite producing genuinely
+different intermediate fitted parameters. This is a clean, informative
+result in its own right: it demonstrates the current design's final
+ICESat-2 accuracy is not fragile to this particular methodological
+choice (symmetric-vs-asymmetric detail extraction, OLS-vs-RANSAC scale
+fit) — a second, independent line of evidence (alongside the
+evidence-gating/LOO check earlier in this file) that frequency fusion's
+current numbers reflect something structural about the data, not an
+artifact of one specific implementation choice. Frequency fusion's
+existing `run_frequency_fusion_sentinel2.py` is unchanged by this test.
+
+## Reproducing this
+
+- `scripts/test_yats0x7_ground_trend_scale_frequency_fusion.py` — ported
+  `ground_trend`/`clip_structure`/`ransac_affine`, reusing
+  `run_frequency_fusion_sentinel2.py`'s DEM low-pass/combination
+  functions unchanged. `... losing4` for the 4 target tiles, `... all25`
+  for the full accepted set. Writes
+  `data/sentinel2_benchmark/yats0x7_ground_trend_results/results_*.csv`.
