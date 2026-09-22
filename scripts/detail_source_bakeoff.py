@@ -26,6 +26,7 @@ ROOT = ff.ROOT
 BENCH = ROOT / "data/sentinel2_benchmark"
 OUT = BENCH / "detail_source_bakeoff"
 MIN_PX = 200
+STRICT_IS2 = False  # set by `main(..., strict_is2=True)`; A1.3 ats-sensitivity subset
 CANDS = {
     "dav2_518": ("relative", lambda t: np.load(BENCH / "dav2_depth" / f"{t}_depth.npy")),
     "dav2_1008": ("relative", lambda t: np.load(BENCH / "dav2_depth_1008" / f"{t}_depth.npy")),
@@ -42,6 +43,8 @@ def ref_pixels(t: dict, ref: str) -> pd.DataFrame:
         if ref == "surface_is2":
             d = pd.read_csv(ROOT / "data/icesat2_segments20m" / f"{t['tile_id']}.csv")
             d = d[(d["gnd_ph_count"] > 0) & (d["landcover"] != 255) & (d["h_max_canopy"] >= 0) & (d["h_max_canopy"] <= 60)]
+            if STRICT_IS2:  # A1.3 sensitivity subset (pre-registered 2026-09-23)
+                d = d[(d["ph_count"] >= d["ph_count"].median()) & (d["gnd_ph_count"] >= 3)]
             d = d.assign(height=d["h_te_median"] + d["h_max_canopy"])
         else:
             d = pd.read_csv(ROOT / "data/gedi_l2a" / f"{t['tile_id']}.csv")
@@ -80,7 +83,9 @@ def holm(pvals: dict) -> dict:
     return adj
 
 
-def main(dem: str = "srtm"):
+def main(dem: str = "srtm", strict_is2: bool = False):
+    global STRICT_IS2
+    STRICT_IS2 = strict_is2
     OUT.mkdir(parents=True, exist_ok=True)
     manifest = pd.read_csv(ff.MANIFEST).set_index("tile_id")
     verdicts = pd.read_csv(ff.VERDICTS_CSV).set_index("tile_id")
@@ -112,7 +117,8 @@ def main(dem: str = "srtm"):
         print(f"[{i}/{len(accepted)}] {tid} " + " ".join(f"{r}:{len(gs[r])}px" for r in refs), flush=True)
 
     df = pd.DataFrame(rows)
-    df.to_csv(OUT / f"per_tile_{dem}.csv", index=False)
+    suffix = f"{dem}_strictis2" if strict_is2 else dem
+    df.to_csv(OUT / f"per_tile_{suffix}.csv", index=False)
 
     summary = {"dem": dem, "min_px": MIN_PX, "by_reference": {}}
     for ref in refs:
@@ -145,11 +151,11 @@ def main(dem: str = "srtm"):
         summary["by_reference"][ref] = res
     eth = summary["by_reference"]
     summary["eth_ceiling_fails_surface"] = not (eth["surface_is2"]["eth_gch2020"]["PASS"] or eth["surface_gedi"]["eth_gch2020"]["PASS"])
-    (OUT / f"summary_{dem}.json").write_text(json.dumps(summary, indent=2) + "\n")
+    (OUT / f"summary_{suffix}.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps({ref: {c: {k: v for k, v in r.items() if k != "by_category"} for c, r in res.items()}
                       for ref, res in summary["by_reference"].items()}, indent=1))
     print("ETH fails surface:", summary["eth_ceiling_fails_surface"])
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "srtm")
+    main(sys.argv[1] if len(sys.argv) > 1 else "srtm", strict_is2="--strict-is2" in sys.argv)

@@ -3558,3 +3558,24 @@ only. Same candidates, same Phase 4 rule and Holm family.
 **"A conclusion changes"** means any candidate's PASS flag, pass_A or pass_B on SURFACE-IS2 flips,
 or the ETH-ceiling verdict flips. **A flip to PASS is reported but does not count as a pass**,
 per the rule.
+
+### A1.3 — results: no Phase 4 conclusion changes; one sub-test flips toward *fail*
+
+Outputs: `data/sentinel2_benchmark/detail_source_bakeoff/{per_tile,summary}_srtm_strictis2.*`,
+stdout in `a1_strictis2_stdout.txt`. The strict subset still leaves ≥ 1,928 SURFACE-IS2 pixels
+per tile, so all 25 tiles are included.
+
+| candidate | original: wins / median r_HF / r_HF > 0 / A / B | strict: wins / median r_HF / r_HF > 0 / A / B / PASS |
+|---|---|---|
+| DAv2 @518 | 15/25 / +0.026 / 16 / – / – | 11/25 / +0.015 / 15 / – / – / no |
+| DAv2 @1008 | 18/25 / +0.069 / 21 / **✓** / – | 15/25 / +0.079 / 20 / **– (Holm p = 0.346)** / – / no |
+| DINOv3-CHMv2 | 22/25 / +0.006 / 15 / ✓ / – | 22/25 / +0.019 / 17 / ✓ / – / no |
+| ETH GCH 2020 | 5/25 / +0.031 / 21 / – / – | 7/25 / +0.039 / 20 / – / – / no |
+
+- **No PASS flag changes. The ETH-ceiling verdict is unchanged (fires).** The Phase 4 conclusions
+  are robust to the `ats=5` relaxation.
+- **One sub-result flips:** DAv2 @1008's Test A on SURFACE-IS2 goes from pass to fail. That near-miss
+  was fragile to segment quality. It moves *away* from a pass, as a robustness check should
+  report.
+- Median SURFACE-IS2 RMSE drops from ~5.0 m to ~4.5 m for the DEM-only control on the stricter
+  segments, as expected: better-supported segments are less noisy.

@@ -1,0 +1,256 @@
+[1/25] bathinda ground:81890px surface_is2:20144px surface_gedi:4111px
+[2/25] kota ground:60088px surface_is2:14357px surface_gedi:4538px
+[3/25] kurnool ground:32405px surface_is2:7312px surface_gedi:663px
+[4/25] nizamabad ground:61013px surface_is2:14706px surface_gedi:1432px
+[5/25] vidisha ground:50499px surface_is2:12386px surface_gedi:919px
+[6/25] amalapuram ground:63028px surface_is2:15225px surface_gedi:1824px
+[7/25] digha ground:59545px surface_is2:14059px surface_gedi:773px
+[8/25] goa_estuary ground:43030px surface_is2:11210px surface_gedi:2090px
+[9/25] kakinada ground:53183px surface_is2:12806px surface_gedi:1474px
+[10/25] kutch ground:67277px surface_is2:15816px surface_gedi:1474px
+[11/25] nagapattinam ground:51301px surface_is2:11280px surface_gedi:838px
+[12/25] vembanad ground:29931px surface_is2:6905px surface_gedi:2804px
+[13/25] almora ground:27672px surface_is2:7819px surface_gedi:11607px
+[14/25] dehradun ground:6789px surface_is2:1928px surface_gedi:2351px
+[15/25] dharamshala ground:13102px surface_is2:3452px surface_gedi:5376px
+[16/25] kohima ground:16350px surface_is2:4691px surface_gedi:4101px
+[17/25] manali ground:20928px surface_is2:5521px surface_gedi:7474px
+[18/25] bengaluru ground:23680px surface_is2:6174px surface_gedi:916px
+[19/25] chennai ground:33243px surface_is2:7984px surface_gedi:1517px
+[20/25] delhi ground:16388px surface_is2:4071px surface_gedi:787px
+[21/25] hyderabad ground:32876px surface_is2:8997px surface_gedi:343px
+[22/25] jaipur ground:50887px surface_is2:13884px surface_gedi:1881px
+[23/25] kochi_city ground:32336px surface_is2:8064px surface_gedi:372px
+[24/25] mumbai ground:20318px surface_is2:5339px surface_gedi:517px
+[25/25] pune ground:28502px surface_is2:7606px surface_gedi:1578px
+{
+ "ground": {
+  "dav2_518": {
+   "n_tiles": 25,
+   "wins": 9,
+   "wins_needed": 15,
+   "median_rmse_product": 3.397640555473158,
+   "median_rmse_control": 3.397642562106266,
+   "wilcoxon_p": 0.5249125957489014,
+   "median_rhf": -0.037078183892620804,
+   "rhf_positive": 8,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.9783573746681213,
+   "median_rhf_spearman": -0.02135442027773743,
+   "wilcoxon_p_holm": 1.0,
+   "sign_p_holm": 1.0,
+   "pass_A": false,
+   "pass_B": false,
+   "PASS": false
+  },
+  "dav2_1008": {
+   "n_tiles": 25,
+   "wins": 15,
+   "wins_needed": 15,
+   "median_rmse_product": 3.396881318886543,
+   "median_rmse_control": 3.397642562106266,
+   "wilcoxon_p": 0.312333345413208,
+   "median_rhf": -0.008045115141100814,
+   "rhf_positive": 10,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.885238528251648,
+   "median_rhf_spearman": -0.015656923123852213,
+   "wilcoxon_p_holm": 0.937000036239624,
+   "sign_p_holm": 1.0,
+   "pass_A": false,
+   "pass_B": false,
+   "PASS": false
+  },
+  "dinov3_chmv2": {
+   "n_tiles": 25,
+   "wins": 12,
+   "wins_needed": 15,
+   "median_rmse_product": 3.3976886703448774,
+   "median_rmse_control": 3.397642562106266,
+   "wilcoxon_p": 0.6720751523971558,
+   "median_rhf": -0.0033672730083208063,
+   "rhf_positive": 10,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.885238528251648,
+   "median_rhf_spearman": 0.014557941599056492,
+   "median_raw_vs_resid": -0.2182805072905862,
+   "wilcoxon_p_holm": 1.0,
+   "sign_p_holm": 1.0,
+   "pass_A": false,
+   "pass_B": false,
+   "PASS": false
+  },
+  "eth_gch2020": {
+   "n_tiles": 25,
+   "wins": 0,
+   "wins_needed": 15,
+   "median_rmse_product": 4.053415805465681,
+   "median_rmse_control": 3.397642562106266,
+   "wilcoxon_p": 5.960464477539063e-08,
+   "median_rhf": -0.02685593256882978,
+   "rhf_positive": 2,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.9999992251396179,
+   "median_rhf_spearman": 0.0051035368850025934,
+   "median_raw_vs_resid": -0.23251083061527655,
+   "wilcoxon_p_holm": 2.384185791015625e-07,
+   "sign_p_holm": 1.0,
+   "pass_A": false,
+   "pass_B": false,
+   "PASS": false
+  }
+ },
+ "surface_is2": {
+  "dav2_518": {
+   "n_tiles": 25,
+   "wins": 11,
+   "wins_needed": 15,
+   "median_rmse_product": 4.486151668211774,
+   "median_rmse_control": 4.500510365333907,
+   "wilcoxon_p": 0.33878785371780396,
+   "median_rhf": 0.015445156950340285,
+   "rhf_positive": 15,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.21217811107635498,
+   "median_rhf_spearman": 0.018708270878135806,
+   "wilcoxon_p_holm": 0.34591710567474365,
+   "sign_p_holm": 0.21217811107635498,
+   "pass_A": false,
+   "pass_B": false,
+   "PASS": false
+  },
+  "dav2_1008": {
+   "n_tiles": 25,
+   "wins": 15,
+   "wins_needed": 15,
+   "median_rmse_product": 4.474985505352513,
+   "median_rmse_control": 4.500510365333907,
+   "wilcoxon_p": 0.17295855283737183,
+   "median_rhf": 0.07874454832926679,
+   "rhf_positive": 20,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.0020386576652526855,
+   "median_rhf_spearman": 0.07330635809648414,
+   "wilcoxon_p_holm": 0.34591710567474365,
+   "sign_p_holm": 0.008154630661010742,
+   "pass_A": false,
+   "pass_B": false,
+   "PASS": false
+  },
+  "dinov3_chmv2": {
+   "n_tiles": 25,
+   "wins": 22,
+   "wins_needed": 15,
+   "median_rmse_product": 4.487033768574066,
+   "median_rmse_control": 4.500510365333907,
+   "wilcoxon_p": 2.562999725341797e-06,
+   "median_rhf": 0.01858185344908722,
+   "rhf_positive": 17,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.05387607216835022,
+   "median_rhf_spearman": 0.022417684598041453,
+   "median_raw_vs_resid": 0.11562671733069387,
+   "wilcoxon_p_holm": 1.0251998901367188e-05,
+   "sign_p_holm": 0.10775214433670044,
+   "pass_A": true,
+   "pass_B": false,
+   "PASS": false
+  },
+  "eth_gch2020": {
+   "n_tiles": 25,
+   "wins": 7,
+   "wins_needed": 15,
+   "median_rmse_product": 8.312101493630632,
+   "median_rmse_control": 4.500510365333907,
+   "wilcoxon_p": 0.002255260944366455,
+   "median_rhf": 0.038558498790684695,
+   "rhf_positive": 20,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.0020386576652526855,
+   "median_rhf_spearman": 0.04733909939338758,
+   "median_raw_vs_resid": 0.07047305134540333,
+   "wilcoxon_p_holm": 0.006765782833099365,
+   "sign_p_holm": 0.008154630661010742,
+   "pass_A": false,
+   "pass_B": false,
+   "PASS": false
+  }
+ },
+ "surface_gedi": {
+  "dav2_518": {
+   "n_tiles": 25,
+   "wins": 20,
+   "wins_needed": 15,
+   "median_rmse_product": 9.16423870202164,
+   "median_rmse_control": 9.165519292186698,
+   "wilcoxon_p": 0.000429689884185791,
+   "median_rhf": 0.05576160942510471,
+   "rhf_positive": 19,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.007316648960113525,
+   "median_rhf_spearman": 0.056055962488684254,
+   "wilcoxon_p_holm": 0.000859379768371582,
+   "sign_p_holm": 0.01463329792022705,
+   "pass_A": true,
+   "pass_B": false,
+   "PASS": false
+  },
+  "dav2_1008": {
+   "n_tiles": 25,
+   "wins": 22,
+   "wins_needed": 15,
+   "median_rmse_product": 9.158840930913165,
+   "median_rmse_control": 9.165519292186698,
+   "wilcoxon_p": 8.803606033325195e-05,
+   "median_rhf": 0.08885834560219351,
+   "rhf_positive": 21,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.0004552602767944336,
+   "median_rhf_spearman": 0.08995452300586132,
+   "wilcoxon_p_holm": 0.00026410818099975586,
+   "sign_p_holm": 0.0018210411071777344,
+   "pass_A": true,
+   "pass_B": false,
+   "PASS": false
+  },
+  "dinov3_chmv2": {
+   "n_tiles": 25,
+   "wins": 25,
+   "wins_needed": 15,
+   "median_rmse_product": 9.150935776802264,
+   "median_rmse_control": 9.165519292186698,
+   "wilcoxon_p": 5.960464477539063e-08,
+   "median_rhf": 0.012452150286670058,
+   "rhf_positive": 17,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.05387607216835022,
+   "median_rhf_spearman": 0.003857660598086851,
+   "median_raw_vs_resid": 0.12005464063812694,
+   "wilcoxon_p_holm": 2.384185791015625e-07,
+   "sign_p_holm": 0.05387607216835022,
+   "pass_A": true,
+   "pass_B": false,
+   "PASS": false
+  },
+  "eth_gch2020": {
+   "n_tiles": 25,
+   "wins": 19,
+   "wins_needed": 15,
+   "median_rmse_product": 8.45821979682193,
+   "median_rmse_control": 9.165519292186698,
+   "wilcoxon_p": 0.01597297191619873,
+   "median_rhf": 0.06460655976796809,
+   "rhf_positive": 20,
+   "rhf_positive_needed": 18,
+   "sign_p": 0.0020386576652526855,
+   "median_rhf_spearman": 0.07044717157671176,
+   "median_raw_vs_resid": 0.18533584592106123,
+   "wilcoxon_p_holm": 0.01597297191619873,
+   "sign_p_holm": 0.006115972995758057,
+   "pass_A": true,
+   "pass_B": false,
+   "PASS": false
+  }
+ }
+}
+ETH fails surface: True
