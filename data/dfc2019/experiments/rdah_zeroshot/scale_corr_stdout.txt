@@ -1,0 +1,58 @@
+# TRANSCRIBED from Claude Code session fa0035ab-aff5-4ffe-9847-a473b6cae7a5 transcript
+# (tool output of `diag_rdah_scale_corr.py`, run at 2026-09-22T17:40:05.004Z UTC); the script printed this, it did not save it.
+
+=== JAX_004_006 ===
+  x1      pred mean=    0.0811 std=    0.0143  Pearson=+0.0515 Spearman=+0.0148
+  x10     pred mean=    0.0810 std=    0.0131  Pearson=+0.0599 Spearman=+0.0286
+  x30     pred mean=    0.0867 std=    0.0389  Pearson=+0.2365 Spearman=+0.2026
+  x50     pred mean=    0.2434 std=    0.6811  Pearson=+0.3987 Spearman=+0.4927
+  x65     pred mean=    0.6615 std=    1.4816  Pearson=+0.6308 Spearman=+0.6159
+  x100    pred mean=    1.6562 std=    2.5835  Pearson=+0.7478 Spearman=+0.6808
+  x150    pred mean=    2.3922 std=    3.3352  Pearson=+0.7789 Spearman=+0.7081
+  x200    pred mean=    2.6161 std=    3.7068  Pearson=+0.7817 Spearman=+0.7151
+  x255    pred mean=    2.9392 std=    4.2235  Pearson=+0.7909 Spearman=+0.7191
+  x300    pred mean=    3.2090 std=    4.6731  Pearson=+0.7895 Spearman=+0.7208
+  x500    pred mean=    5.8761 std=    7.7628  Pearson=+0.7849 Spearman=+0.7182
+  x1000   pred mean=   12.9603 std=   12.5855  Pearson=+0.6758 Spearman=+0.5419
+
+=== JAX_149_006 ===
+  x1      pred mean=    0.0809 std=    0.0114  Pearson=+0.0073 Spearman=-0.0036
+  x10     pred mean=    0.0810 std=    0.0111  Pearson=+0.0081 Spearman=+0.0006
+  x30     pred mean=    0.0816 std=    0.0161  Pearson=+0.0198 Spearman=+0.0112
+  x50     pred mean=    0.0816 std=    0.0148  Pearson=+0.0176 Spearman=+0.0340
+  x65     pred mean=    0.0854 std=    0.0276  Pearson=+0.0975 Spearman=+0.1556
+  x100    pred mean=    0.3472 std=    0.8175  Pearson=+0.2470 Spearman=+0.4987
+  x150    pred mean=    1.4795 std=    2.3606  Pearson=+0.4918 Spearman=+0.5481
+  x200    pred mean=    2.1013 std=    2.7727  Pearson=+0.5655 Spearman=+0.5696
+  x255    pred mean=    2.6873 std=    3.3563  Pearson=+0.6461 Spearman=+0.6230
+  x300    pred mean=    3.3680 std=    4.1609  Pearson=+0.6792 Spearman=+0.6574
+  x500    pred mean=    4.3948 std=    4.9151  Pearson=+0.6394 Spearman=+0.6708
+  x1000   pred mean=    8.8923 std=    9.8402  Pearson=+0.2988 Spearman=+0.3181
+
+=== JAX_264_013 ===
+  x1      pred mean=    0.0810 std=    0.0127  Pearson=+0.0137 Spearman=+0.0602
+  x10     pred mean=    0.0811 std=    0.0124  Pearson=+0.0139 Spearman=+0.0531
+  x30     pred mean=    0.0897 std=    0.0545  Pearson=+0.2930 Spearman=+0.2211
+  x50     pred mean=    0.2095 std=    0.7003  Pearson=+0.4961 Spearman=+0.3460
+  x65     pred mean=    0.4846 std=    1.3455  Pearson=+0.5781 Spearman=+0.3589
+  x100    pred mean=    1.3778 std=    2.3119  Pearson=+0.6948 Spearman=+0.5522
+  x150    pred mean=    2.4103 std=    3.4711  Pearson=+0.8244 Spearman=+0.6579
+  x200    pred mean=    3.0167 std=    4.2678  Pearson=+0.8571 Spearman=+0.6660
+  x255    pred mean=    4.0438 std=    5.3541  Pearson=+0.8649 Spearman=+0.6612
+  x300    pred mean=    5.0790 std=    5.9752  Pearson=+0.8223 Spearman=+0.6301
+  x500    pred mean=   11.2738 std=   12.6656  Pearson=+0.0536 Spearman=+0.1980
+  x1000   pred mean=    3.9012 std=   19.1043  Pearson=-0.2998 Spearman=-0.1767
+
+=== OMA_248_029 ===
+  x1      pred mean=    0.0810 std=    0.0131  Pearson=-0.0282 Spearman=-0.0334
+  x10     pred mean=    0.0809 std=    0.0124  Pearson=-0.0251 Spearman=-0.0293
+  x30     pred mean=    0.0894 std=    0.0700  Pearson=+0.1391 Spearman=+0.2267
+  x50     pred mean=    0.2637 std=    0.8611  Pearson=+0.3431 Spearman=+0.4763
+  x65     pred mean=    0.5501 std=    1.4774  Pearson=+0.4643 Spearman=+0.5644
+  x100    pred mean=    1.3444 std=    2.4322  Pearson=+0.8031 Spearman=+0.6507
+  x150    pred mean=    2.0698 std=    3.4914  Pearson=+0.8626 Spearman=+0.6545
+  x200    pred mean=    2.5094 std=    4.2892  Pearson=+0.8960 Spearman=+0.6975
+  x255    pred mean=    3.0511 std=    5.2761  Pearson=+0.9006 Spearman=+0.7050
+  x300    pred mean=    3.5096 std=    6.1442  Pearson=+0.8936 Spearman=+0.6969
+  x500    pred mean=    7.8947 std=   10.6451  Pearson=+0.6869 Spearman=+0.5793
+  x1000   pred mean=   12.3623 std=   15.5869  Pearson=+0.0898 Spearman=+0.1339

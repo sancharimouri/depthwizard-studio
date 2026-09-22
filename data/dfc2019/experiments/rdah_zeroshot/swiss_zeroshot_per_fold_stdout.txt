@@ -1,0 +1,7 @@
+# TRANSCRIBED from Claude Code session fa0035ab-aff5-4ffe-9847-a473b6cae7a5 transcript
+# (tool output of `diag_swiss_zeroshot_per_fold.py`, run at 2026-09-22T19:37:37.955Z UTC); the script printed this, it did not save it.
+
+fold0 (scale=x255) SWISS ZERO-SHOT on true-test half (n_samples=25): MAE=2.4863 RMSE=5.9153 Pearson=+0.5049 Spearman=+0.5286 var_ratio=0.7229 slope=0.3012
+fold1 (scale=x255) SWISS ZERO-SHOT on true-test half (n_samples=25): MAE=3.1265 RMSE=6.6600 Pearson=+0.4815 Spearman=+0.5712 var_ratio=1.0246 slope=0.3613
+fold2 (scale=x300) SWISS ZERO-SHOT on true-test half (n_samples=25): MAE=3.3693 RMSE=6.7462 Pearson=+0.4840 Spearman=+0.4873 var_ratio=0.8418 slope=0.3244
+fold3 (scale=x300) SWISS ZERO-SHOT on true-test half (n_samples=25): MAE=3.1485 RMSE=6.3636 Pearson=+0.4987 Spearman=+0.5792 var_ratio=0.9312 slope=0.3330

@@ -1,0 +1,6 @@
+# TRANSCRIBED from Claude Code session fa0035ab-aff5-4ffe-9847-a473b6cae7a5 transcript (tool output of scripts/diag/diag_swiss_zeroshot_per_fold.py run 2026-09-22T19:37:37Z UTC). The script printed these values; it did not save them. Swiss checkpoint, zero-shot (no training), raw output (no affine calibration), quadrant protocol, per-fold scale from FT-2's result.json, scored on each fold's 25-sample true-test half (same samples FT-2 reports on).
+fold,scale,n_samples,mae,rmse,pearson,spearman,variance_ratio,ols_slope
+0,255,25,2.4863,5.9153,0.5049,0.5286,0.7229,0.3012
+1,255,25,3.1265,6.6600,0.4815,0.5712,1.0246,0.3613
+2,300,25,3.3693,6.7462,0.4840,0.4873,0.8418,0.3244
+3,300,25,3.1485,6.3636,0.4987,0.5792,0.9312,0.3330

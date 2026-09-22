@@ -1,0 +1,39 @@
+# TRANSCRIBED from Claude Code session fa0035ab-aff5-4ffe-9847-a473b6cae7a5 transcript
+# (tool output of `diag_rdah_x255_fullcv.py`, run at 2026-09-22T17:42:57.823Z UTC); the script printed this, it did not save it.
+
+fold 0: 17 tiles
+fold 1: 8 tiles
+fold 2: 7 tiles
+fold 3: 18 tiles
+  inferred 10/50 tiles
+  inferred 20/50 tiles
+  inferred 30/50 tiles
+  inferred 40/50 tiles
+  inferred 50/50 tiles
+
+FOLD 0: train=33 tiles / test=17 tiles (pooled global affine slope=0.9798 intercept=0.3475)
+  MAE=2.7339 RMSE=5.5482 Pearson=+0.7031 Spearman=+0.6666  n_test_px=17825792
+
+FOLD 1: train=42 tiles / test=8 tiles (pooled global affine slope=0.9721 intercept=0.4866)
+  MAE=1.8113 RMSE=3.2326 Pearson=+0.6797 Spearman=+0.6009  n_test_px=8388607
+
+FOLD 2: train=43 tiles / test=7 tiles (pooled global affine slope=0.9384 intercept=0.5490)
+  MAE=2.2757 RMSE=4.9653 Pearson=+0.7776 Spearman=+0.6782  n_test_px=7340032
+
+FOLD 3: train=32 tiles / test=18 tiles (pooled global affine slope=1.0251 intercept=0.4916)
+  MAE=2.1019 RMSE=4.5168 Pearson=+0.7049 Spearman=+0.6729  n_test_px=18874368
+
+======================================================================
+EQUAL-WEIGHT FOLD-AVERAGE (matches PDF's own averaging convention):
+mae         2.230695
+rmse        4.565741
+pearson     0.716316
+spearman    0.654619
+dtype: float64
+
+PIXEL-WEIGHTED AVERAGE:
+mae         2.294615
+rmse        4.724805
+pearson     0.710420
+spearman    0.659951
+dtype: float64

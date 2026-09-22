@@ -1,0 +1,56 @@
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+======================================================================
+ITEM 8: variance-compression check (fold0, epoch3 vs epoch5)
+======================================================================
+epoch3: pred mean=0.6514 std=1.1145 | true mean=4.3818 std=7.7907
+          variance ratio (pred/true) = 0.0205 | OLS slope(pred~true) = 0.0931
+          p1-p99 pred range = 4.8420  true range = 34.7324
+
+epoch5: pred mean=0.9815 std=1.7508 | true mean=4.3818 std=7.7907
+          variance ratio (pred/true) = 0.0505 | OLS slope(pred~true) = 0.1363
+          p1-p99 pred range = 7.6146  true range = 34.7324
+
+======================================================================
+ITEM 7: nested validation (inner-val epoch selection vs true held-out test)
+======================================================================
+
+--- FOLD 0: 17 test tiles -> inner_val=8, true_test=9 ---
+  epoch1: inner_val MAE=4.4070 | true_test MAE=4.3645 Pearson=-0.0466
+  epoch2: inner_val MAE=4.4439 | true_test MAE=4.3758 Pearson=+0.2172
+  epoch3: inner_val MAE=3.9542 | true_test MAE=3.7970 Pearson=+0.6588
+  epoch4: inner_val MAE=3.7690 | true_test MAE=3.5094 Pearson=+0.6569
+  epoch5: inner_val MAE=3.7593 | true_test MAE=3.4969 Pearson=+0.6451
+  -> NESTED-SELECTED epoch (by inner_val MAE): 5  -> true_test MAE=3.4969 Pearson=+0.6451
+  -> ORACLE-BEST epoch (peeked at true_test):   5  -> true_test MAE=3.4969 Pearson=+0.6451
+  -> DEFAULT epoch5 (PDF's reported number):    5  -> true_test MAE=3.4969 Pearson=+0.6451
+
+--- FOLD 1: 8 test tiles -> inner_val=4, true_test=4 ---
+  epoch1: inner_val MAE=1.2335 | true_test MAE=3.2046 Pearson=+0.1332
+  epoch2: inner_val MAE=1.1980 | true_test MAE=3.1042 Pearson=+0.4291
+  epoch3: inner_val MAE=1.2468 | true_test MAE=3.0517 Pearson=+0.3060
+  epoch4: inner_val MAE=1.2767 | true_test MAE=3.0916 Pearson=+0.2796
+  epoch5: inner_val MAE=1.2920 | true_test MAE=3.1219 Pearson=+0.2600
+  -> NESTED-SELECTED epoch (by inner_val MAE): 2  -> true_test MAE=3.1042 Pearson=+0.4291
+  -> ORACLE-BEST epoch (peeked at true_test):   3  -> true_test MAE=3.0517 Pearson=+0.3060
+  -> DEFAULT epoch5 (PDF's reported number):    5  -> true_test MAE=3.1219 Pearson=+0.2600
+
+--- FOLD 2: 7 test tiles -> inner_val=3, true_test=4 ---
+  epoch1: inner_val MAE=5.2446 | true_test MAE=2.5072 Pearson=-0.1335
+  epoch2: inner_val MAE=5.1147 | true_test MAE=2.3082 Pearson=+0.5593
+  epoch3: inner_val MAE=4.6808 | true_test MAE=2.1122 Pearson=+0.4147
+  epoch4: inner_val MAE=4.6536 | true_test MAE=2.1119 Pearson=+0.3853
+  epoch5: inner_val MAE=4.6305 | true_test MAE=2.1267 Pearson=+0.3562
+  -> NESTED-SELECTED epoch (by inner_val MAE): 5  -> true_test MAE=2.1267 Pearson=+0.3562
+  -> ORACLE-BEST epoch (peeked at true_test):   4  -> true_test MAE=2.1119 Pearson=+0.3853
+  -> DEFAULT epoch5 (PDF's reported number):    5  -> true_test MAE=2.1267 Pearson=+0.3562
+
+--- FOLD 3: 18 test tiles -> inner_val=9, true_test=9 ---
+  epoch1: inner_val MAE=2.1838 | true_test MAE=3.8727 Pearson=+0.0314
+  epoch2: inner_val MAE=2.2176 | true_test MAE=3.9102 Pearson=+0.2504
+  epoch3: inner_val MAE=1.8303 | true_test MAE=3.3984 Pearson=+0.6479
+  epoch4: inner_val MAE=1.6879 | true_test MAE=3.1782 Pearson=+0.5379
+  epoch5: inner_val MAE=1.6923 | true_test MAE=3.1658 Pearson=+0.5183
+  -> NESTED-SELECTED epoch (by inner_val MAE): 4  -> true_test MAE=3.1782 Pearson=+0.5379
+  -> ORACLE-BEST epoch (peeked at true_test):   5  -> true_test MAE=3.1658 Pearson=+0.5183
+  -> DEFAULT epoch5 (PDF's reported number):    5  -> true_test MAE=3.1658 Pearson=+0.5183

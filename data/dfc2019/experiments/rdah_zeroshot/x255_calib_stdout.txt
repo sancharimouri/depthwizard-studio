@@ -1,0 +1,14 @@
+# TRANSCRIBED from Claude Code session fa0035ab-aff5-4ffe-9847-a473b6cae7a5 transcript
+# (tool output of `diag_rdah_x255_calib.py`, run at 2026-09-22T17:41:25.690Z UTC); the script printed this, it did not save it.
+
+JAX_004_006     held-out(50%) affine-calibrated: MAE=2.0403 RMSE=3.1657 Pearson=+0.7903 Spearman=+0.7187  (slope=0.9691 intercept=0.6142)
+JAX_149_006     held-out(50%) affine-calibrated: MAE=3.7495 RMSE=4.8415 Pearson=+0.6467 Spearman=+0.6229  (slope=1.2207 intercept=2.1465)
+JAX_264_013     held-out(50%) affine-calibrated: MAE=1.6060 RMSE=2.6754 Pearson=+0.8644 Spearman=+0.6612  (slope=0.8601 intercept=-0.0742)
+OMA_248_029     held-out(50%) affine-calibrated: MAE=1.4014 RMSE=2.7939 Pearson=+0.9003 Spearman=+0.7051  (slope=1.0963 intercept=0.2283)
+
+Mean across 4 tiles: MAE=2.1993 RMSE=3.3691 Pearson=0.8004
+
+For reference, this project's already-established DFC2019 baselines:
+  Method 2 (20-anchor global calib): MAE 3.13m RMSE 4.48m Pearson 0.526
+  oracle per-tile-OLS baseline:      MAE 3.39m RMSE 4.58m (per CLAUDE.md/Method 6 verdict)
+  Method 6 (current best):            MAE 1.98m RMSE 3.49m Pearson (fold-avg, see verdict.md)
