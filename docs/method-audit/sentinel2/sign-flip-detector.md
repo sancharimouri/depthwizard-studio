@@ -3526,3 +3526,35 @@ from here:** A2 onward applies the geoid **per point** (N evaluated at each phot
 location) as primary, and reports the tile-centre version alongside for continuity. That choice
 is pre-registered in A2's rule. Phase 1/4 numbers aren't retroactively changed; they're
 superseded where A2 recomputes them.
+
+## A1 — reproducibility of the surface reference
+
+**Done:**
+- `data/icesat2_segments20m/*.csv` committed (26 files, largest 6 MB; no LFS needed, and the repo
+  has no `.gitattributes`).
+- `data/REGENERATION.md` gives the exact regeneration command for every large uncommitted artifact.
+- `data/REGENERATION_sha256.csv`: 109 files hashed.
+- `data/icesat2_segments20m_tracks_used.csv`: 654 (tile, RGT, cycle) pairs.
+- `data/icesat2_segments20m_failed_granules.csv`: the 99 fetch-log alerts are **25 unique ATL03
+  granules**, failing on one or more beams, across 16 tiles. The segment counts are a lower bound.
+
+### A1.3 — `ats = 5 m` sensitivity: PRE-REGISTRATION (before any number)
+
+Rule (task text, verbatim): "Rerun the Phase 4 surface-reference metrics on a stricter subset of
+the existing segments ... pre-register which. Report whether any Phase 4 conclusion changes. This
+is a robustness check only; it cannot create a pass."
+
+**Stricter subset, fixed now.** Take Phase 4's SURFACE-IS2 filter
+(`gnd_ph_count>0, landcover≠255, 0≤h_max_canopy≤60`), then keep only segments with:
+- `ph_count ≥` that tile's median `ph_count` (top half by photon count, per tile), AND
+- `gnd_ph_count ≥ 3`.
+
+The along-track spread itself isn't saved, so photon count is the available proxy for the
+segment quality the default `ats=20` enforced.
+
+**Procedure.** Rerun `scripts/detail_source_bakeoff.py srtm` with this subset for SURFACE-IS2
+only. Same candidates, same Phase 4 rule and Holm family.
+
+**"A conclusion changes"** means any candidate's PASS flag, pass_A or pass_B on SURFACE-IS2 flips,
+or the ETH-ceiling verdict flips. **A flip to PASS is reported but does not count as a pass**,
+per the rule.
