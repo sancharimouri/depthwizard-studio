@@ -2917,7 +2917,7 @@ the same-radius annulus. The DAv2 depth input and RGB luminance are shown as con
 | 4 | 9.07e5 | 7.78e5 | 2.97e3 | **1.59e3** | ÷570 | 177 | 3.9 |
 | 8 | 2.71e4 | 2.40e4 | 148 | **163** | ÷166 | 8.6 | 4.5 |
 | 16 | 742 | 580 | 23.8 | **11.1** | ÷67 | 6.9 | 3.0 |
-| 32 | 1.5 | 1.1 | 10.2 | **17.9** | **×12 (grew)** | 6.6 | 2.1 |
+| 32 | 1.5 | 1.1 | 10.2 | **17.9** | **×11.7 (grew)** | 6.6 | 2.1 |
 | 64 | 3.3 | 1.5 | 2.9 | 2.9 | — | 3.8 | 1.1 |
 | 128 | 3.5 | 3.9 | 1.4 | 1.4 | — | 2.7 | 4.2 |
 
@@ -2929,7 +2929,7 @@ the same-radius annulus. The DAv2 depth input and RGB luminance are shown as con
   - After the fix, the dominant period-8/16/32 peaks all sit on **diagonal** bins ((128,128),
     (64,64), (32,32)), the checkerboard signature.
   - Periods 8, 16 and 32 sit well above both input controls.
-- **The period-32 peak, the stride-4 block-attention boundary, *grows* 12× under the fix.** Once
+- **The period-32 peak, the stride-4 block-attention boundary, *grows* 11.7× under the fix.** Once
   the PixelShuffle noise drops, the hard 8×8 block-attention tiling becomes visible.
 - **Size handling is ruled out as the cause.** Resize vs. pad at ×1 differ by under 20% at every
   period (1.35e7 vs. 1.26e7 at period 2), against a 1,940× change from scale. The original run's

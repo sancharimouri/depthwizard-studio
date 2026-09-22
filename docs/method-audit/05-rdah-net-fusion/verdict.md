@@ -116,6 +116,18 @@ fixes, not a vague "try harder."
 
 ## 5. Forward-looking: does anything here change the risk assessment for a future RDAH-on-Sentinel-2 attempt?
 
+> **RESOLVED 2026-09-23: tested, clean negative.** The flagged check was run on the original
+> Darjeeling tile. The original run turned out to be the Swiss checkpoint, reproduced bit-exactly,
+> fed unscaled `[0,1]` depth as suspected below. The ×255 input fix cuts the checkerboard's FFT
+> peaks by 2–3 orders of magnitude but **does not remove them**: diagonal peaks persist at periods
+> 8/16/32, and the period-32 block-attention peak grows 11.7×. The output has **no terrain
+> correlation**, raw or detrended (DEM plane −0.052/−0.047, ICESat-2 plane −0.139/−0.132), while
+> the DAv2 control reproduces its known +0.64 → −0.43 flip. Resize vs. pad is ruled out as a
+> cause. RDAH-on-Sentinel-2 is **closed**, zero-shot or fine-tuned. This doesn't bear on §6's
+> DFC2019 contamination question: the GSD, sensor and construct gaps are confounded with it. Full
+> entry: `docs/method-audit/sentinel2/sign-flip-detector.md`, "2026-09-23 — RDAH-Net zero-shot on
+> Sentinel-2". The text below is the original, pre-test flag, kept for the record.
+
 **Yes, directionally, though not conclusively — flagged as a hypothesis worth testing before
 committing further Sentinel-2 effort, not a settled fact.** This project's own
 `PROJECT_STATUS_REPORT.md` records an earlier, separate zero-shot test of RDAH on Sentinel-2

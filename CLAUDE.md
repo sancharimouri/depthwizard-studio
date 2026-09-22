@@ -47,7 +47,7 @@ exception, specific to Session 2: you may *run* the existing, already-used
 asset-generation process (DAv2 inference + DSM crop/reproject) unmodified, to produce
 visualization assets for new regions — that's reusing a frozen process, not changing it.
 
-## ML research track status (as of 2026-09-23)
+## ML research track status (as of 2026-09-23, incl. RDAH-on-Sentinel-2)
 
 Full audit trail: `PROJECT_STATUS_REPORT.md` (repo root) and `docs/method-audit/`
 (one numbered subfolder per method, each with `summary.md`/`verdict.md`). Methods tried,
@@ -86,6 +86,11 @@ in order:
    unresolved question is contamination vs. fine-tuning damage. Full detail:
    `05-rdah-net-fusion/{verdict.md §6, summary.md §10}`, aggregate in
    `data/dfc2019/experiments/rdah_quadrant_cv/rdah_ft2_aggregate.json`.
+   **RDAH on Sentinel-2 is now CLOSED** (2026-09-23; details in item 7). The original
+   checkerboard run was the Swiss checkpoint, reproduced exactly. The ×255 input fix reduces the
+   artifact but doesn't remove it, and there's no terrain correlation. What stays open is
+   DFC2019-only (contamination vs. fine-tuning damage). The Sentinel-2 test doesn't answer it,
+   because the GSD, sensor and construct gaps are confounded with it.
 6. **Full DAv2-Small fine-tune, twin (mean, log-variance) head**
    (`06-full-finetune-twin-head`) — **current best result, and the first method in this
    project's entire audit to beat the oracle per-tile-OLS baseline on all four tracked
@@ -178,6 +183,15 @@ in order:
    "fix" doubles the ICESat-2 overshoot). The negative stands. Full writeup:
    `docs/method-audit/sentinel2/sign-flip-detector.md` (2026-09-22, "Semantic-prior phase
    2.3" entry and its "Re-investigation" subsection).
+   **RDAH-Net zero-shot on Sentinel-2 (2026-09-23): clean negative, line closed.** On the
+   Darjeeling tile, the DFC2019 input-scale fix (×255 depth, plus reflect-pad-to-1024 sizing)
+   cuts the checkerboard's FFT peaks by 2–3 orders of magnitude but doesn't remove them
+   (diagonal peaks at periods 8/16/32 persist). Resize vs. pad was ruled out as the cause. The
+   output has no terrain correlation raw or detrended: DEM plane-detrended −0.052/−0.047,
+   ICESat-2 −0.139/−0.132. The DAv2 control reproduces its +0.64→−0.43 flip. The run stopped at
+   Step 2, so there was no benchmark scoring, fusion swap or fine-tuning, and frequency fusion
+   with DAv2 remains the deployable baseline. Entry: `sign-flip-detector.md`, "2026-09-23 —
+   RDAH-Net zero-shot on Sentinel-2"; script `scripts/rdah_sentinel2_zeroshot.py`.
 8. **Frozen-backbone comparison: DAv2 vs. DINOv3** (SAT493M+CHMv2) on the Sentinel-2
    benchmark, against real per-photon ICESat-2 ground heights (not the coverage-only
    counts) — CLOSED, DINOv3 won outright per its stated decision rule (pooled Pearson

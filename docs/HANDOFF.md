@@ -102,6 +102,14 @@ blocks/tile) — same 21/25 result under both, zero flips.
   Open-Buildings-target memorization) — **CNN correction is not pursued further
   without new evidence**, this is a deliberate stop, not an open thread. Detail in
   sign-flip-detector.md.
+- **RDAH-Net zero-shot on Sentinel-2 (2026-09-23): clean negative, line closed.** Tested whether
+  the DFC2019 input-scale fix (×255 on DAv2 depth) rescues the Darjeeling checkerboard. The
+  original run (Swiss checkpoint, reproduced bit-exactly) got the fix plus reflect-pad-to-1024
+  sizing. The artifact's FFT peaks drop 2–3 orders of magnitude but persist (diagonal peaks at
+  periods 8/16/32). The output has no terrain correlation, raw or detrended (ICESat-2 plane-
+  detrended −0.139/−0.132). Resize vs. pad was ruled out as the cause. Stopped at Step 2, so no
+  benchmark scoring, fusion swap or fine-tuning. Entry: sign-flip-detector.md, "2026-09-23 —
+  RDAH-Net zero-shot on Sentinel-2"; script `scripts/rdah_sentinel2_zeroshot.py`.
 
 ## 3. Long-term plan — open items, priority order
 
@@ -114,8 +122,11 @@ blocks/tile) — same 21/25 result under both, zero flips.
    zero-shot score is inflated because the Track1 checkpoint it used has 41/50 benchmark tiles in
    `Track1-train.txt`. The Swiss checkpoint FT-2 used has 0/50. **Next check**: Swiss zero-shot at
    the fold-derived scale, under the quadrant protocol, with per-fold affine calibration. Also
-   re-create the zero-shot run's script/JSON, which weren't found in the repo. Neither was run
-   on 2026-09-23.
+   re-create the zero-shot run's script/JSON, which weren't found in the repo. Neither has
+   been run. The 2026-09-23 Sentinel-2 test (§2b) also used the clean Swiss checkpoint but
+   **doesn't answer this**: it fails for reasons confounded with the question (GSD, sensor and
+   nDSM-vs-terrain gaps). Scope: this item is **DFC2019-only**, and RDAH on Sentinel-2 is closed
+   (§4).
 2. **TSE-Net (self-training)** — untouched, no code or docs exist for it yet. Next
    candidate after the RDAH contamination check.
 3. **Sparse-LiDAR 27-feature RF version** — untried. Low priority: frequency fusion
@@ -157,8 +168,11 @@ ICESat-2 overshoot at chennai (+8.28 m vs. +4.52 m mean error). The negative sta
   split; degenerate on Sentinel-2)
 - Sparse-LiDAR-Guided-Correction's **DFC2019** feasibility specifically — blocked, no
   recoverable georeferencing (Sentinel-2 domain not equally blocked, see §3.3)
+- RDAH-Net **on Sentinel-2**, zero-shot or fine-tuned (2026-09-23). The input-scale fix
+  doesn't remove the checkerboard, and there's no terrain correlation after detrending. See
+  sign-flip-detector.md.
 
-**Explicitly excluded from this list: RDAH-Net.** It is open, see §3.1. The specific
+**Explicitly excluded from this list: RDAH-Net on DFC2019.** It is open, see §3.1. Only its Sentinel-2 use is closed (above). The specific
 **RDAH-FT-2 recipe** (Swiss init + per-fold scale + quadrant folds + rank loss, 5 epochs) was
 not adopted (loses to Method 6 on all four metrics). That closes one recipe, not the method.
 
@@ -257,7 +271,8 @@ Full 20-repo audit with claimed-numbers verification: `COMPETITIVE_REPO_AUDIT.md
 **Consistency check against CLAUDE.md** (updated 2026-09-23): CLAUDE.md's "one rule that
 overrides everything else" (quota discipline, act don't ask) still applies and this doc doesn't
 change it. CLAUDE.md's ML-research-track summary (as of 2026-09-23) and this doc agree on all
-facts above, including RDAH-FT-2 (not adopted, method still open) and phase 2.3 (closed). This
+facts above, including RDAH-FT-2 (not adopted, method still open on DFC2019), RDAH-on-Sentinel-2
+(closed 2026-09-23, clean negative), and phase 2.3 (closed). This
 doc reorganizes the same information by "what's next" instead of chronology, and adds the
 frontend feature inventory (§5) and credentials inventory (§6), which CLAUDE.md covers in less
 detail. One naming inconsistency is flagged rather than silently fixed: both docs call Method 2's
