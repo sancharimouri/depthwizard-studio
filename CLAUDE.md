@@ -47,7 +47,7 @@ exception, specific to Session 2: you may *run* the existing, already-used
 asset-generation process (DAv2 inference + DSM crop/reproject) unmodified, to produce
 visualization assets for new regions — that's reusing a frozen process, not changing it.
 
-## ML research track status (as of 2026-09-23, incl. RDAH-on-Sentinel-2)
+## ML research track status (as of 2026-09-23, late: incl. DEM-only controls, RDAH resolution sweep, surface-reference bake-off)
 
 Full audit trail: `PROJECT_STATUS_REPORT.md` (repo root) and `docs/method-audit/`
 (one numbered subfolder per method, each with `summary.md`/`verdict.md`). Methods tried,
@@ -91,6 +91,17 @@ in order:
    artifact but doesn't remove it, and there's no terrain correlation. What stays open is
    DFC2019-only (contamination vs. fine-tuning damage). The Sentinel-2 test doesn't answer it,
    because the GSD, sensor and construct gaps are confounded with it.
+   **Later on 2026-09-23 — rescued artifacts and the RDAH resolution sweep.** Files from a
+   `/private/tmp` scratchpad were rescued to `data/dfc2019/experiments/rdah_zeroshot/`.
+   - The zero-shot row is now verified: ×255 was picked on Track1, using 3 tiles from its own
+     training list.
+   - "Fine-tuning damages the model" is **resolved: no.** Swiss zero-shot on FT-2's samples
+     scores Pearson 0.492, and FT-2 beats it in 4/4 folds on every metric.
+   - RDAH on Sentinel-2 is **closed** via a pre-registered resolution sweep: DFC2019 Pearson falls
+     0.589 → 0.242 from 1.2 m to 2.4 m GSD. The checkerboard turned out to be intrinsic (present
+     in-domain) and isn't the reason.
+   - Open, low priority: Track1 on its 9 unseen vs. 41 seen tiles. Details: 05 `summary.md`
+     §11–12, `verdict.md` §7–8.
 6. **Full DAv2-Small fine-tune, twin (mean, log-variance) head**
    (`06-full-finetune-twin-head`) — **current best result, and the first method in this
    project's entire audit to beat the oracle per-tile-OLS baseline on all four tracked
@@ -183,6 +194,17 @@ in order:
    "fix" doubles the ICESat-2 overshoot). The negative stands. Full writeup:
    `docs/method-audit/sentinel2/sign-flip-detector.md` (2026-09-22, "Semantic-prior phase
    2.3" entry and its "Re-investigation" subsection).
+   **2026-09-23 (later) — frequency fusion restated: the DEM carries it.** Against its own
+   DEM-only control (SRTM low-pass, DAv2 detail zeroed), fusion wins 10/25 (p = 0.85). DAv2
+   high-pass vs. the ground residual is median r −0.037, positive on 8/25 tiles. **The deployable
+   Sentinel-2 baseline is now raw Copernicus GLO-30 on the 10 m grid (EGM2008)**, median 2.32% of
+   range, beating fusion's 3.57% on 23/25 tiles.
+   - A pre-registered no-training bake-off (DAv2 @518/@1008, DINOv3-CHMv2, ETH canopy height)
+     against ground photons plus new surface references (ICESat-2 20 m segments, GEDI rh98, 25
+     tiles) found **no source passing** (max median r_HF 0.089 < 0.10).
+   - The ETH ceiling check fired, so the learned Sentinel-2 + GEDI route is **not recommended**.
+     It's gated on a source passing against ICESat-2 surface, e.g. a DTM + canopy product form.
+   - Entry: `sign-flip-detector.md`, "2026-09-23 (continued)".
    **RDAH-Net zero-shot on Sentinel-2 (2026-09-23): clean negative, line closed.** On the
    Darjeeling tile, the DFC2019 input-scale fix (×255 depth, plus reflect-pad-to-1024 sizing)
    cuts the checkerboard's FFT peaks by 2–3 orders of magnitude but doesn't remove them
@@ -200,6 +222,12 @@ in order:
    DINOv3's pooled win is driven by urban. Full writeup, per-tile/per-category numbers,
    and the HF-checkpoint state-dict conversion needed to get SAT493M running:
    `docs/method-audit/sentinel2/backbone-comparison.md`.
+   **2026-09-23 note.** The saved DINOv3-CHMv2 outputs are already in metres, because the head
+   applies its ×8 internally. On 10 m Sentinel-2 they're only 0.01–0.25 m everywhere,
+   effectively a "no canopy" map from a head trained on sub-metre imagery. Treat this
+   comparison's pooled DINOv3 "win" with that in mind: it's a correlation of a near-flat field
+   with terrain elevation. As a detail source, CHMv2 fails every reference in the Phase 4
+   bake-off; r_HF is ~0, and its only RMSE gains come from a small constant offset.
 9. **Method 6 staged on Sentinel-2/SRTM** (same section as item 7,
    `docs/method-audit/sentinel2/sign-flip-detector.md`, 2026-09-22 entries) — the DFC2019
    win (item 6) does **not** replicate here: fold 0 alone lost decisively on both the DEM

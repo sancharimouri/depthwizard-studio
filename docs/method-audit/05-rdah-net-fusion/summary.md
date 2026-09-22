@@ -661,7 +661,7 @@ _Full entry, with the pre-registered rule: `sentinel2/sign-flip-detector.md`, 20
   That's a real mismatch. The Figshare Swiss data is one 14.7 GB archive, so the Swiss depth
   convention and a positive control stayed untested.
 - **Resolution sweep** (Swiss zero-shot, 8 DFC2019 Jacksonville tiles, block-averaged, DAv2
-  re-run at each resolution): pooled Pearson **0.483 / 0.589 / 0.590 / 0.242** at
+  re-run at each resolution): pooled Pearson **0.483 / 0.589 / 0.589 / 0.242** at
   0.3 / 0.6 / 1.2 / 2.4 m.
   - The pre-registered close-if-8×-below-half-of-1× test **misses by 0.0006** (ratio 0.5006).
   - RDAH is closed on Sentinel-2 through the rule's **default** clause. The curve holds to 1.2 m

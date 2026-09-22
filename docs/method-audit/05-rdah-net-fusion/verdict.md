@@ -227,7 +227,7 @@ closed.
 
 - **RDAH on Sentinel-2: CLOSED.** Neither zero-shot nor fine-tuning should be attempted. Basis:
   - the pre-registered rule's default clause
-  - a resolution cliff on DFC2019 itself (Pearson 0.590 at 1.2 m → 0.242 at 2.4 m; Sentinel-2
+  - a resolution cliff on DFC2019 itself (Pearson 0.589 at 1.2 m → 0.242 at 2.4 m; Sentinel-2
     is 10 m)
   - an RGB-intensity mismatch with the training data
 

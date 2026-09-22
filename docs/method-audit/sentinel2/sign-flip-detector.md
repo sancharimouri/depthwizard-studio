@@ -3230,7 +3230,7 @@ Swiss depth convention and a Swiss positive control remain unverified.
 |---:|---:|---:|---:|---:|---:|---:|---:|
 | 1× | 1024 | 0.3 m | 0.483 | 0.489 | 0.255 | 0.592 | 4,407 |
 | 2× | 512 | 0.6 m | 0.589 | 0.613 | 0.428 | 0.666 | 2,248 |
-| 4× | 256 | 1.2 m | 0.590 | 0.587 | 0.439 | 0.643 | 838 |
+| 4× | 256 | 1.2 m | 0.589 | 0.587 | 0.439 | 0.643 | 838 |
 | **8×** | 128 | 2.4 m | **0.242** | 0.342 | 0.430 | 0.392 | 460 |
 
 Primary: DAv2 re-run on the downsampled RGB. The secondary (block-averaged 1× depth) gives
@@ -3246,7 +3246,7 @@ Primary: DAv2 re-run on the downsampled RGB. The secondary (block-averaged 1× d
 - **The "rerun Darjeeling" branch requires "the curve degrades gracefully AND a real
   preprocessing mismatch".** The mismatch is present (2a). "Gracefully" was not operationalized
   in advance. **Reading, stated as a post-hoc judgment:** a curve that holds flat or improves to
-  4× and then loses 59% of its Pearson in one 2× step (0.590 → 0.242) is a cliff, not a graceful
+  4× and then loses 59% of its Pearson in one 2× step (0.589 → 0.242) is a cliff, not a graceful
   decline. On that reading the branch doesn't apply, and the rule's **default clause, "Otherwise
   close RDAH on Sentinel-2. No further RDAH work.", applies.**
 - The closure therefore rests on the *default* clause, not on the "mechanism shown" clause.
@@ -3406,7 +3406,7 @@ PASS anywhere, max median r_HF 0.079, and the ETH ceiling fires.
   slightly reduces the DEM low-pass's systematic underestimate of surface height (25/25 wins
   against GEDI). Its r_HF is ~0 (+0.006 / +0.012). This is exactly why the rule requires A *and* B.
 - **DAv2's A passes on the surface references are real but negligible.** The effect is
-  0.007–0.022 m of RMSE out of 5–9 m.
+  0.001–0.022 m of RMSE out of 5–9 m.
 - **DAv2 @1008 is the only consistent near-miss.** It is positive on 21/25 tiles against both
   surface references, with median r_HF 0.069 / 0.089. Higher DAv2 input resolution helps
   directionally (@518: 0.026 / 0.056), still below the bar.

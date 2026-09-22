@@ -50,7 +50,7 @@ means. See `05-rdah-net-fusion/summary.md` §10._
 - Experiment outputs: `data/dfc2019/experiments/method6*/`
 - **Caveat: DFC2019-only.** Staged on Sentinel-2/SRTM (item 2b) and lost.
 
-Methods 1–5 (1–4 closed/superseded; 5 open, see §3.1; doc location in each case):
+Methods 1–5 (1–4 closed/superseded; 5 open on DFC2019 only, see §3.2; doc location in each case):
 1. Global DEM-stat calibration — CLOSED, no real improvement. `docs/method-audit/01-dem-stat-anchoring/`
 2. Sparse-anchor/GCP regression — CLOSED as standalone; best variant Grid+Huber+20
    anchors is the oracle baseline Method 6 is compared against. `docs/method-audit/02-gcp-regression/`
@@ -59,11 +59,15 @@ Methods 1–5 (1–4 closed/superseded; 5 open, see §3.1; doc location in each 
 4. Learned CNN scale-modulation — superseded by Method 6, not current best; still the
    best frozen-feature approach (MAE 2.8803m/RMSE 4.7751m/Pearson 0.5835/Spearman
    0.5438). `docs/method-audit/04-learned-scale-modulation/` (full table in `v2-results.md`)
-5. RDAH-Net fusion — **open, not rejected** (§3.1). `docs/method-audit/05-rdah-net-fusion/`.
-   Four separate results:
-   - zero-shot on Sentinel-2: rejected for checkerboard artifacts, probably fed unscaled input
+5. RDAH-Net fusion — **open on DFC2019 (low priority), closed on Sentinel-2** (§3.2, §4). `docs/method-audit/05-rdah-net-fusion/`.
+   Five separate results:
+   - zero-shot on Sentinel-2: closed. The resolution cliff on DFC2019 is the basis; the
+     checkerboard is intrinsic and isn't (§2b)
    - zero-shot on DFC2019 with corrected ×255 input: 2.231/4.566/0.716/0.655. Track1 checkpoint
-     (41/50 tiles contaminated), tile-level folds; the result artifact wasn't located
+     (41/50 tiles contaminated), tile-level folds; artifact rescued to
+     `data/dfc2019/experiments/rdah_zeroshot/`
+   - Swiss zero-shot on DFC2019, FT-2's samples: 3.033/6.421/0.492/0.542 (TRANSCRIBED from a
+     session log)
    - RDAH-FT-1: 2.906/6.659/0.513/0.527 pooled, unstable across folds
    - **RDAH-FT-2** (2026-09-23): Swiss init, per-fold input scale, quadrant folds, rank loss,
      nested selection. **2.500/4.294/0.640/0.506** (per-sample mean, Method 6's aggregation);
@@ -74,18 +78,39 @@ Methods 1–5 (1–4 closed/superseded; 5 open, see §3.1; doc location in each 
 
 ### 2b. Sentinel-2/India track
 
-Current deployable baseline: **frequency fusion** (real DEM low-frequency trend +
-DAv2 high-frequency detail, matched-filter subtraction — no training, so it can't
-memorize). Beats plain per-tile linear calibration on **21/25 tiles**, median
-ICESat-2 error cut from 10.88% → 3.57% of elevation range. Validated two ways: the
-original single-split protocol and leave-one-**block**-out (LOBO, 25 spatial
-blocks/tile) — same 21/25 result under both, zero flips.
+Current deployable baseline (restated 2026-09-23 after DEM-only controls): **raw Copernicus
+GLO-30 reprojected to the 10 m grid (EGM2008 geoid), DEM only.** Median ICESat-2 ground-photon
+RMSE is **2.32% of elevation range**. It beats the previous "frequency fusion" baseline (3.57%)
+on **23/25 tiles** (Wilcoxon p = 6.6e-6).
+
+**The DEM carries the frequency-fusion result; DAv2 detail adds no measurable value against
+ground photons.** This is the pre-registered wording.
+- Fusion vs. its own DEM-only control (SRTM low-pass, DAv2 detail zeroed): 10/25 wins,
+  p = 0.853.
+- DAv2 high-pass vs. the ground residual: median r = −0.037, positive on 8/25 tiles.
+- Fusion's old 21/25 win (10.88% → 3.57%) was against *linear-calibrated DAv2*, a baseline
+  weaker than the raw DEM. Most of that gain is the DEM itself (raw SRTM alone: 3.70%); the
+  low-pass smoothing of SRTM's resampling noise supplies the rest (3.70% → 3.57%).
+
+**No detail source adds signal against a surface reference either.** Tested: DAv2 @518/@1008,
+DINOv3-CHMv2, ETH canopy height, against ICESat-2 20 m canopy-top segments and GEDI rh98. All
+fail the pre-registered bar (max median r_HF 0.089 vs. 0.10). So no "DEM + detail" product is
+recommended. Details: sign-flip-detector.md, "2026-09-23 (continued)", Phases 1 and 4; scripts
+`scripts/frequency_fusion_controls.py`, `scripts/detail_source_bakeoff.py`.
 
 - **Single running log for all Sentinel-2 work**: `docs/method-audit/sentinel2/sign-flip-detector.md`
   (calibration, sign-flip detection, frequency fusion, evidence-gating/LOBO,
-  semantic-prior phase 2.3 incl. its closing re-investigation — all entries, dated, most
-  recent 2026-09-22)
-- Fusion script: `scripts/run_frequency_fusion_sentinel2.py`
+  semantic-prior phase 2.3 incl. its closing re-investigation, RDAH zero-shot, DEM-only
+  controls, surface references, detail-source bake-off — all entries dated, most recent
+  2026-09-23)
+- Fusion script (superseded as the recommendation, kept as the reference pipeline):
+  `scripts/run_frequency_fusion_sentinel2.py`. Result CSVs, now committed:
+  `frequency_fusion_results/`, `srtm_3way_comparison.csv`, `frequency_fusion_controls/`.
+- Surface references (2026-09-23, 25 tiles + Darjeeling):
+  - ICESat-2 20 m PhoREAL segments `data/icesat2_segments20m/`: not committed, regenerable with
+    `scripts/fetch_icesat2_segments20m.py`. Sliderule's `ats` had to be lowered to 5.
+  - GEDI L2A `data/gedi_l2a/` (committed).
+  - Counts: `data/sentinel2_benchmark/surface_reference_counts.csv`.
 - Benchmark data: `data/sentinel2_benchmark/` — `manifest.csv` (25 accepted tiles of
   32 originally selected), `icesat2_coverage.csv`, `srtm_raw/`, `copernicus_dem_raw/`
 - **Content-QC history, so it isn't rediscovered as a surprise**: the benchmark started
@@ -102,33 +127,34 @@ blocks/tile) — same 21/25 result under both, zero flips.
   Open-Buildings-target memorization) — **CNN correction is not pursued further
   without new evidence**, this is a deliberate stop, not an open thread. Detail in
   sign-flip-detector.md.
-- **RDAH-Net zero-shot on Sentinel-2 (2026-09-23): clean negative, line closed.** Tested whether
-  the DFC2019 input-scale fix (×255 on DAv2 depth) rescues the Darjeeling checkerboard. The
-  original run (Swiss checkpoint, reproduced bit-exactly) got the fix plus reflect-pad-to-1024
-  sizing. The artifact's FFT peaks drop 2–3 orders of magnitude but persist (diagonal peaks at
-  periods 8/16/32). The output has no terrain correlation, raw or detrended (ICESat-2 plane-
-  detrended −0.139/−0.132). Resize vs. pad was ruled out as the cause. Stopped at Step 2, so no
-  benchmark scoring, fusion swap or fine-tuning. Entry: sign-flip-detector.md, "2026-09-23 —
-  RDAH-Net zero-shot on Sentinel-2"; script `scripts/rdah_sentinel2_zeroshot.py`.
+- **RDAH-Net on Sentinel-2 (2026-09-23): CLOSED.**
+  - The first test's two stop criteria were both later shown non-diagnostic:
+    - The terrain correlation was the wrong reference for an above-ground-height model.
+    - The checkerboard also appears on DFC2019 at native resolution, where RDAH works.
+  - The closure rests on a pre-registered resolution sweep on DFC2019. Pearson goes 0.483 /
+    0.589 / 0.589 / 0.242 at 0.3 / 0.6 / 1.2 / 2.4 m; Sentinel-2 is 10 m. The rule's
+    mechanism clause missed by 0.0006, and its default clause closes the line.
+  - Also found: the Sentinel-2 RGB renders are 2–4× darker than RDAH's training input.
+  - Entries: sign-flip-detector.md, "2026-09-23 — RDAH-Net zero-shot on Sentinel-2" (with its
+    correction) and "(continued)" Phase 2. Scripts: `scripts/rdah_sentinel2_zeroshot.py`,
+    `scripts/rdah_resolution_sweep.py`.
 
 ## 3. Long-term plan — open items, priority order
 
-1. **RDAH-Net: contamination vs. fine-tuning damage** — **NOT rejected.** FT-1's
-   fold-instability question is answered: under FT-2's quadrant protocol the fold Pearson range
-   narrows from 0.254–0.607 to 0.503–0.607. **RDAH-FT-2 is not adopted** (2.500/4.294/0.640/
-   0.506 per-sample mean; loses to Method 6 on all four metrics; `05-rdah-net-fusion/verdict.md`
-   §6). What's still open: zero-shot on DFC2019 (2.231/4.566/0.716/0.655) beats both fine-tuned
-   runs. Either fine-tuning damages the pretrained model on this small benchmark, or the
-   zero-shot score is inflated because the Track1 checkpoint it used has 41/50 benchmark tiles in
-   `Track1-train.txt`. The Swiss checkpoint FT-2 used has 0/50. **Next check**: Swiss zero-shot at
-   the fold-derived scale, under the quadrant protocol, with per-fold affine calibration. Also
-   re-create the zero-shot run's script/JSON, which weren't found in the repo. Neither has
-   been run. The 2026-09-23 Sentinel-2 test (§2b) also used the clean Swiss checkpoint but
-   **doesn't answer this**: it fails for reasons confounded with the question (GSD, sensor and
-   nDSM-vs-terrain gaps). Scope: this item is **DFC2019-only**, and RDAH on Sentinel-2 is closed
-   (§4).
-2. **TSE-Net (self-training)** — untouched, no code or docs exist for it yet. Next
-   candidate after the RDAH contamination check.
+1. **TSE-Net (self-training)** — untouched, no code or docs exist for it yet. Now the top
+   open item.
+2. **RDAH-Net on DFC2019: memorised tiles vs. in-domain training (low priority, inference
+   only).**
+   - "Fine-tuning damages the model" is **resolved: no**. Swiss zero-shot on FT-2's exact
+     samples scores 3.033/6.421/0.492/0.542, and FT-2 beats it on every metric in 4/4 folds.
+   - The Track1 zero-shot artifact was rescued (`data/dfc2019/experiments/rdah_zeroshot/`) and
+     reproduces 2.231/4.566/0.716/0.655. Its ×255 was picked on 3 tiles from Track1's own
+     training list; Swiss re-derivation finds a broad ×200–×1000 plateau.
+   - Remaining: Track1 0.716 vs. Swiss 0.492 Pearson fits a training-data advantage. To split
+     memorised tiles from in-domain sensor/city, run Track1 zero-shot on its 9 `Track1-test`
+     vs. 41 `Track1-train` tiles.
+   - RDAH-FT-2 is not adopted (`05-rdah-net-fusion/verdict.md` §6–8). RDAH on Sentinel-2 is
+     closed (§4).
 3. **Sparse-LiDAR 27-feature RF version** — untried. Low priority: frequency fusion
    already beats it on deployability grounds and the DFC2019 feasibility check
    (`docs/method-audit/stage0-gates/sparse-lidar-feasibility.md`) found the approach is
@@ -168,11 +194,24 @@ ICESat-2 overshoot at chennai (+8.28 m vs. +4.52 m mean error). The negative sta
   split; degenerate on Sentinel-2)
 - Sparse-LiDAR-Guided-Correction's **DFC2019** feasibility specifically — blocked, no
   recoverable georeferencing (Sentinel-2 domain not equally blocked, see §3.3)
-- RDAH-Net **on Sentinel-2**, zero-shot or fine-tuned (2026-09-23). The input-scale fix
-  doesn't remove the checkerboard, and there's no terrain correlation after detrending. See
-  sign-flip-detector.md.
+- RDAH-Net **on Sentinel-2**, zero-shot or fine-tuned (2026-09-23). Resolution cliff on
+  DFC2019 (Pearson 0.589 at 1.2 m → 0.242 at 2.4 m, vs. Sentinel-2's 10 m), closed by the
+  pre-registered rule's default clause. The checkerboard is *not* the reason; it's intrinsic.
+- **DAv2 (or any tested no-training source) as a high-frequency detail add-on for Sentinel-2**
+  (2026-09-23): DAv2 @518/@1008, DINOv3-CHMv2, ETH canopy height. None passes against ground
+  photons, ICESat-2 20 m surface or GEDI (max median r_HF 0.089 < 0.10). Frequency fusion's gain
+  was the DEM low-pass.
+- **Learned Sentinel-2 + GEDI canopy/surface-height route** (2026-09-23): not started and not
+  recommended. The pre-registered ETH ceiling check fired: ETH GCH 2020, itself a global
+  Sentinel-2 + GEDI model, doesn't pass either surface reference, and worsens the ICESat-2
+  surface product by double-counting with SRTM (8.32 vs. 5.00 m).
+  - That route *would* address both earlier failure modes: ~10⁵–10⁶ direct GEDI labels across
+    many tiles instead of one tile's DEM, and a sparse direct-lidar target instead of an
+    interpolated one.
+  - **Gate to reopen:** a canopy/object-height source passing Test B against ICESat-2 surface,
+    e.g. in a `bare-earth DTM + canopy` product form (FABDEM + ETH), which is untested.
 
-**Explicitly excluded from this list: RDAH-Net on DFC2019.** It is open, see §3.1. Only its Sentinel-2 use is closed (above). The specific
+**Explicitly excluded from this list: RDAH-Net on DFC2019.** It is open (low priority), see §3.2. Only its Sentinel-2 use is closed (above). The specific
 **RDAH-FT-2 recipe** (Swiss init + per-fold scale + quadrant folds + rank loss, 5 epochs) was
 not adopted (loses to Method 6 on all four metrics). That closes one recipe, not the method.
 
@@ -234,6 +273,15 @@ terrain.** None of the research-track work is deployed into it.
   silently dropped. Semantic-prior phase 2.3, RDAH-Net zero-shot, and all three CNN
   Sentinel-2 failures are documented this way; keep doing that.
 - **Every summary response ends with an explicit list of files created/modified.**
+- **Fusion variants must be compared against a DEM-only control** (the same pipeline with the
+  added component zeroed, plus the raw DEM(s)). Beating a weaker learned baseline isn't enough:
+  the frequency-fusion headline (21/25 vs. linear-calibrated DAv2) turned out to be the DEM's
+  own result (2026-09-23).
+- **Detail sources are scored against a surface reference, not only ground photons**
+  (ICESat-2 20 m canopy-top segments, GEDI rh98). Scoring an above-ground-height product against
+  terrain truth is uninformative, as the first RDAH Sentinel-2 test showed.
+- **Pre-register each phase's decision rule in the log and commit it before running**, and label
+  any post-hoc judgment of an un-operationalized term as such.
 
 ## 8. Skills
 
@@ -255,7 +303,7 @@ scratch — they're already here and already read.
 | `DepthWizard-SIH26175` | `devendrakushwah80/DepthWizard-SIH26175` | Source of Method 6's two follow-on ablation ideas: GSD-FiLM conditioning (rejected) and height-balanced loss+sampling (**adopted**, current Method 6 recipe). |
 | `amogh-hub-depthwizard` | `amogh-hub/depthwizard` | Source of evidence-gating + leave-one-out validation, adapted onto frequency fusion as LOBO (§2b). |
 | `ArnabTechiee-depthwizard` | `ArnabTechiee/depthwizard` | Shadow-geometry photogrammetry approach — tested and rejected, fails at 10m GSD (§4). |
-| `RDAH-Net` | (upstream RDAH-Net repo) | Source of the RDAH-Net fusion method itself (§2a Method 5, §3.1 open item). |
+| `RDAH-Net` | (upstream RDAH-Net repo) | Source of the RDAH-Net fusion method itself (§2a Method 5, §3.2 open item). |
 | `SynRS3D` | `JTRNEO/SynRS3D` | Synthetic RS 3D dataset/method referenced during the RDAH-Net investigation; not independently adopted. |
 | `yats0x7-depthwizard` | `yats0x7/DepthWizard` | Ground-trend scale approach — code-read and compared against blakc-coffee's fusion (`docs/method-audit/` — code-read comparison entry); converges with blakc-coffee, no separate adoption. |
 | `madhu-mitha-e-depthwizard` | `madhu-mitha-e/DepthWizard` | Part of the 20-repo competitive audit (`COMPETITIVE_REPO_AUDIT.md`) — reviewed, no method adopted from it directly. |
@@ -268,13 +316,16 @@ Full 20-repo audit with claimed-numbers verification: `COMPETITIVE_REPO_AUDIT.md
 
 ---
 
-**Consistency check against CLAUDE.md** (updated 2026-09-23): CLAUDE.md's "one rule that
-overrides everything else" (quota discipline, act don't ask) still applies and this doc doesn't
-change it. CLAUDE.md's ML-research-track summary (as of 2026-09-23) and this doc agree on all
-facts above, including RDAH-FT-2 (not adopted, method still open on DFC2019), RDAH-on-Sentinel-2
-(closed 2026-09-23, clean negative), and phase 2.3 (closed). This
-doc reorganizes the same information by "what's next" instead of chronology, and adds the
-frontend feature inventory (§5) and credentials inventory (§6), which CLAUDE.md covers in less
-detail. One naming inconsistency is flagged rather than silently fixed: both docs call Method 2's
-Grid+Huber+20 result (2.929/4.718/0.532/0.471) the "oracle per-tile-OLS baseline", while the
-per-method audits use that name for 3.39/4.58/0.582/0.509 (see the §2a note).
+**Consistency check against CLAUDE.md** (updated 2026-09-23, later): CLAUDE.md's "one rule
+that overrides everything else" (quota discipline, act don't ask) still applies and this doc
+doesn't change it. CLAUDE.md's ML-research-track summary and this doc agree on all facts above:
+- RDAH-FT-2 not adopted; RDAH open on DFC2019 only (low priority); RDAH closed on Sentinel-2
+- the Sentinel-2 deployable baseline restated as raw GLO-30 DEM-only
+- no detail source passes, and the learned GEDI route is not recommended
+- phase 2.3 closed
+
+This doc reorganizes the same information by "what's next" instead of chronology, and adds the
+frontend (§5) and credentials (§6) inventories. One naming inconsistency is flagged rather than
+silently fixed: both docs call Method 2's Grid+Huber+20 result (2.929/4.718/0.532/0.471) the
+"oracle per-tile-OLS baseline", while the per-method audits use that name for
+3.39/4.58/0.582/0.509 (see the §2a note).
