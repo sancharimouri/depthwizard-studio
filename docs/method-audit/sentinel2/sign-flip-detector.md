@@ -2842,3 +2842,48 @@ recorded, so all three were re-run through the unmodified engine on its original
 
 Swiss's own file lists (`external/RDAH-Net/Swiss-{train,test}.txt`) are GF-7 ortho tiles, with no
 DFC2019 and nothing in India. Any Sentinel-2 result from this checkpoint is contamination-free.
+
+## Step 1 — input-size compatibility (verified empirically, before any new inference)
+
+Read `backend/rdah/model.py` (identical to `external/RDAH-Net/test.py`'s model classes):
+- The stem is a 4×4 stride-2 conv, followed by three stride-2 `MobileViTBlock` stages. Feature
+  maps sit at strides 4, 8 and 16 (256², 128², 64² for a 1024 input).
+- Every `BlockAttention` and `LightCrossAttention` does **hard, non-overlapping 8×8 block
+  attention** with no shift or overlap. In input pixels, block boundaries fall every **32, 64 and
+  128 px**.
+- The decoder is four `PixelShuffle(2)` stages (periods 2, 4, 8, 16 px).
+- `PositionalEncoding` is a fixed 64×64 buffer sliced to the feature size.
+
+These are the candidate checkerboard periods for Step 2's FFT: **2, 4, 8, 16, 32, 64, 128 px** on
+the native 1024 grid.
+
+Forward passes on zeros confirm the size contract:
+
+| input H×W | result |
+|---|---|
+| 1007×1002 (original Darjeeling), 1000×1000 (benchmark) | **crash**: block-attention `reshape` needs feature H/W divisible by 8 |
+| 1024×1024, 896×896 | run |
+| 1152×1152 | **crash**: positional-encoding buffer is 64×64 (72 ≠ 64) |
+
+So H and W must be multiples of 128, and no larger than 1024. Below 1024 the positional encoding
+is silently corner-cropped (see `05-rdah-net-fusion/summary.md` §6 for the same issue on
+quadrants). **1024 is the only native size that fits these tiles, so they are reflect-padded to
+1024 and the output is cropped back.** No resizing, no GSD change.
+`train_rdah_quadrant_cv.py`'s 32×32 buffer rebuild is for 512² quadrants and isn't needed here.
+
+**Did the original run mishandle size?** It *resized* 1007×1002 → 1024×1024 (bilinear) and resized
+the output back. That's a 1.7%/2.2% anisotropic rescale: a slight GSD change and a mild smoothing,
+the kind of mishandling the task flagged. On its own, a ~2% bilinear resample can't *create* a
+periodic pattern. It would only shift the phase and period of one that already exists. That's a
+prior, not a finding, so Step 2 tests it directly: resize vs. pad at ×1 and at ×255 (a 2×2 grid).
+That separates the size cause from the scale cause.
+
+**Construct-validity caveat, recorded before any Step 2 number was seen.** RDAH-Net predicts an
+**nDSM**: height above local ground, trained against AGL targets (DFC2019 AGL, GF-7 nDSMs). The
+checks below correlate its output with *terrain* elevation (the OpenTopography DSM and ICESat-2
+ground-classified photons). On hilly Darjeeling, a correct nDSM model should carry little of the
+ridge/valley relief, especially after detrending. A near-zero detrended correlation is therefore
+what a *working* nDSM model would also produce. The artifact test (i) doesn't depend on this. The
+correlation test (ii) measures "does RDAH output carry terrain structure", which is the property
+that matters if RDAH is going to replace DAv2 as the high-frequency source in frequency fusion.
+It isn't a test of RDAH's own nDSM accuracy, and no nDSM ground truth exists for these tiles.
