@@ -2073,3 +2073,163 @@ ruled out rather than merely undiagnosed.
   against `sign_flip_detector_signals.csv`'s `true_dav2_icesat2_pearson`)
   was a one-off analysis on top of that CSV plus the existing detector
   signals file, not a separately committed script.
+
+---
+
+# 2026-09-22 (continued) — arpitparashar06's non-regression scale derivation as a frequency-fusion replacement: rejected, catastrophically worse
+
+**Status: COMPLETE. Result: clean, decisive negative — do not adopt.**
+Tested `arpitparashar06/depthwizard`'s non-regression, physically-anchored
+scale derivation (`alpha_from_known_height`, read directly from
+`external/arpitparashar06-depthwizard/mathsandml/inference.py`, never
+executed) as a drop-in replacement for frequency fusion's step-1 metric
+scaling *only*, on the 4 tiles frequency fusion currently loses on
+(bathinda, amalapuram, kutch, chennai) — exactly where a regression-fit
+scale is least constrained, per the task's own hypothesis. It does not
+close any of those 4 gaps. It makes every one of them dramatically worse,
+and generalizes just as badly across the full 25-tile accepted set.
+
+## What was ported, and the substitution used
+
+`alpha_from_known_height(detail, known_height_m, pct=99)` is genuinely the
+non-regression option in that file (unlike their own `alpha_from_gcps`,
+a least-squares slope, or this project's existing DEM-OLS step): threshold
+= p99 of the detail band, `top` = median of detail values at/above that
+threshold, `alpha = known_height_m / top` — one division, anchored to a
+single physical reference (their use case: a person says "that landmark
+is ~40m tall").
+
+Substitution for this domain, per the task's direction ("use ICESat-2
+points as the known-height anchor source, same substitution already used
+when this was first adapted" — i.e. the project's established pattern of
+swapping a competitor's proprietary/manual ground-truth input for real
+ICESat-2 points): their one manual `known_height_m` becomes the median
+**true relief** — ICESat-2 photon height (converted to the DEM's EGM96
+datum via this project's existing `n_egm96` geoid correction) minus the
+DEM's own low-pass trend at that pixel — among the top-1% highest-relief
+points in a held-out **train** half of the tile's photons (seed 42, same
+split discipline as the rest of this project). Their "top" (the model's
+own reading at that same population) becomes DAv2's **raw, unscaled**
+high-pass detail sampled at those exact same anchor pixels. Their
+defensive `alpha <= 0` rejection is kept exactly as they wrote it.
+
+**Order-of-operations change this required**, also read directly out of
+their file: their alpha multiplies the detail band itself, not the raw
+signal before splitting, and needs no intercept (the detail band is
+already zero-centered by construction; the DEM low-pass supplies the
+absolute vertical baseline, so only the detail band's *amplitude* needs
+fixing). So highpass is computed on raw DAv2 first, then scaled — the
+reverse order from the existing linear-OLS step, which scales before
+splitting. Everything else (native-resolution matched low-pass, DEM
+low-pass, DEM+detail combination, the DEM held-out check) is reused
+unchanged by importing directly from `run_frequency_fusion_sentinel2.py`,
+per the task's instruction to touch only the scaling step.
+
+**Held-out discipline:** the photon half used to fit alpha is disjoint
+from the half used for the ICESat-2 evaluation check (same seed=42 split
+pattern used throughout this project) — fitting and evaluating on the
+same points would be exactly the leakage this project's audit trail has
+caught and fixed elsewhere (the geoid bug, the interpolation-memorization
+pattern). This does mean the new method's ICESat-2 check sees half as
+many photons as the existing linear-OLS baseline's check (which never
+touches ICESat-2 for fitting at all) — a real asymmetry, noted rather than
+hidden, though irrelevant to the verdict given how large the gaps below
+are.
+
+## Results on the 4 target tiles
+
+| tile | linear baseline | frequency fusion | known-height (this test) |
+|---|---:|---:|---:|
+| bathinda | 3.45% | 3.57% | **77.80%** |
+| amalapuram | 7.68% | 8.54% | **REJECTED** (negative alpha, self-caught) |
+| kutch | 5.45% | 5.88% | **203.24%** |
+| chennai | 5.52% | 5.67% | **4013.04%** |
+
+(ICESat-2 RMSE as % of the tile's own elevation range — lower is better,
+same metric as the rest of this file. "REJECTED" means the method's own
+defensive check refused to produce a scale at all, per
+`alpha_from_known_height`'s design, not a crash.)
+
+**Zero of the 4 gaps close. All 4 get dramatically worse**, one (chennai)
+by roughly three orders of magnitude, and one (amalapuram) doesn't even
+produce a number.
+
+## Results on the full 25-tile accepted set
+
+Re-run on all 25 tiles to check for regressions on the 21 tiles frequency
+fusion currently wins, per the task's request:
+
+- **16/25 tiles: REJECTED outright** (negative alpha, self-caught) —
+  agricultural: kota, kurnool; coastal: amalapuram, digha, goa_estuary,
+  kakinada, nagapattinam, vembanad; hilly: almora, dharamshala; urban:
+  bengaluru, delhi, hyderabad, jaipur, kochi_city, pune.
+- **9/25 tiles produced a result** (bathinda, nizamabad, vidisha, kutch,
+  dehradun, kohima, manali, chennai, mumbai) — **every single one is worse
+  than both existing methods.** Median ICESat-2 RMSE among these 9:
+  **77.80% of elevation range**, vs. frequency fusion's 3.57% median and
+  the linear baseline's ~10-11% median across the full 25. Even the hilly
+  tiles — where frequency fusion wins by its largest margins (dehradun
+  0.71%, manali 0.48%, kohima 0.68%) — get catastrophically worse under
+  this method: dehradun 12.05%, manali 12.48%, kohima 4.15%. Full
+  per-tile numbers: `data/sentinel2_benchmark/known_height_scale_results/
+  results_all25.csv`.
+
+**0/25 tiles improve on frequency fusion. 0/25 improve on the plain linear
+baseline either.**
+
+## Root cause, verified directly rather than assumed
+
+Checked whether DAv2's raw high-frequency detail band actually correlates
+with true fine-scale relief at all, independent of any scale factor —
+bathinda, full train half (n=1,194,195 photon-sampled pixels): **Pearson
+r = -0.0049** between true relief (ICESat-2-anchored, EGM96) and DAv2's
+raw unscaled highpass detail. Statistically distinguishable from zero only
+because of the huge sample size — practically, no relationship. The
+model's raw detail band has std ≈ 0.0021 (raw DAv2 units) against true
+relief's std ≈ 1.45m — i.e. DAv2's fine-scale (sub-native-resolution)
+output on this flat tile is dominated by texture/noise unrelated to real
+elevation once the smooth low-frequency trend is removed, not a weak-but-
+real signal.
+
+This explains the failure mode precisely: `alpha_from_known_height` was
+designed for a domain (building height from an isolated skyscraper) where
+the anchor point is chosen specifically because it's the least noisy,
+most confident structure in the scene, and the ratio only needs to survive
+being computed from a handful of expert-curated points. Here the "anchor
+population" (the top-1% real-relief ICESat-2 points) is not curated for
+model confidence — it is just wherever real relief happens to be largest,
+and at those specific pixels DAv2's raw detail reading is architecture-
+determined noise, not signal. **A single-point (or single-percentile)
+ratio has no way to average that noise out — dividing a real few-metre
+signal by a nearly-zero, sign-unstable denominator is exactly what
+produces the 4-to-6-figure alpha values and negative-alpha rejections
+seen above.** The existing linear-OLS baseline is structurally more robust
+here for the same underlying reason frequency fusion itself avoids Method
+4's failure mode: it is a least-squares fit across the DEM's entire valid
+pixel population (hundreds of thousands of points), which averages the
+same noise out rather than anchoring on a handful of its worst-conditioned
+samples.
+
+## Verdict
+
+**Reject. Do not adopt arpitparashar06's known-height scale derivation for
+this pipeline, in this form.** The task's hypothesis — that a regression-
+fit scale is least constrained on flat/low-relief tiles, and a
+physically-anchored non-regression alternative might do better there — is
+falsified by this specific test, and for a diagnosable, specific reason
+(near-zero correlation between DAv2's raw fine-scale detail and true
+relief at exactly the points a single-anchor method must trust), not a
+generic "it didn't work." Frequency fusion's existing linear-OLS step-1
+scaling stands as the project's working method; no change to
+`run_frequency_fusion_sentinel2.py` is made by this test.
+
+## Reproducing this
+
+- `scripts/test_known_height_scale_frequency_fusion.py` — the full
+  replacement pipeline (raw-DAv2 highpass, ICESat-2-anchored known-height
+  scale with train/test photon split, DEM + ICESat-2 evaluation), reusing
+  `run_frequency_fusion_sentinel2.py`'s native-resolution/matched-lowpass/
+  DEM-combination functions unchanged. `python
+  scripts/test_known_height_scale_frequency_fusion.py losing4` for the 4
+  target tiles, `... all25` for the full accepted set. Writes
+  `data/sentinel2_benchmark/known_height_scale_results/results_*.csv`.
