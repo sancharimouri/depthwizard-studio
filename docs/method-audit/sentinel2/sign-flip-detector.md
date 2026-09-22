@@ -3821,3 +3821,56 @@ surface baseline.**
 - **TERRAIN** (bare earth, for terrain/flood use): **FABDEM**.
 - **SURFACE** (canopy/building tops): **raw GLO-30**.
 - **No "DEM + canopy height" product beats a plain DSM** against independent lidar at 10 m.
+
+## A4 — results: both 10 m canopy models pass the pre-registered direct test; the signal is mostly between landscapes
+
+Script: `scripts/direct_height_test.py`. Outputs:
+`data/sentinel2_benchmark/direct_height_test/{per_tile.csv, summary.json}`, stdout `a4_stdout.txt`.
+- **Reference fields:** ICESat-2 `h_max_canopy` (529,629 segments on the 25 tiles) and GEDI `rh98`
+  (62,035 shots).
+- **Candidates:** CHMv2 and ETH, raw metres, no fitting.
+
+| candidate (25 tiles) | reference | **pooled Spearman** | tiles positive (sign p) | median per-tile Spearman | vegetated-only pooled (h > 2 m) | **PASS** |
+|---|---|---:|---|---:|---:|:-:|
+| DINOv3-CHMv2 | ICESat-2 `h_max_canopy` | **0.641** | **23/25** (9.7e-6) | 0.224 | 0.310 | **✓** |
+| DINOv3-CHMv2 | GEDI rh98 | 0.539 | 23/25 | 0.236 | 0.539 | |
+| ETH GCH 2020 | ICESat-2 `h_max_canopy` | **0.378** | **21/25** (4.6e-4) | 0.247 | 0.193 | **✓** |
+| ETH GCH 2020 ‡ | GEDI rh98 | 0.753 | 23/25 | 0.416 | 0.753 | |
+
+‡ Non-independent: ETH was trained on GEDI rh98. On GEDI, rh98 is > 2 m for essentially every
+shot, so the vegetated-only figures equal the full ones.
+
+- **32-tile version:** CHMv2 0.598 (29/32 positive), ETH 0.418 (28/32). Both pass at the
+  proportional 23/32.
+- **Per category, ICESat-2, 25 tiles** (median per-tile Spearman, tiles positive):
+  - CHMv2: agricultural 0.22 (5/5), coastal 0.54 (6/7), hilly 0.18 (4/5), urban 0.22 (8/8).
+  - ETH: agricultural 0.15 (5/5), coastal 0.54 (7/7), hilly 0.40 (5/5), urban **0.07 (4/8)**.
+    ETH has essentially no urban signal. It's a canopy model, and buildings are not canopy.
+
+**Pre-registered verdict: BOTH pass A4.** Pooled Spearman ≥ 0.30 AND positive on ≥ 18/25 tiles.
+
+**POST-HOC diagnostic** (not pre-registered; `a4_posthoc_withintile.txt`): how much of the pooled
+correlation is *between* tiles (which landscapes are forested) vs. *within* a tile (which pixels
+are taller)?
+
+| candidate | reference | within-tile pooled Spearman (per-tile ranks) | between-tile Spearman of tile medians (n = 25) |
+|---|---|---:|---:|
+| CHMv2 | ICESat-2 | +0.276 | +0.886 |
+| ETH | ICESat-2 | +0.234 | +0.532 |
+| CHMv2 | GEDI | +0.201 | +0.633 |
+| ETH ‡ | GEDI | +0.467 | +0.761 |
+
+**The pooled pass is carried mainly by between-landscape variation.** Against the independent
+reference (ICESat-2), within-tile Spearman is 0.23–0.28, below the 0.30 the pooled figure clears.
+The rule passes as written, and the pass stands. But the honest reading is:
+- a **real but modest** within-scene height signal at 10 m
+- a **strong** landscape-level signal (forest vs. field)
+
+**CHMv2's scale is collapsed ~100×** (outputs 0.01–0.25 m against real canopies of 0–40 m) while
+its *ranking* carries this signal. That explains why adding it to a DEM does nothing (A3, Phase 4)
+even though it ranks heights.
+
+**Wording for the final docs, selected by the pre-registered rule** (ETH passes A4 and fails A3):
+**"10 m height signal exists; combining it with a DEM is the failure."** It carries the post-hoc
+qualifier: *the signal is mostly between landscapes; within a scene it is weak (Spearman
+0.23–0.28 against ICESat-2).*

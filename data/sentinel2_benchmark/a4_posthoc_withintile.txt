@@ -1,0 +1,4 @@
+dinov3_chmv2  is2  within-tile pooled (per-tile ranks) Spearman=+0.276  between-tile Spearman of tile medians (n=25)=+0.886
+dinov3_chmv2  gedi within-tile pooled (per-tile ranks) Spearman=+0.201  between-tile Spearman of tile medians (n=25)=+0.633
+eth_gch2020   is2  within-tile pooled (per-tile ranks) Spearman=+0.234  between-tile Spearman of tile medians (n=25)=+0.532
+eth_gch2020   gedi within-tile pooled (per-tile ranks) Spearman=+0.467  between-tile Spearman of tile medians (n=25)=+0.761

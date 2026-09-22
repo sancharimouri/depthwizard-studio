@@ -1,0 +1,36 @@
+bathinda
+fatehpur
+hisar
+karnal
+kota
+kurnool
+nizamabad
+vidisha
+amalapuram
+bhitarkanika
+digha
+goa_estuary
+kakinada
+kutch
+nagapattinam
+vembanad
+almora
+dehradun
+dharamshala
+kohima
+manali
+nainital
+ooty
+shimla
+bengaluru
+chennai
+delhi
+hyderabad
+jaipur
+kochi_city
+mumbai
+pune
+25|dinov3_chmv2 PASS {'is2': (0.641, '23/25', 0.31, 0.224), 'gedi': (0.539, '23/25', 0.539, 0.236)}
+25|eth_gch2020 PASS {'is2': (0.378, '21/25', 0.193, 0.247), 'gedi': (0.753, '23/25', 0.753, 0.416)}
+32|dinov3_chmv2 PASS {'is2': (0.598, '29/32', 0.336, 0.197), 'gedi': (0.551, '29/32', 0.551, 0.225)}
+32|eth_gch2020 PASS {'is2': (0.418, '28/32', 0.274, 0.302), 'gedi': (0.789, '30/32', 0.789, 0.417)}

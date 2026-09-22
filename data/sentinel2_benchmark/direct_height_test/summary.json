@@ -1,0 +1,290 @@
+{
+  "reference_field_is2": "h_max_canopy",
+  "reference_field_gedi": "rh98",
+  "results": {
+    "25|dinov3_chmv2": {
+      "is2": {
+        "pooled_spearman": 0.6405688496509258,
+        "pooled_pearson": 0.3341642583649984,
+        "pooled_n": 529629,
+        "pooled_spearman_veg": 0.3100557514071076,
+        "pooled_n_veg": 258171,
+        "tiles_positive": 23,
+        "n_tiles": 25,
+        "sign_test_p": 9.715557098388672e-06,
+        "median_tile_spearman": 0.22413654971585756,
+        "median_tile_spearman_veg": 0.17487075815189515,
+        "by_category": {
+          "agricultural": {
+            "median_spearman": 0.2188453651129808,
+            "positive": 5,
+            "n": 5
+          },
+          "coastal": {
+            "median_spearman": 0.5384617738762169,
+            "positive": 6,
+            "n": 7
+          },
+          "hilly": {
+            "median_spearman": 0.17593052510711488,
+            "positive": 4,
+            "n": 5
+          },
+          "urban": {
+            "median_spearman": 0.22261512503881825,
+            "positive": 8,
+            "n": 8
+          }
+        }
+      },
+      "gedi": {
+        "pooled_spearman": 0.5393056006719663,
+        "pooled_pearson": 0.2673339489892489,
+        "pooled_n": 62035,
+        "pooled_spearman_veg": 0.5391248823934869,
+        "pooled_n_veg": 61997,
+        "tiles_positive": 23,
+        "n_tiles": 25,
+        "sign_test_p": 9.715557098388672e-06,
+        "median_tile_spearman": 0.2356463150393562,
+        "median_tile_spearman_veg": 0.2356463150393562,
+        "by_category": {
+          "agricultural": {
+            "median_spearman": 0.2356463150393562,
+            "positive": 5,
+            "n": 5
+          },
+          "coastal": {
+            "median_spearman": 0.5107028492166382,
+            "positive": 6,
+            "n": 7
+          },
+          "hilly": {
+            "median_spearman": 0.2415764351119629,
+            "positive": 4,
+            "n": 5
+          },
+          "urban": {
+            "median_spearman": 0.22506822686670314,
+            "positive": 8,
+            "n": 8
+          }
+        }
+      },
+      "PASS": true
+    },
+    "25|eth_gch2020": {
+      "is2": {
+        "pooled_spearman": 0.37776941647920725,
+        "pooled_pearson": 0.46914480872747166,
+        "pooled_n": 529629,
+        "pooled_spearman_veg": 0.19321731738914305,
+        "pooled_n_veg": 258171,
+        "tiles_positive": 21,
+        "n_tiles": 25,
+        "sign_test_p": 0.0004552602767944336,
+        "median_tile_spearman": 0.2472326273160113,
+        "median_tile_spearman_veg": 0.16601824521853237,
+        "by_category": {
+          "agricultural": {
+            "median_spearman": 0.14900284602846994,
+            "positive": 5,
+            "n": 5
+          },
+          "coastal": {
+            "median_spearman": 0.5430623509024515,
+            "positive": 7,
+            "n": 7
+          },
+          "hilly": {
+            "median_spearman": 0.4011283910626205,
+            "positive": 5,
+            "n": 5
+          },
+          "urban": {
+            "median_spearman": 0.06703932601934906,
+            "positive": 4,
+            "n": 8
+          }
+        }
+      },
+      "gedi": {
+        "pooled_spearman": 0.7531602802967834,
+        "pooled_pearson": 0.7343350198266173,
+        "pooled_n": 62035,
+        "pooled_spearman_veg": 0.7531143544332389,
+        "pooled_n_veg": 61997,
+        "tiles_positive": 23,
+        "n_tiles": 25,
+        "sign_test_p": 9.715557098388672e-06,
+        "median_tile_spearman": 0.4159936278426047,
+        "median_tile_spearman_veg": 0.4159936278426047,
+        "by_category": {
+          "agricultural": {
+            "median_spearman": 0.26825284621770074,
+            "positive": 5,
+            "n": 5
+          },
+          "coastal": {
+            "median_spearman": 0.5918368426132253,
+            "positive": 7,
+            "n": 7
+          },
+          "hilly": {
+            "median_spearman": 0.611098779103818,
+            "positive": 5,
+            "n": 5
+          },
+          "urban": {
+            "median_spearman": 0.11066846511939998,
+            "positive": 6,
+            "n": 8
+          }
+        }
+      },
+      "PASS": true
+    },
+    "32|dinov3_chmv2": {
+      "is2": {
+        "pooled_spearman": 0.5977537147099714,
+        "pooled_pearson": 0.3440714433261088,
+        "pooled_n": 660862,
+        "pooled_spearman_veg": 0.3356193621835468,
+        "pooled_n_veg": 322412,
+        "tiles_positive": 29,
+        "n_tiles": 32,
+        "sign_test_p": 1.2780074030160904e-06,
+        "median_tile_spearman": 0.19738794511004784,
+        "median_tile_spearman_veg": 0.1677857346476259,
+        "by_category": {
+          "agricultural": {
+            "median_spearman": 0.18951609713924433,
+            "positive": 8,
+            "n": 8
+          },
+          "coastal": {
+            "median_spearman": 0.5164645317713695,
+            "positive": 6,
+            "n": 8
+          },
+          "hilly": {
+            "median_spearman": 0.10340453331457546,
+            "positive": 7,
+            "n": 8
+          },
+          "urban": {
+            "median_spearman": 0.22261512503881825,
+            "positive": 8,
+            "n": 8
+          }
+        }
+      },
+      "gedi": {
+        "pooled_spearman": 0.5513663795932079,
+        "pooled_pearson": 0.27107409247564007,
+        "pooled_n": 95423,
+        "pooled_spearman_veg": 0.5512225102634114,
+        "pooled_n_veg": 95384,
+        "tiles_positive": 29,
+        "n_tiles": 32,
+        "sign_test_p": 1.2780074030160904e-06,
+        "median_tile_spearman": 0.22506822686670314,
+        "median_tile_spearman_veg": 0.22506822686670314,
+        "by_category": {
+          "agricultural": {
+            "median_spearman": 0.23359534639479732,
+            "positive": 8,
+            "n": 8
+          },
+          "coastal": {
+            "median_spearman": 0.2707332122423392,
+            "positive": 6,
+            "n": 8
+          },
+          "hilly": {
+            "median_spearman": 0.16085977688547093,
+            "positive": 7,
+            "n": 8
+          },
+          "urban": {
+            "median_spearman": 0.22506822686670314,
+            "positive": 8,
+            "n": 8
+          }
+        }
+      },
+      "PASS": true
+    },
+    "32|eth_gch2020": {
+      "is2": {
+        "pooled_spearman": 0.4175188418837493,
+        "pooled_pearson": 0.545172232065233,
+        "pooled_n": 660862,
+        "pooled_spearman_veg": 0.27421039348749016,
+        "pooled_n_veg": 322412,
+        "tiles_positive": 28,
+        "n_tiles": 32,
+        "sign_test_p": 9.650597348809242e-06,
+        "median_tile_spearman": 0.3016364149167794,
+        "median_tile_spearman_veg": 0.21877152289602853,
+        "by_category": {
+          "agricultural": {
+            "median_spearman": 0.15009395578128248,
+            "positive": 8,
+            "n": 8
+          },
+          "coastal": {
+            "median_spearman": 0.5600153889265398,
+            "positive": 8,
+            "n": 8
+          },
+          "hilly": {
+            "median_spearman": 0.4038764154466006,
+            "positive": 8,
+            "n": 8
+          },
+          "urban": {
+            "median_spearman": 0.06703932601934906,
+            "positive": 4,
+            "n": 8
+          }
+        }
+      },
+      "gedi": {
+        "pooled_spearman": 0.7886747020654086,
+        "pooled_pearson": 0.7528782878730074,
+        "pooled_n": 95423,
+        "pooled_spearman_veg": 0.7886615453158187,
+        "pooled_n_veg": 95384,
+        "tiles_positive": 30,
+        "n_tiles": 32,
+        "sign_test_p": 1.2316741049289703e-07,
+        "median_tile_spearman": 0.4174484189780492,
+        "median_tile_spearman_veg": 0.4174484189780492,
+        "by_category": {
+          "agricultural": {
+            "median_spearman": 0.24720801434880366,
+            "positive": 8,
+            "n": 8
+          },
+          "coastal": {
+            "median_spearman": 0.5578876797724662,
+            "positive": 8,
+            "n": 8
+          },
+          "hilly": {
+            "median_spearman": 0.5452004710420666,
+            "positive": 8,
+            "n": 8
+          },
+          "urban": {
+            "median_spearman": 0.11066846511939998,
+            "positive": 6,
+            "n": 8
+          }
+        }
+      },
+      "PASS": true
+    }
+  }
+}
