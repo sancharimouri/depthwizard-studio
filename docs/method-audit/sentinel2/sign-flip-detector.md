@@ -3013,3 +3013,58 @@ data, and here RDAH isn't even a better starting model. **Recommendation: (c) cl
 - Outputs: `data/sentinel2_benchmark/rdah_zeroshot/darjeeling/{darjeeling_results.json,
   darjeeling_old_new_dem_dav2.png, darjeeling_zoom_center.png}`. Per-variant rasters are in
   `data/diagnostics/darjeeling/rdah/*.npy` (gitignored).
+
+# 2026-09-23 (continued) — Does DAv2 detail actually add anything? DEM-only controls, RDAH mechanism test, surface references, detail-source bake-off
+
+**No training of any model in this entry.** Inference, evaluation and data acquisition only.
+Written phase by phase. Each phase's decision rule is copied here verbatim and committed
+**before** that phase is run.
+
+Phase 0 (rescuing the RDAH DFC2019 zero-shot scripts/outputs from `/private/tmp`, and the
+correction to this log's earlier RDAH Step 2 terrain-correlation criterion) is recorded in
+`05-rdah-net-fusion/summary.md` §11 and `verdict.md` §7. Commits `37b9122`, `0638569`.
+
+## Phase 1 — PRE-REGISTRATION (committed before any Phase 1 number was computed)
+
+**Decision rule, verbatim:**
+
+> - Fusion counts as better than DEM-only only if (i) beats (ii) with a paired Wilcoxon over 25
+>   tiles at p<0.05 AND on at least 15/25 tiles.
+> - Otherwise record in the log and in HANDOFF §2b: "the DEM carries the frequency-fusion
+>   result; DAv2 detail adds no measurable value against ground photons."
+> - A detail source "adds signal" only if the median per-tile r_HF > 0.10 AND at least 18/25
+>   tiles are positive (one-sided sign test p≈0.02).
+> - Also report per category and state the best DEM-only baseline, (iii) or (iv).
+> Note: ICESat-2's ~6.5 m geolocation error biases r_HF toward zero, so this test is conservative.
+
+**Operationalization, fixed now, before results:**
+- **Variants.** Every variant uses `run_frequency_fusion_sentinel2.py`'s own functions (tile
+  loading, reprojection, seed-42 50/50 split, geodesic σ, `masked_gaussian`, tile-centre geoid,
+  `sample_depth_at_photons`) and the same 25 accepted tiles and photon CSVs.
+  - (i) current fusion. Must reproduce `frequency_fusion_results.csv`'s `icesat2_rmse_m` to
+    within 1e-6 m on every tile, or the phase stops as a pipeline bug.
+  - (ii) `dem_lowpass` only
+  - (iii) raw SRTM `dem_on_grid`
+  - (iv) raw GLO-30 on grid: `COP_NODATA = -32767`, **EGM2008** geoid via EPSG:3855 at the tile
+    centre, exactly as `run_srtm_comparison.py` does
+  - (v) fusion with GLO-30 as the DEM. Same pipeline, with DAv2's OLS fitted to GLO-30.
+- **Metric.** Per-photon ICESat-2 RMSE (m), and RMSE as % of the **SRTM** elevation range (the
+  existing column's denominator), used for every variant so the denominator is fixed per tile.
+  GLO-30's own range is also saved.
+- **Wilcoxon.** `scipy.stats.wilcoxon` on per-tile paired differences RMSE_pct(i) − RMSE_pct(ii),
+  **two-sided**, p < 0.05, AND (i) < (ii) on ≥ 15/25 tiles.
+- **r_HF.** Per tile, photons are grouped by their 10 m pixel. Each pixel gets its median photon
+  height, converted to orthometric with the same tile-centre EGM96 value
+  (h_ortho = h_photon + n, where the script's n = −N). r_HF = Pearson and Spearman of
+  `dav2_highpass[pixel]` vs. (h_ortho − `dem_lowpass[pixel]`).
+  - The geoid is a per-tile constant, so it can't affect r_HF.
+  - `dav2_highpass` = a·DAv2 − lowpass(a·DAv2), so a > 0 can't change r_HF.
+  - **a < 0 flips its sign.** Some tiles have a negative DAv2-vs-DEM slope, so r_HF is computed
+    on `dav2_highpass` exactly as fusion uses it, i.e. including the fitted sign. That is the
+    detail fusion actually adds.
+  - The raw-DAv2 high-pass r_HF (sign-free of `a`) is also reported as secondary.
+- **Adds signal.** Median per-tile r_HF (Pearson, primary) > 0.10 AND ≥ 18/25 tiles positive.
+  One-sided binomial p for ≥ 18/25 is 0.0216.
+- **Cross-check (iii).** `srtm_3way_comparison.csv` scores *linear-calibrated DAv2*, not raw
+  SRTM, so it is not the same quantity as (iii) and can't serve as a cross-check. None exists for
+  raw SRTM; this is recorded as such.
