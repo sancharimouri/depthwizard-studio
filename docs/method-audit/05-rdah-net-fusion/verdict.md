@@ -222,3 +222,17 @@ closed.
 - **The Sentinel-2 §5 resolution is partly corrected.** Its correlation criterion used terrain
   references for an above-ground-height model, so that half was uninformative. The checkerboard
   half stands. See `summary.md` §11 and the sign-flip-detector 2026-09-23 follow-up entries.
+
+## 8. 2026-09-23 (later) — final status
+
+- **RDAH on Sentinel-2: CLOSED.** Neither zero-shot nor fine-tuning should be attempted. Basis:
+  - the pre-registered rule's default clause
+  - a resolution cliff on DFC2019 itself (Pearson 0.590 at 1.2 m → 0.242 at 2.4 m; Sentinel-2
+    is 10 m)
+  - an RGB-intensity mismatch with the training data
+
+  The checkerboard is **not** part of the basis. It's intrinsic to RDAH output and appears
+  in-domain. See `summary.md` §12.
+- **RDAH on DFC2019: open only for the low-priority contamination split** (Track1 zero-shot on
+  its 9 unseen vs. 41 seen tiles; inference only). "Fine-tuning damages the model" is resolved
+  (no). The FT-2 recipe stays not adopted.

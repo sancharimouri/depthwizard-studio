@@ -3451,7 +3451,7 @@ PASS anywhere, max median r_HF 0.079, and the ETH ceiling fires.
   rule.** For the record, the route would address both earlier failure modes, and neither is the
   reason it's not recommended:
   1. **Per-tile data volume.** It trains across many tiles with a sparse-label loss. There are
-     ~345–11,700 quality-filtered GEDI shots per 10 km tile here, so a few hundred tiles give
+     344–11,699 quality-filtered GEDI shots per 10 km tile here, so a few hundred tiles give
      ~10⁵–10⁶ direct labels, instead of ~300–1,000 patches from one tile's DEM. The per-tile
      ceiling no longer applies.
   2. **Memorisation of an interpolated target.** GEDI rh98 is a direct lidar measurement at

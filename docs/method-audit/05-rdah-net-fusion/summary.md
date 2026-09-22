@@ -648,3 +648,28 @@ above ground**, so that half of the stop condition is **uninformative**: a worki
 would also score ~0 there. The entry flagged this caveat a priori but still applied the
 criterion. **The checkerboard half stands** on its own. Revisited under Phase 2 of the same
 day's follow-up (sign-flip-detector.md, 2026-09-23 "(continued)" entries).
+
+## 12. 2026-09-23 (later) — Phase 2: RDAH on Sentinel-2 closed; the checkerboard is intrinsic
+
+_Full entry, with the pre-registered rule: `sentinel2/sign-flip-detector.md`, 2026-09-23
+"(continued)", Phase 2. Script `scripts/rdah_resolution_sweep.py`; outputs
+`data/dfc2019/experiments/rdah_zeroshot/resolution_sweep/`._
+
+- **Preprocessing.** Training applies ImageNet `Normalize` to RGB only, which
+  `backend/rdah/rdah_engine.py` matches. The Sentinel-2 renders are **2–4× darker** than DFC2019
+  (median channel 21–39 vs. 82–157), while GF-7 training input was per-image min-max stretched.
+  That's a real mismatch. The Figshare Swiss data is one 14.7 GB archive, so the Swiss depth
+  convention and a positive control stayed untested.
+- **Resolution sweep** (Swiss zero-shot, 8 DFC2019 Jacksonville tiles, block-averaged, DAv2
+  re-run at each resolution): pooled Pearson **0.483 / 0.589 / 0.590 / 0.242** at
+  0.3 / 0.6 / 1.2 / 2.4 m.
+  - The pre-registered close-if-8×-below-half-of-1× test **misses by 0.0006** (ratio 0.5006).
+  - RDAH is closed on Sentinel-2 through the rule's **default** clause. The curve holds to 1.2 m
+    and then drops 59% in one step, which is not graceful; that reading is recorded as a
+    post-hoc judgment.
+- **The checkerboard is intrinsic, not a failure signature.** On in-domain DFC2019 at native
+  resolution, where Pearson is 0.48, the median period-2/4 peak-to-background is 1,576 / 3,758.
+  Darjeeling's scale-fixed output is the same order (6,972 / 1,592). Combined with §11's
+  correction, **neither half of the earlier Sentinel-2 stop condition was valid evidence**. The
+  Sentinel-2 closure now rests on the resolution cliff (DFC2019 correlation collapses by 2.4 m;
+  Sentinel-2 is 10 m) and the rule's default clause.
