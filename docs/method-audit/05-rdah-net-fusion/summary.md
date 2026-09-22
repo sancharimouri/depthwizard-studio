@@ -673,3 +673,31 @@ _Full entry, with the pre-registered rule: `sentinel2/sign-flip-detector.md`, 20
   correction, **neither half of the earlier Sentinel-2 stop condition was valid evidence**. The
   Sentinel-2 closure now rests on the resolution cliff (DFC2019 correlation collapses by 2.4 m;
   Sentinel-2 is 10 m) and the rule's default clause.
+
+## 13. 2026-09-23 (final close-out) — Part B: resolution curve, PRE-REGISTRATION (protocol + wording, before any number)
+
+Part B has no pass/fail rule. It has a fixed protocol and a **wording rule**, both committed now.
+
+**B1:** the Phase 2 RDAH sweep (`scripts/rdah_resolution_sweep.py`, Swiss checkpoint, depth ×255,
+DAv2 re-run on the downsampled RGB as primary), extended from 8 to **all 50** DFC2019 tiles.
+- Factors 1/2/4/8×, i.e. 1024/512/256/128 px ≈ 0.3/0.6/1.2/2.4 m.
+- Per factor: pooled Pearson, pooled variance ratio, mean per-tile Pearson and Spearman.
+- 95% tile-bootstrap CIs (10,000, seed 0). Pooled Pearson and variance ratio are bootstrapped
+  exactly from per-tile sufficient statistics (n, Σp, Σy, Σp², Σy², Σpy). Spearman is bootstrapped
+  as the mean of per-tile values.
+
+**B2 (Method 6):** the original run saved no checkpoints. The C3 seed runs save per-fold
+checkpoints, and **seed 43's** are used here, inference only. No training is done for B2.
+- For each fold's 50 held-out 512² quadrants, RGB is block-averaged by 1/2/4/8, then
+  **bilinearly upsampled back to 512²**, then passed through Method 6's normal preprocessing
+  (/255, ImageNet norm, `pad_to(PAD_TO)`).
+- Resizing back keeps the ViT's input size constant while coarsening the effective GSD. Feeding a
+  64 px image padded to 518 would mostly test padding.
+- The prediction is block-averaged to the factor grid and compared to the NaN-aware block-averaged
+  AGL (≥ 50% valid).
+- The protocol differs from B1's (RDAH is fed the small image directly); both are stated.
+
+**Wording rule (task text, binding for all docs):**
+- These curves show that models **trained on VHR imagery degrade** as input resolution coarsens.
+- They do **not** show an information limit at 10 m; only A4 may speak to that.
+- Any "threshold" statement must state the tile count and model count behind it.
