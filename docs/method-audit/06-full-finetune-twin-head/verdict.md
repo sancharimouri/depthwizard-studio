@@ -262,3 +262,18 @@ MPS kernels aren't bit-deterministic, so even `--seed 42` wouldn't reproduce see
   mean-of-folds aggregation.
 - The Method 2 Grid+Huber+20 row (2.929 / 4.718 / 0.532 / 0.471), which HANDOFF calls "oracle",
   is also checked and reported.
+
+### C1/C3 — interim (seed 43 complete; seed 44 running)
+
+- **Seed 43** (`data/dfc2019/experiments/method6_height_balanced_seed43/m6_heightbal_seed43_results.json`):
+  - Scores MAE 1.990 / RMSE 3.486 / Pearson 0.744 / Spearman 0.656 (mean of 4 folds).
+  - **Beats the oracle on all four metrics.** Tiles better than the oracle: 49 / 47 / 47 / 46 of
+    50.
+  - Seeds 1 + 43: mean ± sd = MAE 1.985 ± 0.007, RMSE 3.489 ± 0.004, Pearson 0.7442 ± 0.0004,
+    Spearman 0.6560 ± 0.0004 (`data/dfc2019/experiments/method6_uncertainty.json`).
+- **C1 variance ratio** (seed 43, pooled within fold): **0.481 / 0.554 / 0.521 / 0.657**, OLS slope
+  0.54–0.63, bias −0.49 to +0.05 m.
+  - Still underdispersed: predictions carry about half to two-thirds of the true variance.
+  - That's markedly better than RDAH-FT-2 (0.19–0.23).
+  - This closes the "no variance-ratio diagnostic computed yet" caveat.
+  - It's measured on seed 43, the same recipe. Seed 1 saved no predictions or checkpoints.
