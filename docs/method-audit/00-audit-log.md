@@ -43,7 +43,6 @@ its commit don't line up.
 | 2026-09-23 | S2 | A4 direct height test | CHMv2 and ETH pass (pooled); within-tile weak (0.23–0.28) | same | `169504e` |
 | 2026-09-23 | S2 RDAH | A5 Darjeeling rerun | Spearman ≈ 0; closed by the pre-registered rule | same | `ea01358` |
 | 2026-09-23 | DFC2019 | Part B protocol prereg; D1 stale-claim sweep; result-file traceability | — | `05` §13; "(final close-out)" D1 | `5d91176`, `d3a397f`, `b168dca` |
-
 | 2026-09-23 | DFC2019 | result-file traceability; D3 audit log; D4 status-report addendum | 3,615 result files committed | this file; `PROJECT_STATUS_REPORT.md` | `b168dca`, `0af06b3`, `b4c8842` |
 | 2026-09-23 | DFC2019 RDAH | B1: resolution curve on 50 tiles | pooled r 0.490/0.581/0.537/0.330 (8×/1× 0.672) | `05` summary §13 | `2ce0eb4` |
 | 2026-09-23 | DFC2019 M6 | C2 bootstrap vs. oracle; C4 VHR stats recomputed; D2 draft | M6 beats oracle on 47–49/50 tiles per metric | `final-comparison.md` | `9761c78`, `0607678` |
