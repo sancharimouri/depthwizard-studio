@@ -1094,7 +1094,7 @@ const CALC_LOG_LINES = [
     "Spike smoothing — Kolkata / Bardhaman: median k=3, slope cap 0.6, 4 iterations",
     "Spike smoothing — Sundarbans: median k=3, slope cap 0.5, 4 iterations",
     "Darjeeling mesh uses real DSM coverage — no edge erosion / spike smoothing applied",
-    "RDAH-Net (Swiss/HK building-height checkpoint), zero-shot on Sentinel-2 terrain: rejected — checkerboard artifacts",
+    "RDAH-Net (Swiss building-height checkpoint), zero-shot on Sentinel-2: rejected — no height-above-ground signal at 10 m vs ICESat-2/GEDI (checkerboard artifacts observed, later shown intrinsic to the model)",
     "── end of trace ──",
 ];
 
