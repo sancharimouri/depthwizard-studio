@@ -1,0 +1,117 @@
+[1/25] bathinda      fus=3.57% low=3.57% srtm=4.19% glo=2.22% fusglo=2.01% repro=0.0e+00 rHF=-0.020 a=+3.3
+[2/25] kota          fus=2.58% low=2.58% srtm=2.81% glo=1.46% fusglo=1.35% repro=0.0e+00 rHF=-0.005 a=+19.9
+[3/25] kurnool       fus=2.18% low=2.18% srtm=2.32% glo=0.53% fusglo=0.54% repro=0.0e+00 rHF=+0.010 a=+23.2
+[4/25] nizamabad     fus=5.89% low=5.89% srtm=6.09% glo=1.33% fusglo=1.30% repro=0.0e+00 rHF=-0.141 a=+0.8
+[5/25] vidisha       fus=2.04% low=2.03% srtm=2.30% glo=1.31% fusglo=1.34% repro=0.0e+00 rHF=-0.142 a=+6.0
+[6/25] amalapuram    fus=8.54% low=8.54% srtm=8.94% glo=5.20% fusglo=4.94% repro=4.4e-16 rHF=-0.055 a=+3.7
+[7/25] digha         fus=7.78% low=7.78% srtm=7.94% glo=7.34% fusglo=7.20% repro=0.0e+00 rHF=-0.079 a=+12.9
+[8/25] goa_estuary   fus=2.90% low=2.92% srtm=3.14% glo=2.24% fusglo=2.26% repro=0.0e+00 rHF=-0.059 a=+53.5
+[9/25] kakinada      fus=4.94% low=4.94% srtm=5.33% glo=3.10% fusglo=2.94% repro=0.0e+00 rHF=-0.087 a=+7.8
+[10/25] kutch         fus=5.88% low=5.88% srtm=6.30% glo=4.64% fusglo=4.52% repro=0.0e+00 rHF=+0.041 a=+2.6
+[11/25] nagapattinam  fus=10.55% low=10.55% srtm=10.90% glo=4.35% fusglo=4.32% repro=0.0e+00 rHF=-0.071 a=+5.0
+[12/25] vembanad      fus=5.75% low=5.74% srtm=5.97% glo=4.23% fusglo=4.06% repro=0.0e+00 rHF=-0.061 a=+14.7
+[13/25] almora        fus=1.05% low=1.06% srtm=0.91% glo=0.62% fusglo=0.85% repro=1.8e-15 rHF=+0.168 a=+329.9
+[14/25] dehradun      fus=0.71% low=0.72% srtm=0.65% glo=0.47% fusglo=0.62% repro=0.0e+00 rHF=+0.106 a=+750.3
+[15/25] dharamshala   fus=0.27% low=0.27% srtm=0.24% glo=0.22% fusglo=0.26% repro=0.0e+00 rHF=+0.149 a=+1476.7
+[16/25] kohima        fus=0.68% low=0.69% srtm=0.62% glo=0.45% fusglo=0.53% repro=0.0e+00 rHF=+0.020 a=+779.3
+[17/25] manali        fus=0.48% low=0.49% srtm=0.49% glo=0.40% fusglo=0.41% repro=0.0e+00 rHF=+0.134 a=+2232.5
+[18/25] bengaluru     fus=5.82% low=5.82% srtm=5.91% glo=5.12% fusglo=5.09% repro=0.0e+00 rHF=+0.015 a=+22.4
+[19/25] chennai       fus=5.67% low=5.67% srtm=5.92% glo=5.61% fusglo=5.60% repro=0.0e+00 rHF=-0.048 a=+15.2
+[20/25] delhi         fus=5.99% low=5.99% srtm=6.25% glo=6.13% fusglo=6.07% repro=0.0e+00 rHF=-0.037 a=+53.3
+[21/25] hyderabad     fus=3.66% low=3.65% srtm=3.70% glo=3.12% fusglo=3.15% repro=0.0e+00 rHF=-0.075 a=+61.0
+[22/25] jaipur        fus=1.69% low=1.69% srtm=1.72% glo=1.66% fusglo=1.68% repro=0.0e+00 rHF=-0.016 a=+80.4
+[23/25] kochi_city    fus=4.94% low=4.94% srtm=5.21% glo=2.95% fusglo=2.89% repro=0.0e+00 rHF=-0.107 a=+7.3
+[24/25] mumbai        fus=2.48% low=2.48% srtm=2.51% glo=2.32% fusglo=2.34% repro=0.0e+00 rHF=-0.042 a=+39.1
+[25/25] pune          fus=2.50% low=2.50% srtm=2.57% glo=2.82% fusglo=2.78% repro=0.0e+00 rHF=-0.020 a=+8.2
+{
+ "n_tiles": 25,
+ "max_repro_absdiff_m": 1.7763568394002505e-15,
+ "median_pct": {
+  "i_fusion": 3.567677113974278,
+  "ii_dem_lowpass": 3.5676357353617734,
+  "iii_srtm_raw": 3.7024446494717513,
+  "iv_glo30_raw": 2.323858929106255,
+  "v_fusion_glo30": 2.336271575857066
+ },
+ "median_rmse_m": {
+  "i_fusion": 3.1111696861962255,
+  "ii_dem_lowpass": 3.1293710383304623,
+  "iii_srtm_raw": 3.3278169416489067,
+  "iv_glo30_raw": 2.9101407118076774,
+  "v_fusion_glo30": 2.8568383800273986
+ },
+ "fusion_vs_lowpass": {
+  "wilcoxon_stat": 155.0,
+  "wilcoxon_p_two_sided": 0.8531995415687561,
+  "fusion_wins": 10,
+  "median_diff_pct": 0.00021353590801043154,
+  "PASS": false
+ },
+ "rhf": {
+  "median_pearson": -0.037078183892620804,
+  "median_spearman": -0.02135442027773743,
+  "n_positive_pearson": 8,
+  "sign_test_p_one_sided": 0.9783573746681213,
+  "median_raw_pearson": -0.037079138396296084,
+  "n_positive_raw_pearson": 8,
+  "PASS": false
+ },
+ "srtm_vs_glo30_raw": {
+  "srtm_wins": 1,
+  "wilcoxon_p": 1.4901161193847656e-06
+ },
+ "fusion_vs_srtm_raw": {
+  "fusion_wins": 21,
+  "wilcoxon_p": 7.49826431274414e-05
+ },
+ "lowpass_vs_srtm_raw": {
+  "lowpass_wins": 21,
+  "wilcoxon_p": 0.000102996826171875
+ },
+ "by_category": {
+  "agricultural": {
+   "n": 5,
+   "median_i_fusion_pct": 2.57698311093609,
+   "median_ii_dem_lowpass_pct": 2.5767695750280795,
+   "median_iii_srtm_raw_pct": 2.806792224012072,
+   "median_iv_glo30_raw_pct": 1.331657141989738,
+   "median_v_fusion_glo30_pct": 1.3365452457661038,
+   "fusion_beats_lowpass": 1,
+   "median_rhf_pearson": -0.0203804071540572,
+   "rhf_positive": 1
+  },
+  "coastal": {
+   "n": 7,
+   "median_i_fusion_pct": 5.879374650031664,
+   "median_ii_dem_lowpass_pct": 5.879391037313638,
+   "median_iii_srtm_raw_pct": 6.295212326500568,
+   "median_iv_glo30_raw_pct": 4.352379135037462,
+   "median_v_fusion_glo30_pct": 4.3194424984595585,
+   "fusion_beats_lowpass": 3,
+   "median_rhf_pearson": -0.0609536299619726,
+   "rhf_positive": 1
+  },
+  "hilly": {
+   "n": 5,
+   "median_i_fusion_pct": 0.6828056671523297,
+   "median_ii_dem_lowpass_pct": 0.6900545498158115,
+   "median_iii_srtm_raw_pct": 0.6214590868115949,
+   "median_iv_glo30_raw_pct": 0.45365089475784937,
+   "median_v_fusion_glo30_pct": 0.5291505253154442,
+   "fusion_beats_lowpass": 5,
+   "median_rhf_pearson": 0.13429039725902947,
+   "rhf_positive": 5
+  },
+  "urban": {
+   "n": 8,
+   "median_i_fusion_pct": 4.301560255260047,
+   "median_ii_dem_lowpass_pct": 4.297509182563037,
+   "median_iii_srtm_raw_pct": 4.455100097430044,
+   "median_iv_glo30_raw_pct": 3.0392274392275254,
+   "median_v_fusion_glo30_pct": 3.0230969384281012,
+   "fusion_beats_lowpass": 1,
+   "median_rhf_pearson": -0.0395846783413652,
+   "rhf_positive": 1
+  }
+ }
+}

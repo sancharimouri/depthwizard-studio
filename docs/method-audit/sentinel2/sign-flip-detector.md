@@ -3068,3 +3068,77 @@ correction to this log's earlier RDAH Step 2 terrain-correlation criterion) is r
 - **Cross-check (iii).** `srtm_3way_comparison.csv` scores *linear-calibrated DAv2*, not raw
   SRTM, so it is not the same quantity as (iii) and can't serve as a cross-check. None exists for
   raw SRTM; this is recorded as such.
+
+## Phase 1 — results: DAv2 detail adds nothing; the DEM carries the result; raw GLO-30 beats fusion
+
+Script: `scripts/frequency_fusion_controls.py`. Outputs:
+`data/sentinel2_benchmark/frequency_fusion_controls/{controls_per_tile.csv, controls_summary.json}`,
+stdout in `data/sentinel2_benchmark/phase1_stdout.txt`.
+
+**Reproduction.** Variant (i) reproduces `frequency_fusion_results.csv`'s ICESat-2 RMSE on all
+25 tiles, with max |diff| = 1.8e-15 m.
+
+**Medians over 25 tiles**, ICESat-2 RMSE as % of SRTM elevation range, and in metres:
+
+| variant | median % of range | median RMSE (m) |
+|---|---:|---:|
+| (i) fusion: SRTM low-pass + DAv2 high-pass (current "deployable baseline") | 3.568 | 3.111 |
+| (ii) SRTM low-pass only (DAv2 detail = 0) | 3.568 | 3.129 |
+| (iii) raw SRTM on grid | 3.702 | 3.328 |
+| **(iv) raw Copernicus GLO-30 on grid (EGM2008)** | **2.324** | **2.910** |
+| (v) fusion with GLO-30 as the DEM | 2.336 | 2.857 |
+
+**Rule 1: fusion vs. DEM-only. FAIL.**
+- (i) − (ii) per tile ranges from −0.017 to +0.010 percentage points; the median difference is
+  +0.0002 pp.
+- Fusion wins **10/25**. Wilcoxon two-sided W = 155, **p = 0.853**.
+- Recorded as pre-registered: **"the DEM carries the frequency-fusion result; DAv2 detail adds no
+  measurable value against ground photons."**
+- The old 21/25 headline (fusion vs. *linear-calibrated DAv2*, 10.88% → 3.57%) compared against
+  a baseline weaker than the DEM itself. Raw SRTM alone (3.70%) already sits near fusion.
+- The improvement that *does* exist over raw SRTM (fusion wins 21/25, p = 7.5e-5) is reproduced
+  equally by the low-pass alone (21/25, p = 1.0e-4). It comes from **smoothing SRTM's
+  10 m-bilinear-resampled noise**, not from DAv2.
+
+**Rule 2: DAv2 r_HF "adds signal". FAIL.**
+- Median per-tile Pearson r_HF = **−0.037**; median Spearman −0.021.
+- Positive on **8/25** tiles. One-sided sign-test p = 0.978.
+- The sign-free raw-DAv2 version is the same (median −0.037, 8/25 positive): every tile's fitted
+  slope a is positive, so the sign question in the operationalization never bit.
+
+**Best DEM-only baseline: (iv) raw GLO-30.**
+- It beats raw SRTM on 24/25 tiles (Wilcoxon p = 1.5e-6), and beats current fusion on
+  **23/25 tiles** (p = 6.6e-6).
+- Median 2.32% of range vs. fusion's 3.57%: about a third lower error than the current
+  "deployable baseline", **with no DAv2 at all**.
+- Adding DAv2 detail on top of GLO-30 (v) doesn't help: it beats raw GLO-30 on 14/25, p = 0.134
+  (exploratory, not pre-registered).
+
+**Per category** (medians, % of range):
+
+| category | n | fusion (i) | low-pass (ii) | raw SRTM (iii) | **raw GLO-30 (iv)** | fusion-GLO30 (v) | fusion beats low-pass | median r_HF | r_HF > 0 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| agricultural | 5 | 2.577 | 2.577 | 2.807 | **1.332** | 1.337 | 1/5 | −0.020 | 1/5 |
+| coastal | 7 | 5.879 | 5.879 | 6.295 | **4.352** | 4.319 | 3/7 | −0.061 | 1/7 |
+| hilly | 5 | 0.683 | 0.690 | 0.621 | **0.454** | 0.529 | **5/5** | **+0.134** | **5/5** |
+| urban | 8 | 4.302 | 4.298 | 4.455 | **3.039** | 3.023 | 1/8 | −0.040 | 1/8 |
+
+**The one category-level exception, labelled exploratory** (it was not a pre-registered
+subgroup): in **hilly** terrain DAv2 detail is positive on 5/5 tiles (median r_HF +0.134), and
+fusion beats low-pass on 5/5. The effect size is tiny: 0.690% → 0.683%.
+- In hilly terrain *raw* SRTM (0.621%) beats both, because smoothing a steep DEM costs more than
+  it removes.
+- Raw GLO-30 (0.454%) beats everything. Fusion on GLO-30 *hurts* there (0.529%).
+- A plausible reading: DAv2's high-pass correlates with slope/curvature texture that the Gaussian
+  just removed from the DEM, i.e. it partly puts back what the low-pass took out. It's a
+  hypothesis, not tested.
+
+**Verdict (Phase 1).** Frequency fusion's gain belongs to the DEM, not to DAv2. The recommended
+deployable Sentinel-2 baseline changes from "SRTM low-pass + DAv2 high-pass" to **raw Copernicus
+GLO-30 reprojected to the 10 m grid** (EGM2008 geoid), median 2.32% of range. Two things carry
+over:
+- The earlier LOBO / evidence-gating validation of fusion's 21/25 still holds as a statement about
+  fusion's *stability*. It doesn't bear on whether DAv2 contributes.
+- The conservative-test note applies: ICESat-2's ~6.5 m geolocation noise shrinks r_HF toward 0.
+  A true r_HF this small would still be of little practical value, as the fusion-vs-low-pass RMSE
+  differences (≤0.017 pp) show directly.

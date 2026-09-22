@@ -1,0 +1,6 @@
+{
+  "n_tiles": 25,
+  "median_native_res_m": 29.981713610913157,
+  "median_icesat2_rmse_pct_of_range": 3.567677113974278,
+  "mean_dem_coverage_pct": 100.0
+}
