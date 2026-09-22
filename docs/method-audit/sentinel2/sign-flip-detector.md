@@ -2786,7 +2786,7 @@ warranted, and none was applied.
 
 # 2026-09-23 — RDAH-Net zero-shot on Sentinel-2: does the DFC2019 input-scale fix transfer?
 
-**Status: IN PROGRESS. This entry is appended step by step so a session cutoff loses at most one
+**Status: COMPLETE — CLEAN NEGATIVE, stopped at Step 2. The DFC2019 input-scale fix cuts the checkerboard by 2–3 orders of magnitude but does not remove it, and RDAH output has no terrain correlation raw or detrended. Line closed (recommendation c). Written step by step so a session cutoff loses at most one
 step.** Goal: test the forward-looking flag in `docs/method-audit/05-rdah-net-fusion/verdict.md`
 §5. The flag asks whether the Darjeeling checkerboard that got RDAH-Net rejected on Sentinel-2
 changes or disappears once depth is rescaled the way the DFC2019 audit found. **Inference only.**
@@ -2887,3 +2887,121 @@ what a *working* nDSM model would also produce. The artifact test (i) doesn't de
 correlation test (ii) measures "does RDAH output carry terrain structure", which is the property
 that matters if RDAH is going to replace DAv2 as the high-frequency source in frequency fusion.
 It isn't a test of RDAH's own nDSM accuracy, and no nDSM ground truth exists for these tiles.
+
+## Step 2 — Darjeeling check: STOP CONDITION MET (clean negative)
+
+Ran `python scripts/rdah_sentinel2_zeroshot.py darjeeling --rgb
+data/diagnostics/darjeeling/Darjeeling_RGB_committed_660ecb6.tif` (the committed RGB, extracted
+unchanged from commit `660ecb6`). Everything matched the original run except two factors, varied
+in a 2×2 grid:
+- depth scale ×1 vs. **×255** (not re-derived; see the output-range note below)
+- bilinear resize vs. **reflect-pad to 1024 then crop**
+
+The script asserts that the ×1/resize variant is bit-identical to the saved original output, and
+it is. Ground truth:
+- DEM: OpenTopography DSM reprojected bilinearly onto the tile grid (556.6–2476.8 m, 994,491
+  valid px, 200,000 sampled at random, seed 0, for correlation).
+- ICESat-2: **18,947** ground-classified photons fetched for this tile with
+  `query_icesat2_photons.query_tile()` unmodified (542.9–2366.5 m), saved to
+  `data/icesat2_photons/darjeeling.csv` (not committed, same as the other photon CSVs).
+
+Results: `data/sentinel2_benchmark/rdah_zeroshot/darjeeling/darjeeling_results.json`.
+
+**(i) 2D FFT, peak-to-background power at the architecture's candidate periods.** Computed on the
+native 1024² output after plane detrending and a Hann window. Background is the median power on
+the same-radius annulus. The DAv2 depth input and RGB luminance are shown as controls.
+
+| period (px) | original (resize ×1) | pad ×1 | resize ×255 | **pad ×255** | reduction orig→pad×255 | DAv2-input control | RGB control |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 2 | 1.35e7 | 1.26e7 | 1.08e4 | **6.97e3** | ÷1,940 | 1.36e5 | 4.2 |
+| 4 | 9.07e5 | 7.78e5 | 2.97e3 | **1.59e3** | ÷570 | 177 | 3.9 |
+| 8 | 2.71e4 | 2.40e4 | 148 | **163** | ÷166 | 8.6 | 4.5 |
+| 16 | 742 | 580 | 23.8 | **11.1** | ÷67 | 6.9 | 3.0 |
+| 32 | 1.5 | 1.1 | 10.2 | **17.9** | **×12 (grew)** | 6.6 | 2.1 |
+| 64 | 3.3 | 1.5 | 2.9 | 2.9 | — | 3.8 | 1.1 |
+| 128 | 3.5 | 3.9 | 1.4 | 1.4 | — | 2.7 | 4.2 |
+
+- **The scale fix cuts the artifact by 2–3 orders of magnitude but doesn't remove it.** After the
+  fix, the period-2/4/8 peaks are still 10²–10⁴× background.
+- **The residual peaks are network-generated, not inherited from the input.**
+  - The output's period-2 peak sits on the vertical Nyquist bin (512,0). The DAv2 input's period-2
+    peak is on the horizontal bin (0,512), a different component.
+  - After the fix, the dominant period-8/16/32 peaks all sit on **diagonal** bins ((128,128),
+    (64,64), (32,32)), the checkerboard signature.
+  - Periods 8, 16 and 32 sit well above both input controls.
+- **The period-32 peak, the stride-4 block-attention boundary, *grows* 12× under the fix.** Once
+  the PixelShuffle noise drops, the hard 8×8 block-attention tiling becomes visible.
+- **Size handling is ruled out as the cause.** Resize vs. pad at ×1 differ by under 20% at every
+  period (1.35e7 vs. 1.26e7 at period 2), against a 1,940× change from scale. The original run's
+  resize was a real deviation from native handling but not the source of the checkerboard.
+- **The scale mismatch was a real contributor**, responsible for the bulk of the artifact's power.
+  It isn't the whole cause.
+
+**(ii) Correlation with terrain, raw and detrended** (Pearson / Spearman). "Plane" and "quadratic"
+fit a 1st/2nd-order (x, y) surface separately to prediction and truth, then correlate the
+residuals.
+
+| field | DEM raw | DEM plane | DEM quad | ICESat-2 raw | ICESat-2 plane | ICESat-2 quad |
+|---|---|---|---|---|---|---|
+| RDAH original (resize ×1) | −0.042 / −0.080 | −0.056 / −0.041 | −0.019 / −0.065 | −0.145 / −0.162 | −0.232 / −0.207 | −0.132 / −0.114 |
+| RDAH pad ×1 | −0.031 / −0.053 | −0.024 / −0.020 | −0.046 / −0.064 | −0.025 / −0.068 | −0.012 / −0.015 | −0.048 / −0.043 |
+| RDAH resize ×255 | +0.012 / −0.213 | −0.002 / −0.036 | −0.029 / −0.074 | −0.098 / −0.155 | −0.092 / −0.082 | −0.051 / −0.077 |
+| **RDAH pad ×255 (the fix)** | −0.025 / −0.191 | **−0.052 / −0.047** | −0.044 / −0.013 | −0.042 / −0.170 | **−0.139 / −0.132** | −0.036 / −0.006 |
+| DAv2 input (control) | +0.641 / +0.635 | −0.431 / −0.417 | −0.115 / −0.091 | +0.531 / +0.512 | −0.510 / −0.498 | −0.084 / −0.021 |
+
+- **The DAv2 control reproduces this project's known Darjeeling flip** (DEM +0.64 → −0.43 after
+  plane detrending; ICESat-2 +0.53 → −0.51). The scoring pipeline behaves as expected.
+- **RDAH carries no terrain structure under any variant.** Every raw and detrended correlation is
+  between −0.23 and +0.01. RDAH doesn't even show DAv2's spurious raw +0.6; it's ~0 or slightly
+  negative everywhere.
+
+**Output range.** At ×255 the output has median 0.017, p2–p98 −0.018 to 0.33, and max 7.97. That's
+near-zero almost everywhere, with a few bright blobs (see the PNG). As an nDSM for a hill town
+with forest canopy and dense buildings this is implausibly flat. It's closer to "the model sees
+no above-ground structure it recognizes" than to a mis-scaled but structured output. The ×255
+constant was **not re-derived**, per the task: nothing here shows it to be *clearly* wrong
+rather than simply out of domain, and re-deriving it would mean fitting a free constant to the
+same tile being scored. That residual uncertainty is recorded here rather than tuned away.
+
+**(iii) Side-by-side PNGs.** `data/sentinel2_benchmark/rdah_zeroshot/darjeeling/darjeeling_old_new_dem_dav2.png`
+(full tile) and `…/darjeeling_zoom_center.png` (central 256² crop, 2× nearest). Panels, left to
+right: original run, fixed run (pad ×255), DEM, DAv2 input. The original shows the dense regular
+grid over the whole tile. The fixed run is mostly flat, with a few bright blobs and a still-visible
+faint grid in low-signal areas. Neither resembles the DEM's ridge/valley structure.
+
+**STOP CONDITION MET, on both criteria:** the periodic artifact persists (reduced, not removed),
+and the detrended correlation is negative (DEM plane −0.052 / −0.047, ICESat-2 plane
+−0.139 / −0.132). **Verdict: clean negative. The DFC2019 input-scale fix does not rescue RDAH-Net
+zero-shot on Sentinel-2.**
+- **Ruled out:** input size handling (resize vs. pad) as the checkerboard's cause.
+- **Partial cause, confirmed:** the depth-input scale mismatch.
+- **Remaining cause:** architecture-level PixelShuffle and hard block-attention periodicity,
+  exposed on out-of-domain 10 m input. That's a mechanism consistent with the evidence, not
+  proven: no ablation of those layers was done, and none is warranted for a closed line.
+
+Steps 3–4 (decision rule, benchmark, fusion swap, production-tile checks) were **not run**, per the
+stop condition. No fine-tuning was started.
+
+## Step 5 note — what this does and doesn't say about the DFC2019 contamination question
+
+The Swiss checkpoint has no DFC2019 and no India tiles in its lists, so this is a
+contamination-free zero-shot test. It **doesn't separate** the 05 verdict's two explanations
+(fine-tuning damage vs. Track1 contamination inflating the DFC2019 zero-shot score). Here RDAH
+fails zero-shot on Sentinel-2 with a clean checkpoint, but it also crosses a ~12–30× GSD gap
+(10 m vs. GF-7's sub-metre imagery and DFC2019's ~0.3 m), a sensor change, and a construct gap
+(nDSM output vs. terrain truth). Any of these explains the failure without contamination. The
+check that would decide the 05 question is unchanged: **Swiss zero-shot on DFC2019 itself**, at
+the fold-derived scale, under the quadrant protocol. The per-tile data-volume ceiling that killed
+the three Sentinel-2 CNN attempts is also untouched. A better starting model adds no training
+data, and here RDAH isn't even a better starting model. **Recommendation: (c) close this line**
+(RDAH as a Sentinel-2 depth/high-frequency source, zero-shot or fine-tuned).
+
+## Reproducing this
+
+- `scripts/rdah_sentinel2_zeroshot.py darjeeling --rgb <committed Darjeeling RGB>`: the 2×2
+  scale/size grid, FFT, correlations and PNGs. It reuses `backend/rdah/rdah_engine.py`'s model
+  loading and preprocessing unmodified, and `scripts/query_icesat2_photons.py`'s `query_tile()`
+  for photons.
+- Outputs: `data/sentinel2_benchmark/rdah_zeroshot/darjeeling/{darjeeling_results.json,
+  darjeeling_old_new_dem_dav2.png, darjeeling_zoom_center.png}`. Per-variant rasters are in
+  `data/diagnostics/darjeeling/rdah/*.npy` (gitignored).
