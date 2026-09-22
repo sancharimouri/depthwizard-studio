@@ -1,5 +1,19 @@
 # Frozen-backbone comparison: DAv2 vs DINOv3 (SAT493M + CHMv2)
 
+> **CORRECTION (2026-09-23, dated annotation; original text kept).** "DINOv3 becomes the frozen
+> prior going forward" did **not** hold up.
+> - The saved CHMv2 outputs are in metres, but only 0.01–0.25 m on 10 m imagery: a
+>   near-"no canopy" map.
+> - The pooled correlation below is with *terrain elevation*, a construct CHMv2 doesn't predict.
+> - As a detail source, CHMv2 fails every reference (Phase 4). Its A2/A3 RMSE "gains" are a
+>   constant offset caught by the R4 guard.
+> - Against height *above ground* (A4) it passes the pre-registered direct test (pooled Spearman
+>   0.641 vs. ICESat-2), but within-tile only 0.276.
+>
+> No backbone is carried forward as a frozen prior. The Sentinel-2 baseline is DEM-only.
+> See `docs/method-audit/final-comparison.md`.
+
+
 **Status: COMPLETE. Winner: DINOv3 (SAT493M + CHMv2)** — higher pooled Pearson
 AND Spearman across all 32 tiles than DAv2, so the decision rule resolves
 outright with no tie-break needed. See "Step 1.3 — decision" for the full

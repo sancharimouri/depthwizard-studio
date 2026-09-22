@@ -524,6 +524,12 @@ uncertainty was made), but it is the explanation consistent with both
 this result and Step 1's confound finding, without needing a second,
 unrelated story.
 
+> **CLARIFICATION (2026-09-23, dated annotation).** This step tested FABDEM only as a
+> *calibration target for DAv2* (DAv2 linearly fitted to FABDEM, then scored). The "do not adopt"
+> conclusion below applies to that role. **Raw FABDEM as a terrain product** was tested separately
+> on 2026-09-23 (A3, "(final close-out)" entry). It beats GLO-30 against ICESat-2 ground photons on
+> 32/32 tiles and is now the recommended TERRAIN baseline.
+
 **Plain-language bottom line:** switching to FABDEM does not fix the
 diagnosed problem, does not help where the diagnosis predicted it would
 help most, and net-degrades calibration on all but one of the 25 tiles it
@@ -1792,7 +1798,15 @@ both hit — not merely a new loss, target, or capacity tweak.
 
 ---
 
-# 2026-09-22 (continued) — Frequency fusion (blakc-coffee/depthwizard's technique) on all 25 accepted tiles: beats the linear baseline decisively, 21/25 tiles, median error 10.88% → 3.57%
+# 2026-09-22 (continued) — Frequency fusion (blakc-coffee/depthwizard's technique) on all 25 accepted tiles: beats the linear baseline decisively
+
+> **CORRECTION (2026-09-23, dated annotation; the original text below is kept as the historical
+> record).** The 21/25 win and the 10.88% → 3.57% headline compared fusion against
+> *linear-calibrated DAv2*, which is weaker than the raw DEM. Against its own DEM-only control,
+> fusion wins 10/25 (p = 0.853), and DAv2 detail has median r_HF −0.037. **The DEM carries this
+> result.** The recommended baselines are now raw **GLO-30** (surface) and **FABDEM** (terrain).
+> See the "2026-09-23 (continued)" Phase 1 and "(final close-out)" A2/A3 entries, and
+> `docs/method-audit/final-comparison.md`., 21/25 tiles, median error 10.88% → 3.57%
 
 **Status: COMPLETE. Result: this is a genuine, substantial win — the first
 non-CNN correction attempted here, and it beats the working
@@ -2237,6 +2251,10 @@ scaling stands as the project's working method; no change to
 ---
 
 # 2026-09-22 (continued) — amogh-hub's evidence-gating and leave-one-out validation, applied to frequency fusion: 21/25 win rate robustly confirmed
+
+> **CORRECTION (2026-09-23, dated annotation).** LOBO confirms that the 21/25 is *stable*, not
+> that DAv2 contributes. The comparison baseline was linear-calibrated DAv2, and fusion equals its
+> DEM-only control (Phase 1, 2026-09-23 "(continued)"). See `final-comparison.md`.
 
 **Status: COMPLETE. Result: clean positive — the win rate holds, to
 within floating-point noise.** Applied `amogh-hub/depthwizard`'s
@@ -3907,3 +3925,30 @@ judgment through the default clause.
 - **FFT, descriptive only:** period-2/4/8/16/32 peak-to-background 6,914 / 1,563 / 164 / 10.9 /
   18.0, the same as the Step 2 pad ×255 run. The checkerboard remains intrinsic and isn't a
   criterion.
+
+## D1 — stale-claim sweep (2026-09-23)
+
+Grep over `docs/`, `README.md`, `PROJECT_STATUS_REPORT.md`, `COMPETITIVE_REPO_AUDIT.md`,
+`CLAUDE.md` and `frontend/src` + `frontend/index.html` for: "21/25", "3.57", "10.88", "frequency
+fusion", "checkerboard", "frozen prior", "fine-tuning damage", "RDAH … open", "all-NaN". Historical
+log entries are **annotated with dated notes, not rewritten**.
+
+| file:line (at sweep time) | claim | action |
+|---|---|---|
+| `sign-flip-detector.md` (2026-09-22 frequency-fusion entry header) | fusion beats linear 21/25, 10.88% → 3.57% as the deployable baseline | dated CORRECTION note: DEM carries it; baselines now GLO-30 / FABDEM |
+| `sign-flip-detector.md` (2026-09-22 amogh-hub LOBO entry header) | "21/25 win rate robustly confirmed" | dated CORRECTION: confirms stability, not DAv2 contribution |
+| `sign-flip-detector.md` (2026-09-21 FABDEM Step 3, "do not adopt FABDEM") | FABDEM not to replace GLO-30 | dated CLARIFICATION: that tested FABDEM as a DAv2 calibration target; raw FABDEM is now the terrain baseline (A3) |
+| `backbone-comparison.md:14, 287, 305` | "DINOv3 becomes the frozen prior going forward" | dated CORRECTION note at top: not carried forward; CHMv2 near-zero output; A4/R4 facts |
+| `COMPETITIVE_REPO_AUDIT.md:332` | DEM-low + DAv2-high fusion as the project's key unsolved problem | dated note appended: DAv2 component adds nothing vs. a DEM-only control |
+| `PROJECT_STATUS_REPORT.md:72` | RDAH Sentinel-2 "rejected" for checkerboard | D4 addendum at top + inline dated note |
+| `frontend/src/main.js:1097` (pipeline-trace text) | "RDAH-Net … rejected — checkerboard artifacts" | **text fixed**: "rejected — no height-above-ground signal at 10 m vs ICESat-2/GEDI (checkerboard artifacts observed, later shown intrinsic to the model)"; also "Swiss/HK" → "Swiss", since the reproduced run was Swiss. Screenshot after the change: `docs/screenshots/2026-09-23_d1_after_text_fix.png` (UI renders; the 3D canvas is blank only because headless Chrome has no WebGL). The edited line appears only inside the RUN RECONSTRUCTION trace, so a static screenshot can't capture it; the served `main.js` was checked to contain the new string. |
+| `HANDOFF.md` §3.3, §9 (blakc-coffee row) | frequency fusion as "current Sentinel-2 deployable baseline" / "already beats" sparse-LiDAR | fixed in the FINAL STEP |
+| `CLAUDE.md:71, 86, 92, 158–178, 214, 244` | checkerboard rejection; fine-tuning-damage open; fusion as current best, 21/25 | items 5–9 rewritten in the FINAL STEP |
+| `CLAUDE.md:292` | GLO-30 for Darjeeling "rejected earlier as unusable/all-NaN" | kept (historical); HANDOFF records that GLO-30 fetched fine for all 32 tiles + Darjeeling this time, so that was likely a fetch bug; switching the demo DEM is an optional future demo change, **not made** |
+| `05-rdah-net-fusion/*` checkerboard rationale | Sentinel-2 rejection reason | already annotated (verdict §5 note, §8; summary §11–12) |
+| `04-learned-scale-modulation/gaps-and-fixes.md:53` | "checkerboard-like per-pixel scale artifacts" | no action: about Method 4's own output, unrelated to RDAH |
+
+**Flagged, not changed** (framing, not an overturned research claim): the frontend header reads
+"Satellite → Metric Terrain Reconstruction" and has a "METRIC ELEVATION" layer button. CLAUDE.md's
+framing rule says the UI must not imply RGB → absolute elevation. Whether that label does is a demo
+decision for the owner, outside D1's overturned-claim scope.
