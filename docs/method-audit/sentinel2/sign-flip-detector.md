@@ -3711,3 +3711,113 @@ missed by 0.0006, and the checkerboard test was later invalidated), and a prepro
   (ICESat-2, 5,991 segments) and vs. GEDI rh98 (4,189 shots).
 - **Reopen** only if the primary run's Spearman is ≥ 0.30 against **both** references.
 - FFT is reported descriptively, not as a criterion.
+
+## A2 + A3 — results: GLO-30 confirmed over SRTM; FABDEM is the terrain baseline; no DEM + canopy product passes
+
+Script: `scripts/dem_baselines_32.py`. Outputs:
+`data/sentinel2_benchmark/dem_baselines_32/{per_tile.csv, summary.json}`, stdout
+`a2a3_stdout.txt`.
+
+**Data acquired for these tests:**
+- **FABDEM** via `scripts/fetch_fabdem.py`: 32 tiles, `fabdem/*.npy`, not committed, in
+  REGENERATION.
+- **The 7 sign-flip-excluded tiles** (fatehpur, hisar, karnal, bhitarkanika, nainital, ooty,
+  shimla), fetched with the Phase 3 scripts plus `--all-tiles`:
+  - ICESat-2 20 m segments: 12,980–31,319 per tile
+  - GEDI shots: 999–14,599 per tile
+  - ETH canopy height
+
+  No tile falls below the 200 threshold.
+
+**Two pipeline bugs, caught and fixed before any result was read** (systematic-debugging, logged
+for the record):
+1. **FABDEM mosaic projection.** `ImageCollection.mosaic()` drops the native projection and
+   defaults to WGS84 at 1° (nominal scale 111 km), so the bilinear resample averaged over ~100 km.
+   Manali came out as 3,341–3,740 m against GLO-30's 1,691–4,142 m. Fixed with
+   `setDefaultProjection(first().projection())`. After the fix, per-tile correlation vs. GLO-30 is
+   0.85–0.9999, and FABDEM sits 1.7–7.3 m below GLO-30 on forested/urban tiles and ~0 on bare
+   tiles, as expected. The bad arrays were deleted and re-fetched.
+2. **PROJ ballpark geoid (N = 0).** The first run of `dem_baselines_32.py` imported `pyproj`
+   before `PROJ_NETWORK=ON` was set, so every geoid transform silently returned N = 0. Symptom:
+   every product had a ~+60 m bias (= |N|), and per-point vs. tile-centre RMSE came out identical.
+   - Fixed by setting the variable before any import, plus hard guards: an assert in the script,
+     and a raise in `frequency_fusion_controls.build_tile` if |N| < 1 m. The guard was verified to
+     fire when pyproj is imported first.
+   - That run's outputs were overwritten.
+   - **Earlier phases were not affected:** Phase 1 reproduced its saved CSV exactly, and A0's N
+     matched the stored values to 1e-14. The guard now protects every script that uses
+     `build_tile`.
+
+**Descriptive medians, 32 tiles** (per-tile RMSE in m with 95% bootstrap CI; bias = DEM − ref;
+per-point geoid). Tile-centre-geoid RMSE differs by ≤ 0.04 m at the median, so the A0
+approximation is small at this level.
+
+| reference | product | median RMSE [95% CI] | % of SRTM range | median bias | bias-removed RMSE | median abs. error |
+|---|---|---|---:|---:|---:|---:|
+| ground | SRTM | 3.600 [3.173, 5.023] | 4.03 | +1.97 | 3.12 | 2.17 |
+| ground | GLO-30 | 3.045 [1.913, 5.223] | 2.73 | +1.13 | 2.72 | 1.03 |
+| ground | **FABDEM** | **1.782 [1.068, 3.417]** | **1.87** | +0.26 | **1.76** | 0.81 |
+| surface-IS2 | SRTM | 4.552 [3.506, 8.752] | 6.18 | −2.23 | 4.33 | 2.44 |
+| surface-IS2 | **GLO-30** | **4.484 [3.363, 8.846]** | 5.52 | −2.23 | **3.88** | 1.53 |
+| surface-IS2 | FABDEM | 5.445 [3.898, 11.519] | 6.12 | −3.23 | 4.55 | 1.68 |
+| surface-IS2 | FABDEM + ETH | 7.658 [4.973, 9.833] | 6.46 | −0.16 | 6.19 | 3.23 |
+| surface-IS2 | FABDEM + CHMv2 | 5.404 [3.882, 11.477] | 6.09 | −3.19 | 4.54 | 1.66 |
+| surface-GEDI ‡ | SRTM | 9.317 [6.170, 12.807] | 8.76 | −7.23 | 5.45 | 6.76 |
+| surface-GEDI ‡ | GLO-30 | 9.375 [7.016, 12.498] | 8.92 | −7.61 | 4.99 | 7.50 |
+| surface-GEDI ‡ | FABDEM + ETH | 8.527 [5.525, 12.466] | 8.88 | −2.68 | 7.06 | 4.18 |
+
+‡ GEDI is non-independent for FABDEM (GEDI was a FABDEM predictor) and for ETH (trained on GEDI).
+
+**Per category, ground median RMSE (m):**
+
+| category | SRTM | GLO-30 | FABDEM |
+|---|---:|---:|---:|
+| agricultural | 2.28 | 0.96 | 0.69 |
+| coastal | 3.13 | 2.32 | 1.32 |
+| hilly | 9.75 | 7.65 | 5.85 |
+| urban | 4.57 | 4.74 | 2.87 |
+
+**Per category, surface-IS2 median RMSE (m):**
+
+| category | SRTM | GLO-30 | FABDEM |
+|---|---:|---:|---:|
+| agricultural | 3.16 | 2.67 | 2.90 |
+| coastal | 3.45 | 3.20 | 3.83 |
+| hilly | 13.22 | 11.06 | 14.61 |
+| urban | 8.53 | 7.98 | 10.64 |
+
+**A2 decision (decisive: 32 tiles, SURFACE-IS2, R4): PASS. GLO-30 is confirmed as the Tier-1
+surface baseline.**
+- RMSE: 24/32 wins, Wilcoxon p = 6.6e-4, median paired diff −0.411 m [−0.792, −0.107].
+- Bias-removed RMSE: 31/32, p = 7.9e-8, −0.446 m [−0.521, −0.389].
+- **25-tile subset: same conclusion** (RMSE 18/25, p = 0.0042; bias-removed RMSE 25/25).
+- Reported references:
+  - **Ground: PASS** on 32 tiles (RMSE 26/32, p = 1.1e-5; bias-removed 28/32).
+  - **GEDI: RMSE does NOT separate** (16/32, p = 0.98, median diff −0.029 m [−0.446, +0.552]),
+    while bias-removed RMSE does (28/32, p = 1.1e-4).
+- **Stated prominently: the reference changes the RMSE verdict.** Against GEDI rh98, both DSMs
+  sit ~7–8 m *below* the canopy-top reference (bias −7.2 / −7.6 m). That shared bias dominates
+  RMSE and hides GLO-30's better precision.
+
+**A3 terrain decision (32 tiles, GROUND, R4): PASS. FABDEM is the recommended TERRAIN baseline.**
+- RMSE: **32/32**, p = 4.7e-10, median diff −1.047 m [−1.503, −0.677].
+- Bias-removed RMSE: **32/32**, p = 4.7e-10, −0.446 m [−0.710, −0.308].
+- Median RMSE 1.782 m vs. GLO-30's 3.045 m (1.87% vs. 2.73% of range).
+- The 25-tile subset agrees (25/25 on both).
+- ICESat-2 ground photons are **independent** of FABDEM at these latitudes.
+
+**A3 surface decision (32 tiles, SURFACE-IS2, R4, Holm m = 2): both FAIL. Raw GLO-30 remains the
+surface baseline.**
+- FABDEM + ETH: RMSE worse on 28/32 (wins 4/32), bias-removed worse on 31/32.
+- FABDEM + CHMv2: wins 0/32 on RMSE, 2/32 on bias-removed.
+  - CHMv2 adds ≤ 0.25 m, so this is essentially bare FABDEM, and a bare-earth model sits below
+    surface heights (bias −3.2 m).
+- **On GEDI** (non-independent for both components), FABDEM + ETH wins RMSE 27/32 but fails
+  bias-removed RMSE (6/32). This is exactly the constant-offset pattern **R4 exists to reject**:
+  ETH's added canopy cancels the DEM's ~−7.6 m bias against GEDI, while per-pixel scatter gets
+  worse.
+
+**Resulting recommendation:**
+- **TERRAIN** (bare earth, for terrain/flood use): **FABDEM**.
+- **SURFACE** (canopy/building tops): **raw GLO-30**.
+- **No "DEM + canopy height" product beats a plain DSM** against independent lidar at 10 m.

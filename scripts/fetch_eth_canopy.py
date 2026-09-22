@@ -15,7 +15,7 @@ ee.Initialize(project=proj)
 img = ee.Image(ASSET).select(0).resample("bilinear")
 m = pd.read_csv(ROOT / "data/sentinel2_benchmark/manifest.csv").set_index("tile_id")
 v = pd.read_csv(ROOT / "data/sentinel2_benchmark/sign_flip_detector_verdicts.csv").set_index("tile_id")
-for t in v[~v["flagged"]].index:
+for t in (v.index if "--all-tiles" in sys.argv else v[~v["flagged"]].index):  # --all-tiles: A2/A3
     p = OUT / f"{t}_eth.npy"
     if p.exists():
         continue

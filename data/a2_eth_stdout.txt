@@ -1,0 +1,8 @@
+*** Earth Engine *** Share your feedback by taking our Annual Developer Satisfaction Survey: https://google.qualtrics.com/jfe/form/SV_9oS0DRcPvElRMNw?source=python
+fatehpur: (1000, 1000) nan=0.000 median=0.00 p98=10.00 max=24.0
+hisar: (1000, 1000) nan=0.000 median=0.00 p98=5.00 max=19.0
+karnal: (1000, 1000) nan=0.000 median=0.00 p98=10.00 max=25.0
+bhitarkanika: (1000, 1000) nan=0.000 median=7.00 p98=17.00 max=24.0
+nainital: (1000, 1000) nan=0.000 median=29.00 p98=40.00 max=51.0
+ooty: (1000, 1000) nan=0.000 median=14.00 p98=33.00 max=43.0
+shimla: (1000, 1000) nan=0.000 median=22.00 p98=36.00 max=47.0

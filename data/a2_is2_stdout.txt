@@ -1,0 +1,48 @@
+bathinda: exists, skip
+Alert <-7>: Failure on resource ATL03_20211117040417_08511301_007_02.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211117040417_08511301_007_02.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+fatehpur: 30423 segments, gnd>0: 29546
+Alert <-7>: Failure on resource ATL03_20200330205904_00660706_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20200330205904_00660706_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20200330205904_00660706_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20200330205904_00660706_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20250903101525_12172802_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+hisar: 31319 segments, gnd>0: 30864
+karnal: 20118 segments, gnd>0: 19782
+kota: exists, skip
+kurnool: exists, skip
+nizamabad: exists, skip
+vidisha: exists, skip
+amalapuram: exists, skip
+Alert <-7>: Failure on resource ATL03_20211020050230_04241301_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211020050230_04241301_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211020050230_04241301_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190725200350_04240401_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20190725200350_04240401_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20190725200350_04240401_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/geolocation/reference_photon_lat
+bhitarkanika: 24119 segments, gnd>0: 22356
+digha: exists, skip
+goa_estuary: exists, skip
+kakinada: exists, skip
+kutch: exists, skip
+nagapattinam: exists, skip
+vembanad: exists, skip
+almora: exists, skip
+dehradun: exists, skip
+dharamshala: exists, skip
+kohima: exists, skip
+manali: exists, skip
+nainital: 14082 segments, gnd>0: 10271
+ooty: 12980 segments, gnd>0: 11005
+Alert <-7>: Failure on resource ATL03_20230601013642_10951902_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230601013642_10951902_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+shimla: 13880 segments, gnd>0: 10059
+bengaluru: exists, skip
+chennai: exists, skip
+delhi: exists, skip
+hyderabad: exists, skip
+jaipur: exists, skip
+kochi_city: exists, skip
+mumbai: exists, skip
+pune: exists, skip
+darjeeling: exists, skip

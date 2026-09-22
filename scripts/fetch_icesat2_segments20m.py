@@ -37,7 +37,8 @@ KEEP = ["h_te_median", "h_max_canopy", "h_canopy", "h_mean_canopy", "h_min_canop
 def tiles():
     m = pd.read_csv(ROOT / "data/sentinel2_benchmark/manifest.csv").set_index("tile_id")
     v = pd.read_csv(ROOT / "data/sentinel2_benchmark/sign_flip_detector_verdicts.csv").set_index("tile_id")
-    for t in v[~v["flagged"]].index:
+    keep = v.index if "--all-tiles" in sys.argv else v[~v["flagged"]].index  # --all-tiles: A2 (2026-09-23)
+    for t in keep:
         yield t, q.utm_bbox_to_wgs84_poly(ast.literal_eval(m.loc[t, "bbox_utm"]), int(m.loc[t, "bbox_utm_epsg"]))
     with rasterio.open(ROOT / "data/diagnostics/darjeeling/Darjeeling_RGB_committed_660ecb6.tif") as s:
         b = s.bounds
@@ -47,7 +48,7 @@ def tiles():
 def main():
     sliderule.init("slideruleearth.io", verbose=False)
     OUT.mkdir(parents=True, exist_ok=True)
-    only = set(sys.argv[1:])
+    only = set(a for a in sys.argv[1:] if not a.startswith("--"))
     for t, poly in tiles():
         if only and t not in only:
             continue

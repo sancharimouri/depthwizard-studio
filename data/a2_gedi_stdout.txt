@@ -1,0 +1,34 @@
+*** Earth Engine *** Share your feedback by taking our Annual Developer Satisfaction Survey: https://google.qualtrics.com/jfe/form/SV_9oS0DRcPvElRMNw?source=python
+bathinda: exists, skip
+fatehpur: 1799 valid GEDI shots
+hisar: 2460 valid GEDI shots
+karnal: 2232 valid GEDI shots
+kota: exists, skip
+kurnool: exists, skip
+nizamabad: exists, skip
+vidisha: exists, skip
+amalapuram: exists, skip
+bhitarkanika: 999 valid GEDI shots
+digha: exists, skip
+goa_estuary: exists, skip
+kakinada: exists, skip
+kutch: exists, skip
+nagapattinam: exists, skip
+vembanad: exists, skip
+almora: exists, skip
+dehradun: exists, skip
+dharamshala: exists, skip
+kohima: exists, skip
+manali: exists, skip
+nainital: 14599 valid GEDI shots
+ooty: 4150 valid GEDI shots
+shimla: 7185 valid GEDI shots
+bengaluru: exists, skip
+chennai: exists, skip
+delhi: exists, skip
+hyderabad: exists, skip
+jaipur: exists, skip
+kochi_city: exists, skip
+mumbai: exists, skip
+pune: exists, skip
+darjeeling: exists, skip

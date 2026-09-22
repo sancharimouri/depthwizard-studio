@@ -1,0 +1,56 @@
+[1/32] bathinda
+[2/32] fatehpur
+[3/32] hisar
+[4/32] karnal
+[5/32] kota
+[6/32] kurnool
+[7/32] nizamabad
+[8/32] vidisha
+[9/32] amalapuram
+[10/32] bhitarkanika
+[11/32] digha
+[12/32] goa_estuary
+[13/32] kakinada
+[14/32] kutch
+[15/32] nagapattinam
+[16/32] vembanad
+[17/32] almora
+[18/32] dehradun
+[19/32] dharamshala
+[20/32] kohima
+[21/32] manali
+[22/32] nainital
+[23/32] ooty
+[24/32] shimla
+[25/32] bengaluru
+[26/32] chennai
+[27/32] delhi
+[28/32] hyderabad
+[29/32] jaipur
+[30/32] kochi_city
+[31/32] mumbai
+[32/32] pune
+A2|32|ground|glo30_vs_srtm PASS {'rmse': (26, 32, 0.0, -1.037), 'brmse': (28, 32, 0.0, -0.494)}
+A2|32|surface_is2|glo30_vs_srtm PASS {'rmse': (24, 32, 0.0007, -0.411), 'brmse': (31, 32, 0.0, -0.446)}
+A2|32|surface_gedi|glo30_vs_srtm fail {'rmse': (16, 32, 0.9779, -0.029), 'brmse': (28, 32, 0.0001, -0.392)}
+A3terrain|32|ground|fabdem_vs_glo30 PASS {'rmse': (32, 32, 0.0, -1.047), 'brmse': (32, 32, 0.0, -0.446)}
+A3terrain|32|surface_is2|fabdem_vs_glo30 fail {'rmse': (0, 32, 0.0, 1.247), 'brmse': (2, 32, 0.0, 0.443)}
+A3terrain|32|surface_gedi|fabdem_vs_glo30 fail {'rmse': (0, 32, 0.0, 2.029), 'brmse': (3, 32, 0.0, 0.541)}
+A3surface|32|ground|fabdem_eth_vs_glo30 fail {'rmse': (1, 32, 0.0, 4.147), 'brmse': (0, 32, 0.0, 2.954)}
+A3surface|32|ground|fabdem_chmv2_vs_glo30 PASS {'rmse': (32, 32, 0.0, -1.038), 'brmse': (32, 32, 0.0, -0.447)}
+A3surface|32|surface_is2|fabdem_eth_vs_glo30 fail {'rmse': (4, 32, 0.0, 1.559), 'brmse': (1, 32, 0.0, 1.741)}
+A3surface|32|surface_is2|fabdem_chmv2_vs_glo30 fail {'rmse': (0, 32, 0.0, 1.199), 'brmse': (2, 32, 0.0, 0.439)}
+A3surface|32|surface_gedi|fabdem_eth_vs_glo30 fail {'rmse': (27, 32, 0.0001, -0.969), 'brmse': (6, 32, 0.0004, 0.679)}
+A3surface|32|surface_gedi|fabdem_chmv2_vs_glo30 fail {'rmse': (0, 32, 0.0, 2.014), 'brmse': (3, 32, 0.0, 0.539)}
+A2|25|ground|glo30_vs_srtm PASS {'rmse': (20, 25, 0.0001, -0.686), 'brmse': (23, 25, 0.0, -0.513)}
+A2|25|surface_is2|glo30_vs_srtm PASS {'rmse': (18, 25, 0.0042, -0.339), 'brmse': (25, 25, 0.0, -0.42)}
+A2|25|surface_gedi|glo30_vs_srtm fail {'rmse': (14, 25, 1.0, -0.147), 'brmse': (22, 25, 0.0001, -0.413)}
+A3terrain|25|ground|fabdem_vs_glo30 PASS {'rmse': (25, 25, 0.0, -1.056), 'brmse': (25, 25, 0.0, -0.441)}
+A3terrain|25|surface_is2|fabdem_vs_glo30 fail {'rmse': (0, 25, 0.0, 1.282), 'brmse': (1, 25, 0.0, 0.482)}
+A3terrain|25|surface_gedi|fabdem_vs_glo30 fail {'rmse': (0, 25, 0.0, 2.218), 'brmse': (2, 25, 0.0, 0.565)}
+A3surface|25|ground|fabdem_eth_vs_glo30 fail {'rmse': (1, 25, 0.0, 3.657), 'brmse': (0, 25, 0.0, 3.236)}
+A3surface|25|ground|fabdem_chmv2_vs_glo30 PASS {'rmse': (25, 25, 0.0, -1.056), 'brmse': (25, 25, 0.0, -0.443)}
+A3surface|25|surface_is2|fabdem_eth_vs_glo30 fail {'rmse': (3, 25, 0.0, 1.716), 'brmse': (0, 25, 0.0, 1.774)}
+A3surface|25|surface_is2|fabdem_chmv2_vs_glo30 fail {'rmse': (0, 25, 0.0, 1.211), 'brmse': (1, 25, 0.0, 0.476)}
+A3surface|25|surface_gedi|fabdem_eth_vs_glo30 fail {'rmse': (21, 25, 0.0008, -0.998), 'brmse': (4, 25, 0.0005, 0.872)}
+A3surface|25|surface_gedi|fabdem_chmv2_vs_glo30 fail {'rmse': (0, 25, 0.0, 2.149), 'brmse': (2, 25, 0.0, 0.559)}

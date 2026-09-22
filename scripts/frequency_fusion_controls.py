@@ -107,8 +107,13 @@ def build_tile(tile_id: str, m: pd.Series) -> dict:
     _, _, res_m = ff.native_resolution_m(lat, lon)
     sigma_px = res_m / ff.GRID_RES_M
     photons = pd.read_csv(ff.PHOTON_DIR / f"{tile_id}.csv")
+    n96, n08 = ff.n_egm96(lon, lat), sc.n_egm2008(lon, lat)
+    # Guard (added 2026-09-23): |N| > 20 m everywhere in India; ~0 means PROJ fell back to a
+    # ballpark transform because pyproj was imported before PROJ_NETWORK=ON was set.
+    if abs(n96) < 1 or abs(n08) < 1:
+        raise RuntimeError(f"{tile_id}: geoid N~0 (n96={n96}, n08={n08}) -- PROJ_NETWORK not active at pyproj import")
     return {"tile_id": tile_id, "rgb_path": rgb_path, "lat": lat, "lon": lon, "srtm": srtm, "glo": glo,
-            "sigma_px": sigma_px, "n96": ff.n_egm96(lon, lat), "n08": sc.n_egm2008(lon, lat),
+            "sigma_px": sigma_px, "n96": n96, "n08": n08,
             "photons": photons, "pix": photon_pixels(rgb_path, photons, srtm.shape),
             "srtm_range": float(np.nanmax(srtm) - np.nanmin(srtm)),
             "glo_range": float(np.nanmax(glo) - np.nanmin(glo)), "category": m["category"]}
