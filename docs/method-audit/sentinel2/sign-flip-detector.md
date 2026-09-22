@@ -2355,3 +2355,108 @@ trustworthy, not merely lucky.
   `run_frequency_fusion_sentinel2.py`'s native-resolution/matched-lowpass
   functions unchanged. Writes
   `data/sentinel2_benchmark/frequency_fusion_loo_results/results.csv`.
+
+---
+
+# 2026-09-22 (continued) — ArnabTechiee's shadow-length photogrammetry: not usable at 10m GSD, plausibility check only
+
+**Status: COMPLETE (plausibility check, as scoped — not a full
+validation).** Cloned `external/ArnabTechiee-depthwizard/` fresh for this
+task (list entry #16, "dig deep; cast-shadow geometry, with real USGS
+3DEP LiDAR validation"), read `pipeline/calibrate.py` directly (never
+executed), and probed whether its shadow-length-to-height geometry is
+even usable at Sentinel-2's 10m GSD on the same 4 tiles frequency fusion
+loses on (bathinda, amalapuram, kutch, chennai). **It is not** — both the
+underlying physics and an empirical run of their own ported logic against
+these tiles' real data agree, independently.
+
+**A bug found while reading their code, not reproduced here:** their
+docstring states `h = L_pixels x GSD x tan(sun_elevation)`, and their own
+`max_len` cap (`200.0 / tan_elev / gsd`) is derived consistently with
+that formula — but their actual height line,
+`height_m = length_px * gsd / tan_elev`, *divides* by `tan_elev` instead
+of multiplying. This adaptation uses the physically correct formula.
+
+## Real sun-angle metadata, fetched fresh
+
+Not stored anywhere in this repo beforehand. Fetched via the same free,
+keyless Planetary Computer STAC path already established for the
+viewing-angle investigation earlier in this file
+(`s2:mean_solar_zenith`/`s2:mean_solar_azimuth`, elevation = 90 − zenith):
+
+| tile | sun elevation | min. structure height for a 3px shadow (their own hard floor) |
+|---|---:|---:|
+| bathinda | 35.3° | 21.2m |
+| kutch | 40.3° | 25.4m |
+| amalapuram | 52.7° | 39.4m |
+| chennai | 58.2° | 48.4m |
+
+`median < 3` is `measure_building`'s own unconditional rejection floor
+(`pipeline/calibrate.py`), not a threshold chosen here — below it, their
+own code refuses to trust a shadow measurement at all. At 10m GSD and
+these tiles' real sun angles, a structure needs to be 21–48m tall just to
+clear that floor. Bathinda, amalapuram, and kutch are agricultural/
+coastal (manifest categories) — real structures anywhere near 20–40m tall
+are rare to nonexistent in this terrain; even Chennai's 48.4m floor is a
+demanding bar unless the specific AOI happens to contain genuine
+high-rises.
+
+## Empirical probe: ported their exact logic, ran it on real data
+
+Ported `shadow_mask`, `shadow_direction`, `building_mask`,
+`measure_building` verbatim (corrected formula only), run against each
+tile's real Sentinel-2 RGB (shadow detection) and DAv2's raw relative
+depth as the "nDSM" `building_mask` expects (their function only needs a
+relative height field to percentile-threshold — no metric scale required
+for this probe).
+
+| tile | shadow px % | "building" px % | candidate blobs | accepted anchors |
+|---|---:|---:|---:|---:|
+| bathinda | 17.2% | 45.0% | 7 | **1** |
+| kutch | 19.7% | 45.0% | 2 | **1** |
+| amalapuram | 8.5% | 45.0% | 1 | **0** |
+| chennai | 16.0% | 45.1% | 2 | **0** |
+
+**2 of 4 tiles produce even a single accepted anchor; the other 2
+produce zero.** ArnabTechiee's own docstring says "twenty clean anchors
+is plenty" for a defensible scene-wide scale fit — this benchmark's best
+case is 1.
+
+**The `building_pixel_pct ≈ 45%` figure across all four tiles is itself
+diagnostic, not a coincidence.** `building_mask` thresholds at the 55th
+percentile of positive values — by construction, close to 45% of any
+smoothly-varying continuous field will clear that bar, regardless of
+whether real discrete buildings are present. This is the mechanism, not
+just a correlate: `building_mask` was designed for a genuinely bimodal
+nDSM (mostly near-zero ground, a small distinct population of tall
+structures), which a real high-resolution nDSM has and DAv2's coarse
+10m relative-depth output does not — it's a smooth continuous relief
+signal, so the percentile threshold just splits the image roughly in
+half rather than isolating discrete buildings. That's why 45% of pixels
+read as "building" and yet only 1–7 candidate blobs survive the
+morphological/connectivity/min-area filtering into anything
+shape-like — and why `measure_building`'s own strict shadow-consistency
+gates (≥4 valid rays, ≥85% hit ratio, `std/median ≤ 0.45`, `length ≥ 3px`)
+then reject nearly all of even those.
+
+## Verdict
+
+**Not usable at 10m GSD on this benchmark, for two independent reasons
+that agree: the physics (minimum detectable structure height of 21–48m,
+implausible for 3 of these 4 tiles' terrain) and the empirical building-
+segmentation failure (a 10m relative-height field cannot discretize real
+building footprints the way `building_mask` needs).** This was scoped as
+a plausibility check, not a full validation, and the plausibility check's
+own answer is clear enough that a full validation isn't warranted here —
+the correct next step per the task's own framing ("before investing
+further") is **not** to invest further in this specific technique on this
+domain. This does not touch frequency fusion's own 4 losing tiles in any
+other way; they remain a small, known loss (largest gap +0.86 percentage
+points, amalapuram) as already documented, not one this technique
+resolves.
+
+## Reproducing this
+
+- `scripts/test_shadow_photogrammetry_plausibility.py` — sun-angle fetch
+  + ported shadow-length geometry + the empirical probe. Writes
+  `data/sentinel2_benchmark/shadow_photogrammetry_plausibility.csv`.
