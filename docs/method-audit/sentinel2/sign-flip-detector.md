@@ -3327,3 +3327,42 @@ default clause. Excluded from Phase 4.
 - **Stated in advance:** the reference epochs differ (GEDI 2019–2023, ICESat-2 2019–2025, ETH
   2020, Sentinel-2 renders ~2025). Canopy or building change adds noise against every candidate
   equally.
+
+## Phase 3 — surface references acquired (data acquisition only)
+
+Per-tile counts are in `data/sentinel2_benchmark/surface_reference_counts.csv`.
+
+**3a. ICESat-2 20 m PhoREAL segments** (`scripts/fetch_icesat2_segments20m.py` →
+`data/icesat2_segments20m/<tile>.csv`, a new directory; ground-photon CSVs untouched).
+- **Same call as the coverage script** (`atl08p`, `SRT_LAND`, 2019–2025, identical `phoreal`
+  block), except for:
+  - `len/res` 20.
+  - **`ats` 20 → 5 and `cnt` → 5.** Sliderule's default minimum along-track spread of 20 m can't
+    be met by 20 m segments and dropped about 99% of them (dehradun: 73 segments with defaults
+    vs. 7,185 with `ats=5`).
+- **Height semantics.** `use_abs_h=False`, so canopy fields are heights above `h_te_median`, and
+  surface = `h_te_median + h_max_canopy` (WGS84 ellipsoidal).
+- **Fields kept:** `h_te_median`, `h_max_canopy`, `h_canopy`, `h_mean/min_canopy`,
+  `canopy_openness`, `gnd/veg/ph_count`, `landcover`, `snowcover`, `solar_elevation`,
+  `rgt/cycle/spot/gt/segment_id`.
+- **Server-side granule failures.** Sliderule logged 99 `H5Coro::Future read failure` alerts
+  across the run, i.e. some ATL03 granules were skipped server-side. The counts are therefore a
+  lower bound on what exists.
+- **Valid segments** (`gnd_ph_count>0`, `landcover≠255`, `0≤h_max_canopy≤60`): **5,331
+  (dehradun) to 43,506 (bathinda)**; Darjeeling 5,991.
+- **Not committed** (77 MB, regenerable with the script), following the ground-photon precedent.
+
+**3b. GEDI L2A** (`scripts/fetch_gedi_l2a.py` → `data/gedi_l2a/<tile>.csv`, committed, 6.5 MB).
+- **Source:** Earth Engine `LARSE/GEDI/GEDI02_A_002_MONTHLY`.
+- **Filter:** `quality_flag==1`, `degrade_flag==0`, `sensitivity>0.95`.
+- **Position:** that collection has no `lat/lon_lowestmode` bands, so footprint position comes
+  from `lat/lon_highestreturn`. That's the same shot, within metres, which is negligible against
+  a ~25 m footprint.
+- **Valid shots: 344 (hyderabad) to 11,699 (almora)**; Darjeeling 4,189.
+- **Dates** 2019-04 to 2025-05.
+
+**Flag check (< 200 valid segments or shots): no tile flagged on either reference.**
+- The median h_max_canopy / rh98 profile matches expectations: hilly 8.5–12 m / 17–23 m,
+  agricultural 0.6–1 m / 2.4–2.9 m.
+- `h_max_canopy` = 0.00 at median on four coastal tiles and kochi_city: those segments carry no
+  canopy photons.

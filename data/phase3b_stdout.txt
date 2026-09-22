@@ -1,0 +1,27 @@
+*** Earth Engine *** Share your feedback by taking our Annual Developer Satisfaction Survey: https://google.qualtrics.com/jfe/form/SV_9oS0DRcPvElRMNw?source=python
+bathinda: 4136 valid GEDI shots
+kota: 4593 valid GEDI shots
+kurnool: 663 valid GEDI shots
+nizamabad: 1434 valid GEDI shots
+vidisha: 920 valid GEDI shots
+amalapuram: 1838 valid GEDI shots
+digha: 774 valid GEDI shots
+goa_estuary: 2094 valid GEDI shots
+kakinada: 1497 valid GEDI shots
+kutch: 1479 valid GEDI shots
+nagapattinam: 839 valid GEDI shots
+vembanad: 2812 valid GEDI shots
+almora: 11699 valid GEDI shots
+dehradun: 2354 valid GEDI shots
+dharamshala: 5390 valid GEDI shots
+kohima: 4110 valid GEDI shots
+manali: 7522 valid GEDI shots
+bengaluru: 918 valid GEDI shots
+chennai: 1519 valid GEDI shots
+delhi: 787 valid GEDI shots
+hyderabad: 344 valid GEDI shots
+jaipur: 1882 valid GEDI shots
+kochi_city: 372 valid GEDI shots
+mumbai: 519 valid GEDI shots
+pune: 1579 valid GEDI shots
+darjeeling: 4189 valid GEDI shots

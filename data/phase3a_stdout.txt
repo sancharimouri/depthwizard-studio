@@ -1,0 +1,125 @@
+Alert <-7>: Failure on resource ATL03_20251006084247_03332902_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251006084247_03332902_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211230142949_01271406_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211230142949_01271406_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211230142949_01271406_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211230142949_01271406_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+bathinda: 44591 segments, gnd>0: 43862
+Alert <-7>: Failure on resource ATL03_20230321171415_00051907_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230321171415_00051907_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230321171415_00051907_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230321171415_00051907_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20200625165545_00050807_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20200625165545_00050807_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+kota: 32930 segments, gnd>0: 32442
+Alert <-7>: Failure on resource ATL03_20190813075337_07060407_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190813075337_07060407_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190813075337_07060407_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+kurnool: 15138 segments, gnd>0: 14814
+Alert <-7>: Failure on resource ATL03_20251202175356_12092907_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251202175356_12092907_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251202175356_12092907_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251202175356_12092907_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251202175356_12092907_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251202175356_12092907_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+nizamabad: 30227 segments, gnd>0: 29628
+Alert <-7>: Failure on resource ATL03_20230411160643_03251907_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230411160643_03251907_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230411160643_03251907_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230411160643_03251907_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+vidisha: 29038 segments, gnd>0: 27822
+amalapuram: 33315 segments, gnd>0: 32086
+Alert <-7>: Failure on resource ATL03_20250716235426_04772807_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20250716235426_04772807_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20250716235426_04772807_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20250716235426_04772807_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+digha: 29528 segments, gnd>0: 28596
+Alert <-7>: Failure on resource ATL03_20240223130158_10192201_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20240223130158_10192201_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20240223130158_10192201_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20240223130158_10192201_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190603232628_10190301_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190603232628_10190301_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190603232628_10190301_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190603232628_10190301_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190603232628_10190301_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190603232628_10190301_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+goa_estuary: 28084 segments, gnd>0: 25545
+kakinada: 27214 segments, gnd>0: 26210
+Alert <-7>: Failure on resource ATL03_20211130162756_10571307_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211130162756_10571307_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+kutch: 34785 segments, gnd>0: 34643
+nagapattinam: 25653 segments, gnd>0: 25190
+Alert <-7>: Failure on resource ATL03_20191022163508_03940501_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20191022163508_03940501_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20191022163508_03940501_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20240913031401_13392401_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20240913031401_13392401_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20240913031401_13392401_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20240913031401_13392401_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20210714222751_03251207_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20210714222751_03251207_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20210714222751_03251207_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20210714222751_03251207_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20210714222751_03251207_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20210714222751_03251207_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20191022163508_03940501_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20191022163508_03940501_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20191022163508_03940501_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20240913031401_13392401_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20240913031401_13392401_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/geolocation/reference_photon_lat
+Alert <-7>: Failure on resource ATL03_20230411160643_03251907_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230411160643_03251907_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+vembanad: 14773 segments, gnd>0: 14349
+almora: 25136 segments, gnd>0: 20256
+Alert <-7>: Failure on resource ATL03_20251107190116_08282906_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251107190116_08282906_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251107190116_08282906_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251107190116_08282906_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251107190116_08282906_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20251107190116_08282906_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211115162707_08281306_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211115162707_08281306_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+dehradun: 7185 segments, gnd>0: 5368
+dharamshala: 9716 segments, gnd>0: 8006
+Alert <-7>: Failure on resource ATL03_20220310214528_12011401_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20220310214528_12011401_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20210312150557_12011001_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20210312150557_12011001_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20210312150557_12011001_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20210312150557_12011001_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+kohima: 16336 segments, gnd>0: 12508
+manali: 14711 segments, gnd>0: 12391
+Alert <-7>: Failure on resource ATL03_20250903100823_12172801_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190813075337_07060407_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190813075337_07060407_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20250903100823_12172801_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+bengaluru: 16696 segments, gnd>0: 13861
+Alert <-7>: Failure on resource ATL03_20230123193624_05231807_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230123193624_05231807_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230123193624_05231807_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20230123193624_05231807_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20191031155247_05310501_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20191031155247_05310501_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20191031155247_05310501_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20191031155247_05310501_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+chennai: 21641 segments, gnd>0: 18424
+delhi: 12896 segments, gnd>0: 10195
+hyderabad: 25369 segments, gnd>0: 20380
+Alert <-7>: Failure on resource ATL03_20190518235950_07750301_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190518235950_07750301_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190518235950_07750301_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190518235950_07750301_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+jaipur: 39319 segments, gnd>0: 34237
+kochi_city: 17806 segments, gnd>0: 16728
+Alert <-7>: Failure on resource ATL03_20190312153556_11330207_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20190312153556_11330207_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+mumbai: 15125 segments, gnd>0: 12245
+Alert <-7>: Failure on resource ATL03_20211230143819_01271407_007_01.h5 track 3.1: H5Coro::Future read failure on /gt3r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20211230143819_01271407_007_01.h5 track 3.0: H5Coro::Future read failure on /gt3l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20201228200122_00741001_007_01.h5 track 2.1: H5Coro::Future read failure on /gt2r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20201228200122_00741001_007_01.h5 track 1.1: H5Coro::Future read failure on /gt1r/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20201228200122_00741001_007_01.h5 track 1.0: H5Coro::Future read failure on /gt1l/signal_photons/ph_segment_id
+Alert <-7>: Failure on resource ATL03_20201228200122_00741001_007_01.h5 track 2.0: H5Coro::Future read failure on /gt2l/signal_photons/ph_segment_id
+pune: 20751 segments, gnd>0: 17282
+darjeeling: 8423 segments, gnd>0: 6100
