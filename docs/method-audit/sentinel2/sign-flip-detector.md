@@ -2783,3 +2783,62 @@ warranted, and none was applied.
   `building_fraction.tif`/`ob_height.tif`/`ob_presence.tif`, plus
   `coverage_report.csv` and `openbuildings_coverage_report.csv`),
   `data/sentinel2_benchmark/frequency_fusion_semantic_results/results.csv`.
+
+# 2026-09-23 — RDAH-Net zero-shot on Sentinel-2: does the DFC2019 input-scale fix transfer?
+
+**Status: IN PROGRESS. This entry is appended step by step so a session cutoff loses at most one
+step.** Goal: test the forward-looking flag in `docs/method-audit/05-rdah-net-fusion/verdict.md`
+§5. The flag asks whether the Darjeeling checkerboard that got RDAH-Net rejected on Sentinel-2
+changes or disappears once depth is rescaled the way the DFC2019 audit found. **Inference only.**
+No fine-tuning on Sentinel-2: that would reopen the per-tile data-volume ceiling behind the three
+earlier CNN failures (item 7), and it stays gated behind Step 5.
+
+## Step 0 — pre-flight (no new inference except an exact reproduction of the old run)
+
+**0a. The DFC2019 fix is on the INPUT, not the output.** In `scripts/train_rdah_quadrant_cv.py`
+(`train_one_epoch()`, `evaluate_samples()`, `derive_fold_scale()`) the cached DAv2 relative depth
+is multiplied by a constant **before** the forward pass: `depth = (depth_raw * scale)`. The RGB
+path is unchanged (`/255` then ImageNet normalization). The constant is ×255 for folds 0–1 and
+×300 for folds 2–3, derived per fold from training quadrants only (Swiss checkpoint). The 4-tile
+probe sweep (Track1) peaked at ×255–×300. The mechanism is `external/RDAH-Net/loaddata.py`
+`ToTensor`, which divides RGB by 255 but leaves `rel_depth` undivided, so RDAH was trained on
+depth in a 0–255 range and this project feeds [0,1]. Because it changes the input magnitude seen
+by every encoder layer, it *can* change spatial structure in the output, including a periodic
+artifact. The concern that a global output constant can't remove a checkerboard doesn't apply.
+**Provenance caveat:** the scripts that apply the fix (`train_rdah_quadrant_cv.py`,
+`run_rdah_scale_sweep.py`, `run_rdah_probe.py`) are **untracked, never committed**. The fix is
+documented in commit `0b64c6b` (the 05 audit docs), not implemented in any commit. The 50-tile
+zero-shot ×255 run's own script/JSON was not located (see `05-rdah-net-fusion/summary.md` §10).
+
+**0b. Input dtype/range: 8-bit renders, not L2A reflectance.** Every Sentinel-2 RGB this project
+feeds a depth model is already a 3-band **uint8** GeoTIFF: all 32 benchmark tiles (1000×1000,
+checked), the committed Darjeeling tile, and the production tiles. RDAH's `/255` on RGB is
+therefore correct. The rendering path shared with the DAv2 benchmark runs is
+`backend/depth/depth_engine.py` `load_geotiff_rgb()` (bands 1–3, `np.clip(…, 0, 255)` to uint8 if
+not already uint8; a no-op here). DAv2 depth arrives as float32 in [0,1]
+(`data/sentinel2_benchmark/dav2_depth/*_depth.npy`, `data/diagnostics/darjeeling/Darjeeling_RGB_depth.npy`),
+which is exactly the convention that caused the DFC2019 bug.
+
+**0c. The original checkerboard run, reproduced bit-exactly.** Code: `backend/rdah/rdah_engine.py`
+(`RDAHEngine.predict`, `run_darjeeling`), output
+`data/diagnostics/darjeeling/rdah/Darjeeling_RDAH_nDSM.{npy,png}` (10 Sep). Its checkpoint wasn't
+recorded, so all three were re-run through the unmodified engine on its original inputs:
+
+| checkpoint | output mean | std | max \|diff\| vs. saved output | Pearson vs. saved |
+|---|---:|---:|---:|---:|
+| Track1 `104best_model.pth` | 0.0811 | 0.0123 | 1.600 | 0.038 |
+| **Swiss `swiss_best_model.pth`** | **0.1249** | **0.0652** | **0.0 (exact)** | **1.000** |
+| HK `checkpoints-HK/best_model.pth` | 0.0178 | 0.0221 | 1.903 | 0.320 |
+
+**The original run was the Swiss checkpoint**, with these inputs:
+- RGB: the *committed* `data/sentinel2/darjeeling/Darjeeling_RGB.tif` (1007×1002, uint8, EPSG:32645,
+  10 m). The working-tree copy is a different, uncommitted 1118×1004 re-export with different
+  bounds, so this run uses the committed version to change nothing but the fix.
+- Depth: `data/diagnostics/darjeeling/Darjeeling_RGB_depth.npy` (1007×1002, [0,1]), fed
+  **unscaled**.
+- Size handling: **bilinear resize** of RGB and depth to 1024×1024, then a bilinear resize of the
+  output back to 1007×1002. `_pad_to_1024()` exists in the engine but is never called.
+- One whole-tile forward pass, no tiling.
+
+Swiss's own file lists (`external/RDAH-Net/Swiss-{train,test}.txt`) are GF-7 ortho tiles, with no
+DFC2019 and nothing in India. Any Sentinel-2 result from this checkpoint is contamination-free.
