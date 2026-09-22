@@ -264,6 +264,10 @@ def main():
     ap.add_argument("--folds", type=int, nargs="+", default=[0, 1, 2, 3])
     ap.add_argument("--tiles-limit", type=int, default=None)
     ap.add_argument("--max-minutes", type=float, default=0.0)
+    ap.add_argument("--seed", type=int, default=SEED,
+                    help="RNG seed (default = the original run's SEED, so omitting it reproduces that run)")
+    ap.add_argument("--save-checkpoints", action="store_true",
+                    help="save each fold's final model state_dict to <outdir>/fold<k>.pt (eval-only use)")
     ap.add_argument("--enable-gsd-film", action="store_true")
     ap.add_argument("--enable-height-balanced", action="store_true",
                     help="height-weighted loss term + weighted quadrant sampling")
@@ -273,7 +277,7 @@ def main():
     assert args.outdir.name not in ("method4", "method4_v2"), "refusing to overwrite an existing method's outputs"
     args.outdir.mkdir(parents=True, exist_ok=True)
 
-    seed_everything()
+    seed_everything(args.seed)
     device = get_device()
     print(f"[{args.tag}] device={device} gsd_film={args.enable_gsd_film} height_balanced={args.enable_height_balanced}")
 
@@ -377,6 +381,7 @@ def main():
 
         model.eval()
         per_tile = []
+        pooled_y, pooled_p = [], []
         with torch.no_grad():
             for tid, rgb_c, agl_c, valid_c in eval_samples:
                 rgb_t = torch.from_numpy(rgb_c / 255.0)
@@ -390,15 +395,27 @@ def main():
                 m = compute_metrics(yv, pv)
                 m["tile"] = tid
                 per_tile.append(m)
+                ok = np.isfinite(yv) & np.isfinite(pv)
+                pooled_y.append(yv[ok].astype(np.float64)); pooled_p.append(pv[ok].astype(np.float64))
 
         fold_agg = agg(per_tile)
+        # Evaluation-only diagnostics (added 2026-09-23 for C1; do not affect training):
+        # pooled-within-fold variance ratio var(pred)/var(gt), OLS slope pred~gt, bias.
+        Y, P = np.concatenate(pooled_y), np.concatenate(pooled_p)
+        fold_diag = {"pooled_variance_ratio": float(np.var(P) / np.var(Y)),
+                     "pooled_ols_slope": float(np.polyfit(Y, P, 1)[0]),
+                     "pooled_bias_m": float(np.mean(P - Y)), "n_pixels": int(len(Y))}
+        print(f"[{args.tag}] fold{held_out_q} diagnostics={fold_diag}")
+        if args.save_checkpoints:
+            torch.save({"state_dict": model.state_dict(), "height_scale": height_scale, "seed": args.seed,
+                        "fold": held_out_q}, args.outdir / f"fold{held_out_q}.pt")
         fold_time = time.time() - t_fold
         print(f"[{args.tag}] fold{held_out_q} DONE in {fold_time:.1f}s. metrics={fold_agg}")
 
         fold_results.append({
             "fold": held_out_q, "held_out_quadrant": held_out_q,
             "method6_variant": fold_agg, "height_scale": height_scale,
-            "fold_time_sec": fold_time, "tiles": per_tile,
+            "fold_time_sec": fold_time, "tiles": per_tile, "diagnostics": fold_diag,
         })
 
         partial = {"tag": args.tag, "config": vars(args) | {"outdir": str(args.outdir)},
@@ -412,7 +429,7 @@ def main():
     final = agg([f["method6_variant"] | {"tile": "fold_mean"} for f in fold_results]) if fold_results else {}
     output = {
         "tag": args.tag,
-        "config": {"epochs": args.epochs, "batch": args.batch, "lr_backbone": args.lr_backbone,
+        "config": {"seed": args.seed, "epochs": args.epochs, "batch": args.batch, "lr_backbone": args.lr_backbone,
                    "lr_head": args.lr_head, "weight_decay": args.weight_decay,
                    "enable_gsd_film": args.enable_gsd_film, "enable_height_balanced": args.enable_height_balanced},
         "overall": final,

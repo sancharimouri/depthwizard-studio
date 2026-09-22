@@ -232,3 +232,33 @@ proposed as a reason to reopen that track.
   (per-tile breakdown for all 50 tiles × 4 folds included in each).
   ~62 minutes/variant on Apple Silicon MPS, single seed (42), single run
   each — same no-repeated-seed caveat as the baseline.
+
+## 6. 2026-09-23 — C1–C3 hardening (seeds, variance ratio, uncertainty): PRE-REGISTRATION
+
+**C3 gate.** `data/dfc2019/experiments/method6_height_balanced/m6_heightbal_results.json`
+records `total_time_sec = 3733` (about 1.04 h for all 4 folds, 12 epochs). That is ≤ 10 h, so
+**2 additional seeds are launched**, sequentially, in the background.
+- Recipe: identical (`--enable-height-balanced --epochs 12`, same folds and all defaults).
+- Seeds: **43** and **44**. The original run is seed 1 (`SEED = 42`).
+
+**Code change, minimal and not affecting training** (`scripts/evaluate_method6_gsd_film_height_balanced.py`):
+- `--seed`, defaulting to the original `SEED`, so omitting it reproduces the original call.
+- Evaluation-only per-fold diagnostics: pooled variance ratio var(pred)/var(gt), OLS slope and
+  bias.
+- `--save-checkpoints`, which saves each fold's final weights for inference-only reuse in Part B2.
+
+The original run saved no checkpoints and no predictions, so **C1's variance ratio for the adopted
+recipe comes from the seed runs** (same recipe) and can't be computed for seed 1 itself.
+MPS kernels aren't bit-deterministic, so even `--seed 42` wouldn't reproduce seed 1 exactly.
+
+**C3 decision rule, verbatim:**
+
+> the headline "beats the oracle on all 4 metrics" stands if EVERY seed beats the oracle on all
+> 4. Report mean ± sd across seeds; the original run counts as seed 1.
+
+**Operationalization, fixed now:**
+- "The oracle" = the row the headline was stated against: 3.39 m / 4.58 m / 0.582 / 0.509
+  (per-tile-OLS; `04-learned-scale-modulation/summary.md` §1). Comparisons use the overall
+  mean-of-folds aggregation.
+- The Method 2 Grid+Huber+20 row (2.929 / 4.718 / 0.532 / 0.471), which HANDOFF calls "oracle",
+  is also checked and reported.
