@@ -1,0 +1,26 @@
+tile_id,status,ob_year,covered_pct,confident_building_pct,confident_pixels,mean_height_confident_m,category
+almora,OK,2023,100.0,1.3282,13282,6.145076751708984,hilly
+amalapuram,OK,2023,100.0,0.3832,3832,7.103718280792236,coastal
+bathinda,OK,2023,100.0,1.1941,11941,5.260491847991943,agricultural
+bengaluru,OK (reused from method4_port_openbuildings),2023,100.0,28.4288,284288,8.178933143615723,urban
+chennai,OK (reused from method4_port_openbuildings),2023,100.0,23.8456,238456,7.3600077629089355,urban
+dehradun,OK,2023,100.0,0.1931,1931,6.253775596618652,hilly
+delhi,OK (reused from method4_port_openbuildings),2023,100.0,14.4008,144008,10.129541397094727,urban
+dharamshala,OK,2023,100.0,2.4519,24519,6.43446159362793,hilly
+digha,OK,2023,100.0,1.2344,12344,5.218645095825195,coastal
+goa_estuary,OK,2023,100.0,4.5039,45039,7.306197166442871,coastal
+hyderabad,OK (reused from method4_port_openbuildings),2023,100.0,32.7577,327577,9.224016189575195,urban
+jaipur,OK (reused from method4_port_openbuildings),2023,100.0,27.2407,272407,7.041108131408691,urban
+kakinada,OK,2023,100.0,7.8719,78719,7.14882230758667,coastal
+kochi_city,OK (reused from method4_port_openbuildings),2023,100.0,8.8687,88687,5.951233863830566,urban
+kohima,OK,2023,100.0,2.3224,23224,6.399400234222412,hilly
+kota,OK,2023,100.0,0.5757,5757,5.40498161315918,agricultural
+kurnool,OK,2023,82.4,0.1021,1021,5.2789201736450195,agricultural
+kutch,OK,2023,100.0,0.0,0,,coastal
+manali,OK,2023,100.0,0.9336,9336,8.186247825622559,hilly
+mumbai,OK (reused from method4_port_openbuildings),2023,100.0,16.3068,163068,13.760333061218262,urban
+nagapattinam,OK,2023,100.0,2.0009,20009,4.7655029296875,coastal
+nizamabad,OK,2023,100.0,1.1893,11893,5.429993152618408,agricultural
+pune,OK (reused from method4_port_openbuildings),2023,100.0,14.911299999999999,149113,9.750412940979004,urban
+vembanad,OK,2023,100.0,4.6287,46287,4.462322235107422,coastal
+vidisha,OK,2023,100.0,3.2703,32703,5.98557186126709,agricultural
