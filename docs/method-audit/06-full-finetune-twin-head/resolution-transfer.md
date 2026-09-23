@@ -89,3 +89,13 @@ scored on the held-out quadrant (same definition as §1.0 of `final-comparison.m
 
 **Phase 5 (optional):** 8 m (P: 19 px, 2×2 tokens; R) only after Phases 0–4 are written up and committed; it never
 blocks the final step.
+
+## 2026-09-24 — Phase 2 recipe-identity gate: **PASS (bit-identical)**
+
+`scripts/method6_resolution_transfer.py train --gsd 0.3 --proto P --folds 0` (identity transform) reproduces the adopted
+seed-42 fold-0 result exactly: MAE **1.8834942542525481**, RMSE 3.413497563855602, Pearson 0.7572194755073397,
+Spearman 0.6599485918985362, height_scale 16.615135192871094; 714 s. The new script's training path is therefore the
+adopted recipe; the coarse runs differ only by the input transform. Measured native fold time 714 s ⇒ protocol R
+≈ 12 min/fold ⇒ 3 GSD × 4 folds ≈ 2.4 h; protocol P measured on its first fold (logged below). Launched as one
+nohup chain: P 2/3/5 m → R 2/3/5 m → Phase 3 eval → Phase 4 analysis
+(`data/dfc2019/experiments/resolution_transfer/chain.log`).
