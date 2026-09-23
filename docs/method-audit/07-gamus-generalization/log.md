@@ -592,3 +592,18 @@ Method 6 is much better on sparse ground, slightly better on buildings, and **wo
 - The margin over the oracle survives on MAE and on correlation. It disappears on RMSE.
 - **Post-hoc observation, not a claim:** most of the DFC2019 "beats the oracle on all four" came from in-domain
   scale. With a per-tile scale fit (M6 + OLS, which needs local LiDAR), Method 6's ranking advantage would win on all four.
+
+---
+
+## 2026-09-23 — Part F execution note (the RF stage is offloaded to Kaggle; the protocol is unchanged)
+
+- The local Part F run finished **feature extraction**: `terrain_rf_residual/samples.parquet`, 1,241,260 (pixel × RGT)
+  samples, 32 tiles, 63 RGTs, about 8 min.
+- It was then **stopped at the user's request**, 20:21 IST, during the first RF fit (heavy swap on this Mac).
+  **No RF result had been produced or seen.**
+- The RF stage moves to Kaggle CPU (about 30 GB RAM): `kaggle/terrain_rf_kaggle.py`, manual `kaggle/bundle_f/read.md`.
+  - The filter, the `GroupKFold(5)` on RGT and the RF spec (100 trees, `random_state=0`, defaults) are identical.
+  - The fold assignment was verified byte-identical to the local code before shipping.
+  - Per-variant notebooks (A, B) run in parallel. Out-of-fold predictions are saved per fold, so a run can resume.
+- **Merge:** `scripts/terrain_rf_residual.py --from-kaggle=<dir>`. It asserts identical folds, loads the out-of-fold
+  predictions, and computes the linear baseline, per-tile metrics and the pre-registered decision locally.
