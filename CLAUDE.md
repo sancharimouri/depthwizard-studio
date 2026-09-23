@@ -48,7 +48,7 @@ exception, specific to Session 2: you may *run* the existing, already-used
 asset-generation process (DAv2 inference + DSM crop/reproject) unmodified, to produce
 visualization assets for new regions — that's reusing a frozen process, not changing it.
 
-## ML research track status (as of 2026-09-23, final close-out — see `docs/method-audit/final-comparison.md`)
+## ML research track status (as of 2026-09-23, after the 07 generalization session — see `docs/method-audit/final-comparison.md` §7)
 
 Full audit trail: `PROJECT_STATUS_REPORT.md` (repo root) and `docs/method-audit/`
 (one numbered subfolder per method, each with `summary.md`/`verdict.md`). Methods tried,
@@ -117,6 +117,14 @@ in order:
 `docs/method-audit/final-comparison.md` is the single consolidated record (tables, CIs,
 independence flags, audit corrections). `00-audit-log.md` is the chronological index, with
 result/commit gaps flagged.
+
+11. **Method 6 generalization test** (`07-gamus-generalization`, 2026-09-23). **Does NOT generalize.**
+   - **GAMUS:** 2,861 aerial test tiles (DC/NYC/PHL; the HF version has 3 cities; its JAX and OMA were DFC2019 tiles, removed upstream; 0 leakage).
+     - Method 6 vs. the oracle: 3.130 / **4.583** / 0.638 / 0.583 vs. 3.474 / **4.426** / 0.491 / 0.425.
+     - It loses RMSE in all 3 cities for every seed, because it compresses tall objects (pooled variance ratio 0.30).
+   - **US forest vs. 3DEP LiDAR:** canopy p95 is 10.6 m against 37.7 m. "DEM + predicted height" doesn't beat the DEM for SRTM, GLO-30 or FABDEM.
+   - **GAMUS fine-tune:** pre-registered stop, because no GAMUS city is leaf-on.
+   - **No product model adopted; the product stays DEM-only.** Details: `final-comparison.md` §7 and `docs/deliverables-audit.md`.
 
 **None of the above touches the live demo.** Every method here — including Method 6's
 DFC2019 win — is research-track work, evaluated offline against DFC2019/Sentinel-2
@@ -317,3 +325,26 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
    numbered cells, with glob-based path discovery because `/kaggle/input` nesting varies. It covers commit mode
    (Save & Run All), the expected log lines, and exactly which output files go where in the repo. It ends with a
    troubleshooting table.
+
+## SIH26175 brief — evaluation criteria (standing reference; full text `docs/SIH26175_problem_statement.md`)
+
+Source: github.com/IMG-PROCESS-SAC/SIH-DepthWizard-2026 README, commit `ac078d5`.
+
+| Category | Weight | What is judged |
+|---|---|---|
+| DSM estimation accuracy | **50%** | RMSE, MAE and correlation against LiDAR/reference data. **Must be stable across urban, sparse, hilly and forested landscapes.** |
+| Rendering & UX | **50%** | Projection accuracy, visual fidelity, 3D flythrough navigability, interface intuitiveness, software stability, **standalone deployment**. |
+
+**Required deliverables:**
+- Upload of PNG, JPG or TIFF.
+- PNG/JPG → relative DSM.
+- GeoTIFF → absolute metric DSM, using SRTM/DEM or GCP calibration.
+- DSM output in a standard geospatial format.
+- Texture projection plus first-person flythrough.
+- Structural-height and slope analysis.
+- In-UI validation against reference data.
+- Standalone deployment.
+
+**Current status per deliverable:** `docs/deliverables-audit.md` (2026-09-23: none fully met).
+**Recommended dataset:** GAMUS (HF `earthflow/GAMUS`). It is optional; any open remote-sensing depth dataset is allowed.
+

@@ -63,6 +63,18 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
         NYC imagery is real (`*_IMG.h5`) but just as leaf-off, so it wasn't added.
 - Everything: `docs/method-audit/final-comparison.md` §1–2.
 
+**Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
+- **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:
+  - MAE 3.130 vs. 3.474; RMSE **4.583 vs. 4.426**; Pearson 0.638 vs. 0.491; Spearman 0.583 vs. 0.425.
+  - It wins MAE, Pearson and Spearman but **loses RMSE in all 3 cities for every seed** (tall-object compression; pooled variance ratio 0.30).
+- **US forest and mountain vs. airborne LiDAR** (USGS 3DEP, 8 windows):
+  - canopy p95 is 10.6 m against 37.7 m;
+  - "DEM + predicted height" does not beat the DEM for SRTM, GLO-30 or FABDEM. FABDEM + AGL's RMSE gain is bias-only.
+- **GAMUS fine-tune:** a pre-registered stop, because no GAMUS city is leaf-on.
+- **Product model: none adopted.** The product recommendation stays **DEM-only** (FABDEM terrain, GLO-30 surface).
+  Method 6 remains the DFC2019 research best only.
+- Seed-42 fold checkpoints were re-created bit-identically (`method6_height_balanced_seed42_ckpt/`). All 3 seeds × 4 folds now exist.
+
 - Docs: `docs/method-audit/06-full-finetune-twin-head/{summary,verdict}.md`
 - Eval/train scripts: `scripts/evaluate_method6_finetune_twinhead.py`,
   `scripts/evaluate_method6_gsd_film_height_balanced.py`,
@@ -181,6 +193,13 @@ per-point geoid, R4 offset-guarded; `data/sentinel2_benchmark/dem_baselines_32/s
   - Scripts: `scripts/rdah_darjeeling_rerun.py`, `scripts/rdah_resolution_sweep.py`.
 
 ## 3. Long-term plan — open items, priority order
+
+**New, 2026-09-23 (07):**
+- **0a. Leaf-on, tall-forest supervision for the canopy ceiling.** GAMUS is leaf-off, so it can't supply it.
+  - Candidates: NEON AOP (needs a token), 3DEP + leaf-on NAIP at scale (`scripts/forest_mountain_3dep_eval.py`), or an ExG-selected PHL leaf-on subset (post-hoc idea).
+  - Must pass the Sikkim non-regression criterion (`07-.../log.md`, C.0).
+- **0b. Part D rerun on NEON AOP** if a NEON API token is added to `.env`.
+- **0c. Deliverables gaps** (`docs/deliverables-audit.md`): rDSM and metric-DSM paths, GeoTIFF export, slope/height analysis, in-UI validation, packaging. A user decision; the frontend stays frozen until then.
 
 1. **TSE-Net (self-training)** — untouched, no code or docs. The only substantive open method.
 2. **RDAH on DFC2019: Track1 seen-vs-unseen split** — low priority, inference only.
@@ -340,6 +359,18 @@ terrain.** None of the research-track work is deployed into it.
   silently becomes 0.
 - **Commit result files when the result is written up**, not later (see the gaps in
   `00-audit-log.md`).
+
+- **Out-of-domain before adoption (2026-09-23).** A DFC2019 win is not a product claim until it is tested on
+  independent data covering the brief's landscapes: urban (GAMUS), sparse, and forested/mountainous (3DEP/NEON LiDAR).
+  Method 6's DFC2019 "beats the oracle on all 4" did not survive GAMUS.
+- **Check leaf-on/leaf-off before using canopy supervision:** measure the share of tree pixels with ExG > 0.05.
+  `scripts/gamus_leafon_precheck.py`.
+- **Mean-of-tiles variance ratio is uninformative when some tiles are near-flat** (var(true) ≈ 0 blows it up).
+  Report the pixel-pooled variance ratio.
+- **Vertical datums on US LiDAR (NAVD88):** convert EGM → WGS84/ITRF2014 ellipsoid → Helmert to NAD83(2011) → GEOID
+  explicitly. PROJ's default route uses a null NAD83↔WGS84 step, an error of up to 1.3 m.
+  Guard with |N| > 1 m, **not** with the size of the final shift: that can legitimately be ≈ 0, e.g. 0.045 m at MLBS VA.
+- **Kaggle GPU offload:** follow the reference pattern in CLAUDE.md (`kaggle/gamus_zeroshot_kaggle.py`, `kaggle/bundle/read.md`).
 
 ## 8. Skills
 

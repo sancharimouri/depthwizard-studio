@@ -25,6 +25,15 @@ independent ICESat-2 and GEDI lidar), **none of the depth-model corrections help
 - 10 m canopy-height models do carry a real height signal, mostly between landscapes rather than
   within a scene, but adding them to a DEM doesn't improve on a plain DEM.
 
+**Generalization (§7, added 2026-09-23).** Method 6 was tested for the first time outside DFC2019.
+- **It does not generalize** under the pre-registered rule.
+  - On 2,861 GAMUS aerial test tiles (DC, NYC, PHL; zero leakage) it still beats the oracle on MAE, Pearson and Spearman.
+  - It **loses on RMSE in every city and for every seed**, because it compresses tall objects (pooled variance ratio 0.30).
+- On leaf-on US forest vs. airborne LiDAR (USGS 3DEP, 8 windows) its canopy p95 is 10.6 m against 37.7 m.
+  - "DEM + predicted height" does not beat the DEM alone for SRTM, GLO-30 or FABDEM.
+- A GAMUS fine-tune was stopped by a pre-registered leaf-on pre-check: all GAMUS cities are leaf-off or mixed-season.
+- The app meets none of the brief's deliverables in full (`docs/deliverables-audit.md`).
+
 Along the way the project overturned several of its own earlier headlines, and those corrections
 are listed in §5, because catching them is what the methodology is for.
 
@@ -261,6 +270,9 @@ now stops the second silently recurring.
 ## 6. What remains open, and what is deliberately closed
 
 **Open:**
+- **Leaf-on, tall-forest supervision for the canopy ceiling** (§7). GAMUS can't supply it: it is leaf-off.
+  Candidates: NEON AOP (needs a token), 3DEP + leaf-on NAIP at scale, or an ExG-selected leaf-on PHL subset (post-hoc idea, not run).
+- **Part D rerun on NEON AOP**, if a NEON API token is provided.
 - **TSE-Net (self-training):** untouched.
 - **Track1 seen-vs-unseen split:** Track1 zero-shot on its 9 unseen vs. 41 seen tiles, to separate
   memorisation from in-domain training. Low priority, inference only.
@@ -282,3 +294,67 @@ now stops the second silently recurring.
 - RS3DAda (contaminated)
 - shadow photogrammetry at 10 m
 - semantic-prior phase 2.3
+
+---
+
+## 7. Generalization beyond DFC2019 (2026-09-23; `docs/method-audit/07-gamus-generalization/`)
+
+Brief: `docs/SIH26175_problem_statement.md`. All rules were pre-registered in `07-.../log.md`.
+
+### 7.1 GAMUS test split, zero-shot
+
+- **Data:** 2,861 tiles (2,848 scored), DC / NYC / PHL, aerial orthophotos with a LiDAR nDSM.
+- **Leakage:** 0 blocks shared with DFC2019.
+- **Protocol:** mean of tiles, where each tile is the mean of its 4 held-out quadrants; 95% tile-bootstrap CI.
+- Source: `data/gamus_eval/zeroshot_merged_summary.json`.
+
+| | MAE | RMSE | Pearson | Spearman | var ratio (pooled) |
+|---|---|---|---|---|---|
+| Method 6 seed 42 (12-fold-model protocol; seeds 43 and 44 within 0.03) | **3.130** [3.017, 3.246] | 4.583 [4.435, 4.739] | **0.638** [0.631, 0.645] | **0.583** [0.576, 0.590] | 0.305 |
+| Oracle per-tile OLS (frozen DAv2-L, same definition as §1.0) | 3.474 [3.387, 3.564] | **4.426** [4.319, 4.536] | 0.491 [0.480, 0.502] | 0.425 [0.416, 0.434] | 0.603 |
+| Frozen DAv2-L (relative) | n/a | n/a | 0.504 | 0.436 | n/a |
+
+- **Pre-registered verdict: DOES NOT GENERALIZE.**
+  - RMSE: Δ = +0.158 m [+0.089, +0.230], worse. It loses in DC, NYC and PHL for every seed.
+  - MAE, Pearson and Spearman are better everywhere: Holm p < 1e-148; tile wins 2,152, 2,385 and 2,604 of 2,848.
+- **Cause: tall-object compression.** True 20–30 m is predicted at 7.0 m and ≥ 50 m at 17.2 m. GAMUS trees of 20–30 m come out at 5.4 m (leaf-off imagery).
+- **Landscape MAE** (building / sparse / tree): Method 6 3.72 / 1.29 / 5.03; oracle 3.87 / 3.45 / 4.69. The spread is 3.7 m vs. 1.2 m.
+
+### 7.2 Forested and mountainous terrain vs. airborne LiDAR (USGS 3DEP; NEON blocked by its token requirement)
+
+- **Setup:** 8 windows × 600 m. Sites: Olympic WA, Tahoe CA, Great Smoky Mtns TN, MLBS VA.
+- **Input:** leaf-on NAIP → 0.3 m, Method 6 as a 12-model mean.
+- **Datum:** per-pixel EGM → NAVD88 through an explicit ITRF2014 → NAD83(2011) Helmert step.
+- Source: `data/forest_mountain_3dep/summary.json`.
+- **nDSM vs. 3DEP height above ground** (mean of windows): MAE 17.35, RMSE 19.64, bias −17.16, Pearson 0.404, variance ratio 0.125.
+  **p95 10.6 m predicted vs. 37.7 m LiDAR.**
+- **Composed DSM (DEM + max(AGL, 0)) vs. the 3DEP first-return DSM.** Rule: both RMSE and bias-removed RMSE, Holm p < 0.05.
+
+| DEM | RMSE raw → composed | bRMSE raw → composed | verdict |
+|---|---|---|---|
+| FABDEM | 11.36 → 8.56 (7/8, p_Holm 0.031) | 7.75 → 7.60 (5/8, p_Holm 1.0) | **does not add value** (bias-only) |
+| GLO-30 | 9.16 → 12.84 (0/8) | 7.13 → 7.45 | **does not add value** (worse) |
+| SRTM | 9.63 → 11.78 (2/8) | 8.38 → 8.31 | **does not add value** (worse) |
+
+- **India, descriptive** (Sikkim crops vs. ICESat-2 20 m / GEDI; `data/vhr_dsm/_diagnostics/sparse_lidar_dsm_check.json`):
+  - composed ≈ GLO-30, and closer than FABDEM to canopy-top GEDI;
+  - n = 5–84 per crop.
+
+### 7.3 GAMUS fine-tune
+
+- Not run: a **pre-registered stop** (C.0).
+- Median share of green tree pixels: DC 0.06, NYC 0.03, PHL 0.32, against a leaf-on threshold of 0.40.
+- Source: `data/gamus_eval/leafon_precheck.json`.
+
+### 7.4 Deliverables audit (read-only)
+
+`docs/deliverables-audit.md`.
+- **Partial:** upload, texture drape plus an orbit "flythrough", 4-region coverage.
+- **Missing:**
+  - the rDSM path;
+  - the metric-DSM path and GeoTIFF export (both exist offline in `scripts/vhr_dsm_pipeline.py`);
+  - slope and height analysis;
+  - in-UI validation;
+  - standalone packaging.
+- The elevation layer is DEM-only and correctly labelled "DEM ELEVATION".
+
