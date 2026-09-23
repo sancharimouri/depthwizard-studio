@@ -1,0 +1,83 @@
+{
+  "folds_completed": [
+    0
+  ],
+  "folds": [
+    {
+      "fold": 0,
+      "dem_cnn_rmse_m": 12.881958961486816,
+      "dem_linear_rmse_m": 18.546220779418945,
+      "icesat2_cnn_rmse_m": 22.462001373193385,
+      "icesat2_linear_rmse_m": 18.578222687316686,
+      "n_icesat2_photons": 417976,
+      "n_training_patches": 360,
+      "tiles": [
+        {
+          "tile": "bengaluru",
+          "dem_cnn_rmse_m": 11.686979293823242,
+          "dem_linear_rmse_m": 17.311054229736328,
+          "icesat2_n": 28358,
+          "icesat2_cnn_rmse_m": 19.13194558186741,
+          "icesat2_linear_rmse_m": 16.357632211196442
+        },
+        {
+          "tile": "chennai",
+          "dem_cnn_rmse_m": 4.440570831298828,
+          "dem_linear_rmse_m": 6.630288600921631,
+          "icesat2_n": 21908,
+          "icesat2_cnn_rmse_m": 11.278438027714579,
+          "icesat2_linear_rmse_m": 5.460798227753913
+        },
+        {
+          "tile": "delhi",
+          "dem_cnn_rmse_m": 7.274345397949219,
+          "dem_linear_rmse_m": 11.695269584655762,
+          "icesat2_n": 14412,
+          "icesat2_cnn_rmse_m": 16.65016592533281,
+          "icesat2_linear_rmse_m": 11.456719810690315
+        },
+        {
+          "tile": "hyderabad",
+          "dem_cnn_rmse_m": 13.885483741760254,
+          "dem_linear_rmse_m": 17.78327178955078,
+          "icesat2_n": 79548,
+          "icesat2_cnn_rmse_m": 20.790533918544007,
+          "icesat2_linear_rmse_m": 22.914566628089105
+        },
+        {
+          "tile": "jaipur",
+          "dem_cnn_rmse_m": 6.984736442565918,
+          "dem_linear_rmse_m": 6.581226348876953,
+          "icesat2_n": 102728,
+          "icesat2_cnn_rmse_m": 28.021626357406962,
+          "icesat2_linear_rmse_m": 16.612957662179056
+        },
+        {
+          "tile": "kochi_city",
+          "dem_cnn_rmse_m": 2.5144667625427246,
+          "dem_linear_rmse_m": 5.541181564331055,
+          "icesat2_n": 99928,
+          "icesat2_cnn_rmse_m": 5.486300061906771,
+          "icesat2_linear_rmse_m": 1.5760787783883414
+        },
+        {
+          "tile": "mumbai",
+          "dem_cnn_rmse_m": 14.139775276184082,
+          "dem_linear_rmse_m": 14.798896789550781,
+          "icesat2_n": 31920,
+          "icesat2_cnn_rmse_m": 30.28801266403603,
+          "icesat2_linear_rmse_m": 11.202985224918738
+        },
+        {
+          "tile": "pune",
+          "dem_cnn_rmse_m": 26.501487731933594,
+          "dem_linear_rmse_m": 40.977664947509766,
+          "icesat2_n": 39174,
+          "icesat2_cnn_rmse_m": 34.41099205733064,
+          "icesat2_linear_rmse_m": 39.05655568344629
+        }
+      ],
+      "fold_time_sec": 107.99582695960999
+    }
+  ]
+}

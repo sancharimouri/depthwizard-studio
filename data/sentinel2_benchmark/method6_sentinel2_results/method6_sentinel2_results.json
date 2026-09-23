@@ -1,0 +1,271 @@
+{
+  "folds_completed": [
+    0
+  ],
+  "folds": [
+    {
+      "fold": 0,
+      "dem_win_count": "1/25",
+      "icesat2_win_count": "2/25",
+      "overall_dem_cnn_rmse_m": 197.35119487762452,
+      "overall_dem_linear_rmse_m": 55.54730003595352,
+      "overall_icesat2_cnn_rmse_m": 193.30871003202722,
+      "overall_icesat2_linear_rmse_m": 54.33029923534872,
+      "init_mu_m": 458.1333312988281,
+      "height_scale": 732.0386962890625,
+      "fold_time_sec": 309.4531810283661,
+      "tiles": [
+        {
+          "tile": "bathinda",
+          "dem_cnn_rmse_m": 135.93235778808594,
+          "dem_linear_rmse_m": 1.7039408683776855,
+          "dem_cnn_wins": false,
+          "icesat2_n": 332105,
+          "icesat2_cnn_rmse_m": 133.4585432391288,
+          "icesat2_linear_rmse_m": 0.7753941225645195,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "kota",
+          "dem_cnn_rmse_m": 46.891239166259766,
+          "dem_linear_rmse_m": 5.276595115661621,
+          "dem_cnn_wins": false,
+          "icesat2_n": 83046,
+          "icesat2_cnn_rmse_m": 44.83987066087555,
+          "icesat2_linear_rmse_m": 7.024517628520198,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "kurnool",
+          "dem_cnn_rmse_m": 60.73347854614258,
+          "dem_linear_rmse_m": 7.657864570617676,
+          "dem_cnn_wins": false,
+          "icesat2_n": 45853,
+          "icesat2_cnn_rmse_m": 56.618754979397266,
+          "icesat2_linear_rmse_m": 9.297488505248605,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "nizamabad",
+          "dem_cnn_rmse_m": 12.785792350769043,
+          "dem_linear_rmse_m": 7.46812629699707,
+          "dem_cnn_wins": false,
+          "icesat2_n": 168679,
+          "icesat2_cnn_rmse_m": 9.565953799201935,
+          "icesat2_linear_rmse_m": 10.105193867459368,
+          "icesat2_cnn_wins": true
+        },
+        {
+          "tile": "vidisha",
+          "dem_cnn_rmse_m": 31.587093353271484,
+          "dem_linear_rmse_m": 6.422717094421387,
+          "dem_cnn_wins": false,
+          "icesat2_n": 99901,
+          "icesat2_cnn_rmse_m": 31.643752198634154,
+          "icesat2_linear_rmse_m": 5.896694057752695,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "amalapuram",
+          "dem_cnn_rmse_m": 116.22183990478516,
+          "dem_linear_rmse_m": 2.1035242080688477,
+          "dem_cnn_wins": false,
+          "icesat2_n": 363953,
+          "icesat2_cnn_rmse_m": 118.34895368546621,
+          "icesat2_linear_rmse_m": 3.163064207775935,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "digha",
+          "dem_cnn_rmse_m": 331.2947998046875,
+          "dem_linear_rmse_m": 3.317523241043091,
+          "dem_cnn_wins": false,
+          "icesat2_n": 252104,
+          "icesat2_cnn_rmse_m": 344.9729079994969,
+          "icesat2_linear_rmse_m": 4.906162483273244,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "goa_estuary",
+          "dem_cnn_rmse_m": 31.791358947753906,
+          "dem_linear_rmse_m": 20.79126739501953,
+          "dem_cnn_wins": false,
+          "icesat2_n": 117193,
+          "icesat2_cnn_rmse_m": 38.62769912151291,
+          "icesat2_linear_rmse_m": 16.57723984220836,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "kakinada",
+          "dem_cnn_rmse_m": 145.5404815673828,
+          "dem_linear_rmse_m": 2.8091564178466797,
+          "dem_cnn_wins": false,
+          "icesat2_n": 144146,
+          "icesat2_cnn_rmse_m": 144.6002217226701,
+          "icesat2_linear_rmse_m": 3.6427187345005483,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "kutch",
+          "dem_cnn_rmse_m": 27.659130096435547,
+          "dem_linear_rmse_m": 0.8435080647468567,
+          "dem_cnn_wins": false,
+          "icesat2_n": 246627,
+          "icesat2_cnn_rmse_m": 25.102104962337872,
+          "icesat2_linear_rmse_m": 0.8902499287853166,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "nagapattinam",
+          "dem_cnn_rmse_m": 283.5716247558594,
+          "dem_linear_rmse_m": 2.2243525981903076,
+          "dem_cnn_wins": false,
+          "icesat2_n": 185881,
+          "icesat2_cnn_rmse_m": 289.6734863213086,
+          "icesat2_linear_rmse_m": 2.5004915168040833,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "vembanad",
+          "dem_cnn_rmse_m": 23.007726669311523,
+          "dem_linear_rmse_m": 2.771803140640259,
+          "dem_cnn_wins": false,
+          "icesat2_n": 26474,
+          "icesat2_cnn_rmse_m": 31.00050360794338,
+          "icesat2_linear_rmse_m": 3.395477246958091,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "almora",
+          "dem_cnn_rmse_m": 139.0217742919922,
+          "dem_linear_rmse_m": 116.84430694580078,
+          "dem_cnn_wins": false,
+          "icesat2_n": 38555,
+          "icesat2_cnn_rmse_m": 160.61720769141857,
+          "icesat2_linear_rmse_m": 123.81647153261835,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "dehradun",
+          "dem_cnn_rmse_m": 385.0728759765625,
+          "dem_linear_rmse_m": 227.2694854736328,
+          "dem_cnn_wins": false,
+          "icesat2_n": 8757,
+          "icesat2_cnn_rmse_m": 477.6813146490288,
+          "icesat2_linear_rmse_m": 243.66022196320804,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "dharamshala",
+          "dem_cnn_rmse_m": 282.69073486328125,
+          "dem_linear_rmse_m": 399.8283996582031,
+          "dem_cnn_wins": true,
+          "icesat2_n": 11151,
+          "icesat2_cnn_rmse_m": 298.49603010037737,
+          "icesat2_linear_rmse_m": 451.29170342380456,
+          "icesat2_cnn_wins": true
+        },
+        {
+          "tile": "kohima",
+          "dem_cnn_rmse_m": 330.3583984375,
+          "dem_linear_rmse_m": 253.72210693359375,
+          "dem_cnn_wins": false,
+          "icesat2_n": 23433,
+          "icesat2_cnn_rmse_m": 320.56167292451374,
+          "icesat2_linear_rmse_m": 235.36736097067657,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "manali",
+          "dem_cnn_rmse_m": 796.267578125,
+          "dem_linear_rmse_m": 218.34912109375,
+          "dem_cnn_wins": false,
+          "icesat2_n": 14678,
+          "icesat2_cnn_rmse_m": 520.1813587552438,
+          "icesat2_linear_rmse_m": 111.30873662489728,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "bengaluru",
+          "dem_cnn_rmse_m": 358.61737060546875,
+          "dem_linear_rmse_m": 19.27731704711914,
+          "dem_cnn_wins": false,
+          "icesat2_n": 28358,
+          "icesat2_cnn_rmse_m": 357.6684033445059,
+          "icesat2_linear_rmse_m": 16.357632211196442,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "chennai",
+          "dem_cnn_rmse_m": 445.3445739746094,
+          "dem_linear_rmse_m": 3.2035727500915527,
+          "dem_cnn_wins": false,
+          "icesat2_n": 21908,
+          "icesat2_cnn_rmse_m": 450.3265996743276,
+          "icesat2_linear_rmse_m": 5.460798227753913,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "delhi",
+          "dem_cnn_rmse_m": 129.28448486328125,
+          "dem_linear_rmse_m": 9.946105003356934,
+          "dem_cnn_wins": false,
+          "icesat2_n": 14412,
+          "icesat2_cnn_rmse_m": 134.93691832419228,
+          "icesat2_linear_rmse_m": 11.456719810690315,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "hyderabad",
+          "dem_cnn_rmse_m": 162.6618194580078,
+          "dem_linear_rmse_m": 16.985050201416016,
+          "dem_cnn_wins": false,
+          "icesat2_n": 79548,
+          "icesat2_cnn_rmse_m": 177.3093985139318,
+          "icesat2_linear_rmse_m": 22.914566628089105,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "jaipur",
+          "dem_cnn_rmse_m": 49.0789680480957,
+          "dem_linear_rmse_m": 16.378009796142578,
+          "dem_cnn_wins": false,
+          "icesat2_n": 102728,
+          "icesat2_cnn_rmse_m": 47.84067910638594,
+          "icesat2_linear_rmse_m": 16.612957662179056,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "kochi_city",
+          "dem_cnn_rmse_m": 28.217687606811523,
+          "dem_linear_rmse_m": 3.8908848762512207,
+          "dem_cnn_wins": false,
+          "icesat2_n": 99928,
+          "icesat2_cnn_rmse_m": 32.9798953665621,
+          "icesat2_linear_rmse_m": 1.5760787783883414,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "mumbai",
+          "dem_cnn_rmse_m": 244.41856384277344,
+          "dem_linear_rmse_m": 9.7479887008667,
+          "dem_cnn_wins": false,
+          "icesat2_n": 31920,
+          "icesat2_cnn_rmse_m": 243.85019486780357,
+          "icesat2_linear_rmse_m": 11.202985224918738,
+          "icesat2_cnn_wins": false
+        },
+        {
+          "tile": "pune",
+          "dem_cnn_rmse_m": 335.7281188964844,
+          "dem_linear_rmse_m": 29.849773406982422,
+          "dem_cnn_wins": false,
+          "icesat2_n": 39174,
+          "icesat2_cnn_rmse_m": 341.81532518441645,
+          "icesat2_linear_rmse_m": 39.05655568344629,
+          "icesat2_cnn_wins": false
+        }
+      ]
+    }
+  ]
+}

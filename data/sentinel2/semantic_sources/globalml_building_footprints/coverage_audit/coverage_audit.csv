@@ -1,0 +1,11 @@
+city,rgb_path,aoi_min_lon,aoi_min_lat,aoi_max_lon,aoi_max_lat,required_partition_count,quadkeys
+kolkata,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/kolkata/Kolkata_RGB.tif,88.24813125922181,22.448300737015703,88.4521429549545,22.651758879422417,2,"123133321,123133323"
+bardhaman,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/bardhaman/Bardhaman_RGB.tif,87.79935693201405,23.199413258568754,87.90067587993991,23.300576350215636,4,"123133302,123133303,123133320,123133321"
+delhi,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/delhi/Delhi_RGB.tif,77.09599905358705,28.49667290748401,77.30443658398231,28.703293686459634,1,123121303
+mumbai,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/mumbai/Mumbai_RGB.tif,72.79730255417347,18.898244232895156,72.95253883218544,19.10176076568479,1,123300311
+bengaluru,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/bengaluru/Bengaluru_RGB.tif,77.4979771260507,12.897928881872271,77.70219420756412,13.102029210980795,1,123303312
+hyderabad,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/hyderabad/Hyderabad_RGB.tif,78.34782282030653,17.347402768777858,78.55209488139009,17.502600429029275,1,123301331
+jaipur,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/jaipur/Jaipur_RGB.tif,75.69875108683145,26.798821412141134,75.90165480223044,27.00119305876331,1,123123011
+kochi,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/kochi/Kochi_RGB.tif,76.19941867935019,9.899402830222469,76.35069170155998,10.05062390354095,1,123321102
+darjeeling,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/darjeeling/Darjeeling_RGB.tif,88.19885736316962,26.999100252815772,88.30119062977198,27.10091435028303,2,"123131323,123133101"
+sundarbans,/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/sundarbans/Sundarbans_RGB.tif,88.69758908165959,21.797744383693242,88.90265702468875,22.00223596706311,1,123133332

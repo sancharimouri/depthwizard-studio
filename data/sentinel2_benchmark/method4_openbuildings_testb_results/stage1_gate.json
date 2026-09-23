@@ -1,0 +1,56 @@
+{
+  "wins": 2,
+  "losses": 6,
+  "n": 8,
+  "dem_win_count": "7/8",
+  "detail": [
+    {
+      "tile": "bengaluru",
+      "cnn_rmse": 19.13194558186741,
+      "best_existing_baseline": 16.36,
+      "cnn_wins": false
+    },
+    {
+      "tile": "chennai",
+      "cnn_rmse": 11.278438027714579,
+      "best_existing_baseline": 5.46,
+      "cnn_wins": false
+    },
+    {
+      "tile": "delhi",
+      "cnn_rmse": 16.65016592533281,
+      "best_existing_baseline": 11.46,
+      "cnn_wins": false
+    },
+    {
+      "tile": "hyderabad",
+      "cnn_rmse": 20.790533918544007,
+      "best_existing_baseline": 21.03,
+      "cnn_wins": true
+    },
+    {
+      "tile": "jaipur",
+      "cnn_rmse": 28.021626357406962,
+      "best_existing_baseline": 16.61,
+      "cnn_wins": false
+    },
+    {
+      "tile": "kochi_city",
+      "cnn_rmse": 5.486300061906771,
+      "best_existing_baseline": 1.58,
+      "cnn_wins": false
+    },
+    {
+      "tile": "mumbai",
+      "cnn_rmse": 30.28801266403603,
+      "best_existing_baseline": 11.2,
+      "cnn_wins": false
+    },
+    {
+      "tile": "pune",
+      "cnn_rmse": 34.41099205733064,
+      "best_existing_baseline": 38.68,
+      "cnn_wins": true
+    }
+  ]
+}

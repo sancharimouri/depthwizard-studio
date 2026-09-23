@@ -1,0 +1,7 @@
+{
+  "stopped": true,
+  "icesat2_losses": 23,
+  "icesat2_n": 25,
+  "dem_win_count": "1/25",
+  "signature": "plain underperformance (loses both DEM and ICESat-2)"
+}

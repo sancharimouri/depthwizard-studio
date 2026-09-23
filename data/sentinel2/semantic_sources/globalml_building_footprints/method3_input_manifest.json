@@ -1,0 +1,73 @@
+{
+  "dataset": "Microsoft GlobalMLBuildingFootprints",
+  "release": "2026-08-13",
+  "cities": [
+    "bardhaman",
+    "bengaluru",
+    "darjeeling",
+    "delhi",
+    "hyderabad",
+    "jaipur",
+    "kochi",
+    "kolkata",
+    "mumbai",
+    "sundarbans"
+  ],
+  "rgb_paths": {
+    "bardhaman": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/bardhaman/Bardhaman_RGB.tif",
+    "bengaluru": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/bengaluru/Bengaluru_RGB.tif",
+    "darjeeling": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/darjeeling/Darjeeling_RGB.tif",
+    "delhi": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/delhi/Delhi_RGB.tif",
+    "hyderabad": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/hyderabad/Hyderabad_RGB.tif",
+    "jaipur": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/jaipur/Jaipur_RGB.tif",
+    "kochi": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/kochi/Kochi_RGB.tif",
+    "kolkata": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/kolkata/Kolkata_RGB.tif",
+    "mumbai": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/mumbai/Mumbai_RGB.tif",
+    "sundarbans": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/sundarbans/Sundarbans_RGB.tif"
+  },
+  "footprint_paths": {
+    "bardhaman": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/bardhaman/part-00180-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz",
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/bardhaman/part-00066-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz",
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/bardhaman/part-00122-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz",
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/bardhaman/part-00108-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "bengaluru": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/bengaluru/part-00014-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "darjeeling": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/darjeeling/part-00139-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz",
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/darjeeling/part-00175-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "delhi": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/delhi/part-00170-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "hyderabad": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/hyderabad/part-00073-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "jaipur": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/jaipur/part-00047-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "kochi": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/kochi/part-00113-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "kolkata": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/kolkata/part-00108-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz",
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/kolkata/part-00047-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "mumbai": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/mumbai/part-00055-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ],
+    "sundarbans": [
+      "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/raw/sundarbans/part-00057-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz"
+    ]
+  },
+  "supersample": 5,
+  "derived_features": true,
+  "hotosm_model": "/Users/anweshasaha/projects/DepthWizard2/models/semantic/hotosm_dinov3s_buildings/model.onnx",
+  "warnings": [
+    "GlobalMLBuildingFootprints is an external building semantic prior, not ground truth for the Sentinel acquisition.",
+    "building_fraction is a supersampled approximation of within-pixel coverage.",
+    "HOTOSM DINOv3-S is intended for VHR RGB inference and is not used on 10m Sentinel in this workflow."
+  ]
+}

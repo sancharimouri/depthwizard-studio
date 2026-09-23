@@ -1,0 +1,106 @@
+{
+  "release": "2026-08-13",
+  "index": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/semantic_sources/globalml_building_footprints/dataset-links.csv",
+  "cities": [
+    {
+      "city": "kolkata",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/kolkata/Kolkata_RGB.tif",
+      "aoi_min_lon": 88.24813125922181,
+      "aoi_min_lat": 22.448300737015703,
+      "aoi_max_lon": 88.4521429549545,
+      "aoi_max_lat": 22.651758879422417,
+      "required_partition_count": 2,
+      "quadkeys": "123133321,123133323"
+    },
+    {
+      "city": "bardhaman",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/bardhaman/Bardhaman_RGB.tif",
+      "aoi_min_lon": 87.79935693201405,
+      "aoi_min_lat": 23.199413258568754,
+      "aoi_max_lon": 87.90067587993991,
+      "aoi_max_lat": 23.300576350215636,
+      "required_partition_count": 4,
+      "quadkeys": "123133302,123133303,123133320,123133321"
+    },
+    {
+      "city": "delhi",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/delhi/Delhi_RGB.tif",
+      "aoi_min_lon": 77.09599905358705,
+      "aoi_min_lat": 28.49667290748401,
+      "aoi_max_lon": 77.30443658398231,
+      "aoi_max_lat": 28.703293686459634,
+      "required_partition_count": 1,
+      "quadkeys": "123121303"
+    },
+    {
+      "city": "mumbai",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/mumbai/Mumbai_RGB.tif",
+      "aoi_min_lon": 72.79730255417347,
+      "aoi_min_lat": 18.898244232895156,
+      "aoi_max_lon": 72.95253883218544,
+      "aoi_max_lat": 19.10176076568479,
+      "required_partition_count": 1,
+      "quadkeys": "123300311"
+    },
+    {
+      "city": "bengaluru",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/bengaluru/Bengaluru_RGB.tif",
+      "aoi_min_lon": 77.4979771260507,
+      "aoi_min_lat": 12.897928881872271,
+      "aoi_max_lon": 77.70219420756412,
+      "aoi_max_lat": 13.102029210980795,
+      "required_partition_count": 1,
+      "quadkeys": "123303312"
+    },
+    {
+      "city": "hyderabad",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/hyderabad/Hyderabad_RGB.tif",
+      "aoi_min_lon": 78.34782282030653,
+      "aoi_min_lat": 17.347402768777858,
+      "aoi_max_lon": 78.55209488139009,
+      "aoi_max_lat": 17.502600429029275,
+      "required_partition_count": 1,
+      "quadkeys": "123301331"
+    },
+    {
+      "city": "jaipur",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/jaipur/Jaipur_RGB.tif",
+      "aoi_min_lon": 75.69875108683145,
+      "aoi_min_lat": 26.798821412141134,
+      "aoi_max_lon": 75.90165480223044,
+      "aoi_max_lat": 27.00119305876331,
+      "required_partition_count": 1,
+      "quadkeys": "123123011"
+    },
+    {
+      "city": "kochi",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/kochi/Kochi_RGB.tif",
+      "aoi_min_lon": 76.19941867935019,
+      "aoi_min_lat": 9.899402830222469,
+      "aoi_max_lon": 76.35069170155998,
+      "aoi_max_lat": 10.05062390354095,
+      "required_partition_count": 1,
+      "quadkeys": "123321102"
+    },
+    {
+      "city": "darjeeling",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/darjeeling/Darjeeling_RGB.tif",
+      "aoi_min_lon": 88.19885736316962,
+      "aoi_min_lat": 26.999100252815772,
+      "aoi_max_lon": 88.30119062977198,
+      "aoi_max_lat": 27.10091435028303,
+      "required_partition_count": 2,
+      "quadkeys": "123131323,123133101"
+    },
+    {
+      "city": "sundarbans",
+      "rgb_path": "/Users/anweshasaha/projects/DepthWizard2/data/sentinel2/sundarbans/Sundarbans_RGB.tif",
+      "aoi_min_lon": 88.69758908165959,
+      "aoi_min_lat": 21.797744383693242,
+      "aoi_max_lon": 88.90265702468875,
+      "aoi_max_lat": 22.00223596706311,
+      "required_partition_count": 1,
+      "quadkeys": "123133332"
+    }
+  ]
+}

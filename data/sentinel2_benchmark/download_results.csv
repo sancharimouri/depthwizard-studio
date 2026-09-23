@@ -1,0 +1,33 @@
+slug,label,category,status,date,cloud,epsg,bbox_utm,path
+dehradun,"Dehradun, Uttarakhand",hilly,ok,2025-12-09,0.0,32644,"[209612.1794316048, 3352589.9865631224, 219612.1794316048, 3362589.9865631224]",data/sentinel2_benchmark/hilly/dehradun/dehradun_RGB.tif
+manali,"Manali, HP",hilly,ok,2025-12-24,0.0,32643,"[701255.7499244068, 3564495.9765648018, 711255.7499244068, 3574495.9765648018]",data/sentinel2_benchmark/hilly/manali/manali_RGB.tif
+almora,"Almora, Uttarakhand",hilly,ok,2025-12-11,0.0,32644,"[363936.8352968979, 3269031.174508453, 373936.8352968979, 3279031.174508453]",data/sentinel2_benchmark/hilly/almora/almora_RGB.tif
+ooty,"Ooty (Nilgiris), TN",hilly,ok,2025-12-13,0.2,32643,"[679738.6209718192, 1256455.8367453027, 689738.6209718192, 1266455.8367453027]",data/sentinel2_benchmark/hilly/ooty/ooty_RGB.tif
+kohima,"Kohima, Nagaland",hilly,ok,2025-12-13,0.0,32646,"[606253.8708780525, 2835170.392591384, 616253.8708780525, 2845170.392591384]",data/sentinel2_benchmark/hilly/kohima/kohima_RGB.tif
+shillong,"Shillong, Meghalaya",hilly,ok,2025-12-18,0.0,32646,"[383847.707951545, 2824503.4723809767, 393847.707951545, 2834503.4723809767]",data/sentinel2_benchmark/hilly/shillong/shillong_RGB.tif
+dharamshala,"Dharamshala, HP",hilly,ok,2025-12-27,0.0,32643,"[619708.9946478473, 3560478.5710478816, 629708.9946478473, 3570478.5710478816]",data/sentinel2_benchmark/hilly/dharamshala/dharamshala_RGB.tif
+nainital,"Nainital, Uttarakhand",hilly,ok,2025-12-11,0.0,32644,"[345001.1145883711, 3247399.262549159, 355001.1145883711, 3257399.262549159]",data/sentinel2_benchmark/hilly/nainital/nainital_RGB.tif
+kochi_city,"Kochi, Kerala",urban,ok,2025-12-21,0.0,32643,"[633930.2310723267, 1093070.7566591317, 643930.2310723267, 1103070.7566591317]",data/sentinel2_benchmark/urban/kochi_city/kochi_city_RGB.tif
+jaipur,"Jaipur, Rajasthan",urban,ok,2025-12-16,0.0,32643,"[573174.0159209307, 2971975.9105338897, 583174.0159209307, 2981975.9105338897]",data/sentinel2_benchmark/urban/jaipur/jaipur_RGB.tif
+chennai,"Chennai, TN",urban,ok,2025-10-31,0.9,32644,"[415938.05403896706, 1441395.1351808733, 425938.05403896706, 1451395.1351808733]",data/sentinel2_benchmark/urban/chennai/chennai_RGB.tif
+hyderabad,"Hyderabad, Telangana",urban,ok,2025-12-28,0.0,32644,"[227957.61663073523, 1918897.2743155544, 237957.61663073523, 1928897.2743155544]",data/sentinel2_benchmark/urban/hyderabad/hyderabad_RGB.tif
+pune,"Pune, Maharashtra",urban,ok,2025-12-29,0.0,32643,"[374320.8175238202, 2043144.6233660013, 384320.8175238202, 2053144.6233660013]",data/sentinel2_benchmark/urban/pune/pune_RGB.tif
+bengaluru,"Bengaluru, Karnataka",urban,ok,2025-12-08,0.0,32643,"[776481.0202947541, 1430426.4069104537, 786481.0202947541, 1440426.4069104537]",data/sentinel2_benchmark/urban/bengaluru/bengaluru_RGB.tif
+mumbai,"Mumbai, Maharashtra",urban,ok,2025-12-27,0.0,32643,"[271689.32815293805, 2105588.8386807116, 281689.32815293805, 2115588.8386807116]",data/sentinel2_benchmark/urban/mumbai/mumbai_RGB.tif
+delhi,Delhi,urban,ok,2025-12-24,0.0,32643,"[710980.2937392073, 3162204.8196549597, 720980.2937392073, 3172204.8196549597]",data/sentinel2_benchmark/urban/delhi/delhi_RGB.tif
+karnal,"Karnal, Haryana",agricultural,ok,2025-12-24,0.0,32643,"[687601.0692605365, 3280616.4785303366, 697601.0692605365, 3290616.4785303366]",data/sentinel2_benchmark/agricultural/karnal/karnal_RGB.tif
+kota,"Kota (Chambal command area), Rajasthan",agricultural,ok,2025-12-24,0.0,32643,"[582117.2224749646, 2783901.9469763567, 592117.2224749646, 2793901.9469763567]",data/sentinel2_benchmark/agricultural/kota/kota_RGB.tif
+nizamabad,"Nizamabad, Telangana",agricultural,ok,2025-12-31,0.0,32644,"[188455.77436744602, 2062081.2265976362, 198455.77436744602, 2072081.2265976362]",data/sentinel2_benchmark/agricultural/nizamabad/nizamabad_RGB.tif
+fatehpur,"Fatehpur (Ganga plain), UP",agricultural,ok,2025-11-28,0.0,32644,"[476524.84606880724, 2863033.420560711, 486524.84606880724, 2873033.420560711]",data/sentinel2_benchmark/agricultural/fatehpur/fatehpur_RGB.tif
+bathinda,"Bathinda, Punjab",agricultural,ok,2025-12-07,0.0,32643,"[489754.75617428543, 3337167.4928214215, 499754.75617428543, 3347167.4928214215]",data/sentinel2_benchmark/agricultural/bathinda/bathinda_RGB.tif
+vidisha,"Vidisha, MP",agricultural,ok,2025-12-31,0.0,32643,"[781731.9336953361, 2599456.257858387, 791731.9336953361, 2609456.257858387]",data/sentinel2_benchmark/agricultural/vidisha/vidisha_RGB.tif
+hisar,"Hisar, Haryana",agricultural,ok,2025-12-24,0.0,32643,"[565193.3319848856, 3219731.2188943652, 575193.3319848856, 3229731.2188943652]",data/sentinel2_benchmark/agricultural/hisar/hisar_RGB.tif
+sangrur,"Sangrur, Punjab",agricultural,ok,2025-12-24,0.0,32643,"[576019.1429291491, 3341322.4096093937, 586019.1429291491, 3351322.4096093937]",data/sentinel2_benchmark/agricultural/sangrur/sangrur_RGB.tif
+chilika,"Chilika Lake, Odisha",coastal,ok,2025-12-17,0.0,32645,"[318913.060398767, 2174154.274858859, 328913.060398767, 2184154.274858859]",data/sentinel2_benchmark/coastal/chilika/chilika_RGB.tif
+amalapuram,"Amalapuram (Godavari delta), AP",coastal,ok,2025-12-25,0.1,32644,"[602600.3665200319, 1828208.8680562624, 612600.3665200319, 1838208.8680562624]",data/sentinel2_benchmark/coastal/amalapuram/amalapuram_RGB.tif
+kutch,"Gulf of Kutch coastal fringe, Gujarat",coastal,ok,2025-12-28,0.0,32642,"[491777.61526280653, 2565309.853512785, 501777.61526280653, 2575309.853512785]",data/sentinel2_benchmark/coastal/kutch/kutch_RGB.tif
+vedaranyam,"Vedaranyam, TN",coastal,ok,2025-12-30,0.8,32644,"[369291.12554113095, 1142267.0480094883, 379291.12554113095, 1152267.0480094883]",data/sentinel2_benchmark/coastal/vedaranyam/vedaranyam_RGB.tif
+goa_estuary,"Mandovi-Zuari estuary, Goa",coastal,ok,2025-12-29,0.0,32643,"[369264.27572510066, 1707966.450741288, 379264.27572510066, 1717966.450741288]",data/sentinel2_benchmark/coastal/goa_estuary/goa_estuary_RGB.tif
+digha,"Digha coast, WB",coastal,ok,2025-12-14,0.0,32645,"[547779.6939532501, 2386628.5979818464, 557779.6939532501, 2396628.5979818464]",data/sentinel2_benchmark/coastal/digha/digha_RGB.tif
+kakinada,"Kakinada (Godavari delta), AP",coastal,ok,2025-04-01,2.2,32644,"[627804.3715703416, 1873771.7120800307, 637804.3715703416, 1883771.7120800307]",data/sentinel2_benchmark/coastal/kakinada/kakinada_RGB.tif
+nagapattinam,"Nagapattinam (Cauvery delta), TN",coastal,ok,2025-10-31,0.0,32644,"[368706.44298867544, 1185476.679282449, 378706.44298867544, 1195476.679282449]",data/sentinel2_benchmark/coastal/nagapattinam/nagapattinam_RGB.tif

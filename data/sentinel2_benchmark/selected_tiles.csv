@@ -1,0 +1,33 @@
+category,slug,label,lat,lon,gnd_ph_count,segments
+hilly,dehradun,"Dehradun, Uttarakhand",30.3165,78.0322,416137,8620
+hilly,manali,"Manali, HP",32.2432,77.1892,172806,3820
+hilly,almora,"Almora, Uttarakhand",29.5892,79.6467,133786,6403
+hilly,ooty,"Ooty (Nilgiris), TN",11.4064,76.6932,104740,3050
+hilly,kohima,"Kohima, Nagaland",25.6751,94.1086,83403,4094
+hilly,shillong,"Shillong, Meghalaya",25.5788,91.8933,60311,2945
+hilly,dharamshala,"Dharamshala, HP",32.219,76.3234,60230,2364
+hilly,nainital,"Nainital, Uttarakhand",29.3919,79.4542,52423,3661
+urban,kochi_city,"Kochi, Kerala",9.9312,76.2673,373215,4030
+urban,jaipur,"Jaipur, Rajasthan",26.9124,75.7873,338720,9022
+urban,chennai,"Chennai, TN",13.0827,80.2707,284734,5239
+urban,hyderabad,"Hyderabad, Telangana",17.385,78.4867,241818,5808
+urban,pune,"Pune, Maharashtra",18.5204,73.8567,164383,4959
+urban,bengaluru,"Bengaluru, Karnataka",12.9716,77.5946,145805,4002
+urban,mumbai,"Mumbai, Maharashtra",19.076,72.8777,142816,3825
+urban,delhi,Delhi,28.6139,77.209,73302,3478
+agricultural,karnal,"Karnal, Haryana",29.6857,76.9905,661965,9700
+agricultural,kota,"Kota (Chambal command area), Rajasthan",25.2138,75.8648,585691,7169
+agricultural,nizamabad,"Nizamabad, Telangana",18.6725,78.0941,559769,6273
+agricultural,fatehpur,"Fatehpur (Ganga plain), UP",25.9308,80.8155,546485,7236
+agricultural,bathinda,"Bathinda, Punjab",30.211,74.9455,507730,8736
+agricultural,vidisha,"Vidisha, MP",23.5251,77.8081,506762,6748
+agricultural,hisar,"Hisar, Haryana",29.1492,75.7217,442374,6850
+agricultural,sangrur,"Sangrur, Punjab",30.2458,75.8421,431683,5480
+coastal,chilika,"Chilika Lake, Odisha",19.7,85.32,1193965,7908
+coastal,amalapuram,"Amalapuram (Godavari delta), AP",16.5786,82.0086,948826,7138
+coastal,kutch,"Gulf of Kutch coastal fringe, Gujarat",23.242,68.9685,786239,8662
+coastal,vedaranyam,"Vedaranyam, TN",10.3765,79.8517,734795,7437
+coastal,goa_estuary,"Mandovi-Zuari estuary, Goa",15.4909,73.8278,730595,6770
+coastal,digha,"Digha coast, WB",21.627,87.51,717297,7343
+coastal,kakinada,"Kakinada (Godavari delta), AP",16.9891,82.2475,585242,6720
+coastal,nagapattinam,"Nagapattinam (Cauvery delta), TN",10.7672,79.8449,582698,6037
