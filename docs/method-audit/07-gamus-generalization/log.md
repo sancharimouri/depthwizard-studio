@@ -623,3 +623,17 @@ Method 6 is much better on sparse ground, slightly better on buildings, and **wo
   Outputs are prefixed `xgbrf_` and can't be mixed with sklearn's `rf_`. The merge (`--kaggle-engine=xgb`) writes `summary_xgbrf.json`.
 - **Checks.** The sklearn smoke test passed locally (20,000 rows, fold 0). The xgb path could not be run on this Mac (XGBoost
   needs `libomp`), so the notebook starts with a 20,000-row xgb smoke cell on Kaggle.
+
+---
+
+## 2026-09-23 — Part F execution note: variant A fold 4 trained locally (no result read)
+
+- The Kaggle session for variant A ended after fold 3: the log has no fold 4 line and no `DONE`.
+- Kaggle folds 0–3 are valid:
+  - `folds.npy` is identical to the local assignment;
+  - each fold has the exact expected size, and all predictions are finite.
+- **Fold 4 was trained locally** with the identical script (`kaggle/terrain_rf_kaggle.py`), sklearn 1.9.0, `random_state=0`, the same fold.
+  - 248,297 predictions in 276 s, on 10 cores.
+  - Log: `terrain_rf_residual/kaggle/rf_run_log_A_local_fold4.txt`.
+- sklearn RF results with a fixed `random_state` don't depend on `n_jobs`. Mixing Kaggle (4 CPUs) and local (10 cores) folds is therefore equivalent to a single run.
+- Variant B, all 5 folds, is still pending. The pre-registered test runs only once A and B are both complete.
