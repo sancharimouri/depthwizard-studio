@@ -21,7 +21,7 @@ Method 6 on independent data, and would have improved it with GAMUS, the brief's
 | D | Forested and mountainous terrain vs. airborne LiDAR (USGS 3DEP; NEON's API needed a token) | **Canopy ceiling confirmed:** predicted p95 10.6 m vs. LiDAR 37.7 m. **The composed DSM does not add value** for any DEM. FABDEM + AGL lowers RMSE, but only by fixing bias; GLO-30 and SRTM + AGL are worse. |
 | D.3 | Sikkim composed DSM vs. ICESat-2 and GEDI (descriptive) | The composed DSM is about at GLO-30's level and better than FABDEM against canopy-top GEDI. Small n. |
 | E | Deliverables audit (read-only) | **No brief deliverable is fully met.** 3 are partial and 6 missing. "DEM ELEVATION" is correctly labelled (DEM-only). `docs/deliverables-audit.md`. |
-| F | Sentinel-2 terrain RF residual (Song, Chen & Yokoya 2026) | See the Part F entry in `log.md`. |
+| F | Sentinel-2 terrain RF residual (Song, Chen & Yokoya 2026; held-out ICESat-2 tracks, 32 tiles) | **Not adopted** (either variant). Both lose to a per-tile linear residual (8–9/32). Median RMSE: raw FABDEM 1.776, linear 1.467, RF A 2.436, RF B 1.425. Post-hoc: the linear gain is offset-only (bRMSE n.s.). |
 
 ## Key numbers
 

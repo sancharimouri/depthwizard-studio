@@ -32,6 +32,7 @@ independent ICESat-2 and GEDI lidar), **none of the depth-model corrections help
 - On leaf-on US forest vs. airborne LiDAR (USGS 3DEP, 8 windows) its canopy p95 is 10.6 m against 37.7 m.
   - "DEM + predicted height" does not beat the DEM alone for SRTM, GLO-30 or FABDEM.
 - A GAMUS fine-tune was stopped by a pre-registered leaf-on pre-check: all GAMUS cities are leaf-off or mixed-season.
+- A Sentinel-2 terrain RF residual on FABDEM (Song et al. 2026 features, held-out ICESat-2 tracks) is **not adopted** (§7.5).
 - The app meets none of the brief's deliverables in full (`docs/deliverables-audit.md`).
 
 Along the way the project overturned several of its own earlier headlines, and those corrections
@@ -357,4 +358,22 @@ Brief: `docs/SIH26175_problem_statement.md`. All rules were pre-registered in `0
   - in-UI validation;
   - standalone packaging.
 - The elevation layer is DEM-only and correctly labelled "DEM ELEVATION".
+
+### 7.5 Sentinel-2 terrain RF residual (optional Part F)
+
+- **Setup:**
+  - Features: Song, Chen & Yokoya (2026) HRF, 64 × 64 px windows.
+  - Target: FABDEM − ICESat-2 ground height.
+  - Data: 32 tiles, 1,241,260 (pixel × RGT) samples.
+  - Folds: GroupKFold(5) on RGT.
+  - Model: sklearn RF, 100 trees.
+  - Source: `data/sentinel2_benchmark/terrain_rf_residual/summary.json`.
+- Median per-tile RMSE vs. ground photons:
+  - raw FABDEM 1.776
+  - linear residual 1.467
+  - RF A 2.436
+  - RF B 1.425
+- **Pre-registered verdict: NOT ADOPTED** (A and B). Neither beats raw FABDEM (19/32 and 21/32, p_Holm 0.83 and 0.26). Both lose to the linear residual (8/32 and 9/32, p_Holm ≤ 0.007).
+- **Post-hoc:** the linear residual's RMSE gain over raw (27/32, p = 1.4e-5) is offset-only. Its bRMSE gain is 19/32, p = 0.078, so it fails the R4 guard. Not adopted.
+- **The terrain product stays raw FABDEM.**
 

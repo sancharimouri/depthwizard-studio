@@ -122,6 +122,7 @@ per-point geoid, R4 offset-guarded; `data/sentinel2_benchmark/dem_baselines_32/s
 | **surface (DSM)** | **Copernicus GLO-30** (EGM2008) | 20 m canopy-top segments: **4.484 m** [3.363, 8.846] | beats SRTM: RMSE 24/32 (p = 6.6e-4), bias-removed 31/32 |
 
 - **No depth-model or canopy-model add-on beats these.**
+  - (2026-09-23, 07 Part F) A Song et al. 2026 HRF random-forest residual on FABDEM (held-out ICESat-2 tracks) is not adopted: 19–21/32 vs. raw, and it loses to a per-tile linear residual. The linear residual's own gain is offset-only.
   - Frequency fusion equals its DEM-only control (10/25, p = 0.853), and DAv2 detail has median
     r_HF −0.037. **The DEM carries the frequency-fusion result.**
   - No detail source passes any reference (Phase 4).

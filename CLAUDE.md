@@ -124,6 +124,7 @@ result/commit gaps flagged.
      - It loses RMSE in all 3 cities for every seed, because it compresses tall objects (pooled variance ratio 0.30).
    - **US forest vs. 3DEP LiDAR:** canopy p95 is 10.6 m against 37.7 m. "DEM + predicted height" doesn't beat the DEM for SRTM, GLO-30 or FABDEM.
    - **GAMUS fine-tune:** pre-registered stop, because no GAMUS city is leaf-on.
+   - **Sentinel-2 terrain RF residual (Song et al. 2026 features):** not adopted. It doesn't beat raw FABDEM, and it loses to a per-tile linear residual, whose own gain is offset-only.
    - **No product model adopted; the product stays DEM-only.** Details: `final-comparison.md` §7 and `docs/deliverables-audit.md`.
 
 **None of the above touches the live demo.** Every method here — including Method 6's

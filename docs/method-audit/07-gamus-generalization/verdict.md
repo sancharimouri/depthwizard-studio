@@ -9,14 +9,14 @@ All rules were pre-registered in `log.md` before the part they govern ran.
 | **B: "Method 6 generalizes"** (all 4 metrics beat the oracle with non-overlapping CIs, and wins in all 3 cities, for every seed) | **FAIL.** RMSE is worse (+0.16 m [+0.09, +0.23]) in every city for every seed. MAE, Pearson and Spearman are clearly better. |
 | **C.0: leaf-on pre-check** (some city with median tree-pixel ExG share ≥ 0.40) | **STOP.** DC 0.06, NYC 0.03, PHL 0.32. The GAMUS fine-tune was not run, so the C adoption rule does not apply. |
 | **D(b): composed DSM "adds value"** (beats the raw DEM on RMSE **and** bias-removed RMSE; Holm p < 0.05) | **FAIL for all three DEMs.** FABDEM + AGL wins RMSE (7/8, p_Holm 0.031) but not bias-removed RMSE (5/8, p 1.0). GLO-30 and SRTM + AGL are worse on RMSE. |
-| **F: RF terrain residual adopted** | See the Part F entry in `log.md`. The expected outcome was negative. |
+| **F: RF terrain residual adopted** (beats raw FABDEM **and** the linear residual on RMSE and bRMSE; Holm p < 0.05; ≥ 20/32) | **NOT ADOPTED, both variants.** A: 19/32 vs. raw (p_Holm 0.83) and 8/32 vs. linear (worse). B: 21/32 vs. raw (0.26) and 9/32 vs. linear (worse). As expected. |
 
 ## Adopted / not adopted
 
 - **No new product model is adopted.** Method 6 stays the DFC2019 research best (1.980 / 3.492 / 0.745 / 0.656).
   It is now explicitly flagged as **not generalizing**: on GAMUS, a different city, sensor and city type, it loses RMSE to the oracle.
 - **Product recommendation, unchanged and now tested on forest and mountain:** DEM-only.
-  - FABDEM is the terrain product and GLO-30 the surface product.
+  - FABDEM is the terrain product and GLO-30 the surface product. Part F's RF residual doesn't improve FABDEM.
   - "DEM + Method 6 height" is not adopted for any DEM.
 - **Retired as a plan:** "Fine-tune Method 6 on GAMUS to fix the canopy ceiling." GAMUS is leaf-off in 2 cities and
   mixed-season in the third. The canopy fix needs leaf-on, tall-forest supervision.
