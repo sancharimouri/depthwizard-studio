@@ -33,3 +33,38 @@ All commands run from the repo root with the project venv (`.venv/bin/python`).
   unique ATL03 granules**, each failing on one or more beams, across 16 tiles. Those beams
   contributed no segments. The segment counts are therefore a lower bound on what exists, and a
   re-fetch on a day the granules read cleanly would return more.
+
+## Environment and external code (added 2026-09-23, fresh-checkout audit)
+
+A fresh clone of HEAD was statically audited: every tracked `.py` file was parsed and every
+import resolved. **Every in-repo import and hard-coded script path resolves.** Two things are
+needed from outside the repo.
+
+**1. Python environment: use `requirements-research.txt`, not `pyproject.toml` alone.**
+- The committed `pyproject.toml` declares only `pyproj`, `rasterio` and `sliderule` (plus an
+  `ml` extra). The code also imports pandas, geopandas, earthengine-api, fastapi, opencv,
+  matplotlib, huggingface-hub, safetensors, shapely, onnxruntime, albumentations, httpx,
+  pydantic, python-dotenv, joblib, affine, torchvision and scikit-learn.
+- `requirements-research.txt` is a `uv pip freeze` of the exact `.venv` (Python 3.11.16) that
+  produced every result in this repo: 113 pinned packages, with all 26 third-party top-level
+  imports verified covered.
+- Install:
+  `uv venv --python 3.11 && uv pip install -r requirements-research.txt`.
+- The owner's uncommitted `pyproject.toml` edit (adds `earthengine-api`) was deliberately left
+  untouched.
+
+**2. External code under `external/` (untracked by the project's clone-on-demand policy).** Only
+these three are *imported*:
+
+| directory | imported by | source / pin |
+|---|---|---|
+| `external/RDAH-Net/` (`test.py`, `loaddata.py`, `nyu_transform.py`, checkpoints) | `scripts/{run_rdah_probe,run_rdah_scale_sweep,train_rdah_spatial_cv,train_rdah_quadrant_cv,evaluate_rdah_pooled_cv,diagnose_rdah_fold0}.py` | Not a git clone, and the upstream code URL is **not recorded** anywhere in this repo. Provenance: paper DOI 10.3390/rs18071024; checkpoints from Figshare DOI 10.6084/m9.figshare.31986864. MD5 `104best_model.pth` = `4fdd8769d2a05aee0ed40234aeceee09` (Track1), `swiss_best_model.pth` = `a7e8a7933d8190058d2e117e3573e3cb` (Swiss); both match Figshare. Every file's SHA-256 is in `data/EXTERNAL_CODE_sha256.csv`. |
+| `external/dinov3/` | `scripts/lib_dinov3_sat493m_loader.py` (`dinov3.hub.*`, `dinov3.eval.depth.models`) | `github.com/facebookresearch/dinov3` (vendored unmodified). Not a git clone, so there's no commit pin; content hashes in `data/EXTERNAL_CODE_sha256.csv`. Weights via `HF_TOKEN` (gated SAT493M). |
+| `external/SynRS3D/` | `scripts/rs3dada_{mps,sentinel2}_smoketest.py` (`models.dpt`) | `git clone https://github.com/JTRNEO/SynRS3D.git && git -C external/SynRS3D checkout ab5a4857825448e4c5cd1fe3aa3045c7348814c5` |
+
+**3. Housekeeping flag.** `scripts 2/` is a Finder-style duplicate folder from 2026-09-20,
+swept into git by `fd9fd35`.
+- Its `evaluate_method4.py` is byte-identical to `scripts/evaluate_method4.py`.
+- `evaluate_method4_v2_kaggle.py` exists only there, and nothing imports it.
+
+It's left in place as the owner's file, and flagged rather than deleted.
