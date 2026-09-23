@@ -266,7 +266,7 @@ MPS kernels aren't bit-deterministic, so even `--seed 42` wouldn't reproduce see
 ### C1/C3 — interim (seed 43 complete; seed 44 running)
 
 - **Seed 43** (`data/dfc2019/experiments/method6_height_balanced_seed43/m6_heightbal_seed43_results.json`):
-  - Scores MAE 1.990 / RMSE 3.486 / Pearson 0.744 / Spearman 0.656 (mean of 4 folds).
+  - Scores MAE 1.989 / RMSE 3.486 / Pearson 0.744 / Spearman 0.656 (mean of 4 folds).
   - **Beats the oracle on all four metrics.** Tiles better than the oracle: 49 / 47 / 47 / 46 of
     50.
   - Seeds 1 + 43: mean ± sd = MAE 1.985 ± 0.007, RMSE 3.489 ± 0.004, Pearson 0.7442 ± 0.0004,
@@ -277,3 +277,39 @@ MPS kernels aren't bit-deterministic, so even `--seed 42` wouldn't reproduce see
   - That's markedly better than RDAH-FT-2 (0.19–0.23).
   - This closes the "no variance-ratio diagnostic computed yet" caveat.
   - It's measured on seed 43, the same recipe. Seed 1 saved no predictions or checkpoints.
+
+### C1–C3 — final (all seeds complete, 2026-09-23)
+
+**C3, pre-registered rule applied: the headline "beats the oracle on all 4 metrics" STANDS.**
+Every seed beats the per-tile-OLS oracle (3.392 / 4.579 / 0.582 / 0.509) on all four metrics, and
+also beats the Method 2 Grid+Huber+20 row (2.929 / 4.718 / 0.532 / 0.471). Source:
+`data/dfc2019/experiments/method6_uncertainty.json`; runs in `method6_height_balanced{,_seed43,_seed44}/`.
+
+| seed | MAE (m) | RMSE (m) | Pearson | Spearman | tiles better than oracle (MAE/RMSE/r/ρ) |
+|---|---:|---:|---:|---:|---|
+| 1 (original, `SEED = 42`) | 1.980 | 3.492 | 0.745 | 0.656 | 49/47/47/47 |
+| 43 | 1.989 | 3.486 | 0.744 | 0.656 | 49/47/47/46 |
+| 44 | 2.000 | 3.535 | 0.741 | 0.656 | 49/47/47/46 |
+| **mean ± sd (n = 3)** | **1.990 ± 0.010** | **3.504 ± 0.026** | **0.743 ± 0.002** | **0.656 ± 0.0003** | |
+
+- Aggregation: mean of 4 fold means (= mean over 200 tile-quadrant evaluations).
+- Seed-to-seed spread is 1–2 orders of magnitude smaller than the gap to the oracle (MAE −1.41 m,
+  Pearson +0.16).
+
+**C1: variance ratio** var(pred)/var(gt), pooled within fold, adopted recipe:
+- seed 43: 0.481 / 0.554 / 0.521 / 0.657
+- seed 44: 0.488 / 0.508 / 0.551 / 0.659
+- **range 0.48–0.66** over 8 seed-folds; OLS slope 0.54–0.63
+
+**Still underdispersed:** predictions carry about half to two-thirds of the true variance, but
+2–3× better than RDAH-FT-2 (0.19–0.23). The "no variance-ratio diagnostic computed yet" caveat is
+closed. Seed 1 saved no predictions or checkpoints, so its ratio can't be computed.
+
+**C2** (seed 1 vs. oracle, tile bootstrap):
+- mean paired difference MAE −1.412 m [−1.647, −1.189], RMSE −1.086 m [−1.326, −0.850], Pearson
+  +0.162 [+0.122, +0.209], Spearman +0.147 [+0.115, +0.182]
+- Wilcoxon over 50 tiles: p ≤ 1.2e-11 on every metric
+
+**C4:** the VHR sanity check is described in `final-comparison.md` §2.2. Two of three Maxar crops
+give non-degenerate output. Accuracy was not tested, and the check used the original recipe's
+full-data checkpoint.

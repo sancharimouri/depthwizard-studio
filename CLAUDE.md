@@ -84,7 +84,8 @@ in order:
    — **current DFC2019 best: 1.980/3.492/0.745/0.656** (mean of 4 quadrant folds).
    - Beats the per-tile-OLS oracle (3.392/4.579/0.582/0.509) on all four metrics and on 47–49/50
      tiles per metric, with tile-bootstrap CIs.
-   - SEEDS-PENDING
+   - Holds across 3 seeds (1.990 ± 0.010 / 3.504 ± 0.026 / 0.743 ± 0.002 / 0.656 ± 0.0003).
+     Variance ratio 0.48–0.66, still underdispersed.
    - **DFC2019-only:** it failed when staged on Sentinel-2.
    - Details: `final-comparison.md` §1–2; `06-full-finetune-twin-head/verdict.md` §6.
 7. **Sentinel-2 / India** (`data/sentinel2_benchmark/`, 32 tiles, ICESat-2 + GEDI references) —

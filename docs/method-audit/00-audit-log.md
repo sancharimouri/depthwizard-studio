@@ -46,11 +46,12 @@ its commit don't line up.
 | 2026-09-23 | DFC2019 | result-file traceability; D3 audit log; D4 status-report addendum | 3,615 result files committed | this file; `PROJECT_STATUS_REPORT.md` | `b168dca`, `0af06b3`, `b4c8842` |
 | 2026-09-23 | DFC2019 RDAH | B1: resolution curve on 50 tiles | pooled r 0.490/0.581/0.537/0.330 (8×/1× 0.672) | `05` summary §13 | `2ce0eb4` |
 | 2026-09-23 | DFC2019 M6 | C2 bootstrap vs. oracle; C4 VHR stats recomputed; D2 draft | M6 beats oracle on 47–49/50 tiles per metric | `final-comparison.md` | `9761c78`, `0607678` |
-| 2026-09-23 | DFC2019 M6 | C1/C3: seed 43 | 1.990/3.486/0.744/0.656, beats oracle on all 4; variance ratio 0.48–0.66 | `06` verdict §6 | `fea5b68` |
+| 2026-09-23 | DFC2019 M6 | C1/C3: seed 43 | 1.989/3.486/0.744/0.656, beats oracle on all 4; variance ratio 0.48–0.66 | `06` verdict §6 | `fea5b68` |
 | 2026-09-23 | DFC2019 M6 | B2: Method 6 resolution curve (seed-43 checkpoints, inference only) | 0.795 → 0.708 at 2.4 m (−11%) | `05` summary §13 | `d48267c` |
 | 2026-09-23 | docs | HANDOFF / CLAUDE.md partial updates; REGENERATION refresh | — | HANDOFF, CLAUDE.md, `data/REGENERATION.md` | `05fdcfe`, `ad27726`, `93ae9df` |
 
-(The seed-44 result and the final doc commit are appended at the bottom.)
+| 2026-09-23 | DFC2019 M6 | C3 final: seed 44; C1 variance ratio over 8 seed-folds | all 3 seeds beat the oracle on all 4 (1.990 ± 0.010 m MAE); VR 0.48–0.66 — headline stands | `06` verdict §6; `final-comparison.md` §2 | final commit of 2026-09-23 (see `git log`) |
+| 2026-09-23 | docs | FINAL STEP: HANDOFF, CLAUDE.md, final-comparison, logs completed and cross-checked | — | all | final commit of 2026-09-23 |
 
 ## Gaps (result ↔ commit mismatches), flagged
 

@@ -1,0 +1,69 @@
+[m6_heightbal_seed44] device=mps gsd_film=False height_balanced=True
+[m6_heightbal_seed44] tiles: 50
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[m6_heightbal_seed44] loaded in 1.5s
+
+========================================================================
+[m6_heightbal_seed44] FOLD 0
+========================================================================
+[m6_heightbal_seed44] fold0: 150 train quadrants, 50 eval quadrants, height_scale(train p95)=16.62m
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7743.75it/s]
+[m6_heightbal_seed44] fold0: height-balanced sampler, weight range [1.00, 3.67], mean=2.00
+[m6_heightbal_seed44] fold0 epoch 01/12: loss=6.6608  (74s elapsed)
+[m6_heightbal_seed44] fold0 epoch 03/12: loss=3.1964  (242s elapsed)
+[m6_heightbal_seed44] fold0 epoch 06/12: loss=3.1813  (418s elapsed)
+[m6_heightbal_seed44] fold0 epoch 09/12: loss=1.9603  (596s elapsed)
+[m6_heightbal_seed44] fold0 epoch 12/12: loss=1.5990  (776s elapsed)
+[m6_heightbal_seed44] fold0 diagnostics={'pooled_variance_ratio': 0.48838765398337797, 'pooled_ols_slope': 0.5420534546435686, 'pooled_bias_m': -0.13227118132882482, 'n_pixels': 11559412}
+[m6_heightbal_seed44] fold0 DONE in 782.6s. metrics={'mae_m': 1.8458737369653462, 'rmse_m': 3.4125977307166178, 'pearson': 0.7581344697347123, 'spearman': 0.6593000341723417, 'n_tiles': 50}
+
+========================================================================
+[m6_heightbal_seed44] FOLD 1
+========================================================================
+[m6_heightbal_seed44] fold1: 150 train quadrants, 50 eval quadrants, height_scale(train p95)=16.40m
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7460.95it/s]
+[m6_heightbal_seed44] fold1: height-balanced sampler, weight range [1.00, 3.67], mean=1.95
+[m6_heightbal_seed44] fold1 epoch 01/12: loss=6.4571  (61s elapsed)
+[m6_heightbal_seed44] fold1 epoch 03/12: loss=3.2700  (175s elapsed)
+[m6_heightbal_seed44] fold1 epoch 06/12: loss=2.4342  (344s elapsed)
+[m6_heightbal_seed44] fold1 epoch 09/12: loss=2.0228  (514s elapsed)
+[m6_heightbal_seed44] fold1 epoch 12/12: loss=1.5537  (683s elapsed)
+[m6_heightbal_seed44] fold1 diagnostics={'pooled_variance_ratio': 0.5079732801841246, 'pooled_ols_slope': 0.5710230568213521, 'pooled_bias_m': -0.19040676617074986, 'n_pixels': 11644560}
+[m6_heightbal_seed44] fold1 DONE in 689.3s. metrics={'mae_m': 2.1244180222905813, 'rmse_m': 3.6373322934819408, 'pearson': 0.7328440486798402, 'spearman': 0.6450671297187737, 'n_tiles': 50}
+
+========================================================================
+[m6_heightbal_seed44] FOLD 2
+========================================================================
+[m6_heightbal_seed44] fold2: 150 train quadrants, 50 eval quadrants, height_scale(train p95)=16.25m
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7206.71it/s]
+[m6_heightbal_seed44] fold2: height-balanced sampler, weight range [1.00, 3.67], mean=1.95
+[m6_heightbal_seed44] fold2 epoch 01/12: loss=6.4663  (60s elapsed)
+[m6_heightbal_seed44] fold2 epoch 03/12: loss=3.2827  (173s elapsed)
+[m6_heightbal_seed44] fold2 epoch 06/12: loss=2.1723  (343s elapsed)
+[m6_heightbal_seed44] fold2 epoch 09/12: loss=1.7964  (517s elapsed)
+[m6_heightbal_seed44] fold2 epoch 12/12: loss=1.3158  (693s elapsed)
+[m6_heightbal_seed44] fold2 diagnostics={'pooled_variance_ratio': 0.5513051849906235, 'pooled_ols_slope': 0.5920338494729431, 'pooled_bias_m': -0.33025835655566727, 'n_pixels': 11827090}
+[m6_heightbal_seed44] fold2 DONE in 699.2s. metrics={'mae_m': 1.9973580379668132, 'rmse_m': 3.5333662595008577, 'pearson': 0.7252064544366122, 'spearman': 0.6375204579562673, 'n_tiles': 50}
+
+========================================================================
+[m6_heightbal_seed44] FOLD 3
+========================================================================
+[m6_heightbal_seed44] fold3: 150 train quadrants, 50 eval quadrants, height_scale(train p95)=16.42m
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7463.45it/s]
+[m6_heightbal_seed44] fold3: height-balanced sampler, weight range [1.00, 3.65], mean=1.94
+[m6_heightbal_seed44] fold3 epoch 01/12: loss=6.5051  (63s elapsed)
+[m6_heightbal_seed44] fold3 epoch 03/12: loss=3.1188  (181s elapsed)
+[m6_heightbal_seed44] fold3 epoch 06/12: loss=2.7028  (359s elapsed)
+[m6_heightbal_seed44] fold3 epoch 09/12: loss=1.9708  (534s elapsed)
+[m6_heightbal_seed44] fold3 epoch 12/12: loss=1.6414  (711s elapsed)
+[m6_heightbal_seed44] fold3 diagnostics={'pooled_variance_ratio': 0.6593689191249041, 'pooled_ols_slope': 0.6232652950882671, 'pooled_bias_m': -0.07145885238454779, 'n_pixels': 11955666}
+[m6_heightbal_seed44] fold3 DONE in 717.5s. metrics={'mae_m': 2.0335732258239414, 'rmse_m': 3.5559825353387153, 'pearson': 0.7467856750173629, 'spearman': 0.6830432155467152, 'n_tiles': 50}
+
+==============================================================================
+[m6_heightbal_seed44] FINAL RESULT
+==============================================================================
+Overall (mean of fold means): {'mae_m': 2.0003057557616706, 'rmse_m': 3.534819704759533, 'pearson': 0.7407426619671319, 'spearman': 0.6562327093485245, 'n_tiles': 4}
+Total time: 2894.5s
+Saved: data/dfc2019/experiments/method6_height_balanced_seed44/m6_heightbal_seed44_results.json

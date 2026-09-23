@@ -12,7 +12,7 @@ On the DFC2019 benchmark (50 tiles, dense airborne LiDAR, 4-fold held-out spatia
 twin mean/variance head and height-balanced loss and sampling, and it scores **MAE 1.980 m, RMSE
 3.492 m, Pearson 0.745, Spearman 0.656**. That beats the per-tile-OLS oracle on all four metrics
 and on **47–49 of 50 tiles per metric**, with tile-bootstrap intervals that don't overlap on MAE,
-Pearson or Spearman. Seed robustness: §2.3.
+Pearson or Spearman. The result holds across three training seeds (MAE 1.990 ± 0.010 m).
 
 On the real deployment domain (10 m Sentinel-2 over India, 32 benchmark tiles, scored against
 independent ICESat-2 and GEDI lidar), **none of the depth-model corrections helps**:
@@ -37,7 +37,7 @@ mean over (tile, held-out quadrant) evaluations = mean of the 4 fold means.
 
 | method | MAE (m) | RMSE (m) | Pearson | Spearman | aggregation / protocol | source | status |
 |---|---:|---:|---:|---:|---|---|---|
-| **M6 — full DAv2-Small fine-tune + height-balanced** | **1.980** [1.691, 2.297] | **3.492** [2.964, 4.106] | **0.745** [0.704, 0.779] | **0.656** [0.616, 0.692] | mean of 200; 4-fold quadrant CV; 95% tile-bootstrap CI | `data/dfc2019/experiments/method6_height_balanced/m6_heightbal_results.json`; CIs `data/dfc2019/experiments/method6_uncertainty.json` | **CURRENT BEST** (seeds: §2.3) |
+| **M6 — full DAv2-Small fine-tune + height-balanced** | **1.980** [1.691, 2.297] | **3.492** [2.964, 4.106] | **0.745** [0.704, 0.779] | **0.656** [0.616, 0.692] | mean of 200; 4-fold quadrant CV; 95% tile-bootstrap CI | `data/dfc2019/experiments/method6_height_balanced/m6_heightbal_results.json`; CIs `data/dfc2019/experiments/method6_uncertainty.json` | **CURRENT BEST** (3 seeds: 1.990 ± 0.010 / 3.504 ± 0.026 / 0.743 ± 0.002 / 0.656 ± 0.0003; §2.3) |
 | M6 — original recipe | 2.053 | 3.531 | 0.737 | 0.654 | mean of 200 | `method6_finetune_twinhead/method6_results.json` | superseded by height-balanced |
 | **Oracle per-tile-OLS** (DAv2 → AGL fitted on 3 quadrants of the same tile) | 3.392 [2.963, 3.865] | 4.579 [3.985, 5.229] | 0.582 [0.521, 0.639] | 0.509 [0.456, 0.559] | mean of 200; same quadrants as M6 | `semantic/method3_spatial_cv_results.json` ("baseline") | reference |
 | M5 — RDAH-Net zero-shot, **Track1** ckpt, ×255 | 2.231 | 4.566 | 0.716 | 0.655 | mean of 4 tile-level folds; per-fold affine | `rdah_zeroshot/rdah_x255_zeroshot_fold_results.csv` | not comparable: 41/50 tiles in the checkpoint's training list |
@@ -68,7 +68,16 @@ per-tile-OLS baseline". The true per-tile-OLS oracle is the 3.392/4.579 row. Met
 ## 2. Method 6 hardening (C1–C4)
 
 ### 2.1 Variance ratio (C1)
-PENDING-C3
+
+var(pred)/var(gt), pooled within each held-out fold, for the adopted recipe:
+- seed 43: 0.481 / 0.554 / 0.521 / 0.657
+- seed 44: 0.488 / 0.508 / 0.551 / 0.659
+- **range 0.48–0.66**; OLS slope pred ~ gt 0.54–0.63; bias −0.49 to +0.05 m
+
+Source: `data/dfc2019/experiments/method6_uncertainty.json` (`fold_diagnostics`).
+
+That's still underdispersed, but 2–3× better than RDAH-FT-2 (0.19–0.23). Seed 1 saved no
+predictions, so its ratio can't be computed.
 
 ### 2.2 VHR (Maxar) sanity check (C4)
 
@@ -96,8 +105,18 @@ on 2026-09-23, with no new inference: `data/maxar_sanity/method6_inference_summa
 It shows only that the DFC2019-trained model does not collapse on real satellite VHR imagery in
 2 of 3 crops. The near-flat near-nadir crop is unexplained.
 
-### 2.3 Seeds (C3)
-PENDING-C3
+### 2.3 Seeds (C3) — pre-registered: the headline stands if every seed beats the oracle on all 4
+
+| seed | MAE (m) | RMSE (m) | Pearson | Spearman |
+|---|---:|---:|---:|---:|
+| 1 (original) | 1.980 | 3.492 | 0.745 | 0.656 |
+| 43 | 1.989 | 3.486 | 0.744 | 0.656 |
+| 44 | 2.000 | 3.535 | 0.741 | 0.656 |
+| **mean ± sd** | **1.990 ± 0.010** | **3.504 ± 0.026** | **0.743 ± 0.002** | **0.656 ± 0.0003** |
+
+**Every seed beats the oracle on all four metrics. The headline stands.** Every seed is better
+than the oracle on 46–49 of 50 tiles per metric. Sources: the three `m6_heightbal*_results.json`
+and `method6_uncertainty.json`.
 
 ---
 

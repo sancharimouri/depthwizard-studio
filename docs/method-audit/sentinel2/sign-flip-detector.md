@@ -3952,3 +3952,18 @@ log entries are **annotated with dated notes, not rewritten**.
 "Satellite → Metric Terrain Reconstruction" and has a "METRIC ELEVATION" layer button. CLAUDE.md's
 framing rule says the UI must not imply RGB → absolute elevation. Whether that label does is a demo
 decision for the owner, outside D1's overturned-claim scope.
+
+## Close-out summary (2026-09-23): where the Part B / C / D results live
+
+- **Parts A0–A5 and D1:** above, in this entry.
+- **Part B** (resolution curves; RDAH on 50 tiles, Method 6 seed 43): `05-rdah-net-fusion/summary.md` §13.
+- **Part C** (Method 6 variance ratio, bootstrap vs. oracle, 3 seeds, VHR check):
+  `06-full-finetune-twin-head/verdict.md` §6 and `final-comparison.md` §2.
+- **D2–D4:** `final-comparison.md` (consolidated record), `00-audit-log.md`, and the
+  `PROJECT_STATUS_REPORT.md` addendum.
+
+**Final Sentinel-2 position:**
+- **FABDEM** for terrain; **raw GLO-30** for the surface.
+- No depth or canopy model adds value on top of a DEM against independent lidar.
+- RDAH is closed by the pre-registered rule.
+- The learned GEDI route is gated.

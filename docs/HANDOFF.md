@@ -26,28 +26,30 @@ system — see §5.
 
 ### 2a. DFC2019 track
 
-Current best: **Method 6** — full DAv2-Small backbone fine-tune, twin (mean,
-log-variance) head, `CappedHeightWeightedLoss` + `WeightedRandomSampler` recipe.
-First method in the whole audit to beat the oracle per-tile-OLS baseline on all 4
-tracked metrics simultaneously (4-fold spatial-quadrant holdout, 50-tile DFC2019
-benchmark):
+Current best: **Method 6**: full DAv2-Small fine-tune, twin (mean, log-variance) head,
+height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 50-tile DFC2019,
+4-fold spatial-quadrant holdout, mean of fold means, 95% tile-bootstrap CIs.
 
-| | MAE | RMSE | Pearson | Spearman |
+| | MAE (m) | RMSE (m) | Pearson | Spearman |
 |---|---|---|---|---|
-| Method 6 | 2.053m → **1.980m** (height-balanced) | 3.531m → **3.492m** | 0.737 → **0.745** | 0.654 → **0.656** |
-| Oracle per-tile-OLS baseline | 2.929m | 4.718m | 0.532 | 0.471 |
+| **Method 6** (seed 1) | **1.980** [1.691, 2.297] | **3.492** [2.964, 4.106] | **0.745** [0.704, 0.779] | **0.656** [0.616, 0.692] |
+| Method 6, 3 seeds (mean ± sd) | 1.990 ± 0.010 | 3.504 ± 0.026 | 0.743 ± 0.002 | 0.656 ± 0.0003 |
+| Oracle per-tile-OLS | 3.392 [2.963, 3.865] | 4.579 [3.985, 5.229] | 0.582 [0.521, 0.639] | 0.509 [0.456, 0.559] |
+| Method 2 Grid+Huber+20 (older docs' "oracle") | 2.929 | 4.718 | 0.532 | 0.471 |
 
-_Naming note (2026-09-23): the "oracle" row above is Method 2's Grid+Huber+20 sparse-anchor
-result. The per-tile-OLS oracle that Methods 4/6's own audits compare against is
-3.39m/4.58m/0.582/0.509 (`04-learned-scale-modulation/summary.md` §1). Both rows are per-tile
-means. See `05-rdah-net-fusion/summary.md` §10._
+- Every seed beats the oracle on all four metrics (pre-registered C3 rule, so **the headline
+  stands**).
+- Tiles better than the oracle: 47–49/50 per metric.
+- Variance ratio 0.48–0.66: still underdispersed.
+- The Maxar VHR check shows non-degenerate output on 2 of 3 crops; accuracy untested.
+- Everything: `docs/method-audit/final-comparison.md` §1–2.
 
 - Docs: `docs/method-audit/06-full-finetune-twin-head/{summary,verdict}.md`
 - Eval/train scripts: `scripts/evaluate_method6_finetune_twinhead.py`,
   `scripts/evaluate_method6_gsd_film_height_balanced.py`,
   `scripts/evaluate_method6_sentinel2.py`, `scripts/train_method6_full_dfc2019.py`,
   `scripts/method6_vhr_sanity_check.py`
-- Experiment outputs: `data/dfc2019/experiments/method6*/`
+- Experiment outputs: `data/dfc2019/experiments/method6*/` (seed runs `method6_height_balanced_seed{43,44}/`, which save per-fold checkpoints; uncertainty `method6_uncertainty.json`)
 - **Caveat: DFC2019-only.** Staged on Sentinel-2/SRTM (item 2b) and lost.
 
 Methods 1–5 (1–4 closed/superseded; 5 open on DFC2019 only, see §3.2; doc location in each case):
@@ -325,16 +327,18 @@ Full 20-repo audit with claimed-numbers verification: `COMPETITIVE_REPO_AUDIT.md
 
 ---
 
-**Consistency check against CLAUDE.md** (updated 2026-09-23, later): CLAUDE.md's "one rule
-that overrides everything else" (quota discipline, act don't ask) still applies and this doc
-doesn't change it. CLAUDE.md's ML-research-track summary and this doc agree on all facts above:
-- RDAH-FT-2 not adopted; RDAH open on DFC2019 only (low priority); RDAH closed on Sentinel-2
-- the Sentinel-2 deployable baseline restated as raw GLO-30 DEM-only
-- no detail source passes, and the learned GEDI route is not recommended
-- phase 2.3 closed
+**Consistency check against CLAUDE.md** (updated 2026-09-23, final close-out): CLAUDE.md's "one
+rule that overrides everything else" (quota discipline, act don't ask) still applies and this doc
+doesn't change it. CLAUDE.md's research-track items 5–10 were rewritten short. They and this doc
+both summarize `docs/method-audit/final-comparison.md`, which is the single consolidated record,
+and they agree on:
+- Method 6 1.980/3.492/0.745/0.656, holding across 3 seeds
+- FT-2 not adopted
+- RDAH closed on Sentinel-2 by the pre-registered A5 rule and open on DFC2019 only for the
+  Track1 split
+- Sentinel-2 baselines: FABDEM (terrain) and GLO-30 (surface)
+- frequency fusion retired
+- no detail/canopy add-on passes; the learned GEDI route is gated
 
-This doc reorganizes the same information by "what's next" instead of chronology, and adds the
-frontend (§5) and credentials (§6) inventories. One naming inconsistency is flagged rather than
-silently fixed: both docs call Method 2's Grid+Huber+20 result (2.929/4.718/0.532/0.471) the
-"oracle per-tile-OLS baseline", while the per-method audits use that name for
-3.39/4.58/0.582/0.509 (see the §2a note).
+The "oracle" naming inconsistency is now resolved explicitly in §2a's table, which shows both
+rows.
