@@ -161,10 +161,13 @@ def to_navd88(H, lon, lat, vdatum):
     b = Transformer.from_crs("EPSG:7912", "EPSG:6319", always_xy=True)
     c = Transformer.from_crs("EPSG:6319", "EPSG:6318+5703", always_xy=True)
     x, y, h = a.transform(lon, lat, np.zeros_like(lon) + 1000.0)
+    # no-op guard: the geoid step itself must be non-trivial (|N| > 1 m; HANDOFF §7 convention).
+    # (Was: median |final shift| > 0.05 m, which fired falsely at MLBS VA where EGM2008 ~= NAVD88, 0.045 m.)
+    assert np.all(np.abs(h - 1000.0) > 1.0), "geoid N ~ 0: PROJ grid not used"
     x, y, h, _ = b.transform(x, y, h, np.full_like(lon, 2015.0))
     _, _, Hn = c.transform(x, y, h)
     shift = Hn - 1000.0  # H_navd88 - H_src, a smooth field
-    assert np.isfinite(shift).all() and np.median(np.abs(shift)) > 0.05, f"datum no-op? {np.median(shift)}"
+    assert np.isfinite(shift).all(), "non-finite datum shift"
     return H + shift, shift
 
 
@@ -228,8 +231,15 @@ def run():
             # reference
             ref = {}
             for col, iid in (("3dep-lidar-hag", rec["hag_item"]), ("3dep-lidar-dsm", rec["dsm_item"])):
-                with rasterio.open(signed(col, item(col, iid)["assets"]["data"]["href"])) as s:
-                    ref[col] = read_on_grid(s, T2, (n, n))
+                for attempt in range(5):  # transient remote-COG read failures ("Chunk and warp failed")
+                    try:
+                        with rasterio.open(signed(col, item(col, iid)["assets"]["data"]["href"])) as s:
+                            ref[col] = read_on_grid(s, T2, (n, n))
+                        break
+                    except rasterio.errors.RasterioError:
+                        if attempt == 4:
+                            raise
+                        import time; time.sleep(20 * (attempt + 1))
             hag, ldsm = ref["3dep-lidar-hag"], ref["3dep-lidar-dsm"]
             bad = ~np.isfinite(hag) | (hag < HAG_MIN) | (hag > HAG_MAX)
             out["hag_excluded_frac"] = float(bad.mean())

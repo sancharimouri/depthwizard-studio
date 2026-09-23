@@ -446,3 +446,61 @@ linear residual on RMSE **and** bias-removed RMSE, each with:
 
 **Expected outcome: negative.** FABDEM is itself a globally trained ML correction of GLO-30 (random forest), it is already
 the best terrain product here (32/32 vs. GLO-30), and the residual left is small. One run, no tuning.
+
+---
+
+## 2026-09-23 — Part D result: forested and mountainous terrain vs. airborne LiDAR (USGS 3DEP)
+
+`scripts/forest_mountain_3dep_eval.py` → `data/forest_mountain_3dep/{windows.json,summary.json}`.
+- Model: Method 6 = mean of 12 fold models, margin-192 tiling.
+- Input: NAIP resampled to 0.3 m (primary).
+- Scale: 8 windows × 600 m, 4 sites.
+
+**Run incidents (neither touches the analysis).**
+1. A transient remote-COG read failure ("Chunk and warp failed") after 3 windows. A 5× retry was added and the run resumed.
+2. **Guard deviation.** The pre-registered no-op guard (median |EGM→NAVD88 shift| > 0.05 m) fired falsely at MLBS VA, where EGM2008 and NAVD88 nearly coincide (0.045 m).
+   - It was replaced by the repo's standard guard: |geoid N| > 1 m at every pixel (N ≈ −30 m there).
+   - The datum chain itself is unchanged: EGM → WGS84/ITRF2014 ellipsoid → Helmert to NAD83(2011) @2015.0 → GEOID → NAVD88.
+- No HAG pixels were excluded by the > 100 m / < −2 m rule in any window.
+
+### (a) nDSM: predicted AGL vs. 3DEP height above ground
+
+Values are per-window means over 8 windows, on the 2 m grid.
+
+| input | MAE | RMSE | bias | Pearson | Spearman | var ratio | p95 pred / LiDAR | p99 pred / LiDAR |
+|---|---|---|---|---|---|---|---|---|
+| **0.3 m** | 17.35 | 19.64 | **−17.16** | 0.404 | 0.382 | **0.125** | **10.6 / 37.7** | 12.6 / 42.4 |
+| 0.6 m | 17.39 | 19.69 | −17.18 | 0.360 | 0.359 | 0.089 | 9.6 / 37.7 | 11.4 / 42.4 |
+
+| window | LiDAR p95 | pred p95 | bias | Pearson |
+|---|---|---|---|---|
+| Olympic w0 / w1 | 53.8 / 49.8 | 11.7 / 10.4 | −28.4 / −14.8 | 0.43 / 0.38 |
+| Tahoe w0 / w1 | 32.0 / 35.3 | 8.4 / 10.0 | −12.9 / −16.7 | 0.50 / 0.54 |
+| GRSM w0 / w1 | 34.4 / 39.2 | 10.2 / 12.8 | −20.6 / −23.0 | 0.14 / 0.03 |
+| MLBS w0 / w1 | 27.8 / 29.5 | 9.1 / 12.1 | −14.0 / −6.8 | 0.40 / 0.81 |
+
+**Reading.** The canopy ceiling is **confirmed on independent airborne LiDAR in leaf-on forest.**
+- Method 6's AGL p95 is about 10 m where real canopy p95 is 28–54 m.
+- Variance ratio 0.12, against 0.48–0.66 on DFC2019.
+- Correlation is weak to moderate. It is about 0 on steep GRSM, where the LiDAR ground itself is suspect.
+- This is the DFC2019 training-range ceiling (tree p99 23.6 m) seen out of domain, and made worse:
+  - NAIP at 0.6–1.0 m is coarser than 0.3 m;
+  - these are closed tall forests, not urban trees.
+
+### (b) Composed DSM = DEM + max(AGL, 0) vs. the 3DEP first-return DSM
+
+The pre-registered rule is paired Wilcoxon, n = 8, Holm across 3 DEMs, and **both** RMSE and bias-removed RMSE must pass.
+
+| DEM | RMSE raw → composed (mean) | wins | p (Holm) | bRMSE raw → composed | wins | p (Holm) | **verdict** |
+|---|---|---|---|---|---|---|---|
+| FABDEM | 11.36 → **8.56** | 7/8 | 0.031 | 7.75 → 7.60 | 5/8 | 1.0 | **does not add value** |
+| GLO-30 | 9.16 → 12.84 (worse) | 0/8 | 0.023 | 7.13 → 7.45 | 4/8 | 1.0 | **does not add value** (harms) |
+| SRTM | 9.63 → 11.78 (worse) | 2/8 | 0.039 | 8.38 → 8.31 | 4/8 | 1.0 | **does not add value** (harms) |
+
+**Reading.**
+- **FABDEM + AGL** lowers RMSE on 7/8 windows, and that part is significant. But the gain is almost all **bias**: FABDEM's mean bias vs. the LiDAR surface goes from −8.2 m to −3.0 m. Bias-removed RMSE is unchanged (5/8, p = 0.46).
+  - So the predicted height restores part of the canopy's **level**, not its **shape**.
+  - That is exactly what the R4 offset guard exists to block, so the pre-registered verdict is **fail**.
+- **GLO-30 and SRTM + AGL are worse.** They are radar surface models that already carry most of the canopy, so adding AGL double-counts.
+- **Post-hoc, descriptive:** the best raw surface product on these windows is GLO-30 (RMSE 9.16, bRMSE 7.13). Composed FABDEM has the lower mean RMSE (8.56) but a higher bRMSE (7.60).
+- The brief's recommended route (a low-resolution DEM, e.g. SRTM, mapped to absolute heights) **plus Method 6** does not produce a better DSM than the DEM on forested and mountainous terrain.

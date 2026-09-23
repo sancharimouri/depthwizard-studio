@@ -1,0 +1,76 @@
+{
+ "n_windows": 8,
+ "tests": {
+  "srtm|rmse": {
+   "raw_mean": 9.632938245702608,
+   "composed_mean": 11.777409334656149,
+   "composed_wins": 2,
+   "p": 0.0390625,
+   "p_holm": 0.0390625
+  },
+  "glo30|rmse": {
+   "raw_mean": 9.159406095645771,
+   "composed_mean": 12.841820553989425,
+   "composed_wins": 0,
+   "p": 0.0078125,
+   "p_holm": 0.0234375
+  },
+  "fabdem|rmse": {
+   "raw_mean": 11.360236348220923,
+   "composed_mean": 8.555733006111934,
+   "composed_wins": 7,
+   "p": 0.015625,
+   "p_holm": 0.03125
+  },
+  "srtm|brmse": {
+   "raw_mean": 8.382417592700271,
+   "composed_mean": 8.305849856920794,
+   "composed_wins": 4,
+   "p": 0.7421875,
+   "p_holm": 1.0
+  },
+  "glo30|brmse": {
+   "raw_mean": 7.133473908652266,
+   "composed_mean": 7.45357800040528,
+   "composed_wins": 4,
+   "p": 0.640625,
+   "p_holm": 1.0
+  },
+  "fabdem|brmse": {
+   "raw_mean": 7.753782134351204,
+   "composed_mean": 7.602182089087096,
+   "composed_wins": 5,
+   "p": 0.4609375,
+   "p_holm": 1.0
+  }
+ },
+ "ndsm": {
+  "0.3": {
+   "mae": 17.34841760236086,
+   "rmse": 19.641617564949037,
+   "pearson": 0.40405306624561266,
+   "spearman": 0.3820727260387219,
+   "bias": -17.155572150817342,
+   "var_ratio": 0.12485937060752841,
+   "p95_pred": 10.57686961889267,
+   "p95_ref": 37.7212495803833,
+   "p99_pred": 12.624014332294461,
+   "p99_ref": 42.42254941940305
+  },
+  "0.6": {
+   "mae": 17.385443127129335,
+   "rmse": 19.687875182285403,
+   "pearson": 0.35986462588020085,
+   "spearman": 0.35925766666991976,
+   "bias": -17.180217302952535,
+   "var_ratio": 0.08887487577837873,
+   "p95_pred": 9.550622174143793,
+   "p95_ref": 37.7212495803833,
+   "p99_pred": 11.448612125515936,
+   "p99_ref": 42.42254941940305
+  }
+ },
+ "verdict_srtm": "does not add value",
+ "verdict_glo30": "does not add value",
+ "verdict_fabdem": "does not add value"
+}
