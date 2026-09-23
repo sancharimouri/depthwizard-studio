@@ -85,3 +85,37 @@ GLO-30 comes from the public AWS COGs.
   - `zoom_*.png`, and `data/vhr_dsm/_overview/`.
   - The viewer assets in `frontend/public/data/vhr/<crop>/` (about 29 MB in total), which
     `frontend/vhr_preview.html` needs in order to render.
+
+## Deleted to reclaim disk (2026-09-23): closed-route artifacts, all recoverable
+
+**Scope.** These files were deleted **after** this entry was committed. All were untracked by git. None is read by any pending
+script: Parts A–F of `docs/method-audit/07-gamus-generalization/` were checked. For Part F variant B, `chmv2_mean` comes from
+the saved `data/sentinel2_benchmark/dinov3_depth/*.npy`, which is already in `terrain_rf_residual/samples.parquet`
+(1,241,260/1,241,260 non-null), so no live CHMv2 inference is needed.
+
+**Totals and checksums.**
+- 20 inventoried items; 8,188,481,521 bytes by file size.
+- Size and SHA-256 of each file are appended to `data/REGENERATION_sha256.csv` under the same paths.
+- For the two external repos, the whole `.git/` directory was removed, not just the pack file, so that no repo is left corrupt.
+  The working trees are kept as plain snapshots.
+
+| # | Deleted path(s) | What it was | Closed route it belonged to | Recovery |
+|---|---|---|---|---|
+| 1 | `external/SynRS3D/pretrain/RS3DAda_vitl_DPT_height.pth` (1.47 GB) | RS3DAda ViT-L DPT height checkpoint | **RS3DAda rejected:** 49/50 DFC2019 benchmark tiles are in its training split (contaminated), and it is degenerate on Sentinel-2 (HANDOFF §4) | https://huggingface.co/JTRNEO/RS3DAda/blob/main/RS3DAda_vitl_DPT_height.pth → back to `external/SynRS3D/pretrain/` |
+| 2 | `data/gamus_dc/test_tiles.npz` (1.37 GB) and `data/gamus_dc/train_quadrants.npz` (0.55 GB) | Leakage-safe GAMUS-DC arrays for the Method 6 + GAMUS-DC pilot retrain | **GAMUS-DC pilot, closed and not adopted.** The tall-tree criterion failed because the imagery is leaf-off. The 07 C.0 pre-check then found every GAMUS city leaf-off or mixed, so no GAMUS retrain is planned (`07-.../log.md`) | `uv run --no-project --with h5py --with numpy python scripts/prepare_gamus_dc.py` (streams HF `earthflow/GAMUS`; deterministic split, seed 0; `split.json` is kept) |
+| 3 | `models/hub/hf_dinov3_sat493m/model.safetensors` (1.21 GB) | DINOv3 ViT-L SAT-493M backbone weights | **DAv2-vs-DINOv3 comparison, superseded.** No backbone is carried forward, because no 10 m RGB detail source adds anything over the DEM (Phase 4) (`sentinel2/backbone-comparison.md`) | HF `facebook/dinov3-vitl16-pretrain-sat493m` (gated; `HF_TOKEN` has access). Conversion: `scripts/lib_dinov3_sat493m_loader.py` |
+| 4 | `kaggle/gamus_b_kaggle_bundle.zip` (1.19 GB) | Part B Kaggle upload bundle | Part B **complete** (results merged and committed, `6e820c7`) | Rebuild: `kaggle/bundle/` (script, `read.md`, hashes, done list) plus hard-linked checkpoints; `zip -r -0 gamus_b_kaggle_bundle.zip bundle` |
+| 5 | `kaggle_phase2.5_package.zip` (0.65 GB) | Kaggle export for the Method 4 v2 SID ordinal-constraint follow-up | **Method 4 superseded** by Method 6 | The unzipped `kaggle_phase2.5_package/` folder is still in the repo; re-zip it if needed |
+| 6 | `models/semantic/hotosm_dinov3s_buildings/model.onnx` (0.22 GB) | HOT OSM DINOv3-S building-segmentation model | **Semantic prior closed** (Method 3; Sentinel-2 phase 2.3) | HF `hotosm/dinov3s-buildings` (`hf_hub_download` in `scripts/generate_dfc_building_prior.py`) |
+| 7 | **Duplicate group (SHA-256 `b12e22b4…`, 180,352,229 B each):** `data/sentinel2/semantic_sources/globalml_building_footprints/raw/kolkata/part-00108-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz` and `…/raw/bardhaman/part-00108-…` | MS Global ML Building Footprints, India partition | **Semantic prior / building-footprint route closed** (phase 2.3; Open-Buildings CNN failure) | https://bfppub.z5.web.core.windows.net/2026-08-13/global-buildings.geojsonl/RegionName=India/quadkey=123133321/part-00108-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz (index: `…/globalml_building_footprints/dataset-links.csv`, kept) |
+| 8 | `data/sentinel2/…/raw/kolkata/part-00047-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz` (169 MB) | Same dataset | Same | https://bfppub.z5.web.core.windows.net/2026-08-13/global-buildings.geojsonl/RegionName=India/quadkey=123133323/part-00047-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz |
+| 9 | `models/hub/checkpoints/dinov3_vitl16_chmv2_dpt_head-3703d643.pth` (135 MB) | DINOv3 CHMv2 canopy-height DPT head | **CHMv2 closed** as a detail source (Phase 4) and as a DEM add-on (A3). Its outputs are saved in `sentinel2_benchmark/dinov3_depth/` | HF `facebook/dinov3-vitl16-chmv2-dpt-head`, or https://ai.meta.com/resources/models-and-libraries/chmv2-downloads/ |
+| 10 | **Duplicate group (SHA-256 `e4a19ea2…`, 131,950,214 B each):** `data/sentinel2/…/raw/delhi/part-00170-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz` and `data/sentinel2_benchmark/semantic_sources/globalml_building_footprints/raw/delhi/123121303_part-00170-…` | MS Global ML Building Footprints | Semantic prior closed | https://bfppub.z5.web.core.windows.net/2026-08-13/global-buildings.geojsonl/RegionName=India/quadkey=123121303/part-00170-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz |
+| 11 | `external/DepthWizard-SIH26175/.git/` (95 MB; the 99 MB pack was in it) | Git history of an audited competitor repo | Competitor audit done (GSD-FiLM rejected; the height-balanced idea was adopted into Method 6 and is reimplemented here). History isn't needed | `git clone https://github.com/devendrakushwah80/DepthWizard-SIH26175.git && git -C DepthWizard-SIH26175 checkout 558ddde63847a2d58426a802c628486ff6093bed` |
+| 12 | **Duplicate group (SHA-256 `5e81306f…`, 93,708,060 B each):** `data/sentinel2/…/raw/bengaluru/part-00014-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz` and `data/sentinel2_benchmark/…/raw/bengaluru/123303312_part-00014-…` | MS Global ML Building Footprints | Semantic prior closed | https://bfppub.z5.web.core.windows.net/2026-08-13/global-buildings.geojsonl/RegionName=India/quadkey=123303312/part-00014-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz |
+| 13 | `data/sentinel2/…/raw/bardhaman/part-00066-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz` (90 MB) | Same dataset | Same | https://bfppub.z5.web.core.windows.net/2026-08-13/global-buildings.geojsonl/RegionName=India/quadkey=123133303/part-00066-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz |
+| 14 | `data/elevation/darjeeling/Darjeeling_Copernicus_GLO30_DSM.tif` (85 MB) | The full N26 + N27 GLO-30 mosaic from the Darjeeling fetch-bug diagnosis | Diagnosis resolved (HANDOFF §2b). The committed `…_cropped.tif` is what's used, and is byte-identical to the demo DEM | `python scripts/fetch_glo30_darjeeling.py` (public AWS `copernicus-dem-30m`) |
+| 15 | `data/sentinel2/…/raw/bardhaman/part-00180-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz` (74 MB) | Same dataset | Same | https://bfppub.z5.web.core.windows.net/2026-08-13/global-buildings.geojsonl/RegionName=India/quadkey=123133302/part-00180-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz |
+| 16 | `external/ArnabTechiee-depthwizard/.git/` (67 MB; the 70 MB pack was in it) | Git history of an audited competitor repo | **Shadow-geometry photogrammetry rejected** at 10 m (HANDOFF §4) | `git clone https://github.com/ArnabTechiee/depthwizard.git ArnabTechiee-depthwizard && git -C ArnabTechiee-depthwizard checkout 664e92bf625b0bbedfcdb52abfede791d788c394` |
+
+Rows 2, 7, 10 and 12 each cover two paths, so the 16 rows cover the 20 inventoried paths.
