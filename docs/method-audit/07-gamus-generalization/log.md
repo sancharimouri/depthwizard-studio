@@ -216,3 +216,91 @@ the trees Method 6 learned from, whose tall-tree predictions it gets wrong in a 
 - The elevation layer is **DEM-only** and is already labelled "DEM ELEVATION", so the label is accurate.
 - Screenshot: `docs/screenshots/2026-09-23_deliverables_audit_home.png`, headless Chrome, since the extension was not connected.
 - Frontend untouched (`git status frontend` shows only the pre-existing untracked `public/data/vhr/`).
+
+---
+
+## 2026-09-23 — Part D pre-registration (committed before any Part D download or inference)
+
+### D.0 Data-source deviation: NEON → USGS 3DEP + NAIP (blocker, default chosen)
+
+- **NEON is blocked.**
+  - The NEON **products** API answers without authentication, and all three AOP products exist at the candidate sites:
+    DP3.30010.001 camera mosaic 10 cm, DP3.30024.001 LiDAR DSM/DTM 1 m, DP3.30015.001 CHM 1 m.
+  - Every **data/file** endpoint returns `403 Access Denied`. NEON now requires an API token for data
+    downloads, and that needs a user account. Creating one is not something this session may do, and
+    `.env` has no NEON token.
+- **Default chosen, per CLAUDE.md's blocker rule:** independent airborne-LiDAR truth plus leaf-on aerial RGB, both served
+  anonymously by Microsoft Planetary Computer:
+  - **Reference:** USGS 3DEP LiDAR rasters, `3dep-lidar-dsm` (first-return surface) and `3dep-lidar-hag`
+    (height above ground).
+    - 2 m, NAD83 / UTM + **NAVD88 height** (compound CRS read from the COG).
+    - PDAL-reprocessed: SMRF ground, `hag_nn`.
+  - **RGB:** USGS NAIP, 0.3–1.0 m, 4-band; RGB bands are used.
+- **Rerun offer:** with a NEON token in `.env`, the same protocol can be rerun on NEON AOP. This is an open item.
+
+### D.1 Sites, items, windows (all chosen by rule, before seeing any prediction)
+
+**Sites.** Four forested and mountainous sites with 3DEP coverage on Planetary Computer, from a probe of 18 candidate locations:
+1. **Olympic Peninsula, WA** (47.95, −123.90): temperate conifer.
+2. **Lake Tahoe / Placer Co., CA** (39.10, −120.10): Sierra mixed conifer.
+3. **Colorado Front Range** (40.35, −105.60): subalpine conifer, high relief.
+4. **Great Smoky Mountains, TN** (35.689, −83.502): the NEON GRSM site, Appalachian deciduous, steep.
+- NEON's SOAP, WREF and NIWO have no 3DEP raster on Planetary Computer. Backups in order: MLBS VA/WV (37.378, −80.525), then White Mtns NH (44.10, −71.40).
+
+**Item per site.**
+- Candidates are the `3dep-lidar-hag` items intersecting a 0.3° × 0.3° box centred on the site.
+- Eligible if the STAC `valid_percent` ≥ 95 and the STAC HAG `mean` ≥ 8 m. If none qualifies, relax to mean ≥ 5 m;
+  if still none, use the next backup site.
+- One eligible item is drawn at random (seed 0). Its `-dsm-` twin (same id stem) must exist.
+
+**Windows.**
+- Two non-overlapping 600 m × 600 m windows per item, top-left corners drawn at random (seed 0) on the 2 m grid.
+- Accepted if DSM and HAG are ≥ 98% valid and ≥ 50% of pixels have HAG > 5 m (forested). Up to 500 draws.
+- **8 windows in total.**
+
+**RGB.**
+- NAIP items with month June–September (leaf-on) and GSD ≤ 1.0 m. Among those, the acquisition date closest to the
+  3DEP item's `end_datetime`; ties go to the finer GSD. Items are mosaicked if a window spans several.
+- **Primary input:** RGB bilinearly resampled to **0.3 m** on the window's UTM grid (2000 × 2000 px). This is
+  Method 6's training GSD; the real information content is the NAIP GSD (0.6–1.0 m), inside the 0.3–2.4 m range.
+- **Secondary, descriptive:** 0.6 m input.
+- **Known confound:** the time gap between the LiDAR and NAIP dates (canopy growth, harvest) is reported per window.
+
+**Reference cleaning.** HAG pixels > 100 m or < −2 m are excluded as ground-classification failures on steep
+terrain; the GRSM item's STAC max is 949 m. The excluded fraction is reported. No other filtering.
+
+### D.2 Models and evaluation
+
+- **Model:** Method 6 = the mean of all 12 fold models (seeds 42, 43, 44 × 4 folds). There is no Part C model (C.0 stop).
+- **Tiling:** `scripts/vhr_dsm_pipeline.py` sliding windows with `--margin=192`, the seam-fixed setting.
+- **(a) nDSM:**
+  - predicted AGL is block-averaged to the 2 m reference grid and compared with HAG;
+  - per window: MAE, RMSE, Pearson, Spearman, bias, variance ratio, and the p95 of AGL vs. the p95 of HAG (the canopy ceiling);
+  - **descriptive; no pass rule was set for (a).**
+- **(b) Composed DSM:**
+  - composed = DEM + max(AGL, 0) on the 2 m grid, with the DEM bilinearly resampled from 30 m (SRTM, GLO-30, FABDEM via Earth Engine);
+  - baseline = the DEM alone;
+  - reference = 3DEP first-return DSM.
+- **Datums, per pixel:**
+  - SRTM EGM96 (EPSG:5773), GLO-30 and FABDEM EGM2008 (EPSG:3855);
+  - each is converted to NAVD88 at every pixel's lat/lon with pyproj (`PROJ_NETWORK=ON`), source EPSG:4326+{5773|3855} → target EPSG:6318+5703;
+  - the script asserts that the operation uses geoid grids and that the median |shift| > 0.05 m, i.e. not a silent no-op.
+- **Metrics per window:** RMSE and bias-removed RMSE (the std of the error), plus MAE, bias and median |error|.
+
+**Decision rule (b), per DEM.**
+- Composed "adds value" over the raw DEM if it is better on **both** RMSE and bias-removed RMSE.
+- Test: a paired two-sided exact Wilcoxon across the 8 windows.
+- Threshold: **Holm-adjusted p < 0.05 across the 3 DEMs** (per metric), with win counts reported.
+- The prompt's "all tiles won if n < 8" does not apply because n = 8.
+- **Prior expectation, stated now:** SRTM and GLO-30 are radar surface models that already contain part of the
+  canopy, so adding AGL double-counts. FABDEM (bare earth) is the principled base.
+
+### D.3 India transfer check (descriptive only; no rule)
+
+- The existing composed DSMs `data/vhr_dsm/*_margin192/dsm.tif` = FABDEM + max(Method 6 seed-43 AGL, 0), EGM2008, six Sikkim/Darjeeling crops.
+- References:
+  - ICESat-2 20 m segments (sliderule PhoREAL, same parameters as `scripts/fetch_icesat2_segments20m.py`), surface = ground + canopy top;
+  - GEDI L2A `elev_highestreturn` (WGS84 ellipsoid);
+  - each is converted per point to EGM2008.
+- Reported per crop: n, bias, MAE and median |error| for the composed DSM and for raw FABDEM and GLO-30 at the same points.
+- n is expected to be small; no inference is drawn beyond description.
