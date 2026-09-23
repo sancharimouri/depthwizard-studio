@@ -121,10 +121,23 @@ per-point geoid, R4 offset-guarded; `data/sentinel2_benchmark/dem_baselines_32/s
   (`scripts/dem_baselines_32.py`).
   - **PROJ_NETWORK must be set before any pyproj import**, or N silently becomes 0.
     `frequency_fusion_controls.build_tile` now raises if it does.
-- **Darjeeling DEM note:** CLAUDE.md records GLO-30 for Darjeeling as "all-NaN" earlier. GLO-30
-  fetched fine for all 32 tiles, and FABDEM for all 32, this session, so the earlier failure was
-  most likely a fetch bug. Switching the demo's Darjeeling DEM to GLO-30 or FABDEM is an
-  **optional future demo change, not made**.
+- **Darjeeling DEM — resolved 2026-09-23.** The "GLO-30 all-NaN for Darjeeling" was a
+  **tile-selection fetch bug**, not a data gap.
+  - Darjeeling's footprint (lat 26.9999–27.0901) straddles the 27°N boundary of the 1° GLO-30
+    tiles. Taking the single tile at the footprint's southern edge (`floor(26.9999)` → N26) leaves
+    one pixel row, so the crop is **0.31% valid**.
+  - Reproduced against the public AWS COGs. Neither a CRS error nor a swallowed API error.
+  - The original fetch script doesn't survive; the claim predates every transcript, so the exact
+    code can't be inspected. The failure mode is reproduced exactly.
+  - Correct fetch: `scripts/fetch_glo30_darjeeling.py` mosaics N26 + N27 →
+    `data/elevation/darjeeling/Darjeeling_Copernicus_GLO30_DSM_cropped.tif` (committed; 100%
+    valid, 556.55–2477.54 m). The full 85 MB two-tile mosaic is not committed (see
+    `data/REGENERATION.md`).
+  - **Consequence for the demo: none needed.** The demo's `Darjeeling_OpenTopography_DSM.tif` is
+    **byte-identical to GLO-30 on all 117,325 pixels**, because OpenTopography served COP30. The
+    demo already uses GLO-30 and matches the other three regions' source.
+  - The only substantive switch still open is to **FABDEM** (bare earth; A3 found it best against
+    ICESat-2 ground photons). That is an optional demo decision, **not made**.
 - Benchmark data: `data/sentinel2_benchmark/` — `manifest.csv` (25 accepted tiles of
   32 originally selected), `icesat2_coverage.csv`, `srtm_raw/`, `copernicus_dem_raw/`
 - **Content-QC history, so it isn't rediscovered as a surprise**: the benchmark started

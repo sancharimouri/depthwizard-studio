@@ -18,6 +18,7 @@ All commands run from the repo root with the project venv (`.venv/bin/python`).
 | `data/dfc2019/experiments/method6_height_balanced_seed{43,44}/fold*.pt` | no (~100 MB each) | `bash scripts/run_method6_seeds.sh` (**training**) | C3 seed runs. |
 | `data/sentinel2_benchmark/fabdem/<tile>_fabdem.npy` (32 × 4 MB) | no | `python scripts/fetch_fabdem.py` | EE `projects/sat-io/open-datasets/FABDEM`, mosaic with the **native projection restored** (see the script comment; the default 1° mosaic projection is a bug trap). Data licence CC BY-NC-SA 4.0. |
 | ETH for the 7 sign-flip-excluded tiles | no | `python scripts/fetch_eth_canopy.py --all-tiles` | Same asset as above. |
+| `data/elevation/darjeeling/Darjeeling_Copernicus_GLO30_DSM.tif` (85 MB, N26 + N27 full-tile mosaic) | no | `python scripts/fetch_glo30_darjeeling.py` | The cropped `..._cropped.tif` is committed and byte-identical to the demo's DEM. |
 | ICESat-2 segments / GEDI for the 7 extra tiles | yes | `python scripts/fetch_icesat2_segments20m.py --all-tiles`, `python scripts/fetch_gedi_l2a.py --all-tiles` | |
 | `data/dfc2019/experiments/dav2_calibration/calibration_samples.csv` (41 MB) | no | Method 1's calibration run (`data/dfc2019/experiments/dav2_calibration/config.json`) | Raw pixel samples; the summaries are committed. |
 | `data/sentinel2_benchmark/dem_baselines_32/` inputs | — | `python scripts/dem_baselines_32.py` | **Sets `PROJ_NETWORK=ON` before importing pyproj**; asserts \|N\| > 1 m. |

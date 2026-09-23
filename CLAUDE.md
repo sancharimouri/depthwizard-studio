@@ -158,9 +158,16 @@ note if a fuller VHR domain-transfer investigation follows.
 - Real Sentinel-2 RGB GeoTIFFs (10x10km, 10m, 3-band, **EPSG:32645**) for **Darjeeling,
   Kolkata, Bardhaman, Sundarbans** under `data/sentinel2/`.
 - Elevation sources:
-  - Darjeeling: OpenTopography DSM (elevation range ~557–2478 m) — CartoDEM/Copernicus
-    for Darjeeling specifically was rejected earlier as unusable/all-NaN, OpenTopography
-    is what's actually wired in.
+  - Darjeeling: OpenTopography DSM (elevation range ~557–2478 m) is what's wired in. **It is
+    Copernicus GLO-30:** it's byte-identical to a GLO-30 mosaic on all 117,325 pixels (OpenTopography
+    serves COP30). The old "Copernicus for Darjeeling is all-NaN" was a **fetch bug**, diagnosed on
+    2026-09-23 by reproduction:
+    - Darjeeling's footprint (lat 26.9999–27.0901) straddles the 27°N tile boundary.
+    - Choosing one tile from the southern edge (N26) leaves one pixel row, i.e. 0.31% valid.
+    - The correct fetch mosaics N26 + N27: `scripts/fetch_glo30_darjeeling.py` →
+      `data/elevation/darjeeling/Darjeeling_Copernicus_GLO30_DSM_cropped.tif`, 100% valid.
+
+    CartoDEM (`Darjeeling_CartoDEM_30m_RAW.tif`) is also not all-NaN (0–2518 m, 0.28% zeros).
   - **New: Copernicus GLO-30 DSMs for Kolkata, Bardhaman, and Sundarbans**, now at
     `data/elevation/{region}/`, **30 m, EPSG:4326**, each covering its region's Sentinel
     footprint. Note the CRS mismatch vs. the Sentinel tiles (EPSG:32645 vs EPSG:4326) —
