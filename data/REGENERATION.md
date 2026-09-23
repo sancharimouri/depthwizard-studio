@@ -162,3 +162,9 @@ Rows 2, 7, 10 and 12 each cover two paths, so the 16 rows cover the 20 inventori
 | `data/forest_mountain_3dep/*_agl03.npy` | no (8 × 8 MB) | `PROJ_NETWORK=ON .venv/bin/python scripts/forest_mountain_3dep_eval.py run` | Needs Planetary Computer (anonymous) and Earth Engine. |
 | `data/sentinel2_benchmark/terrain_rf_residual/samples.parquet` | no (212 MB) | `PROJ_NETWORK=ON .venv/bin/python scripts/terrain_rf_residual.py` (feature stage; needs Earth Engine for WorldCover) | The fold assignment is deterministic (GroupKFold on RGT). |
 | `data/sentinel2_benchmark/terrain_rf_residual/kaggle/rf_oof_{A,B}_fold{0-4}.npy` | no (10 × 2 MB) | `kaggle/terrain_rf_kaggle.py --variant AB` (local or Kaggle) | sklearn 1.9.0, `random_state=0`. The summary and per-tile CSV are committed. |
+
+## Resolution-transfer checkpoints (2026-09-24)
+
+| Artifact | Committed? | Regenerate with | Notes |
+|---|---|---|---|
+| `data/dfc2019/experiments/resolution_transfer/rt_{P,R}_{2,3,5,8}m_seed42/fold{0-3}.pt`, `gate_native_fold0/fold0.pt` | no (33 × 99 MB) | `.venv/bin/python scripts/method6_resolution_transfer.py train --gsd <g> --proto <P\|R>` (chains: `run_chain.sh`, `run_chain8.sh`) | Seed 42; the native gate reproduces the adopted fold-0 MAE bit-for-bit. Per-fold results are committed (`train_results.json`), as are `matrix_tiles.jsonl` and `matrix_summary.json`. |

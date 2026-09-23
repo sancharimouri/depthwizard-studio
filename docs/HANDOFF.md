@@ -63,6 +63,14 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
         NYC imagery is real (`*_IMG.h5`) but just as leaf-off, so it wasn't added.
 - Everything: `docs/method-audit/final-comparison.md` §1–2.
 
+**Resolution transfer (2026-09-24, `06-full-finetune-twin-head/resolution-transfer.md`; pre-registered; seed 42):**
+- Native DFC2019 GSD is **0.3 m** (a 512 px quadrant is 153.6 m). Two protocols: P = true pixel count (the prompt's), R = resample-back (37×37 tokens kept).
+- DAv2's ViT interpolates position embeddings natively (Phase 0), so no fix was needed. The new training script reproduces the adopted fold 0 bit-for-bit.
+- **P: coarse→fine transfer fails at 2/3/5 (and 8) m** (0/4 metrics beat the 0.3 m oracle). Too few tokens: 6×6 → 2×2.
+- **R: coarse→fine transfer works at 2/3/5 m** (3/4 metrics; native-eval Pearson 0.721 / 0.708 / 0.687 vs. oracle 0.582). It fails at 8 m (0.631, CI-overlapping); the curve bends between 5 and 8 m.
+- **Strongly asymmetric, coarse→fine better** everywhere. E.g. R at 5 m: 0.687 (5 m-trained at 0.3 m) vs. 0.321 (native model at 5 m).
+- Synthetic degradation of one WorldView-3 city. This is **not** evidence that real 10 m Sentinel-2 supports this.
+
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
 - **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:
   - MAE 3.130 vs. 3.474; RMSE **4.583 vs. 4.426**; Pearson 0.638 vs. 0.491; Spearman 0.583 vs. 0.425.
@@ -194,6 +202,9 @@ per-point geoid, R4 offset-guarded; `data/sentinel2_benchmark/dem_baselines_32/s
   - Scripts: `scripts/rdah_darjeeling_rerun.py`, `scripts/rdah_resolution_sweep.py`.
 
 ## 3. Long-term plan — open items, priority order
+
+**New, 2026-09-24 (resolution transfer):**
+- **0d.** If coarse-imagery training is pursued, test it on **real** coarse sensors, not synthetic degradation, with a token-preserving input protocol (R), several seeds, and the 5–10 m range. The synthetic R curve bends between 5 and 8 m.
 
 **New, 2026-09-23 (07):**
 - **0a. Leaf-on, tall-forest supervision for the canopy ceiling.** GAMUS is leaf-off, so it can't supply it.
@@ -446,3 +457,11 @@ to match.
 - The numbers in this file, CLAUDE.md, `final-comparison.md` §7 and 07 `summary`/`verdict` were cross-checked programmatically against
   `zeroshot_merged_summary.json`, `forest_mountain_3dep/summary.json`, `terrain_rf_residual/summary.json` and `leafon_precheck.json`.
   0 mismatches.
+
+**Session footer: 2026-09-24, "resolution transfer"** (record: `docs/method-audit/06-full-finetune-twin-head/resolution-transfer.md`; summary in `last_session.md`)
+- **Phase 0:** native position-embedding interpolation; no fix needed.
+- **Protocol P** (true pixel count): coarse→fine fails at 2 / 3 / 5 / 8 m.
+- **Protocol R** (resample-back): coarse→fine works at 2 / 3 / 5 m and fails at 8 m.
+- Coarse→fine beats fine→coarse at every GSD, in both protocols. Monotonic, no pre-registered cliff at or below 5 m.
+- The numbers here were verified against `data/dfc2019/experiments/resolution_transfer/matrix_summary.json`.
+

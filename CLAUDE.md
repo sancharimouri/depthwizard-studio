@@ -327,6 +327,16 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
    (Save & Run All), the expected log lines, and exactly which output files go where in the repo. It ends with a
    troubleshooting table.
 
+## Method 6 resolution transfer (2026-09-24; `docs/method-audit/06-full-finetune-twin-head/resolution-transfer.md`)
+
+- DFC2019's native GSD is **0.3 m** (not 0.5 m). DAv2's ViT handles any input size natively (position embeddings are interpolated).
+- **Training on coarse imagery and testing on fine:**
+  - it fails when the coarse input has its true pixel count (P: 6×6 to 2×2 tokens);
+  - it works at 2 / 3 / 5 m when the token grid is kept (R: Pearson at 0.3 m 0.721 / 0.708 / 0.687 vs. oracle 0.582);
+  - it fails at 8 m (0.631).
+- It is strongly asymmetric: coarse→fine beats fine→coarse.
+- Synthetic degradation, one city, one seed. Not a Sentinel-2 result.
+
 ## SIH26175 brief — evaluation criteria (standing reference; full text `docs/SIH26175_problem_statement.md`)
 
 Source: github.com/IMG-PROCESS-SAC/SIH-DepthWizard-2026 README, commit `ac078d5`.

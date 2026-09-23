@@ -1,0 +1,11 @@
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[gate_native_fold0] device=mps gsd=0.3 proto=P n_px=512
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22139.84it/s]
+[gate_native_fold0] fold0 epoch 01/12: loss=6.8672 (54s)
+[gate_native_fold0] fold0 epoch 03/12: loss=3.1490 (155s)
+[gate_native_fold0] fold0 epoch 06/12: loss=2.4829 (331s)
+[gate_native_fold0] fold0 epoch 09/12: loss=1.9447 (516s)
+[gate_native_fold0] fold0 epoch 12/12: loss=1.6705 (707s)
+[gate_native_fold0] fold0 DONE in 713.9s. own-GSD metrics={'mae_m': 1.8834942542525481, 'rmse_m': 3.413497563855602, 'pearson': 0.7572194755073397, 'spearman': 0.6599485918985362, 'n_tiles': 50}
