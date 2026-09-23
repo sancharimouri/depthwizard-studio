@@ -324,3 +324,45 @@ terrain; the GRSM item's STAC max is 949 m. The excluded fraction is reported. N
 
 - **MLBS gap.** The rule picked 2012 for MLBS: no leaf-on NAIP at ≤ 1 m is closer to the 2018 LiDAR there. Its 5.3-year gap is a known confound, reported, not fixed.
 - **Caveat.** The 3DEP STAC items carry year-level dates only (YYYY-01-01), so the gaps are approximate.
+
+---
+
+## 2026-09-23 — Part D.3 result (descriptive only): Sikkim composed DSM vs. ICESat-2 20 m and GEDI
+
+`scripts/sikkim_dsm_vs_sparse_lidar.py` → `data/vhr_dsm/_diagnostics/sparse_lidar_dsm_check.json`.
+
+**Setup.**
+- Composed = FABDEM + max(Method 6 seed-43 AGL, 0), margin-192, EGM2008.
+- Each raster's value = its p98 inside the footprint (GEDI radius 12.5 m, ICESat-2 10 m).
+- References converted per point from the WGS84 ellipsoid to EGM2008, asserting |N| > 1 m.
+
+**Deviations.**
+- GEDI surface = `elev_lowestmode + rh98`, which is what the existing fetcher exports, not `elev_highestreturn`.
+- **Post-hoc:** the median bias and the count of |error| > 50 m were added after seeing gross outliers.
+  - ICESat-2 mean biases were +31 to +342 m, driven by 1–8 outlier segments per crop (clouds or false returns).
+  - GEDI on `c_river` sits 125–150 m low on 7 of 12 shots: the lowest mode is in a deep gorge, or geolocation fails on the steep valley walls.
+- **The medians are the readable numbers.**
+
+**Median error, raster − lidar (m); n = footprints/segments.**
+
+| crop | ref | n | composed | FABDEM | GLO-30 |
+|---|---|---|---|---|---|
+| c_town | GEDI | 13 | **−1.6** | −8.0 | −3.4 |
+| c_town | IS2 20 m | 12 | +5.9 | −1.2 | +0.2 |
+| c_terraces | GEDI | 20 | −12.2 | −17.5 | −10.7 |
+| c_terraces | IS2 20 m | 24 | +2.6 | −2.6 | +5.6 |
+| a_forest | GEDI | 13 | −16.5 | −30.0 | −17.9 |
+| a_valley | GEDI | 5 | +6.0 | −5.3 | +2.5 |
+| a_valley | IS2 20 m | 10 | +1.3 | −1.7 | +0.7 |
+| c_river | IS2 20 m | 84 | +1.0 | −2.2 | −0.3 |
+| b_glacier | GEDI | 11 | −0.4 | −0.6 | −0.6 |
+
+- Not usable: c_river GEDI (gorge failures). a_forest and b_glacier have no ICESat-2 20 m segments; one granule had a server-side read failure.
+
+**Reading (descriptive, small n, no test).**
+- Against **canopy-top GEDI**, the composed DSM is always closer than bare-earth FABDEM, which it should be, since it adds height.
+  - It is about equal to raw GLO-30: better on town and forest, slightly worse on terraces and valley.
+  - In the forest, composed and GLO-30 both sit about 17 m below GEDI's rh98. That is the known AGL ceiling plus GEDI's slope inflation.
+- Against **ICESat-2 20 m** surface segments, all three rasters sit within ±6 m in median, and none is consistently best.
+- **This does not show that composition beats GLO-30 as a surface product on Indian mountain terrain.**
+  It shows that composition turns FABDEM into something at GLO-30's level.
