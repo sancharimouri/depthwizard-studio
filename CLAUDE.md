@@ -151,6 +151,12 @@ own DFC2019-trained Method 6 model was sanity-tested on real Maxar VHR crops (Si
 *because* VHR access is real but opportunistic, and Sentinel-2 access is universal but
 10m — see the ML research track status above for what that test found, and update this
 note if a fuller VHR domain-transfer investigation follows.
+**Update 2026-09-23:** a real end-to-end VHR DSM pipeline now exists (research track only, not
+in the demo): DSM = FABDEM bare-earth + max(Method 6 AGL, 0), `scripts/vhr_dsm_pipeline.py`,
+`backend/terrain/{composer,mesh_export}.py`. On 6 Maxar Sikkim/Darjeeling crops it is plausible on
+textured terrain, with two defects: a tile-seam artifact on snow, and an AGL ceiling of about 18–23 m
+that under-states tall canopy. Maxar Open Data has no non-mountain India coverage; other terrain needs
+a manual Bhoonidhi fetch. See `docs/method-audit/06-full-finetune-twin-head/vhr_dsm_pipeline.md`.
 
 ## What actually exists right now
 

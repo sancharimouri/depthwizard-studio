@@ -42,6 +42,11 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 - Tiles better than the oracle: 47–49/50 per metric.
 - Variance ratio 0.48–0.66: still underdispersed.
 - The Maxar VHR check shows non-degenerate output on 2 of 3 crops; accuracy untested.
+- **VHR → absolute DSM pipeline exists (2026-09-23).** DSM = FABDEM + max(Method 6 AGL, 0) on 6 Maxar
+  Sikkim/Darjeeling crops, rendered through the unmodified viewer (`frontend/vhr_preview.html`, unlinked).
+  Plausible on textured terrain: buildings and crowns are resolved, no seams, and C4 ρ is +0.45 to +0.68. Two defects: a tile-grid
+  artifact on textureless snow, and an AGL ceiling of about 18–23 m (the forest is under-tall compared with GLO-30−FABDEM and GEDI).
+  Plausibility only; there is no ground truth. `docs/method-audit/06-full-finetune-twin-head/vhr_dsm_pipeline.md`.
 - Everything: `docs/method-audit/final-comparison.md` §1–2.
 
 - Docs: `docs/method-audit/06-full-finetune-twin-head/{summary,verdict}.md`

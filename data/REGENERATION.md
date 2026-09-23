@@ -69,3 +69,19 @@ swept into git by `fd9fd35`.
 - `evaluate_method4_v2_kaggle.py` exists only there, and nothing imports it.
 
 It's left in place as the owner's file, and flagged rather than deleted.
+
+## VHR DSM pipeline outputs (added 2026-09-23)
+
+`python scripts/vhr_dsm_pipeline.py` regenerates everything below. It needs the Maxar scenes
+under the path the script reads, the seed-43 Method 6 fold checkpoints plus
+`method6_full_checkpoint/method6_full_dfc2019.pt`, and Earth Engine access for FABDEM and GEDI.
+GLO-30 comes from the public AWS COGs.
+
+- **Committed:** `data/vhr_dsm/summary.json`, `data/vhr_dsm/<crop>/stats.json`, and
+  `data/vhr_dsm/<crop>/panel_rgb_agl_dsmhs_dtmhs.png`.
+- **Not committed (large):**
+  - Per crop, about 95 MB of 2048² float32 GeoTIFFs: `agl`, `agl_std`, `sigma`, `agl_fullckpt`,
+    `dtm_fabdem`, `dsm`, `glo30`.
+  - `zoom_*.png`, and `data/vhr_dsm/_overview/`.
+  - The viewer assets in `frontend/public/data/vhr/<crop>/` (about 29 MB in total), which
+    `frontend/vhr_preview.html` needs in order to render.

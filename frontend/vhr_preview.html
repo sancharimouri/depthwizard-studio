@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- Research-track preview, NOT linked from the demo. Renders a Method 6 VHR DSM
+     (data/vhr_dsm, scripts/vhr_dsm_pipeline.py) through the unmodified viewer.js.
+     Usage: /vhr_preview.html?crop=c_town&layer=satellite-3d -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VHR DSM Preview</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #110f0e; color: #ddd; font: 13px monospace; }
+  canvas { width: 100%; height: 100%; display: block; }
+  #label { position: fixed; top: 8px; left: 8px; background: #000a; padding: 6px 8px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="label">loading…</div>
+<script type="module">
+import { createTerrainViewer } from "/src/viewer.js";
+const q = new URLSearchParams(location.search);
+const crop = q.get("crop") ?? "c_town";
+const layer = q.get("layer") ?? "satellite-3d";
+const canvas = document.getElementById("c");
+const viewer = createTerrainViewer(canvas);
+viewer.controls.autoRotate = false;
+const { terrainData } = await viewer.loadRegion(`vhr/${crop}`);
+viewer.setLayer(layer);
+document.getElementById("label").textContent =
+  `research preview · Method 6 DSM = FABDEM + AGL · ${crop} · ${layer} · ` +
+  `${terrainData.elevationMin.toFixed(0)}–${terrainData.elevationMax.toFixed(0)} m`;
+function frame() {
+  viewer.resizeToCanvas();
+  viewer.update();
+  viewer.render();
+  requestAnimationFrame(frame);
+}
+frame();
+window.__ready = true;
+</script>
+</body>
+</html>
