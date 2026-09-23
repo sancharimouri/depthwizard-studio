@@ -304,3 +304,23 @@ terrain; the GRSM item's STAC max is 949 m. The excluded fraction is reported. N
   - each is converted per point to EGM2008.
 - Reported per crop: n, bias, MAE and median |error| for the composed DSM and for raw FABDEM and GLO-30 at the same points.
 - n is expected to be small; no inference is drawn beyond description.
+
+---
+
+## 2026-09-23 — Part D selection (rule output; no inference yet) → `data/forest_mountain_3dep/selection.json`
+
+- **Olympic WA:** 4 items eligible (mean ≥ 8 m).
+- **Tahoe CA:** 0 at ≥ 8 m, 3 at ≥ 5 m. The item drawn is `USGS_LPC_CA_NoCAL_Wildfires_B1_2018`, not the Placer Co. item probed earlier.
+- **GRSM TN:** 6 eligible.
+- **Front Range CO: no eligible item** (16 candidates, none with mean ≥ 5 m and ≥ 95% valid). Replaced by the first backup, **MLBS VA**: 5 eligible at ≥ 5 m.
+- Each site yielded 2 windows within ≤ 4 draws, **8 windows** in total.
+
+| site | window NAIP | GSD | LiDAR–NAIP gap |
+|---|---|---|---|
+| Olympic WA | 2017-08-26 | 1.0 m | 237 d |
+| Tahoe CA | 2018-09-16 | 0.6 m | 258 d |
+| GRSM TN | 2016-06-08 | 1.0 m | 207 d |
+| MLBS VA | 2012-09-11 | 1.0 m | **1,938 d** |
+
+- **MLBS gap.** The rule picked 2012 for MLBS: no leaf-on NAIP at ≤ 1 m is closer to the 2018 LiDAR there. Its 5.3-year gap is a known confound, reported, not fixed.
+- **Caveat.** The 3DEP STAC items carry year-level dates only (YYYY-01-01), so the gaps are approximate.
