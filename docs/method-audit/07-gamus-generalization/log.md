@@ -192,3 +192,15 @@ the trees Method 6 learned from, whose tall-tree predictions it gets wrong in a 
   - Part C(3) and its adoption rule do not apply.
   - Part D runs Method 6 only ("Part C model, if adopted" is void).
   - The added Sikkim non-regression criterion stays on record for any future GAMUS fine-tune.
+
+---
+
+## 2026-09-23 — Part B pre-registration amendment (before the full run; the only inference so far is a 4-tile smoke test of the script)
+
+- **The oracle's frozen DAv2 is DAv2-Large, not Small.** The DFC2019 oracle depth maps came from the
+  demo engine with `Depth-Anything-V2-Large` (`data/dfc2019/experiments/dav2_baseline/config.json`), and
+  the engine is still set to Large (`backend/config.py`). To keep the "same definition", Part B uses the
+  engine unchanged. So the oracle and `dav2_raw` are **DAv2-Large**. Method 6 is fine-tuned from DAv2-Small.
+- **Script:** `scripts/gamus_zeroshot_eval.py` (streamed; output `data/gamus_eval/zeroshot_tiles.jsonl`).
+  `h5py` was installed into `.venv` for this; `pyproject.toml` is untouched.
+- **Smoke test (4 DC tiles, seeds 43 and 44, not results):** 0 blocks shared with DFC2019. The script runs end to end.
