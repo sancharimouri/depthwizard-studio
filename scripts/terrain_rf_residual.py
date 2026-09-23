@@ -139,15 +139,19 @@ def main():
     D["rhat_lin"] = 0.0
     fallback = 0
     kag = next((Path(a.split("=", 1)[1]) for a in sys.argv[1:] if a.startswith("--from-kaggle=")), None)
-    if kag is not None:  # RF stage was run on Kaggle (kaggle/terrain_rf_kaggle.py): same filter, folds, RF spec
+    # --kaggle-engine=xgb: the OPT-IN GPU approximation (XGBoost RF mode) -- a documented deviation from the
+    # pre-registered sklearn RF; its files are prefixed xgbrf_ and results are labelled as such.
+    engine = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--kaggle-engine=")), "sklearn")
+    pre = "rf" if engine == "sklearn" else "xgbrf"
+    if kag is not None:  # RF stage was run on Kaggle (kaggle/terrain_rf_kaggle.py): same filter, folds
         assert np.array_equal(np.load(kag / "folds.npy"), D["fold"].values), "Kaggle fold assignment differs"
-        S_meta = json.loads((kag / "rf_run_meta.json").read_text())
+        S_meta = json.loads((kag / f"{pre}_run_meta.json").read_text())
         print("Kaggle RF run:", S_meta, flush=True)
     for k in range(5):
         tr, te = D["fold"] != k, D["fold"] == k
         for v, F in (("A", FEAT_A), ("B", FEAT_B)):
             if kag is not None:
-                D.loc[te, f"rhat_{v}"] = np.load(kag / f"rf_oof_{v}_fold{k}.npy")
+                D.loc[te, f"rhat_{v}"] = np.load(kag / f"{pre}_oof_{v}_fold{k}.npy")
                 continue
             rf = RandomForestRegressor(n_estimators=100, random_state=0, n_jobs=-1)
             rf.fit(D.loc[tr, F].values, D.loc[tr, "resid"].values)
@@ -167,8 +171,8 @@ def main():
             r.update({f"{name}_{k}": v for k, v in err(e.values).items() if k != "n"})
         rows.append(r)
     P = pd.DataFrame(rows)
-    P.to_csv(OUT / "per_tile.csv", index=False)
-    S = {"n_samples": len(D), "n_tiles": len(P), "n_rgt": int(D.rgt.nunique()), "linear_fallback_tile_folds": fallback,
+    P.to_csv(OUT / ("per_tile.csv" if engine == "sklearn" else f"per_tile_{pre}.csv"), index=False)
+    S = {"rf_engine": engine if kag is not None else "sklearn (local)", "n_samples": len(D), "n_tiles": len(P), "n_rgt": int(D.rgt.nunique()), "linear_fallback_tile_folds": fallback,
          "median": {c: float(P[c].median()) for c in P.columns if c.endswith(("_rmse", "_brmse", "_bias", "_medae"))},
          "tests": {}}
     for metric in ("rmse", "brmse"):
@@ -185,7 +189,7 @@ def main():
     for v in ("A", "B"):
         t = [S["tests"][f"rf_{v}|vs_{b}|{m}"] for b in ("raw", "linear") for m in ("rmse", "brmse")]
         S[f"verdict_rf_{v}"] = "ADOPT" if all(x["median_diff"] < 0 and x["p_holm"] < 0.05 and x["wins"] >= 20 for x in t) else "NOT ADOPTED"
-    (OUT / "summary.json").write_text(json.dumps(S, indent=1))
+    (OUT / ("summary.json" if engine == "sklearn" else f"summary_{pre}.json")).write_text(json.dumps(S, indent=1))
     print(json.dumps(S, indent=1))
 
 

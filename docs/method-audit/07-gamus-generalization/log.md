@@ -607,3 +607,19 @@ Method 6 is much better on sparse ground, slightly better on buildings, and **wo
   - Per-variant notebooks (A, B) run in parallel. Out-of-fold predictions are saved per fold, so a run can resume.
 - **Merge:** `scripts/terrain_rf_residual.py --from-kaggle=<dir>`. It asserts identical folds, loads the out-of-fold
   predictions, and computes the linear baseline, per-tile metrics and the pre-registered decision locally.
+
+---
+
+## 2026-09-23 — Part F amendment: optional GPU engine (added before any RF result exists)
+
+- **Why.** The pre-registered model is sklearn's `RandomForestRegressor`, which is CPU-only. The user asked for a GPU option.
+- **What.** `kaggle/terrain_rf_kaggle.py --engine xgb`, off by default: XGBoost random-forest mode on CUDA.
+  - Settings: 100 parallel trees in 1 round, learning_rate 1, row subsample 0.632 without replacement, all features per split,
+    min_child_weight 1, reg_lambda 0, hist with 256 bins, max_depth 20, `random_state` 0.
+- **This is an approximation of the pre-registered model, not the model itself.** If it is the engine used:
+  - the Part F result is reported as "XGBoost-RF approximation (deviation from the sklearn pre-registration)";
+  - the pre-registered decision rule is applied unchanged.
+- **Only one engine's result will be used.** Whichever run the user completes is the single run, per "one run, no tuning".
+  Outputs are prefixed `xgbrf_` and can't be mixed with sklearn's `rf_`. The merge (`--kaggle-engine=xgb`) writes `summary_xgbrf.json`.
+- **Checks.** The sklearn smoke test passed locally (20,000 rows, fold 0). The xgb path could not be run on this Mac (XGBoost
+  needs `libomp`), so the notebook starts with a 20,000-row xgb smoke cell on Kaggle.

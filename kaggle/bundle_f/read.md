@@ -15,6 +15,39 @@
 
 Bundle contents (the folder `bundle_f/` inside the zip): `terrain_rf_kaggle.py`, `samples.parquet` (212 MB), `read.md`.
 
+## 0. Choose the engine: sklearn (CPU, pre-registered) or xgb (GPU, faster, a documented deviation)
+
+| | `--engine sklearn` (**default**) | `--engine xgb` (opt-in) |
+|---|---|---|
+| Model | The exact pre-registered sklearn `RandomForestRegressor` | XGBoost random-forest mode: 100 parallel trees, 1 round, `device="cuda"` |
+| Hardware | **CPU**. sklearn has no GPU implementation, so a GPU would sit idle | **GPU**, P100 or T4 |
+| Time (estimate) | About 1.5–2.5 h with two notebooks in parallel | Minutes per variant |
+| Fidelity | Exactly as pre-registered | **Approximation.** Histogram splits (256 bins), row sampling without replacement (0.632), depth cap 20. Results are logged as a deviation from the pre-registration |
+| Output files | `rf_oof_*`, `rf_run_meta.json` | `xgbrf_oof_*`, `xgbrf_run_meta.json` (so the two can never be mixed at merge) |
+
+If you have time, prefer **sklearn**, because it is the pre-registered model. Use **xgb** if you need it fast; the write-up
+will then say the RF was the XGBoost approximation. Either way, `folds.npy` is identical, and the merge checks that.
+
+**GPU (xgb) quick recipe.** One notebook, `gamus-f-rf-gpu`: **Accelerator GPU P100** (or T4), **Internet Off**.
+XGBoost with CUDA is preinstalled on Kaggle images, so skip the pip cell.
+```python
+import glob, os
+hits = glob.glob("/kaggle/input/**/terrain_rf_kaggle.py", recursive=True); assert len(hits) == 1, hits
+BUNDLE = os.path.dirname(hits[0]); OUT = "/kaggle/working"; LOG = "/kaggle/working/xgbrf_run_log.txt"
+!nvidia-smi --query-gpu=name,memory.total --format=csv
+# 1) smoke test: 20,000 rows, fold 0, a few seconds; must end with DONE
+!python -u {BUNDLE}/terrain_rf_kaggle.py --data {BUNDLE} --variant AB --engine xgb --smoke --out {OUT}
+# 2) the real run: both variants, all 5 folds
+!python -u {BUNDLE}/terrain_rf_kaggle.py --data {BUNDLE} --variant AB --engine xgb --out {OUT} 2>&1 | tee -a {LOG}
+```
+If step 1 fails on the P100 with a CUDA or architecture error, switch the accelerator to **T4** and rerun.
+Download these into `DepthWizard2/data/sentinel2_benchmark/terrain_rf_residual/kaggle/`:
+`xgbrf_oof_A_fold0..4.npy`, `xgbrf_oof_B_fold0..4.npy`, `folds.npy`, `xgbrf_run_meta.json`, `xgbrf_run_log.txt`.
+Ignore the `smoke_*` files. Then tell Claude: "Part F GPU (xgb) output is in `terrain_rf_residual/kaggle/`." Claude runs
+`scripts/terrain_rf_residual.py --from-kaggle=data/sentinel2_benchmark/terrain_rf_residual/kaggle --kaggle-engine=xgb`.
+
+The sections below describe the **sklearn (CPU)** path.
+
 ---
 
 ## 1. Upload the dataset
