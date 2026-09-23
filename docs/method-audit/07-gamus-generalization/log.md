@@ -366,3 +366,31 @@ terrain; the GRSM item's STAC max is 949 m. The excluded fraction is reported. N
 - Against **ICESat-2 20 m** surface segments, all three rasters sit within ±6 m in median, and none is consistently best.
 - **This does not show that composition beats GLO-30 as a surface product on Indian mountain terrain.**
   It shows that composition turns FABDEM into something at GLO-30's level.
+
+---
+
+## 2026-09-23 — Seed-42 fold checkpoints re-created (reproducibility check: exact)
+
+- `data/dfc2019/experiments/method6_height_balanced_seed42_ckpt/` was run with the identical command plus `--save-checkpoints`.
+- It reproduces the adopted headline **bit-for-bit**:
+  - mean of fold means MAE 1.979971505587631, RMSE 3.4922650091556022, Pearson 0.7445242046106612, Spearman 0.6563199482216565;
+  - these are identical to `method6_height_balanced/m6_heightbal_results.json`;
+  - per fold: 1.883 / 2.060 / 2.009 / 1.968.
+- So training on this machine is deterministic for a fixed seed, and the checkpoints are exactly the headline model.
+  Checkpoints are not committed (size); the results JSON and train log are.
+- Part B (full GAMUS test, all 3 seeds) and Part D (`run`) launched in the background at 15:44 IST.
+
+## 2026-09-23 — Part F citation (supplied by the user: `Claude_Research.pdf`)
+
+- The "27-feature sparse-LiDAR RF" is **Song, Chen & Yokoya, "Sparse LiDAR-Guided Correction"**:
+  - arXiv 2505.06905 (v3, 8 Dec 2025);
+  - *ISPRS J. Photogramm. Remote Sens.* 232:155–171 (2026);
+  - DOI 10.1016/j.isprsjprs.2025.12.004.
+- Per the research note, it regresses the residual (prediction − ICESat-2) with a random forest on about 27 handcrafted
+  features over a 64×64 window:
+  - predicted-height statistics: mean, std, min, max, p90, p10;
+  - Sobel-gradient statistics;
+  - optical indices, e.g. (G−R)/(G+R);
+  - land-cover fractions and Shannon entropy;
+  - or, alternatively, a ViT patch embedding.
+- The exact list is to be taken from the paper itself before Part F is pre-registered.

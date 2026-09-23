@@ -1,0 +1,69 @@
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[m6_heightbal_seed42_ckpt] device=mps gsd_film=False height_balanced=True
+[m6_heightbal_seed42_ckpt] tiles: 50
+[m6_heightbal_seed42_ckpt] loaded in 1.4s
+
+========================================================================
+[m6_heightbal_seed42_ckpt] FOLD 0
+========================================================================
+[m6_heightbal_seed42_ckpt] fold0: 150 train quadrants, 50 eval quadrants, height_scale(train p95)=16.62m
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21002.62it/s]
+[m6_heightbal_seed42_ckpt] fold0: height-balanced sampler, weight range [1.00, 3.67], mean=2.00
+[m6_heightbal_seed42_ckpt] fold0 epoch 01/12: loss=6.8672  (55s elapsed)
+[m6_heightbal_seed42_ckpt] fold0 epoch 03/12: loss=3.1490  (158s elapsed)
+[m6_heightbal_seed42_ckpt] fold0 epoch 06/12: loss=2.4829  (319s elapsed)
+[m6_heightbal_seed42_ckpt] fold0 epoch 09/12: loss=1.9447  (482s elapsed)
+[m6_heightbal_seed42_ckpt] fold0 epoch 12/12: loss=1.6705  (661s elapsed)
+[m6_heightbal_seed42_ckpt] fold0 diagnostics={'pooled_variance_ratio': 0.5202246671906166, 'pooled_ols_slope': 0.5614287744054114, 'pooled_bias_m': -0.08120496018993685, 'n_pixels': 11559412}
+[m6_heightbal_seed42_ckpt] fold0 DONE in 667.2s. metrics={'mae_m': 1.8834942542525481, 'rmse_m': 3.413497563855602, 'pearson': 0.7572194755073397, 'spearman': 0.6599485918985362, 'n_tiles': 50}
+
+========================================================================
+[m6_heightbal_seed42_ckpt] FOLD 1
+========================================================================
+[m6_heightbal_seed42_ckpt] fold1: 150 train quadrants, 50 eval quadrants, height_scale(train p95)=16.40m
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7100.81it/s]
+[m6_heightbal_seed42_ckpt] fold1: height-balanced sampler, weight range [1.00, 3.67], mean=1.95
+[m6_heightbal_seed42_ckpt] fold1 epoch 01/12: loss=6.3561  (56s elapsed)
+[m6_heightbal_seed42_ckpt] fold1 epoch 03/12: loss=3.4705  (168s elapsed)
+[m6_heightbal_seed42_ckpt] fold1 epoch 06/12: loss=2.3043  (348s elapsed)
+[m6_heightbal_seed42_ckpt] fold1 epoch 09/12: loss=1.7854  (561s elapsed)
+[m6_heightbal_seed42_ckpt] fold1 epoch 12/12: loss=1.4667  (777s elapsed)
+[m6_heightbal_seed42_ckpt] fold1 diagnostics={'pooled_variance_ratio': 0.5119181649122364, 'pooled_ols_slope': 0.5778955823193532, 'pooled_bias_m': -0.2662695788603664, 'n_pixels': 11644560}
+[m6_heightbal_seed42_ckpt] fold1 DONE in 784.4s. metrics={'mae_m': 2.0596311609999827, 'rmse_m': 3.572100771364457, 'pearson': 0.7366230869989789, 'spearman': 0.6392088998105363, 'n_tiles': 50}
+
+========================================================================
+[m6_heightbal_seed42_ckpt] FOLD 2
+========================================================================
+[m6_heightbal_seed42_ckpt] fold2: 150 train quadrants, 50 eval quadrants, height_scale(train p95)=16.25m
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7276.14it/s]
+[m6_heightbal_seed42_ckpt] fold2: height-balanced sampler, weight range [1.00, 3.67], mean=1.95
+[m6_heightbal_seed42_ckpt] fold2 epoch 01/12: loss=5.9366  (69s elapsed)
+[m6_heightbal_seed42_ckpt] fold2 epoch 03/12: loss=3.4083  (198s elapsed)
+[m6_heightbal_seed42_ckpt] fold2 epoch 06/12: loss=2.6671  (395s elapsed)
+[m6_heightbal_seed42_ckpt] fold2 epoch 09/12: loss=1.8999  (596s elapsed)
+[m6_heightbal_seed42_ckpt] fold2 epoch 12/12: loss=1.4377  (796s elapsed)
+[m6_heightbal_seed42_ckpt] fold2 diagnostics={'pooled_variance_ratio': 0.5536172769948103, 'pooled_ols_slope': 0.5947021915393992, 'pooled_bias_m': -0.33928174768387065, 'n_pixels': 11827090}
+[m6_heightbal_seed42_ckpt] fold2 DONE in 803.3s. metrics={'mae_m': 2.009093142576809, 'rmse_m': 3.549366591209655, 'pearson': 0.7204173324033836, 'spearman': 0.6352540797501759, 'n_tiles': 50}
+
+========================================================================
+[m6_heightbal_seed42_ckpt] FOLD 3
+========================================================================
+[m6_heightbal_seed42_ckpt] fold3: 150 train quadrants, 50 eval quadrants, height_scale(train p95)=16.42m
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8415.41it/s]
+[m6_heightbal_seed42_ckpt] fold3: height-balanced sampler, weight range [1.00, 3.65], mean=1.94
+[m6_heightbal_seed42_ckpt] fold3 epoch 01/12: loss=6.6509  (69s elapsed)
+[m6_heightbal_seed42_ckpt] fold3 epoch 03/12: loss=3.4823  (208s elapsed)
+[m6_heightbal_seed42_ckpt] fold3 epoch 06/12: loss=2.5651  (411s elapsed)
+[m6_heightbal_seed42_ckpt] fold3 epoch 09/12: loss=1.8935  (618s elapsed)
+[m6_heightbal_seed42_ckpt] fold3 epoch 12/12: loss=1.4740  (818s elapsed)
+[m6_heightbal_seed42_ckpt] fold3 diagnostics={'pooled_variance_ratio': 0.6418153603056578, 'pooled_ols_slope': 0.6252259632979638, 'pooled_bias_m': -0.011862841234162117, 'n_pixels': 11955666}
+[m6_heightbal_seed42_ckpt] fold3 DONE in 825.1s. metrics={'mae_m': 1.967667464521184, 'rmse_m': 3.434095110192695, 'pearson': 0.7638369235329426, 'spearman': 0.6908682214273777, 'n_tiles': 50}
+
+==============================================================================
+[m6_heightbal_seed42_ckpt] FINAL RESULT
+==============================================================================
+Overall (mean of fold means): {'mae_m': 1.979971505587631, 'rmse_m': 3.4922650091556022, 'pearson': 0.7445242046106612, 'spearman': 0.6563199482216565, 'n_tiles': 4}
+Total time: 3086.1s
+Saved: data/dfc2019/experiments/method6_height_balanced_seed42_ckpt/m6_heightbal_seed42_ckpt_results.json
