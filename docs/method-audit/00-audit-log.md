@@ -75,6 +75,12 @@ its commit don't line up.
    commits of 2026-09-23.
 7. **Commits with no research doc entry:** only the frontend/demo commits, which is by design.
    `89c017d` is a CLAUDE.md framing fix.
+9. **Core scripts were untracked until `fd9fd35`** (2026-09-23), including
+   `run_frequency_fusion_sentinel2.py`, `run_srtm_comparison.py`,
+   `evaluate_method6_finetune_twinhead.py`, `evaluate_method4.py`, the sparse-anchor evaluators
+   and the sign-flip detector. Committed scripts imported them, so until then no pipeline in this
+   log was reproducible from git alone. The same commit added the Sentinel-2 benchmark's core
+   files (`manifest.csv`, calibration results, Method 4 Sentinel-2 results).
 8. **Large artifacts deliberately not committed** (arrays, checkpoints, ground-photon CSVs, the
    41 MB `calibration_samples.csv`) are listed with regeneration commands and SHA-256 in
    `data/REGENERATION.md`.
