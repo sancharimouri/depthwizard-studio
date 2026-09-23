@@ -299,7 +299,21 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
    - A prefetch thread pool feeds a bounded queue.
    - The progress line prints s/item, ETA, GPU peak memory and **queue depth**: a full queue means GPU-bound
      (good); near 0 means download-bound.
-7. **The `read.md` manual.** It gives exact names (dataset slug, notebook title), accelerator and Internet settings, and
+7. **Path handling that never hard-codes Kaggle's layout.** This ran error-free even though Kaggle mounted the
+   bundle at `/kaggle/input/datasets/<user>/<slug>/bundle/`, not the documented `/kaggle/input/<slug>/`.
+   - **Discover, don't assume.** Find the script with
+     `glob("/kaggle/input/**/<script>.py", recursive=True)` and `assert len(hits) == 1`. That fails fast if the
+     dataset isn't attached or is attached twice. Set `BUNDLE = dirname(hits[0])`.
+   - **One root argument.** The script takes `--data BUNDLE` and builds every bundle-internal path relative to it
+     (`args.data / "ckpt" / tag / f"fold{f}.pt"`, `args.data / "done_tiles.txt"`). No other absolute input paths exist.
+   - **Inputs are read-only and outputs go to `/kaggle/working` only.** `OUT` and `LOG` are fixed absolute paths
+     there, passed with `--out`. Kaggle's Output tab is exactly that folder.
+   - **Resume inputs are discovered too.** The previous version's output is found with
+     `glob("/kaggle/input/**/<out>.jsonl", recursive=True)`, whatever its mount path, and copied into `/kaggle/working`.
+   - **Python variables go into shell cells as `{BUNDLE}` / `{OUT}` / `{LOG}`.** Never retype paths in `!` commands.
+   - **Repo-side destinations are fixed and spelled out in `read.md`,** with "do not rename or overwrite the local
+     file" (e.g. `data/gamus_eval/zeroshot_tiles_kaggle.jsonl` next to the local `zeroshot_tiles.jsonl`).
+8. **The `read.md` manual.** It gives exact names (dataset slug, notebook title), accelerator and Internet settings, and
    numbered cells, with glob-based path discovery because `/kaggle/input` nesting varies. It covers commit mode
    (Save & Run All), the expected log lines, and exactly which output files go where in the repo. It ends with a
    troubleshooting table.
