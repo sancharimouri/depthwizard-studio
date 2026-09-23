@@ -1,0 +1,48 @@
+{
+ "texture_threshold_graylevel_std": 4.224735260009766,
+ "crops": {
+  "c_town": {
+   "featureless_block_frac": 0.0,
+   "seam_ratio_all": 1.0261240005493164,
+   "own_lowest_decile_block_std_max": 15.6521635055542,
+   "frac_blocks_below_2x_threshold": 0.0,
+   "seam_ratio_in_own_lowest_decile": 1.1073347330093384
+  },
+  "c_river": {
+   "featureless_block_frac": 0.0,
+   "seam_ratio_all": 1.0697869062423706,
+   "own_lowest_decile_block_std_max": 10.22464656829834,
+   "frac_blocks_below_2x_threshold": 0.041015625,
+   "seam_ratio_in_own_lowest_decile": 1.3796721696853638
+  },
+  "c_terraces": {
+   "featureless_block_frac": 0.0,
+   "seam_ratio_all": 1.0592070817947388,
+   "own_lowest_decile_block_std_max": 13.441692352294922,
+   "frac_blocks_below_2x_threshold": 0.0,
+   "seam_ratio_in_own_lowest_decile": 1.0923573970794678
+  },
+  "a_forest": {
+   "featureless_block_frac": 0.0,
+   "seam_ratio_all": 1.026578426361084,
+   "own_lowest_decile_block_std_max": 15.54077434539795,
+   "frac_blocks_below_2x_threshold": 0.009765625,
+   "seam_ratio_in_own_lowest_decile": 1.1262441873550415
+  },
+  "a_valley": {
+   "featureless_block_frac": 0.0,
+   "seam_ratio_all": 1.0622650384902954,
+   "own_lowest_decile_block_std_max": 14.871417999267578,
+   "frac_blocks_below_2x_threshold": 0.0029296875,
+   "seam_ratio_in_own_lowest_decile": 1.0655534267425537
+  },
+  "b_glacier": {
+   "featureless_block_frac": 0.8994140625,
+   "seam_ratio_in_featureless": 2.4985315799713135,
+   "seam_ratio_all": 2.367643117904663,
+   "own_lowest_decile_block_std_max": 1.7807834148406982,
+   "frac_blocks_below_2x_threshold": 0.9990234375,
+   "seam_ratio_in_own_lowest_decile": 2.3157730102539062
+  }
+ }
+}

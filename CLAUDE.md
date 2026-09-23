@@ -161,6 +161,9 @@ Follow-ups: the snow seam is fixed by `--margin=192` (seam ratio 2.37 → 1.07).
 DFC2019's training range for trees (p99 23.6 m; held-out 25–50 m trees are predicted at about 16 m), not model
 capacity. GAMUS DC/NYC has about 10× more tall canopy (tops out around 35 m); a retrain on it is proposed but not run.
 The VHR result covers mountain terrain only; there are no plains, coastal or urban VHR tests yet.
+GAMUS-DC retrain (2026-09-23): DFC2019 MAE improves to 1.920 (candidate, single seed), but the tall-tree
+criterion failed (14.1 vs. 18 m) and the VHR forest ceiling didn't rise. GAMUS imagery is leaf-off. Fixing the canopy
+needs leaf-on tall-forest supervision, not more GAMUS data.
 
 ## What actually exists right now
 

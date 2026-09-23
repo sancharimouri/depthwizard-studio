@@ -1,0 +1,19 @@
+{
+ "gamus_nyc_trees": {
+  "exg_median": 0.005091185392959923,
+  "frac_exg_gt_0.05": 0.08869251797303154
+ },
+ "gamus_dc_test_trees": {
+  "exg_median": -0.03305785096646404,
+  "frac_exg_gt_0.05": 0.08968225517353756
+ },
+ "dfc2019_jax50_highveg": {
+  "exg_median": 0.03614457816809406,
+  "frac_exg_gt_0.05": 0.4001048189115384
+ },
+ "vhr_a_forest_agl_gt5": {
+  "n": 3029664,
+  "exg_median": 0.13966480368902345,
+  "frac_exg_gt_0.05": 0.9271120493889752
+ }
+}

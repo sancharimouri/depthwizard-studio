@@ -61,7 +61,7 @@ PREVIEW = ROOT / "frontend/public/data/vhr"
 def load_models(device):
     folds = []
     for q in range(4):
-        ck = torch.load(ROOT / f"data/dfc2019/experiments/method6_height_balanced_seed43/fold{q}.pt",
+        ck = torch.load(CKPT_DIR / f"fold{q}.pt",
                         map_location="cpu", weights_only=False)
         m = hb.TwinHeadDav2GSD(height_scale=ck["height_scale"], init_sigma_m=5.0, log_var_max=7.0,
                                log_var_min=-8.0, enable_gsd_film=False)
@@ -288,7 +288,7 @@ def main(only=None):
         comp = compose_dsm(dtm, agl, valid)
         dsm = comp.dsm
         # --- write rasters
-        out_name = f"{name}_margin{MARGIN}" if MARGIN else name
+        out_name = name + (f"_margin{MARGIN}" if MARGIN else "") + (f"_{TAG}" if TAG else "")
         d = OUT / out_name
         d.mkdir(parents=True, exist_ok=True)
         for fn, arr in (("agl", agl), ("agl_std", agl_std), ("sigma", sigma), ("agl_fullckpt", agl_full),
@@ -324,6 +324,7 @@ def main(only=None):
              "dsm_range_m": [float(np.nanmin(dsm)), float(np.nanmax(dsm))]}
         poly = [{"lon": lo, "lat": la} for lo, la in [(bounds[0], bounds[1]), (bounds[2], bounds[1]), (bounds[2], bounds[3]), (bounds[0], bounds[3]), (bounds[0], bounds[1])]]
         s["sparse_lidar"] = sparse_lidar(poly, transform, crs, (SIZE, SIZE), agl)
+        s["fold_ckpt_dir"] = str(CKPT_DIR.relative_to(ROOT))
         if MARGIN:
             s["margin_px"] = MARGIN
             s["seam_ratio_own_core_edges"] = seam_ratio(np.where(v, agl, np.nan), v, [e for e in core_edges if 2 <= e < SIZE - 2])
@@ -354,13 +355,20 @@ def main(only=None):
               f"r(ens,full) {s['pearson_ensemble_vs_fullckpt']:.3f} | rho(AGL, GLO-FAB) {s['coarse_ref']['spearman_aglblock_vs_glo30_minus_fabdem']} | "
               f"GEDI n={s['sparse_lidar']['gedi'].get('n')}", flush=True)
     # A full default run owns summary.json; subset/margin runs write their own file.
-    fn = "summary.json" if not only and not MARGIN else "summary_" + "_".join(sorted(summary)) + ".json"
+    fn = ("summary.json" if not only and not MARGIN and not TAG
+          else f"summary_margin{MARGIN}_{TAG or 'seed43'}.json" if not only
+          else "summary_" + "_".join(sorted(summary)) + ".json")
     (OUT / fn).write_text(json.dumps(summary, indent=2) + "\n")
 
 
 MARGIN = 0
+TAG = ""  # output suffix; "" = original seed-43 outputs
+CKPT_DIR = ROOT / "data/dfc2019/experiments/method6_height_balanced_seed43"
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if not a.startswith("--margin=")]
-    MARGIN = next((int(a.split("=")[1]) for a in sys.argv[1:] if a.startswith("--margin=")), 0)
+    opt = lambda k, d: next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith(f"--{k}=")), d)
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    MARGIN = int(opt("margin", 0))
+    TAG = opt("tag", "")
+    CKPT_DIR = ROOT / opt("ckpt-dir", str(CKPT_DIR.relative_to(ROOT)))
     main(set(args) or None)

@@ -278,3 +278,140 @@ So the VHR forest result is not a new transfer failure. It is Method 6's known i
 - **(iii) VHR `a_forest` crop.** Report AGL p95 and C4 ρ. Descriptive only, since there is no ground truth.
 
 Because this uses GAMUS DC, the split must be cut by city or grid block. GAMUS's own splits leak spatially: adjacent DC grid tiles land in different splits.
+
+## Retrain: Method 6 + GAMUS-DC (pre-registration, written 2026-09-23 before any training)
+
+This retrain was authorized by the user on 2026-09-23. GAMUS NYC is **excluded**, because its image contents were never verified. It gets checked only if DC alone fails, and only then considered.
+
+**Leakage-safe DC split** (`scripts/prepare_gamus_dc.py`):
+- **Why a new split.** The tile grid was verified on real pixels:
+  - col+1 is directly east and row+1 directly south. Adjacent tiles abut with **zero overlap**: the edge-to-edge RGB difference is 16.4 (east) and 21.9 (south), against 16.7 between adjacent columns inside a tile. Any overlap offset k > 0 or a flipped orientation gives 57–59.
+  - So the Hugging Face split really does leak. For example, `DC_20_30` (train) sits directly west of `DC_20_31` (test).
+- **The boundary:**
+  - test = all DC tiles in grid rows ≤ 14 (the northern tip);
+  - rows 15–16 are dropped as a buffer (about 680 m);
+  - train = 300 tiles drawn at random (seed 0) from rows ≥ 17, one random 512 px quadrant each.
+- **Checks run in the script** (it aborts if any fails):
+  1. no tile appears in both sets;
+  2. the minimum Chebyshev grid distance between train and test is ≥ 3;
+  3. zero non-flat 32×32 RGB blocks are byte-identical between the test and train sets.
+
+**Training.**
+- **Identical to the adopted seed-43 height-balanced recipe:** seed 43, 12 epochs, batch 2, same learning rates and warm-up, NLL + 0.35 × capped height-weighted Huber, weighted quadrant sampler.
+- **Same 4-fold DFC2019 quadrant holdout.**
+- **The only change:** the 300 GAMUS-DC quadrants are appended to every fold's training set, via the new `--extra-train-npz` option, which is off by default. The recipe's own rule sets `height_scale` = p95 of the combined training pixels.
+- **Known confounds, stated up front:**
+  - each epoch now has 450 samples instead of 150, so there are about 3× more gradient steps;
+  - GAMUS GSD is about 0.33 m vs. about 0.3 m and is not resampled;
+  - GAMUS trees are US urban and mostly deciduous.
+
+**Pass criteria.** These are the ones already written, unchanged:
+- **(i)** mean-of-fold DFC2019 MAE ≤ 1.980 × 1.02 = **2.020 m**;
+- **(ii)** the median prediction on held-out DFC2019 high-vegetation pixels with true AGL in [20, 30) m is **≥ 18 m**. The seed-43 baseline on this exact bin is **13.9 m** (`scripts/eval_method6_tall_trees.py`, `data/vhr_dsm/_diagnostics/tall_trees_seed43.json`);
+- **(iii)** the VHR `a_forest` crop is descriptive only.
+
+**Also reported, not criteria.** RMSE, Pearson and Spearman on DFC2019, and GAMUS-DC test MAE plus the tree 20–30 m bin.
+
+**VHR rerun (the test that matters for the goal).**
+- All six crops go through the full pipeline with the new fold ensemble, using `--margin=192` tiling, as decided earlier for any full rerun.
+- To hold tiling fixed, the old seed-43 ensemble is **also** run with `--margin=192` on the same six crops, and that is the comparison baseline.
+- **Pre-stated reading:** the forest ceiling "rises in practice" if `a_forest` AGL p99 rises by ≥ 3 m over the old model under identical tiling. This 3 m threshold is my own, set now, and is **not** one of the user's criteria. p95, max, C4 ρ and the GEDI comparison are reported alongside.
+
+**Framing fixed in advance.** Even if everything passes, this is a **partial fix, not a resolution**:
+- GAMUS canopy itself tops out at about 35–37 m (p99.9), so the new ceiling is bounded by that;
+- US urban deciduous trees are not Himalayan conifers;
+- no ground truth exists for the VHR crops.
+
+### Retrain results (2026-09-23)
+
+Run: `data/dfc2019/experiments/method6_hb_gamusdc_seed43/`. That folder holds the results JSON; the checkpoints are not committed.
+
+**Leakage checks: all three passed.**
+- Test is 163 tiles (rows ≤ 14); the train pool is 1,937 tiles (rows ≥ 17), of which 300 were drawn.
+- The minimum grid distance is 3.
+- 0 of 166,892 test 32 px blocks are shared with the train set.
+- The GAMUS RGB/AGL alignment was checked visually. Training quadrants: height p95 26.8 m, 6.3% above 25 m. `height_scale` rose from 16.6 to 24.5–24.7 m.
+
+**DFC2019, 4-fold quadrant holdout, mean of folds**
+
+| | MAE | RMSE | Pearson | Spearman | variance ratio (per fold) |
+|---|---|---|---|---|---|
+| seed-43 height-balanced (old) | 1.989 | 3.486 | 0.744 | 0.656 | 0.48–0.66 |
+| **+ GAMUS-DC (new)** | **1.920** | **3.425** | 0.744 | 0.652 | 0.55–0.74 |
+
+Per-fold MAE, new vs. old: 1.825 vs. 1.866; 1.953 vs. 2.053; 1.928; 1.977. **All four folds improve.** This is a single seed.
+
+**(i) PASS.** 1.920 ≤ 2.020. It is also better than the adopted 1.980.
+
+**(ii) FAIL.** The median prediction on held-out DFC2019 trees that are truly 20–30 m is **14.1 m**, against 13.9 m before and an 18 m target. Trees that are truly 30–50 m come out at 15.0 m, against 16.3 m before.
+
+**Buildings did improve:**
+- 30–50 m: 22.1 → 25.2 m;
+- 50 m +: 26.5 → 33.9 m.
+
+**On GAMUS-DC's own held-out test** (descriptive):
+- MAE is 3.04–3.07 m and Pearson 0.82 per fold;
+- trees 20–30 m are predicted at **21.0–21.8 m**, and 30–50 m at **27.2–28.5 m**.
+
+So the model **did learn tall GAMUS trees, but that learning does not carry over to Jacksonville's trees.**
+
+**Why the canopy gain doesn't transfer: leaf-off imagery.** Measured, then run post-hoc; `scripts/tree_greenness_check.py`, `_diagnostics/tree_greenness.json`. The measure is the share of tree pixels with an excess-green index (ExG) above 0.05:
+
+| source | share of green tree pixels |
+|---|---|
+| GAMUS DC | 9% |
+| GAMUS NYC | 9% |
+| DFC2019 JAX | 40% |
+| VHR `a_forest` | 93% |
+
+Both GAMUS cities were imaged **leaf-off**: bare winter deciduous crowns. GAMUS's tall-canopy supervision therefore pairs "bare-branch texture" with height. That is the opposite appearance from Sikkim's evergreen forest, and differs from JAX's mostly leaf-on trees.
+
+**NYC: contents checked (per the rule), and not added.** `scripts/gamus_nyc_content_check.py`, `_diagnostics/gamus_nyc_content_check.json`.
+- **The imagery is real.** All 20 of 20 random tiles are 1024×1024×3 uint8, essentially no zero pixels, 100% valid AGL, and visually aligned with the heights.
+- **Why the audited repo thought otherwise.** It reported "no NYC imagery" because NYC files are named `*_IMG.h5`, not `*_RGB.h5`.
+- **Why it isn't added.** NYC is just as leaf-off as DC (9% green). Adding it would scale up the data that already failed to transfer, so it's a speculative addition by the same logic the rule exists to prevent.
+
+**(iii) VHR rerun: all six crops, `--margin=192`, new ensemble vs. old ensemble, same tiling**
+
+| crop | AGL p50 old → new | p95 | p99 | max | C4 ρ | AGL block median vs. GLO30−FABDEM |
+|---|---|---|---|---|---|---|
+| **a_forest** | 7.46 → 10.07 | 13.92 → 16.63 | **16.25 → 18.86** | 23.7 → 25.2 | −0.04 → −0.06 | 7.9 → 10.2 (vs. 12.1) |
+| c_town | 3.59 → 6.36 | 12.16 → 16.49 | 14.38 → 19.16 | 19.0 → 23.3 | 0.43 → 0.51 | 4.1 → 5.8 (vs. 3.0) |
+| c_river | 0.96 → 2.25 | 11.25 → 15.98 | 14.77 → 20.94 | 20.2 → 27.3 | 0.50 → 0.56 | 1.8 → 3.1 (vs. 2.7) |
+| c_terraces | 3.62 → **9.95** | 12.52 → 17.65 | 15.30 → 19.90 | 20.4 → 24.3 | 0.55 → 0.64 | 4.2 → **9.8** (vs. 8.0) |
+| a_valley | 5.17 → 6.30 | 13.14 → 15.57 | 15.93 → 18.18 | 21.1 → 22.5 | 0.62 → 0.66 | 5.4 → 6.5 (vs. 5.2) |
+| b_glacier | 0.27 → 0.58 | 0.59 → 1.49 | 1.14 → 4.08 | 5.0 → 6.0 | (n/a) | 0.3 → 0.6 (vs. 0.0) |
+
+**Answer to the question that matters: the forest ceiling does not rise in practice.**
+- Forest p99 rose by +2.6 m, which is under the pre-stated 3 m reading.
+- More importantly, the median rose just as much (+2.6 m) and the max only +1.5 m.
+- So the whole distribution **shifted up**, consistent with the larger `height_scale`, rather than the tail stretching toward the taller canopy that GLO-30 − FABDEM and GEDI indicate. GEDI rh98 is 51 m; AGL p98 is now 14.2 m, up from 11.0.
+- C4 on the forest stays about 0.
+
+**Side effects on the other crops** (reported, not criteria):
+- **River:** the median rises above 1 m again (0.96 → 2.25), so C1 river fails under the new model.
+- **Glacier:** p99 more than triples (1.1 → 4.1 m), though p95 is still < 2 m.
+- **Terraces:** the median almost triples.
+- **Non-green pixels.** A post-hoc check (`scripts/vhr_nongreen_agl_check.py`, `_diagnostics/nongreen_agl_old_vs_gamusdc.json`) shows the largest relative rise is on **non-green** pixels. On terraces, pixels with ExG < 0 go from a 1.5 m to a 7.4 m median, against 7.8 → 13.1 m on green pixels. That is consistent with the leaf-off hypothesis that brown, twiggy texture was learned as canopy. It is a post-hoc reading and not proven.
+- Seams stay clean on every crop (1.01–1.09 old-edge, 1.01–1.31 core-edge; the glacier's 1.31 is the highest).
+- r(ensemble, full checkpoint) is now 0.35–0.85. The full checkpoint is still the *old* model, so this is no longer a same-model consistency check.
+
+### Verdict
+
+**Not adopted for the VHR/India goal.** Criterion (ii) fails. The real forest crop shows a level shift, not a lifted ceiling. The model also gives new height to bare brown terrain.
+
+**The DFC2019 gain is real but in-domain.**
+- MAE 1.920 vs. 1.989, with all four folds better, on a single seed.
+- It is recorded as a **candidate** DFC2019 improvement. It is not adopted over the 3-seed 1.980 result without more seeds.
+
+**Framing, stated in advance and still true.** Even a pass would have been a partial fix:
+- GAMUS canopy tops out at about 35–37 m (p99.9);
+- US deciduous, and now also leaf-off, trees are not Himalayan conifers;
+- there is no VHR ground truth.
+
+The result makes that sharper. **Tall-canopy supervision needs leaf-on imagery of the right forest type.** Adding more GAMUS data, NYC included, doesn't address that.
+
+**Lower-priority artifact check** (`scripts/vhr_lowtexture_seam_check.py`, `_diagnostics/lowtexture_seam_check.json`).
+- None of the five committed crops has glacier-like featureless blocks: 0% below the glacier's p90 block std.
+- In each crop's own least-textured 10% of blocks, the seam ratio is 1.07–1.13, except the river at **1.38** (water and sandbar). That is under 1.5, so no dedicated rerun was triggered.
+- The river's margin-192 rerun, done anyway as the baseline for (iii), gives 1.02–1.07.

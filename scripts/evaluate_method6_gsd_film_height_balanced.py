@@ -271,6 +271,14 @@ def main():
     ap.add_argument("--enable-gsd-film", action="store_true")
     ap.add_argument("--enable-height-balanced", action="store_true",
                     help="height-weighted loss term + weighted quadrant sampling")
+    # Added 2026-09-23 (Method 6 + GAMUS-DC retrain). Off by default: omitting both reproduces
+    # every earlier run exactly.
+    ap.add_argument("--extra-train-npz", type=Path, default=None,
+                    help="npz with rgb uint8 (N,3,512,512) + agl (N,512,512); appended to EVERY fold's "
+                         "training set (never evaluated on). valid = finite & agl >= 0")
+    ap.add_argument("--gamus-test-npz", type=Path, default=None,
+                    help="npz with rgb (M,3,1024,1024), agl, cls; each fold model is also scored on it "
+                         "(descriptive only)")
     args = ap.parse_args()
     args.lr_head = args.lr_head if args.lr_head is not None else args.lr_backbone * 50
 
@@ -289,6 +297,15 @@ def main():
     t_load = time.time()
     cache = {tid: load_tile_rgb_agl(tid) for tid in tids}
     print(f"[{args.tag}] loaded in {time.time()-t_load:.1f}s")
+
+    extra = []
+    if args.extra_train_npz:
+        z = np.load(args.extra_train_npz)
+        for rgb_e, agl_e in zip(z["rgb"], z["agl"]):
+            agl_e = agl_e.astype(np.float32)
+            extra.append((rgb_e.astype(np.float32), agl_e, np.isfinite(agl_e) & (agl_e >= 0)))
+        print(f"[{args.tag}] extra training quadrants: {len(extra)} from {args.extra_train_npz}")
+    gtest = np.load(args.gamus_test_npz) if args.gamus_test_npz else None
 
     fold_results = []
     t_start_all = time.time()
@@ -316,6 +333,13 @@ def main():
                         train_agl_for_scale.append(agl_c[valid_c])
                     if args.enable_height_balanced:
                         train_weights.append(quadrant_sample_weight(agl_c, valid_c))
+
+        for rgb_e, agl_e, valid_e in extra:
+            train_samples.append((rgb_e, agl_e, valid_e))
+            if valid_e.any():
+                train_agl_for_scale.append(agl_e[valid_e])
+            if args.enable_height_balanced:
+                train_weights.append(quadrant_sample_weight(agl_e, valid_e))
 
         height_scale = float(np.percentile(np.concatenate(train_agl_for_scale), 95))
         height_scale = max(height_scale, 1.0)
@@ -406,6 +430,32 @@ def main():
                      "pooled_ols_slope": float(np.polyfit(Y, P, 1)[0]),
                      "pooled_bias_m": float(np.mean(P - Y)), "n_pixels": int(len(Y))}
         print(f"[{args.tag}] fold{held_out_q} diagnostics={fold_diag}")
+        if gtest is not None:
+            g_tiles, gy, gp, gc = [], [], [], []
+            with torch.no_grad():
+                for rgb_g, agl_g, cls_g in zip(gtest["rgb"], gtest["agl"], gtest["cls"]):
+                    pred = np.zeros(agl_g.shape, np.float32)
+                    for r0 in (0, 512):
+                        for c0 in (0, 512):
+                            x = torch.from_numpy(rgb_g[:, r0:r0 + 512, c0:c0 + 512].astype(np.float32) / 255.0)
+                            x = ((x - IMAGENET_MEAN[0]) / IMAGENET_STD[0]).float()
+                            mu, _ = model(pad_to(x, PAD_TO)[None].to(device))
+                            pred[r0:r0 + 512, c0:c0 + 512] = mu[0, 0, :512, :512].float().cpu().numpy()
+                    v = np.isfinite(agl_g) & (agl_g >= 0)
+                    if v.sum() < 100:
+                        continue
+                    g_tiles.append(compute_metrics(agl_g[v], pred[v]))
+                    gy.append(agl_g[v]); gp.append(pred[v]); gc.append(cls_g[v])
+            gy, gp, gc = map(np.concatenate, (gy, gp, gc))
+            tree = gc == 6  # GAMUS: 6 = tree, 3 = building
+            gdiag = {"tiles": agg([m | {"tile": str(i)} for i, m in enumerate(g_tiles)])}
+            for lo, hi in [(10, 20), (20, 30), (30, 50)]:
+                s = tree & (gy >= lo) & (gy < hi)
+                if s.sum() >= 100:
+                    gdiag[f"tree_{lo}-{hi}"] = {"n": int(s.sum()), "truth_med": float(np.median(gy[s])),
+                                               "pred_med": float(np.median(gp[s]))}
+            fold_diag["gamus_dc_test"] = gdiag
+            print(f"[{args.tag}] fold{held_out_q} GAMUS-DC test (descriptive): {gdiag}")
         if args.save_checkpoints:
             torch.save({"state_dict": model.state_dict(), "height_scale": height_scale, "seed": args.seed,
                         "fold": held_out_q}, args.outdir / f"fold{held_out_q}.pt")
@@ -431,7 +481,8 @@ def main():
         "tag": args.tag,
         "config": {"seed": args.seed, "epochs": args.epochs, "batch": args.batch, "lr_backbone": args.lr_backbone,
                    "lr_head": args.lr_head, "weight_decay": args.weight_decay,
-                   "enable_gsd_film": args.enable_gsd_film, "enable_height_balanced": args.enable_height_balanced},
+                   "enable_gsd_film": args.enable_gsd_film, "enable_height_balanced": args.enable_height_balanced,
+                   "extra_train_npz": str(args.extra_train_npz) if args.extra_train_npz else None},
         "overall": final,
         "total_time_sec": time.time() - t_start_all,
         "folds": fold_results,

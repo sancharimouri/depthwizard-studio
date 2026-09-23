@@ -55,6 +55,12 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
       so this is not a capacity limit.
     - **GAMUS DC/NYC has about 10× more tree pixels above 25 m**, but tops out around 35 m. It's the candidate
       for a retrain; that retrain is not authorized. Its pre-registered test is in the doc.
+    - **Retrain done (DFC2019 + GAMUS-DC, leakage-safe split).**
+      - DFC2019 MAE 1.920 (all 4 folds better; single seed) is a candidate, not adopted.
+      - **Tall-tree criterion FAILED:** held-out 20–30 m trees are predicted at 14.1 m (was 13.9; target 18).
+      - The VHR forest ceiling doesn't rise: the whole distribution shifts up by about 2.6 m. Bare brown terraces gain height.
+      - Cause: GAMUS DC/NYC imagery is leaf-off (9% of tree pixels are green, vs. 93% in the Sikkim forest).
+        NYC imagery is real (`*_IMG.h5`) but just as leaf-off, so it wasn't added.
 - Everything: `docs/method-audit/final-comparison.md` §1–2.
 
 - Docs: `docs/method-audit/06-full-finetune-twin-head/{summary,verdict}.md`
