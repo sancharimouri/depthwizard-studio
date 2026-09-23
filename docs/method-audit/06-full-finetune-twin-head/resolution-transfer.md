@@ -173,7 +173,7 @@ All 24 per-metric Wilcoxon tests have Holm p ≤ 0.011 (in the direction shown).
 | 5 m | 0.173 vs 0.020 (+0.15 [0.11, 0.19]) | asymmetric, c→f better (6e-9) | 0.687 vs 0.321 (+0.37 [0.31, 0.43]) | asymmetric, c→f better (5e-14) |
 
 Under R, coarse-trained models are also better on MAE and RMSE in the c→f direction at every g (CIs exclude 0).
-Under P, c→f is better on MAE but **worse on RMSE** at 3 and 5 m (Δ RMSE +0.42 [0.27, 0.56] and +0.81 [0.66, 0.97]):
+Under P, c→f is better on MAE at 2 and 3 m (at 5 m the CI includes 0: [−0.23, +0.02]) but **worse on RMSE** at 3 and 5 m (Δ RMSE +0.42 [0.27, 0.56] and +0.81 [0.66, 0.97]):
 both P directions are poor, and neither beats the oracle.
 
 **3. Dose-response (native-eval quality vs training GSD 0.3 → 2 → 3 → 5 m).**
@@ -201,3 +201,10 @@ both P directions are poor, and neither beats the oracle.
   view-geometry differences); 50 tiles in one city; one seed per cell; scene extent fixed at 153.6 m, so "5 m" here is
   31 px of content. **This does not show that real 10 m Sentinel-2 imagery supports Method 6-style height estimation**;
   it shows the architecture can learn and transfer from coarse-content inputs when given enough tokens.
+
+## 2026-09-24 — Phase 5 (optional) launched after Phases 0–4 were committed
+
+8 m training for both protocols (P: 19 px, 2×2 tokens; R: 37×37 tokens), same recipe/seed/split; the matrix is extended
+with an 8 m evaluation column for every model and 8 m rows; the oracle is computed at 8 m. The pre-registered
+dose-response rule stays on 0.3 → 5 m; 8 m is reported as an extended curve (descriptive). Estimate ≈ 6 min (P) +
+54 min (R) + ≈ 20 min eval ⇒ ≈ 80 min. Chain: `data/dfc2019/experiments/resolution_transfer/run_chain8.sh`.

@@ -383,7 +383,9 @@ def analyze(args):
             R1[n]["symmetry"]["verdict"] = ("asymmetric: coarse->fine better" if d > 0 else "asymmetric: fine->coarse better") \
                 if p is not None and p < 0.05 else "no evidence of asymmetry"
         # dose-response on native-eval Pearson / MAE
-        curve = [("native", 0.3)] + [(f"{pr}{g:g}", g) for g in gs if (f"{pr}{g:g}", pr, 0.3) in T]
+        # pre-registered rule: curve 0.3 -> 5 m; Phase 5 (8 m) reported as a separate extended curve
+        curve_ext = [("native", 0.3)] + [(f"{pr}{g:g}", g) for g in gs if (f"{pr}{g:g}", pr, 0.3) in T]
+        curve = [c for c in curve_ext if c[1] <= 5.0]
         pear = [float(np.nanmean(tile_vec((n, pr, 0.3), "pearson"))) for n, _ in curve]
         mae = [float(np.nanmean(tile_vec((n, pr, 0.3), "mae"))) for n, _ in curve]
         drops = [pear[i] - pear[i + 1] for i in range(len(pear) - 1)]
@@ -391,7 +393,10 @@ def analyze(args):
         cliff = [f"{curve[i][1]:g}->{curve[i+1][1]:g} m" for i, d in enumerate(drops) if total > 0 and d >= 0.6 * total]
         S["rules"][pr] = {"transfer": R1, "dose_response": {"train_gsd": [g for _, g in curve], "native_eval_pearson": pear,
                                                             "native_eval_mae": mae, "monotonic": all(d > 0 for d in drops),
-                                                            "cliff": cliff or None}}
+                                                            "cliff": cliff or None,
+                                                            "extended_incl_8m": {"train_gsd": [g for _, g in curve_ext],
+                                                                "native_eval_pearson": [float(np.nanmean(tile_vec((n, pr, 0.3), "pearson"))) for n, _ in curve_ext],
+                                                                "native_eval_mae": [float(np.nanmean(tile_vec((n, pr, 0.3), "mae"))) for n, _ in curve_ext]}}}
     (OUT / "matrix_summary.json").write_text(json.dumps(S, indent=1))
     print(json.dumps(S["rules"], indent=1)[:6000])
 
