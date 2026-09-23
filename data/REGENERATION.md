@@ -119,3 +119,36 @@ the saved `data/sentinel2_benchmark/dinov3_depth/*.npy`, which is already in `te
 | 16 | `external/ArnabTechiee-depthwizard/.git/` (67 MB; the 70 MB pack was in it) | Git history of an audited competitor repo | **Shadow-geometry photogrammetry rejected** at 10 m (HANDOFF §4) | `git clone https://github.com/ArnabTechiee/depthwizard.git ArnabTechiee-depthwizard && git -C ArnabTechiee-depthwizard checkout 664e92bf625b0bbedfcdb52abfede791d788c394` |
 
 Rows 2, 7, 10 and 12 each cover two paths, so the 16 rows cover the 20 inventoried paths.
+
+## Deleted to reclaim disk, part 2 (2026-09-23): `external/` reference repos
+
+**Scope.**
+- These are 11 folders under `external/`, plus the two duplicate RDAH-Net checkpoints. The `external/RDAH-Net/` folder itself is **kept**.
+- **Checked before deletion:**
+  - Nothing in the pending 07 work uses these folders: the Part F merge (`scripts/terrain_rf_residual.py --from-kaggle`,
+    reads only `samples.parquet`) and the docs step.
+  - The only references in `scripts/` are provenance docstrings and comments ("ported from…", "read, never executed").
+  - Two closed-route scripts import code from the folders: `scripts/rs3dada_{mps,sentinel2}_smoketest.py` needs
+    `external/SynRS3D`, and `scripts/lib_dinov3_sat493m_loader.py` needs `external/dinov3`. **Re-clone first if either is ever re-run.**
+- **Policy:** clone on demand (HANDOFF §9). Restore with the command in the last column, run from `external/`.
+
+**RDAH-Net duplicate checkpoints, replaced by symlinks (not lost).**
+- `external/RDAH-Net/104best_model.pth` (SHA-256 4c940ef3a3f2cea5…) and `external/RDAH-Net/swiss_best_model.pth` (SHA-256 6efd4ac5655760e6…) were
+  **SHA-256 byte-identical** to `data/checkpoints/rdah/checkpoints-track1/104best_model.pth` and `…/checkpoints-Swiss/best_model.pth`.
+- Each is now a relative symlink to that copy, so every `RDAH_DIR / "104best_model.pth"` path in `scripts/` keeps working.
+- Freed about 131 MB.
+- Original provenance: Figshare DOI 10.6084/m9.figshare.31986864 (MD5 in the "External code" section above).
+
+| Folder | Source | Commit | Contributed to this project | Restore (from `external/`) |
+|---|---|---|---|---|
+| `sih2026-depthwizard` | github.com/zaidnansari2011/sih2026-depthwizard | c5646628ebec22b3f66b590b20ad5deda4112525 | **Source of Method 6's idea:** a full DAv2 fine-tune with a twin head, reimplemented here | `git clone https://github.com/zaidnansari2011/sih2026-depthwizard.git sih2026-depthwizard && git -C sih2026-depthwizard checkout c5646628ebec22b3f66b590b20ad5deda4112525` |
+| `depthwizard` | github.com/blakc-coffee/depthwizard | 55bc2c0d61f94f430205b4c5390643be3c2f961d | Source of frequency fusion, **retired**: it equals its DEM-only control | `git clone https://github.com/blakc-coffee/depthwizard.git depthwizard && git -C depthwizard checkout 55bc2c0d61f94f430205b4c5390643be3c2f961d` |
+| `DepthWizard-SIH26175` (snapshot; `.git` removed earlier today) | github.com/devendrakushwah80/DepthWizard-SIH26175 | 558ddde63847a2d58426a802c628486ff6093bed | **Height-balanced loss and sampler adopted into Method 6** (reimplemented); GSD-FiLM rejected | `git clone https://github.com/devendrakushwah80/DepthWizard-SIH26175.git && git -C DepthWizard-SIH26175 checkout 558ddde63847a2d58426a802c628486ff6093bed` |
+| `ArnabTechiee-depthwizard` (snapshot; `.git` removed earlier today) | github.com/ArnabTechiee/depthwizard | 664e92bf625b0bbedfcdb52abfede791d788c394 | Shadow-geometry photogrammetry, **rejected** at 10 m | `git clone https://github.com/ArnabTechiee/depthwizard.git ArnabTechiee-depthwizard && git -C ArnabTechiee-depthwizard checkout 664e92bf625b0bbedfcdb52abfede791d788c394` |
+| `SynRS3D` | github.com/JTRNEO/SynRS3D | ab5a4857825448e4c5cd1fe3aa3045c7348814c5 | RS3DAda, **rejected** as contaminated (49/50 DFC2019 tiles in its training split). The only local changes were `__pycache__` | `git clone https://github.com/JTRNEO/SynRS3D.git && git -C SynRS3D checkout ab5a4857825448e4c5cd1fe3aa3045c7348814c5`; weights: part 1, row 1 |
+| `madhu-mitha-e-depthwizard` | github.com/madhu-mitha-e/DepthWizard | 92cd97f62290cf0a8643af2699bc24a72fa8d225 | Audited, nothing adopted (`COMPETITIVE_REPO_AUDIT.md`) | `git clone https://github.com/madhu-mitha-e/DepthWizard.git madhu-mitha-e-depthwizard && git -C madhu-mitha-e-depthwizard checkout 92cd97f62290cf0a8643af2699bc24a72fa8d225` |
+| `gowthamkrishna27-elevate3d` | github.com/gowthamkrishna27/Elevate3d | 7efa6433583cf36e116fef1c3ac7e8f463335a66 | Audited, nothing adopted | `git clone https://github.com/gowthamkrishna27/Elevate3d.git gowthamkrishna27-elevate3d && git -C gowthamkrishna27-elevate3d checkout 7efa6433583cf36e116fef1c3ac7e8f463335a66` |
+| `amogh-hub-depthwizard` | github.com/amogh-hub/depthwizard | 2b2bd2653989403ddf5f468e09a8fdf10e697759 | Evidence gating and leave-one-out validation, adapted as LOBO on frequency fusion (retired with it) | `git clone https://github.com/amogh-hub/depthwizard.git amogh-hub-depthwizard && git -C amogh-hub-depthwizard checkout 2b2bd2653989403ddf5f468e09a8fdf10e697759` |
+| `yats0x7-depthwizard` | github.com/yats0x7/DepthWizard | 116a205e2572c272cb924d9465b648163cf74868 | Ground-trend scale: compared, converges with blakc-coffee, not adopted | `git clone https://github.com/yats0x7/DepthWizard.git yats0x7-depthwizard && git -C yats0x7-depthwizard checkout 116a205e2572c272cb924d9465b648163cf74868` |
+| `arpitparashar06-depthwizard` | github.com/arpitparashar06/depthwizard | 5eea1c3906408debd7b8d2bb57e5a8183a3fac62 | Non-regression scale derivation, **rejected** | `git clone https://github.com/arpitparashar06/depthwizard.git arpitparashar06-depthwizard && git -C arpitparashar06-depthwizard checkout 5eea1c3906408debd7b8d2bb57e5a8183a3fac62` |
+| `dinov3` (vendored code, **was git-tracked**, 213 files) | github.com/facebookresearch/dinov3 (vendored unmodified; no upstream pin) | this repo's commit `ee30f7f` | The DAv2-vs-DINOv3 backbone comparison, **superseded**: no backbone is carried forward | **Exact copy from this repo's own history:** `git checkout ee30f7f -- external/dinov3` (run from the repo root). Removed with `git rm`, so the history keeps every file |

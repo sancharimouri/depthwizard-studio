@@ -379,10 +379,15 @@ terrain.** None of the research-track work is deployed into it.
 session's skill listing; if either is missing, that's a regression to flag, not
 something to work around silently.
 
-## 9. External reference repos already cloned (`external/`)
+## 9. External reference repos (`external/`): read, recorded, and removed on 2026-09-23
 
-Clone-on-demand-only policy: don't re-clone or re-investigate any of these from
-scratch — they're already here and already read.
+**Clone-on-demand policy (standard practice, not a special case).**
+- All of these have been read, and what each contributed is recorded in the table below. Don't re-investigate them from scratch.
+- On 2026-09-23 the folders were **deleted to reclaim disk**. Only `external/RDAH-Net/` remains; its checkpoints are
+  symlinks to `data/checkpoints/rdah/`.
+- **If code from one is ever needed again, re-clone it on demand** with the exact pinned command in `data/REGENERATION.md`,
+  section "Deleted to reclaim disk, part 2". `external/dinov3` is restored from this repo's history with `git checkout ee30f7f -- external/dinov3`.
+- Never run their scripts. Reimplement any logic ourselves. Keep the clone out of commits unless it's vendored on purpose.
 
 | Folder | Source | Contribution |
 |---|---|---|
