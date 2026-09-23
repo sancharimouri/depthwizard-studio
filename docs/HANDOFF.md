@@ -47,6 +47,14 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
   Plausible on textured terrain: buildings and crowns are resolved, no seams, and C4 ρ is +0.45 to +0.68. Two defects: a tile-grid
   artifact on textureless snow, and an AGL ceiling of about 18–23 m (the forest is under-tall compared with GLO-30−FABDEM and GEDI).
   Plausibility only; there is no ground truth. `docs/method-audit/06-full-finetune-twin-head/vhr_dsm_pipeline.md`.
+  - **Follow-ups:**
+    - **Seam fix.** `--margin=192`, which discards a 192 px ring per window, cuts the glacier seam ratio from
+      2.37 to 1.07. Use it for any future full rerun; the five committed crops still use the original tiling.
+    - **Height ceiling = training range, confirmed for canopy.** DFC2019 JAX tree pixels reach p99 23.6 m.
+      Held-out DFC2019 trees that are 25–50 m are predicted at about 16 m. Buildings still reach 43 m p90,
+      so this is not a capacity limit.
+    - **GAMUS DC/NYC has about 10× more tree pixels above 25 m**, but tops out around 35 m. It's the candidate
+      for a retrain; that retrain is not authorized. Its pre-registered test is in the doc.
 - Everything: `docs/method-audit/final-comparison.md` §1–2.
 
 - Docs: `docs/method-audit/06-full-finetune-twin-head/{summary,verdict}.md`

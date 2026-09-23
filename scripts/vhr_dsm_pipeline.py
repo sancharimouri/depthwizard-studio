@@ -40,6 +40,8 @@ from evaluate_method6_finetune_twinhead import (  # noqa: E402
 )
 
 TILE, STRIDE, RAMP = 512, 448, 64
+# --margin=M mode (seam fix): discard an M-px ring per window; cores blended over MARGIN_RAMP px.
+MARGIN_RAMP = 16
 SIZE = 2048
 CELL = 17408 // 8
 SCENES = {"C": "45_120220211230_2022-03-14_1040010073381800.tif",
@@ -103,14 +105,60 @@ def tiled_predict(model, rgb: np.ndarray, device):
     return acc_mu / wts, acc_sg / wts
 
 
-def seam_ratio(a: np.ndarray, valid: np.ndarray) -> float:
+@torch.no_grad()
+def tiled_predict_margin(model, rgb: np.ndarray, device, margin: int):
+    """Seam fix (2026-09-23): reflect-pad the image by `margin` px, run the same 512 px
+    windows, but keep only each window's central (512 - 2*margin) px core; the outer
+    `margin` ring of every window is discarded, so no kept pixel is within `margin` px of
+    a window edge. Cores overlap by MARGIN_RAMP px and are linearly blended there."""
+    _, H, W = rgb.shape
+    core = TILE - 2 * margin
+    step = core - MARGIN_RAMP
+    x_all = np.pad(rgb, ((0, 0), (margin, margin), (margin, margin)), mode="reflect")
+    r1 = np.zeros(TILE, np.float32)
+    i = np.arange(core)
+    r1[margin:margin + core] = np.minimum(1.0, np.minimum(i + 1, core - i) / MARGIN_RAMP)
+    fw = np.outer(r1, r1)
+    def st(n):
+        s = list(range(0, n - core + 1, step))
+        if s[-1] != n - core:
+            s.append(n - core)
+        return s
+    Hp, Wp = H + 2 * margin, W + 2 * margin
+    wts, acc_mu, acc_sg = np.zeros((Hp, Wp), np.float32), np.zeros((Hp, Wp), np.float32), np.zeros((Hp, Wp), np.float32)
+    for r in st(H):
+        for c in st(W):
+            x = torch.from_numpy(x_all[:, r:r + TILE, c:c + TILE] / 255.0)
+            x = (x - IMAGENET_MEAN[0]) / IMAGENET_STD[0]
+            mu, lv = model(pad_to(x.float(), PAD_TO)[None].to(device))
+            mu = mu[0, 0, :TILE, :TILE].float().cpu().numpy()
+            sg = torch.exp(0.5 * lv)[0, 0, :TILE, :TILE].float().cpu().numpy()
+            acc_mu[r:r + TILE, c:c + TILE] += fw * mu
+            acc_sg[r:r + TILE, c:c + TILE] += fw * sg
+            wts[r:r + TILE, c:c + TILE] += fw
+    sl = (slice(margin, margin + H), slice(margin, margin + W))
+    core_edges = sorted({e for s in st(H) for e in (s, s + core)})
+    return acc_mu[sl] / wts[sl], acc_sg[sl] / wts[sl], core_edges
+
+
+def old_layout_lines(n: int) -> list[int]:
+    lines = set()
+    for s in starts(n)[1:]:
+        lines.update({s, s + 1})
+    for s in starts(n)[:-1]:
+        lines.update({s + TILE - 1, s + TILE - 2})
+    return sorted(lines)
+
+
+def seam_ratio(a: np.ndarray, valid: np.ndarray, lines: list[int] | None = None) -> float:
+    """Mean |grad| on tile-boundary lines / elsewhere. Default lines = the original
+    stride-448 layout's window edges."""
     gy, gx = np.gradient(a)
     g = np.hypot(gx, gy)
-    lines = set()
-    for s in starts(a.shape[0])[1:]:
-        lines.update({s, s + 1})
-    for s in starts(a.shape[0])[:-1]:
-        lines.update({s + TILE - 1, s + TILE - 2})
+    if lines is None:
+        lines = old_layout_lines(a.shape[0])  # unchanged definition used for the committed C2 numbers
+    else:
+        lines = set(lines) | {x - 1 for x in lines}  # 2-px band at each core edge, same width as default
     lines = sorted(x for x in lines if 2 <= x < a.shape[0] - 2)
     seam = np.zeros_like(valid)
     seam[lines, :] = True
@@ -217,12 +265,17 @@ def main(only=None):
             crs = src.crs
         valid = ~np.all(rgb == 0, axis=0)
         # --- AGL: fold ensemble + full-data cross-check
-        fold_mu, fold_sg = zip(*[tiled_predict(m, rgb, device) for m in folds])
+        if MARGIN:
+            preds = [tiled_predict_margin(m, rgb, device, MARGIN) for m in folds]
+            core_edges = preds[0][2]
+            fold_mu, fold_sg = [p[0] for p in preds], [p[1] for p in preds]
+        else:
+            fold_mu, fold_sg = zip(*[tiled_predict(m, rgb, device) for m in folds])
         fold_mu = np.stack(fold_mu)
         agl = fold_mu.mean(0)
         agl_std = fold_mu.std(0)
         sigma = np.stack(fold_sg).mean(0)
-        agl_full, _ = tiled_predict(full, rgb, device)
+        agl_full = tiled_predict_margin(full, rgb, device, MARGIN)[0] if MARGIN else tiled_predict(full, rgb, device)[0]
         agl[~valid] = np.nan
         # --- terrain + surface references
         t2g = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
@@ -235,7 +288,8 @@ def main(only=None):
         comp = compose_dsm(dtm, agl, valid)
         dsm = comp.dsm
         # --- write rasters
-        d = OUT / name
+        out_name = f"{name}_margin{MARGIN}" if MARGIN else name
+        d = OUT / out_name
         d.mkdir(parents=True, exist_ok=True)
         for fn, arr in (("agl", agl), ("agl_std", agl_std), ("sigma", sigma), ("agl_fullckpt", agl_full),
                         ("dtm_fabdem", dtm), ("dsm", dsm), ("glo30", glo)):
@@ -270,8 +324,11 @@ def main(only=None):
              "dsm_range_m": [float(np.nanmin(dsm)), float(np.nanmax(dsm))]}
         poly = [{"lon": lo, "lat": la} for lo, la in [(bounds[0], bounds[1]), (bounds[2], bounds[1]), (bounds[2], bounds[3]), (bounds[0], bounds[3]), (bounds[0], bounds[1])]]
         s["sparse_lidar"] = sparse_lidar(poly, transform, crs, (SIZE, SIZE), agl)
+        if MARGIN:
+            s["margin_px"] = MARGIN
+            s["seam_ratio_own_core_edges"] = seam_ratio(np.where(v, agl, np.nan), v, [e for e in core_edges if 2 <= e < SIZE - 2])
         (d / "stats.json").write_text(json.dumps(s, indent=2) + "\n")
-        summary[name] = s
+        summary[out_name] = s
         # --- images
         rgb8 = rgb.transpose(1, 2, 0)
         agl_img = (cm.viridis(np.clip(np.nan_to_num(agl, nan=0) / 30.0, 0, 1))[..., :3] * 255).astype(np.uint8)
@@ -284,7 +341,7 @@ def main(only=None):
                                np.repeat(hs_dsm[z[0]:z[0] + 512, z[1]:z[1] + 512, None], 3, 2)], axis=1)
         Image.fromarray(zoom).save(d / "zoom_rgb_agl_dsmhs.png")
         # --- frontend asset set (viewer.js schema), for the preview page only
-        p = PREVIEW / name
+        p = PREVIEW / out_name
         p.mkdir(parents=True, exist_ok=True)
         meta = write_terrain_json(p / "terrain.json", dsm, bounds, (512, 512))
         Image.fromarray(rgb8).resize((1024, 1024)).save(p / "satellite.png")
@@ -296,8 +353,14 @@ def main(only=None):
         print(f"{name}: AGL p50 {pct[50]:.2f} p95 {pct[95]:.2f} max {s['agl_max_m']:.1f} m | seam {s['seam_ratio']:.2f} | "
               f"r(ens,full) {s['pearson_ensemble_vs_fullckpt']:.3f} | rho(AGL, GLO-FAB) {s['coarse_ref']['spearman_aglblock_vs_glo30_minus_fabdem']} | "
               f"GEDI n={s['sparse_lidar']['gedi'].get('n')}", flush=True)
-    (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    # A full default run owns summary.json; subset/margin runs write their own file.
+    fn = "summary.json" if not only and not MARGIN else "summary_" + "_".join(sorted(summary)) + ".json"
+    (OUT / fn).write_text(json.dumps(summary, indent=2) + "\n")
 
+
+MARGIN = 0
 
 if __name__ == "__main__":
-    main(set(sys.argv[1:]) or None)
+    args = [a for a in sys.argv[1:] if not a.startswith("--margin=")]
+    MARGIN = next((int(a.split("=")[1]) for a in sys.argv[1:] if a.startswith("--margin=")), 0)
+    main(set(args) or None)

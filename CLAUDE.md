@@ -157,6 +157,10 @@ in the demo): DSM = FABDEM bare-earth + max(Method 6 AGL, 0), `scripts/vhr_dsm_p
 textured terrain, with two defects: a tile-seam artifact on snow, and an AGL ceiling of about 18–23 m
 that under-states tall canopy. Maxar Open Data has no non-mountain India coverage; other terrain needs
 a manual Bhoonidhi fetch. See `docs/method-audit/06-full-finetune-twin-head/vhr_dsm_pipeline.md`.
+Follow-ups: the snow seam is fixed by `--margin=192` (seam ratio 2.37 → 1.07). The ceiling is confirmed as
+DFC2019's training range for trees (p99 23.6 m; held-out 25–50 m trees are predicted at about 16 m), not model
+capacity. GAMUS DC/NYC has about 10× more tall canopy (tops out around 35 m); a retrain on it is proposed but not run.
+The VHR result covers mountain terrain only; there are no plains, coastal or urban VHR tests yet.
 
 ## What actually exists right now
 
