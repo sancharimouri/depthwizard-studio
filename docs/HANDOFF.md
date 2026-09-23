@@ -428,3 +428,21 @@ The "oracle" naming inconsistency is resolved: both figures are traced to code i
 `final-comparison.md` §1.0. "Oracle" means only 3.392/4.579/0.582/0.509; 2.929/4.718/0.532/0.471
 is Method 2's deployable sparse-GCP result. CLAUDE.md item 2 and HANDOFF §2a/§7 were corrected
 to match.
+
+---
+
+**Session footer: 2026-09-23, "07: GAMUS generalization"** (brief: `docs/SIH26175_problem_statement.md`; record: `docs/method-audit/07-gamus-generalization/`)
+
+- **B, GAMUS zero-shot:** Method 6 **does not generalize.** It wins MAE, r and ρ, and loses RMSE in all 3 cities.
+- **C, GAMUS fine-tune:** a pre-registered stop (leaf-off).
+- **D, 3DEP forest and mountain:** canopy p95 10.6 vs. 37.7 m. DEM + AGL doesn't add value.
+- **E:** no deliverable fully met.
+- **F:** the RF terrain residual is not adopted.
+- **Product:** DEM-only, unchanged.
+- **Also this session:**
+  - seed-42 checkpoints re-created, bit-identical;
+  - the Kaggle GPU offload pattern added to CLAUDE.md;
+  - 20 closed-route artifacts and 11 `external/` repos deleted after documenting them in `data/REGENERATION.md` (about 8 GB freed).
+- The numbers in this file, CLAUDE.md, `final-comparison.md` §7 and 07 `summary`/`verdict` were cross-checked programmatically against
+  `zeroshot_merged_summary.json`, `forest_mountain_3dep/summary.json`, `terrain_rf_residual/summary.json` and `leafon_precheck.json`.
+  0 mismatches.
