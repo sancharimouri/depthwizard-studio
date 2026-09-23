@@ -51,7 +51,13 @@ its commit don't line up.
 | 2026-09-23 | docs | HANDOFF / CLAUDE.md partial updates; REGENERATION refresh | — | HANDOFF, CLAUDE.md, `data/REGENERATION.md` | `05fdcfe`, `ad27726`, `93ae9df` |
 
 | 2026-09-23 | DFC2019 M6 | C3 final: seed 44; C1 variance ratio over 8 seed-folds | all 3 seeds beat the oracle on all 4 (1.990 ± 0.010 m MAE); VR 0.48–0.66 — headline stands | `06` verdict §6; `final-comparison.md` §2 | final commit of 2026-09-23 (see `git log`) |
-| 2026-09-23 | docs | FINAL STEP: HANDOFF, CLAUDE.md, final-comparison, logs completed and cross-checked | — | all | final commit of 2026-09-23 |
+| 2026-09-23 | docs | FINAL STEP: HANDOFF, CLAUDE.md, final-comparison, logs completed and cross-checked | — | all | `965a2a4` |
+| 2026-09-23 | repo | core scripts + small Sentinel-2 results committed (gap 9); audit-log gap note | fresh checkout no longer missing imported scripts | this file | `fd9fd35`, `c0f0174` |
+| 2026-09-23 | docs | SESSION_LOG reconciled against git (54 commits) | 3,839 paths enumerated; discrepancies flagged | `docs/SESSION_LOG_2026-09-23.md` | `23cda58` |
+| 2026-09-23 | repo | fresh-clone audit: pinned `requirements-research.txt`, external-code manifest | all in-repo imports resolve; 3 pipelines reproduce byte-identically from a fresh clone | `data/REGENERATION.md` | `8ce51b2` |
+| 2026-09-23 | DFC2019 | oracle-baseline discrepancy traced to code | oracle = 3.392/4.579/0.582/0.509; 2.929/… is Method 2's sparse-GCP result | `final-comparison.md` §1.0 | `197e943` |
+| 2026-09-23 | demo data | Darjeeling "GLO-30 all-NaN" diagnosed | tile-selection bug (footprint straddles 27°N); demo DEM already byte-identical to GLO-30 | HANDOFF §2b | `ae2ac1e` |
+| 2026-09-23 | demo | honest labels ("3D Terrain Visualization", "DEM ELEVATION") | verified served + built | HANDOFF §5 | `77baed1` |
 
 ## Gaps (result ↔ commit mismatches), flagged
 

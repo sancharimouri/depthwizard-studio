@@ -3952,6 +3952,8 @@ log entries are **annotated with dated notes, not rewritten**.
 "Satellite → Metric Terrain Reconstruction" and has a "METRIC ELEVATION" layer button. CLAUDE.md's
 framing rule says the UI must not imply RGB → absolute elevation. Whether that label does is a demo
 decision for the owner, outside D1's overturned-claim scope.
+*(Resolved 2026-09-23, later, at the owner's request: labels changed to "Satellite → 3D Terrain
+Visualization" / "DEM ELEVATION", commit `77baed1`.)*
 
 ## Close-out summary (2026-09-23): where the Part B / C / D results live
 

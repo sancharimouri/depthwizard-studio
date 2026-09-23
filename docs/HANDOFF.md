@@ -239,6 +239,15 @@ Method 6's DFC2019 win. **A real DSM is the terrain source; DAv2 output is shown
 as a labeled relative-depth *visualization* layer, never as the thing that produced the
 terrain.** None of the research-track work is deployed into it.
 
+- **Labels (2026-09-23, text only):** the header reads "Satellite → 3D Terrain Visualization"
+  (was "… Metric Terrain Reconstruction"). The "METRIC ELEVATION" layer/panel labels now read
+  "DEM ELEVATION", and the captions read "DEM elevation from <source>". Verified in the
+  dev-server-served files and a rebuilt `dist/`; screenshot
+  `docs/screenshots/2026-09-23_demo_labels_dem.png`.
+  - **Flagged, not changed:** the "DSM" button shows *DAv2 relative depth draped on the real
+    DSM relief*. The label is ambiguous but doesn't overclaim.
+  - `package.json`'s `build` script runs `vite` (the dev server), not `vite build`.
+    `frontend/dist/` is gitignored and was rebuilt manually.
 - **Stack**: single-page Three.js + Vite app (`frontend/src/main.js`, `viewer.js`), dev
   server at `localhost:5173`. FastAPI backend (`backend/main.py`) with a CDSE router
   mounted at `/api/cdse` (`backend/api/routes.py`, `backend/cdse/client.py`).
