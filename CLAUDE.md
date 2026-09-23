@@ -58,8 +58,10 @@ in order:
 2. **Sparse-anchor / GCP regression** (`02-gcp-regression`, many variants: Grid/Random/
    Spatial × OLS/Huber/RANSAC) — CLOSED as standalone; RANSAC failed twice; best
    deployable was Grid+Huber+20 anchors (MAE 2.929m / RMSE 4.718m / Pearson 0.532 /
-   Spearman 0.471, DFC2019). Still the reference "oracle per-tile-OLS baseline" every
-   later method is compared against.
+   Spearman 0.471, DFC2019; mean of 50 whole-tile runs). This is a deployable sparse-GCP
+   baseline, **not** the oracle. The oracle per-tile-OLS baseline every later method is compared
+   against is 3.392 / 4.579 / 0.582 / 0.509 (dense same-tile OLS, scored on held-out quadrants).
+   Both are traced in `docs/method-audit/final-comparison.md` §1.0.
 3. **Semantic prior** (`03-semantic-prior`, building-probability term) — CLOSED, overfit,
    didn't generalize spatially.
 4. **Learned CNN scale-modulation** (`04-learned-scale-modulation`) — **superseded by

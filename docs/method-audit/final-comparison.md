@@ -53,8 +53,33 @@ mean over (tile, held-out quadrant) evaluations = mean of the 4 fold means.
 All paths are relative to `data/dfc2019/experiments/` unless given in full. CIs were computed only
 where stated. Other rows have none, because their per-tile outputs weren't bootstrapped.
 
-**Naming note.** The project's older docs call the Method 2 Grid+Huber+20 row the "oracle
-per-tile-OLS baseline". The true per-tile-OLS oracle is the 3.392/4.579 row. Method 6 beats both.
+### 1.0 Baseline definitions: two different numbers, two different contexts (traced 2026-09-23)
+
+Two figures have both been called "the oracle per-tile-OLS baseline" in this project's docs. They
+are **different experiments**, and neither is wrong. Both use **mean-of-per-unit metrics**;
+neither is pixel-weighted. Traced from code:
+
+| | **Oracle per-tile-OLS** | **Method 2 Grid+Huber+20 (sparse-GCP baseline)** |
+|---|---|---|
+| numbers (MAE / RMSE / Pearson / Spearman) | **3.392 / 4.579 / 0.582 / 0.509** | **2.929 / 4.718 / 0.532 / 0.471** |
+| fit | OLS, AGL = a·DAv2 + b, on **all valid pixels of the other 3 quadrants of the same tile** (dense LiDAR truth, up to 3 × 512² = 786,432 px) | Huber regression on **20 grid-placed anchor pixels** of the same tile |
+| evaluated on | the **held-out quadrant** (the same 50 × 4 quadrants Method 6 is scored on; pixel counts match) | **all valid pixels of the whole 1024² tile outside a 16 px buffer** around the anchors ("strict" mask) |
+| aggregation | mean over **200** (tile, quadrant) evaluations (= mean of 4 fold means) | mean over **50** whole-tile runs (one grid run per tile) |
+| what it represents | an **upper-bound-style reference**: the best a single affine rescale of DAv2 can do *with dense same-tile truth* | a **deployable** calibration from 20 known heights per tile |
+| code / file | `scripts/evaluate_prior_spatial_cv.py` (`base_model = LinearRegression()`) → `data/dfc2019/experiments/semantic/method3_spatial_cv_results.json` (`baseline`) | `scripts/evaluate_sparse_anchor_regression.py` → `data/dfc2019/experiments/sparse_anchor_regression/summary.csv` (huber, grid, 20, `strict_*_mean`) |
+
+**Which applies where:**
+- **"Oracle" means only the 3.392 row.** It is the like-for-like comparator for any method scored
+  on the 4-fold held-out quadrants (Method 4, Method 6, RDAH-FT-2), because it is scored on exactly
+  those pixels.
+- **The 2.929 row is Method 2's own best result.** Its lower MAE comes from Huber's absolute-loss
+  fit and a different evaluation pixel set (whole tile), not from being a stronger baseline. Its
+  RMSE and correlations are worse than the oracle's.
+- **They aren't directly comparable to each other**: different fit data, estimator and evaluation
+  pixels.
+- **Method 6 beats both on all four metrics** (every seed, §2.3).
+- **Where older docs call 2.929 "the oracle", that label is wrong.** The number is right; it's
+  Method 2's result. The label has been corrected in CLAUDE.md and HANDOFF (§2a, §7).
 
 ### 1.1 Method 6 vs. the oracle, per tile (C2; `method6_uncertainty.json`)
 

@@ -35,7 +35,7 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 | **Method 6** (seed 1) | **1.980** [1.691, 2.297] | **3.492** [2.964, 4.106] | **0.745** [0.704, 0.779] | **0.656** [0.616, 0.692] |
 | Method 6, 3 seeds (mean ± sd) | 1.990 ± 0.010 | 3.504 ± 0.026 | 0.743 ± 0.002 | 0.656 ± 0.0003 |
 | Oracle per-tile-OLS | 3.392 [2.963, 3.865] | 4.579 [3.985, 5.229] | 0.582 [0.521, 0.639] | 0.509 [0.456, 0.559] |
-| Method 2 Grid+Huber+20 (older docs' "oracle") | 2.929 | 4.718 | 0.532 | 0.471 |
+| Method 2 Grid+Huber+20: sparse-GCP baseline, **not** an oracle (see `final-comparison.md` §1.0) | 2.929 | 4.718 | 0.532 | 0.471 |
 
 - Every seed beats the oracle on all four metrics (pre-registered C3 rule, so **the headline
   stands**).
@@ -54,8 +54,10 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 
 Methods 1–5 (1–4 closed/superseded; 5 open on DFC2019 only, see §3.2; doc location in each case):
 1. Global DEM-stat calibration — CLOSED, no real improvement. `docs/method-audit/01-dem-stat-anchoring/`
-2. Sparse-anchor/GCP regression — CLOSED as standalone; best variant Grid+Huber+20
-   anchors is the oracle baseline Method 6 is compared against. `docs/method-audit/02-gcp-regression/`
+2. Sparse-anchor/GCP regression — CLOSED as standalone. Best variant Grid+Huber+20 anchors
+   (2.929/4.718/0.532/0.471): a deployable sparse-GCP baseline, **not** the oracle. The oracle is
+   the per-tile-OLS row, 3.392/4.579/0.582/0.509; both are traced in `final-comparison.md` §1.0.
+   `docs/method-audit/02-gcp-regression/`
 3. Semantic prior (linear building-probability term) — CLOSED, overfit, didn't
    generalize spatially. `docs/method-audit/03-semantic-prior/`
 4. Learned CNN scale-modulation — superseded by Method 6, not current best; still the
@@ -262,8 +264,12 @@ terrain.** None of the research-track work is deployed into it.
 
 - **4-fold spatial-quadrant holdout** is the standard evaluation protocol for any new
   DFC2019-track method.
-- **Always compare against the oracle per-tile-OLS baseline** (Method 2's Grid+Huber+20
-  result) — a method that doesn't beat this isn't worth adopting.
+- **Always compare against the oracle per-tile-OLS baseline, 3.392/4.579/0.582/0.509**
+  (dense OLS of DAv2 on 3 quadrants, scored on the held-out quadrant;
+  `data/dfc2019/experiments/semantic/method3_spatial_cv_results.json`). A method that doesn't
+  beat it isn't worth adopting. The Method 2 Grid+Huber+20 row (2.929/4.718/0.532/0.471) is a
+  *deployable* sparse-GCP baseline on a different pixel set. Report it, but it is not the oracle
+  (`final-comparison.md` §1.0).
 - **Independent-of-training-reference validation is required.** ICESat-2 for Sentinel-2,
   real held-out LiDAR for DFC2019. A DEM-only or same-source check alone is **not
   trusted** — this project has hit the same memorization-detection pattern three
@@ -340,5 +346,7 @@ and they agree on:
 - frequency fusion retired
 - no detail/canopy add-on passes; the learned GEDI route is gated
 
-The "oracle" naming inconsistency is now resolved explicitly in §2a's table, which shows both
-rows.
+The "oracle" naming inconsistency is resolved: both figures are traced to code in
+`final-comparison.md` §1.0. "Oracle" means only 3.392/4.579/0.582/0.509; 2.929/4.718/0.532/0.471
+is Method 2's deployable sparse-GCP result. CLAUDE.md item 2 and HANDOFF §2a/§7 were corrected
+to match.
