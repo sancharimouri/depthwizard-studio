@@ -504,3 +504,91 @@ The pre-registered rule is paired Wilcoxon, n = 8, Holm across 3 DEMs, and **bot
 - **GLO-30 and SRTM + AGL are worse.** They are radar surface models that already carry most of the canopy, so adding AGL double-counts.
 - **Post-hoc, descriptive:** the best raw surface product on these windows is GLO-30 (RMSE 9.16, bRMSE 7.13). Composed FABDEM has the lower mean RMSE (8.56) but a higher bRMSE (7.60).
 - The brief's recommended route (a low-resolution DEM, e.g. SRTM, mapped to absolute heights) **plus Method 6** does not produce a better DSM than the DEM on forested and mountainous terrain.
+
+---
+
+## 2026-09-23 — Part B result: Method 6 zero-shot on GAMUS. **Pre-registered verdict: DOES NOT GENERALIZE.**
+
+**Execution.**
+- Split across two runners:
+  - locally on MPS, 219 tiles (`zeroshot_tiles.jsonl`);
+  - on Kaggle, 2,759 tiles (`zeroshot_tiles_kaggle.jsonl`, script `kaggle/gamus_zeroshot_kaggle.py`).
+- Merged file `zeroshot_tiles_merged.jsonl` (not committed, 98 MB; regenerate by concatenation, local wins):
+  - all **2,861** test tiles, exactly once;
+  - 0 corrupt lines, 0 duplicate keys;
+  - 2,848 scored; 13 without a scorable quadrant (too few valid px).
+- **Cross-runner agreement** on the 117 tiles scored by both: max |Δ| is MAE 4.3e-5 m, RMSE 7.1e-5 m, Pearson 7e-6, Spearman 2e-6.
+  The two hardware paths are interchangeable.
+- Kaggle ran on a P100, and the final 162 tiles on a T4, after two session interruptions. Both resumed exactly.
+  The run log's dataset path had a slug typo ("games-b-bundle"), corrected to "gamus-b-bundle" in the saved log (text only).
+- **Leakage (A.3), confirmed:** 0 of 2,861 GAMUS test tiles share any non-flat 32×32 RGB block with the 50 DFC2019 tiles.
+  "Non-overlapping" = "full split", and the two are identical.
+
+**Headline: 2,848 tiles, mean of tiles (each tile's metric is the mean of its 4 held-out quadrants), 95% tile-bootstrap CI.**
+
+| | MAE (m) | RMSE (m) | Pearson | Spearman | var ratio (pixel-pooled) |
+|---|---|---|---|---|---|
+| **Method 6, seed 42** | **3.130** [3.017, 3.246] | 4.583 [4.435, 4.739] | **0.638** [0.631, 0.645] | **0.583** [0.576, 0.590] | 0.305 |
+| Method 6, seed 43 | 3.149 [3.035, 3.268] | 4.610 [4.461, 4.768] | 0.635 [0.627, 0.642] | 0.581 [0.574, 0.588] | 0.300 |
+| Method 6, seed 44 | 3.146 [3.032, 3.264] | 4.610 [4.460, 4.766] | 0.634 [0.627, 0.642] | 0.580 [0.573, 0.587] | 0.305 |
+| **Oracle per-tile OLS (frozen DAv2-L)** | 3.474 [3.387, 3.564] | **4.426** [4.319, 4.536] | 0.491 [0.480, 0.502] | 0.425 [0.416, 0.434] | 0.603 |
+| Frozen DAv2-L (relative) | n/a | n/a | 0.504 [0.494, 0.513] | 0.436 [0.428, 0.445] | n/a |
+| *Method 6 s42 + per-tile OLS (descriptive only)* | *2.853* [2.765, 2.942] | *3.908* [3.798, 4.021] | *0.635* | *0.580* | *0.607* |
+
+**Method 6 − oracle, paired.** Tile wins are out of 2,848; Wilcoxon p is Holm-adjusted across the 3 seeds.
+
+| metric | seed 42 Δ [CI] | tile wins | Wilcoxon p (Holm) | CIs non-overlapping? |
+|---|---|---|---|---|
+| MAE | −0.344 [−0.406, −0.282] | 2,152 | 2e-149 | yes, M6 better |
+| **RMSE** | **+0.158 [+0.089, +0.230]** | 1,713 | 1e-13 | **no, M6 worse on the mean** |
+| Pearson | +0.147 [+0.140, +0.154] | 2,385 | ≈0 | yes, M6 better |
+| Spearman | +0.158 [+0.152, +0.164] | 2,604 | ≈0 | yes, M6 better |
+
+(Seeds 43 and 44 are the same to ±0.03.)
+
+**Per city: Method 6 wins MAE, Pearson and Spearman, and loses RMSE, in every city and for every seed.** So 0 of 3 city wins.
+
+| city (tiles) | M6 s42 MAE / RMSE / r / ρ | oracle MAE / RMSE / r / ρ |
+|---|---|---|
+| DC (361) | 5.05 / 7.00 / 0.629 / 0.630 | 5.43 / 6.69 / 0.361 / 0.346 |
+| NYC (987) | 4.03 / 5.52 / 0.490 / 0.460 | 4.26 / 5.24 / 0.293 / 0.277 |
+| PHL (1,500) | 2.08 / 3.39 / 0.737 / 0.653 | 2.49 / 3.35 / 0.653 / 0.541 |
+
+**Rule outcome.**
+- Criterion 1 fails: RMSE is worse on the mean and the CIs overlap.
+- Criterion 2 fails: 0 of 3 cities.
+- This holds for every seed. **Method 6 does not generalize to GAMUS** under the pre-registered rule.
+
+**Why RMSE loses while everything else wins.** Method 6 ranks heights much better than the oracle, and is closer on
+most pixels (MAE, 60% of tiles on RMSE too). But it **compresses tall structures**, and RMSE is dominated by that tail.
+
+Pixel-pooled, by true height (mean prediction / mean truth, m):
+
+| true height | 0–2 | 2–5 | 5–10 | 10–20 | 20–30 | 30–50 | ≥ 50 |
+|---|---|---|---|---|---|---|---|
+| Method 6 s42 | 1.2 / 0.2 | 4.4 / 3.5 | 7.0 / 7.4 | 7.1 / 14.0 | **7.0 / 23.8** | **10.8 / 35.7** | **17.2 / 81.6** |
+| Oracle | 2.3 / 0.2 | 4.4 / 3.5 | 6.0 / 7.4 | 8.8 / 14.0 | 14.1 / 23.8 | 24.8 / 35.7 | 53.9 / 81.6 |
+
+- The oracle's per-tile scale fit, which sees each tile's own LiDAR, recovers the tall tail far better.
+- Method 6's pooled variance ratio is 0.30, against 0.48–0.66 on DFC2019, so the compression is **worse** out of domain.
+- **Trees on GAMUS** (tree class, by true height): 20–30 m trees are predicted at 5.4 m, and 30–50 m trees at 6.0 m.
+  - That is the leaf-off imagery again (C.0), on top of the training-range ceiling.
+- The mean-of-tiles variance ratio (26–29 for Method 6) is **not interpretable**. It is blown up by near-flat tiles where
+  var(true) ≈ 0. This was noticed after seeing results (post-hoc), so the pixel-pooled figure is the one reported.
+
+**Per-landscape stability (descriptive, as pre-registered).** Mean-of-tiles MAE over tiles with ≥ 100 px of the class.
+
+| | urban (building) | sparse (ground + low veg) | forested (tree) | spread |
+|---|---|---|---|---|
+| Method 6 s42 | 3.72 (2,492 tiles) | **1.29** (2,840) | 5.03 (2,789) | **3.74 m** |
+| Oracle | 3.87 | 3.45 | **4.69** | 1.24 m |
+
+Method 6 is much better on sparse ground, slightly better on buildings, and **worse on trees**. It is therefore
+**less stable across landscapes** than the oracle: a spread of 3.7 m vs. 1.2 m.
+
+**Context vs. DFC2019 (in-domain, same metric definitions).**
+- Method 6: DFC2019 1.980 / 3.492 / 0.745 / 0.656 → GAMUS 3.130 / 4.583 / 0.638 / 0.583.
+- The oracle: 3.392 / 4.579 / 0.582 / 0.509 → 3.474 / 4.426 / 0.491 / 0.425.
+- The margin over the oracle survives on MAE and on correlation. It disappears on RMSE.
+- **Post-hoc observation, not a claim:** most of the DFC2019 "beats the oracle on all four" came from in-domain
+  scale. With a per-tile scale fit (M6 + OLS, which needs local LiDAR), Method 6's ranking advantage would win on all four.

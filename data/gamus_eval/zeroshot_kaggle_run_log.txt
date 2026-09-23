@@ -1,0 +1,26 @@
+device cuda:0 Tesla T4
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  86%|████████▌ | 246/287 [00:00<00:00, 2447.56it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2529.92it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  90%|█████████ | 259/287 [00:00<00:00, 2588.90it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2822.14it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  90%|█████████ | 259/287 [00:00<00:00, 2577.15it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2601.30it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  87%|████████▋ | 249/287 [00:00<00:00, 2476.92it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2532.84it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  92%|█████████▏| 263/287 [00:00<00:00, 2624.21it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2657.56it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  91%|█████████ | 260/287 [00:00<00:00, 2567.47it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2631.48it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  91%|█████████ | 261/287 [00:00<00:00, 2599.89it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2618.42it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  92%|█████████▏| 263/287 [00:00<00:00, 2598.55it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2661.05it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  93%|█████████▎| 267/287 [00:00<00:00, 2669.78it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2705.17it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 5244.48it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  94%|█████████▍| 270/287 [00:00<00:00, 2684.76it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2743.29it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  86%|████████▋ | 248/287 [00:00<00:00, 2474.20it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2529.05it/s]
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights:  52%|█████▏    | 264/503 [00:00<00:00, 2635.73it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 2676.90it/s]
+51125 DFC2019 blocks
+test tiles 2861, skipped 2699, todo 162 (reverse order)
+/kaggle/input/datasets/sancharimouri/gamus-b-bundle/bundle/gamus_zeroshot_kaggle.py:246: DeprecationWarning: 'mode' parameter is deprecated and will be removed in Pillow 13 (2026-10-15)
+  d = torch.from_numpy(infer_dav2(Image.fromarray(rgb, "RGB"), proc, dav2, dev)).to(dev)
+25/162 tiles, 3.15 s/tile, ETA 0.12 h, GPU peak mem 10.8 GiB, queue 32
+50/162 tiles, 3.11 s/tile, ETA 0.10 h, GPU peak mem 10.8 GiB, queue 32
+75/162 tiles, 3.08 s/tile, ETA 0.07 h, GPU peak mem 10.8 GiB, queue 32
+100/162 tiles, 3.07 s/tile, ETA 0.05 h, GPU peak mem 10.8 GiB, queue 32
+125/162 tiles, 3.06 s/tile, ETA 0.03 h, GPU peak mem 10.8 GiB, queue 32
+150/162 tiles, 3.06 s/tile, ETA 0.01 h, GPU peak mem 10.8 GiB, queue 13
+DONE
