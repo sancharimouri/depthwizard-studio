@@ -98,6 +98,23 @@ if prev:
     import shutil; shutil.copy(prev[0], OUT); print("resuming from", prev[0])
 ```
 
+**Cell 5b: drop a partial last line.** Always run this after Cell 5. If the previous session died mid-write, its
+last line may be cut off, and resuming would crash on it.
+```python
+import json
+if os.path.exists(OUT):
+    good = []
+    for l in open(OUT).read().splitlines():
+        try:
+            json.loads(l); good.append(l)
+        except Exception:
+            print("dropped a partial line")
+    open(OUT, "w").write("\n".join(good) + ("\n" if good else ""))
+    print("tiles already done on Kaggle:", len(good))
+```
+Check: the next run's `skipped` count must equal len(`done_tiles.txt`) + this number. It was verified on
+2026-09-23: 102 + 1,611 = 1,713 skipped, 1,148 to do, 2,861 total.
+
 **Cell 6: run** (the long cell)
 ```python
 !python -u {BUNDLE}/gamus_zeroshot_kaggle.py --data {BUNDLE} --out {OUT} 2>&1 | tee -a {LOG}

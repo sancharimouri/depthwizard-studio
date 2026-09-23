@@ -264,3 +264,42 @@ motion is either one orchestrated moment or a response to user action.
   asset-generation process as-is, per the exception noted above.
 - When session usage crosses 90%, stop experimental work and update docs/HANDOFF.md and
   CLAUDE.md before anything else.
+
+## Kaggle GPU offload — reference pattern (user-endorsed 2026-09-23; reuse for any future export)
+
+When a long GPU job should run on Kaggle instead of this Mac, **copy this pattern**. The reference
+implementation is `kaggle/gamus_zeroshot_kaggle.py` + `kaggle/bundle/read.md` (Part B, GAMUS zero-shot). It ran
+3× faster than local (4.3–5.4 s/tile on a P100 vs. 15 s on MPS), survived a session interruption, and resumed
+with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
+
+1. **Self-contained script.**
+   - No repo imports: copy the model and scoring code verbatim and say so in the docstring.
+   - Pin the dependency versions that matter (`transformers==…`).
+2. **Parity check before shipping.**
+   - Run the Kaggle script locally with `--device cpu --only <item>` on an item the local run already scored.
+   - Diff every JSON field. The check covers structure too, not just the headline metrics.
+   - Record the max diff in `read.md`.
+3. **Ship weights, stream data.**
+   - The bundle holds only checkpoints and small precomputed artifacts (e.g. leakage hashes).
+   - The dataset is streamed from its source (HF) with retries and an optional `HF_TOKEN` Kaggle secret.
+   - The zip is stored uncompressed (`zip -0`); checkpoints are hard-linked into the staging folder, so no extra disk.
+4. **Split work, no coordination.**
+   - The local run goes **forward**; Kaggle goes **in reverse** and skips a `done_tiles.txt` snapshot.
+   - Merge by key, with the local copy winning. Assert full coverage exactly once.
+5. **Resumable by construction.**
+   - Append-only jsonl, flushed per item. On start, skip every key already in the output file.
+   - Notebook Cell 5 copies the previous version's output back from `/kaggle/input/**`.
+   - Cell 5b drops a partial last line.
+   - The `skipped` count must equal the done-list size plus the rows already written.
+6. **Full use of one GPU.**
+   - Assert CUDA, pin `cuda:0`, set `cudnn.benchmark`.
+   - **All numerics on the GPU in float64:** metrics, Spearman with tie-averaged ranks, closed-form OLS, masked
+     class/bin sums.
+   - The CPU does only downloads, decoding and hashing (`torch.set_num_threads(2)`).
+   - A prefetch thread pool feeds a bounded queue.
+   - The progress line prints s/item, ETA, GPU peak memory and **queue depth**: a full queue means GPU-bound
+     (good); near 0 means download-bound.
+7. **The `read.md` manual.** It gives exact names (dataset slug, notebook title), accelerator and Internet settings, and
+   numbered cells, with glob-based path discovery because `/kaggle/input` nesting varies. It covers commit mode
+   (Save & Run All), the expected log lines, and exactly which output files go where in the repo. It ends with a
+   troubleshooting table.
