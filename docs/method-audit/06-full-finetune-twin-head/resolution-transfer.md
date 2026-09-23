@@ -101,3 +101,103 @@ nohup chain: P 2/3/5 m → R 2/3/5 m → Phase 3 eval → Phase 4 analysis
 (`data/dfc2019/experiments/resolution_transfer/chain.log`).
 - Measured P-protocol fold time (2 m, fold 0): **98 s** ⇒ P grid ≈ 18 min; chain total estimate ≈ 2.8–3 h
   (R dominates), expected completion ≈ 03:30 IST.
+
+## 2026-09-24 — Phase 2 training record
+
+All 24 fold trainings completed (chain 00:45–03:46 IST): P 2/3/5 m ≈ 92–98 s/fold; R 2/3/5 m ≈ 794–814 s/fold.
+Own-GSD fold results are in `data/dfc2019/experiments/resolution_transfer/rt_{P,R}_{2,3,5}m_seed42/train_results.json`
+(checkpoints not committed, ~100 MB each). One incident: the Phase 4 analysis step crashed on a metric-key name
+(`compute_metrics` returns `mae_m`/`rmse_m`); fixed by renaming at load, re-run — no number changed (the 12,000 matrix
+records are the raw output of Phase 3).
+
+**Sanity anchors (reproduce known numbers under the new scoring):** native Method 6 at 0.3 m = **1.98 / 3.49 / 0.745 /
+0.656** (the adopted headline); recomputed oracle at 0.3 m = **3.39 / 4.58 / 0.582 / 0.509** (exactly §1.0's oracle).
+
+## 2026-09-24 — Phase 3: the full matrix (50 tiles; tile = mean of its 4 held-out quadrants; mean of tiles)
+
+Cell = MAE / RMSE / Pearson / Spearman (m, m, r, ρ). Rows = training GSD (native = 0.3 m); columns = evaluation GSD.
+95% tile-bootstrap CIs for every cell: `data/dfc2019/experiments/resolution_transfer/matrix_summary.json`.
+
+**Protocol P (pixel count shrinks — primary):**
+
+| train ↓ / eval → | 0.3 m | 1.2 m | 2 m | 2.4 m | 3 m | 5 m |
+|---|---|---|---|---|---|---|
+| native 0.3 | **1.98/3.49/0.745/0.656** | 3.79/5.79/0.187/0.174 | 4.08/5.89/0.078/0.063 | 4.19/5.94/0.047/0.037 | 4.24/5.96/0.046/0.051 | 4.29/5.91/0.020/0.022 |
+| P 2 m | 3.76/6.12/0.420/0.453 | 3.06/5.04/0.519/0.499 | *3.01/4.87/0.493/0.468* | 3.11/4.98/0.455/0.431 | 3.20/5.07/0.402/0.389 | 3.56/5.45/0.272/0.287 |
+| P 3 m | 3.95/6.37/0.203/0.252 | 3.46/5.68/0.392/0.403 | 3.28/5.31/0.422/0.421 | 3.27/5.25/0.415/0.410 | *3.26/5.18/0.406/0.399* | 3.61/5.49/0.292/0.299 |
+| P 5 m | 4.19/6.72/0.173/0.228 | 4.02/6.30/0.244/0.288 | 3.80/5.95/0.281/0.308 | 3.73/5.81/0.293/0.310 | 3.67/5.67/0.313/0.319 | *3.62/5.53/0.318/0.314* |
+| oracle (DAv2-L, per-tile OLS) | 3.39/4.58/0.582/0.509 | 3.46/4.65/0.566/0.495 | 3.50/4.73/0.538/0.472 | 3.53/4.78/0.521/0.461 | 3.64/4.91/0.485/0.433 | 3.82/5.16/0.387/0.352 |
+
+**Protocol R (resample-back: same 37×37 token grid, degraded content — secondary):**
+
+| train ↓ / eval → | 0.3 m | 1.2 m | 2 m | 2.4 m | 3 m | 5 m |
+|---|---|---|---|---|---|---|
+| native 0.3 | **1.98/3.49/0.745/0.656** | 2.12/3.76/0.707/0.629 | 2.45/4.26/0.625/0.579 | 2.57/4.41/0.601/0.561 | 2.80/4.72/0.544/0.514 | 3.52/5.54/0.321/0.323 |
+| R 2 m | 2.19/3.77/0.721/0.642 | 2.18/3.76/0.718/0.636 | *2.20/3.79/0.706/0.630* | 2.24/3.86/0.693/0.622 | 2.31/3.98/0.675/0.608 | 2.67/4.56/0.580/0.549 |
+| R 3 m | 2.26/3.89/0.708/0.630 | 2.23/3.85/0.705/0.626 | 2.25/3.86/0.696/0.622 | 2.26/3.88/0.689/0.617 | *2.29/3.92/0.678/0.609* | 2.51/4.26/0.618/0.572 |
+| R 5 m | 2.44/4.10/0.687/0.624 | 2.38/4.06/0.686/0.620 | 2.37/4.04/0.682/0.617 | 2.37/4.03/0.678/0.614 | 2.35/4.00/0.673/0.610 | *2.41/4.07/0.645/0.588* |
+| oracle | 3.39/4.58/0.582/0.509 | 3.47/4.67/0.561/0.490 | 3.53/4.77/0.531/0.468 | 3.53/4.79/0.509/0.452 | 3.65/4.94/0.481/0.430 | 3.85/5.21/0.379/0.350 |
+
+(*Italic* = self-consistency cell, the model at its own training GSD.)
+
+**Variance ratio.** The pre-registered mean-of-tiles var(pred)/var(true) is **not interpretable** here (cells of 3–640):
+near-flat quadrants (var(true) ≈ 0) blow it up — the same failure noted in 07. **Post-hoc**, the median-of-tiles ratio
+(rows as above; columns 0.3 / 1.2 / 2 / 2.4 / 3 / 5 m):
+P — native 0.80 0.03 0.02 0.02 0.01 0.00 · P2 1.40 0.87 0.52 0.38 0.26 0.17 · P3 0.75 0.85 0.63 0.62 0.47 0.34 ·
+P5 0.99 0.88 0.73 0.71 0.60 0.41 · oracle 0.24 0.21 0.23 0.24 0.20 0.09.
+R — native 0.80 0.62 0.48 0.45 0.38 0.29 · R2 0.81 0.75 0.73 0.69 0.62 0.39 · R3 0.81 0.81 0.73 0.72 0.68 0.56 ·
+R5 0.78 0.80 0.73 0.71 0.69 0.61 · oracle 0.24 0.20 0.22 0.19 0.15 0.08.
+(Under P the native model's output collapses to near-constant once the pixel count shrinks: median ratio ≤ 0.03.)
+
+## 2026-09-24 — Phase 4: pre-registered comparisons
+
+**1. "Coarse-to-fine transfer works" (at 0.3 m, beats the 0.3 m oracle on ≥ 3/4 metrics, non-overlapping CIs).**
+
+| model | MAE | RMSE | Pearson | Spearman | metrics won (CI-separated) | verdict |
+|---|---|---|---|---|---|---|
+| **P 2 m** | 3.76 vs 3.39 (worse) | 6.12 vs 4.58 (worse) | 0.420 vs 0.582 (worse) | 0.453 vs 0.509 (worse) | 0 | **FAILS** |
+| **P 3 m** | 3.95 (worse) | 6.37 (worse) | 0.203 (worse) | 0.252 (worse) | 0 | **FAILS** |
+| **P 5 m** | 4.19 (worse) | 6.72 (worse) | 0.173 (worse) | 0.228 (worse) | 0 | **FAILS** |
+| R 2 m | **2.19** (49/50 tiles) | 3.77 (CIs overlap; 43/50) | **0.721** (44/50) | **0.642** (44/50) | 3 | **WORKS** |
+| R 3 m | **2.26** (48/50) | 3.89 (overlap; 41/50) | **0.708** (45/50) | **0.630** (44/50) | 3 | **WORKS** |
+| R 5 m | **2.44** (44/50) | 4.10 (overlap; 38/50) | **0.687** (38/50) | **0.624** (42/50) | 3 | **WORKS** |
+
+All 24 per-metric Wilcoxon tests have Holm p ≤ 0.011 (in the direction shown).
+
+**2. Symmetry (g-trained evaluated at 0.3 m vs native evaluated at g; paired over 50 tiles; primary Pearson, Holm across g).**
+
+| g | P: coarse→fine vs fine→coarse Pearson (Δ [95% CI]) | P verdict | R: c→f vs f→c Pearson (Δ [CI]) | R verdict |
+|---|---|---|---|---|
+| 2 m | 0.420 vs 0.078 (+0.34 [0.29, 0.40]) | asymmetric, c→f better (p_Holm 9e-13) | 0.721 vs 0.625 (+0.10 [0.08, 0.12]) | asymmetric, c→f better (5e-13) |
+| 3 m | 0.203 vs 0.046 (+0.16 [0.11, 0.21]) | asymmetric, c→f better (1e-7) | 0.708 vs 0.544 (+0.17 [0.13, 0.20]) | asymmetric, c→f better (2e-13) |
+| 5 m | 0.173 vs 0.020 (+0.15 [0.11, 0.19]) | asymmetric, c→f better (6e-9) | 0.687 vs 0.321 (+0.37 [0.31, 0.43]) | asymmetric, c→f better (5e-14) |
+
+Under R, coarse-trained models are also better on MAE and RMSE in the c→f direction at every g (CIs exclude 0).
+Under P, c→f is better on MAE but **worse on RMSE** at 3 and 5 m (Δ RMSE +0.42 [0.27, 0.56] and +0.81 [0.66, 0.97]):
+both P directions are poor, and neither beats the oracle.
+
+**3. Dose-response (native-eval quality vs training GSD 0.3 → 2 → 3 → 5 m).**
+- **P:** Pearson 0.745 → 0.420 → 0.203 → 0.173; MAE 1.98 → 3.76 → 3.95 → 4.19. **Monotonic.** No step reaches 60% of the
+  total drop (the 0.3 → 2 m step is 57%), so by the pre-registered rule **no cliff** — but the shape is front-loaded:
+  most of the loss happens by 2 m (a 6×6 token grid).
+- **R:** Pearson 0.745 → 0.721 → 0.708 → 0.687; MAE 1.98 → 2.19 → 2.26 → 2.44. **Monotonic, gentle, no cliff** — a
+  7.7% total Pearson loss from 0.3 to 5 m training.
+
+### Reading (what the pre-registered results say)
+
+- **With the prompt's protocol (P: coarse imagery at its true pixel count), coarse-to-fine transfer fails at every
+  GSD tested** — none of the 2/3/5 m models beats the 0.3 m oracle on a single metric. The native model evaluated on
+  coarse P input collapses entirely (Pearson ≤ 0.19, near-constant output). So under P both directions fail; c→f is
+  the less bad one on correlation.
+- **With the same content degradation but the token grid held at 37×37 (R), coarse-to-fine transfer works at
+  2, 3 and 5 m** (3/4 metrics vs the oracle; RMSE better on the mean but CI-overlapping), and it is **strongly
+  asymmetric in favour of coarse→fine**: a model trained on 5 m-content imagery loses only 0.058 Pearson on sharp
+  0.3 m input, while the native model loses 0.424 on 5 m-content input. The R5 model is nearly flat across evaluation
+  GSDs (Pearson 0.687 → 0.645 from 0.3 to 5 m).
+- **The P-vs-R contrast is the main finding:** at this scene size (153.6 m), what kills the P models is the **pixel
+  / token count** (6×6 → 3×3 tokens), not the loss of ground detail — R shows the height signal in 5 m-content
+  imagery is still learnable and transfers to fine imagery.
+- **Limits:** synthetic degradation of one VHR sensor (WorldView-3, JAX; no real 2–5 m sensor, MTF, atmosphere or
+  view-geometry differences); 50 tiles in one city; one seed per cell; scene extent fixed at 153.6 m, so "5 m" here is
+  31 px of content. **This does not show that real 10 m Sentinel-2 imagery supports Method 6-style height estimation**;
+  it shows the architecture can learn and transfer from coarse-content inputs when given enough tokens.

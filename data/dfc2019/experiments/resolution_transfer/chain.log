@@ -1,0 +1,295 @@
+=== train P 2 m start Thu Sep 24 00:45:13 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[rt_P_2m_seed42] device=mps gsd=2.0 proto=P n_px=77
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8478.59it/s]
+[rt_P_2m_seed42] fold0 epoch 01/12: loss=8.3037 (14s)
+[rt_P_2m_seed42] fold0 epoch 03/12: loss=4.1194 (29s)
+[rt_P_2m_seed42] fold0 epoch 06/12: loss=3.0573 (51s)
+[rt_P_2m_seed42] fold0 epoch 09/12: loss=2.3981 (73s)
+[rt_P_2m_seed42] fold0 epoch 12/12: loss=2.1044 (96s)
+[rt_P_2m_seed42] fold0 DONE in 97.9s. own-GSD metrics={'mae_m': 2.955166028884343, 'rmse_m': 4.861238165525844, 'pearson': 0.49375326660527713, 'spearman': 0.46712858798750345, 'n_tiles': 50}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 25669.37it/s]
+[rt_P_2m_seed42] fold1 epoch 01/12: loss=7.8258 (11s)
+[rt_P_2m_seed42] fold1 epoch 03/12: loss=4.6170 (26s)
+[rt_P_2m_seed42] fold1 epoch 06/12: loss=3.4056 (49s)
+[rt_P_2m_seed42] fold1 epoch 09/12: loss=2.3571 (72s)
+[rt_P_2m_seed42] fold1 epoch 12/12: loss=2.0667 (94s)
+[rt_P_2m_seed42] fold1 DONE in 96.4s. own-GSD metrics={'mae_m': 3.0718557644849933, 'rmse_m': 5.071572324199902, 'pearson': 0.4710752198256511, 'spearman': 0.4431784634755661, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 26522.83it/s]
+[rt_P_2m_seed42] fold2 epoch 01/12: loss=7.6149 (11s)
+[rt_P_2m_seed42] fold2 epoch 03/12: loss=4.4479 (26s)
+[rt_P_2m_seed42] fold2 epoch 06/12: loss=3.4334 (48s)
+[rt_P_2m_seed42] fold2 epoch 09/12: loss=2.8887 (71s)
+[rt_P_2m_seed42] fold2 epoch 12/12: loss=2.1608 (93s)
+[rt_P_2m_seed42] fold2 DONE in 95.4s. own-GSD metrics={'mae_m': 3.0991100249358023, 'rmse_m': 4.963414661062145, 'pearson': 0.46493277650575626, 'spearman': 0.4560485350968324, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 26349.24it/s]
+[rt_P_2m_seed42] fold3 epoch 01/12: loss=8.6824 (11s)
+[rt_P_2m_seed42] fold3 epoch 03/12: loss=4.4459 (26s)
+[rt_P_2m_seed42] fold3 epoch 06/12: loss=3.2931 (48s)
+[rt_P_2m_seed42] fold3 epoch 09/12: loss=2.5781 (71s)
+[rt_P_2m_seed42] fold3 epoch 12/12: loss=2.1830 (93s)
+[rt_P_2m_seed42] fold3 DONE in 95.5s. own-GSD metrics={'mae_m': 2.8942880689430086, 'rmse_m': 4.585103726004508, 'pearson': 0.5439349740920099, 'spearman': 0.5074994579037008, 'n_tiles': 50}
+=== train P 3 m start Thu Sep 24 00:51:44 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[rt_P_3m_seed42] device=mps gsd=3.0 proto=P n_px=51
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 19968.24it/s]
+[rt_P_3m_seed42] fold0 epoch 01/12: loss=7.9001 (11s)
+[rt_P_3m_seed42] fold0 epoch 03/12: loss=4.2751 (25s)
+[rt_P_3m_seed42] fold0 epoch 06/12: loss=3.5972 (47s)
+[rt_P_3m_seed42] fold0 epoch 09/12: loss=2.7916 (69s)
+[rt_P_3m_seed42] fold0 epoch 12/12: loss=2.4233 (92s)
+[rt_P_3m_seed42] fold0 DONE in 93.7s. own-GSD metrics={'mae_m': 3.0846430561630296, 'rmse_m': 4.990086899987749, 'pearson': 0.40701705351906076, 'spearman': 0.40417379612027626, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23691.50it/s]
+[rt_P_3m_seed42] fold1 epoch 01/12: loss=7.3552 (8s)
+[rt_P_3m_seed42] fold1 epoch 03/12: loss=4.4100 (23s)
+[rt_P_3m_seed42] fold1 epoch 06/12: loss=3.2874 (45s)
+[rt_P_3m_seed42] fold1 epoch 09/12: loss=2.5351 (67s)
+[rt_P_3m_seed42] fold1 epoch 12/12: loss=2.2368 (90s)
+[rt_P_3m_seed42] fold1 DONE in 91.7s. own-GSD metrics={'mae_m': 3.3691030796179553, 'rmse_m': 5.43536020279158, 'pearson': 0.41282802540074326, 'spearman': 0.4010988655768367, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21918.12it/s]
+[rt_P_3m_seed42] fold2 epoch 01/12: loss=7.2862 (9s)
+[rt_P_3m_seed42] fold2 epoch 03/12: loss=4.2902 (23s)
+[rt_P_3m_seed42] fold2 epoch 06/12: loss=3.4461 (45s)
+[rt_P_3m_seed42] fold2 epoch 09/12: loss=2.7207 (68s)
+[rt_P_3m_seed42] fold2 epoch 12/12: loss=2.2283 (90s)
+[rt_P_3m_seed42] fold2 DONE in 91.9s. own-GSD metrics={'mae_m': 3.339196560242599, 'rmse_m': 5.2538248408941355, 'pearson': 0.3790094211441098, 'spearman': 0.3755022010027699, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 28195.19it/s]
+[rt_P_3m_seed42] fold3 epoch 01/12: loss=8.2937 (8s)
+[rt_P_3m_seed42] fold3 epoch 03/12: loss=4.3612 (23s)
+[rt_P_3m_seed42] fold3 epoch 06/12: loss=3.2362 (45s)
+[rt_P_3m_seed42] fold3 epoch 09/12: loss=2.7086 (68s)
+[rt_P_3m_seed42] fold3 epoch 12/12: loss=2.3872 (90s)
+[rt_P_3m_seed42] fold3 DONE in 92.1s. own-GSD metrics={'mae_m': 3.2644116545049595, 'rmse_m': 5.0459850185670225, 'pearson': 0.42498880985769416, 'spearman': 0.41336033017418805, 'n_tiles': 50}
+=== train P 5 m start Thu Sep 24 00:58:00 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[rt_P_5m_seed42] device=mps gsd=5.0 proto=P n_px=31
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21346.00it/s]
+[rt_P_5m_seed42] fold0 epoch 01/12: loss=7.7622 (10s)
+[rt_P_5m_seed42] fold0 epoch 03/12: loss=4.4724 (25s)
+[rt_P_5m_seed42] fold0 epoch 06/12: loss=3.7281 (47s)
+[rt_P_5m_seed42] fold0 epoch 09/12: loss=3.1756 (69s)
+[rt_P_5m_seed42] fold0 epoch 12/12: loss=2.8846 (92s)
+[rt_P_5m_seed42] fold0 DONE in 93.8s. own-GSD metrics={'mae_m': 3.5582717493682736, 'rmse_m': 5.50579738868988, 'pearson': 0.29064220875404906, 'spearman': 0.31098973624581205, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 25488.38it/s]
+[rt_P_5m_seed42] fold1 epoch 01/12: loss=7.4834 (9s)
+[rt_P_5m_seed42] fold1 epoch 03/12: loss=4.6752 (23s)
+[rt_P_5m_seed42] fold1 epoch 06/12: loss=3.6951 (45s)
+[rt_P_5m_seed42] fold1 epoch 09/12: loss=2.8656 (68s)
+[rt_P_5m_seed42] fold1 epoch 12/12: loss=2.6684 (90s)
+[rt_P_5m_seed42] fold1 DONE in 92.2s. own-GSD metrics={'mae_m': 3.698653877649195, 'rmse_m': 5.734559041579089, 'pearson': 0.3265390585174493, 'spearman': 0.31325429186413895, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 26875.76it/s]
+[rt_P_5m_seed42] fold2 epoch 01/12: loss=7.4310 (9s)
+[rt_P_5m_seed42] fold2 epoch 03/12: loss=4.6593 (23s)
+[rt_P_5m_seed42] fold2 epoch 06/12: loss=3.7794 (46s)
+[rt_P_5m_seed42] fold2 epoch 09/12: loss=3.0884 (68s)
+[rt_P_5m_seed42] fold2 epoch 12/12: loss=2.6769 (90s)
+[rt_P_5m_seed42] fold2 DONE in 92.3s. own-GSD metrics={'mae_m': 3.6622039344550603, 'rmse_m': 5.510672523855858, 'pearson': 0.283532858333604, 'spearman': 0.2875600552736467, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21645.39it/s]
+[rt_P_5m_seed42] fold3 epoch 01/12: loss=8.2923 (8s)
+[rt_P_5m_seed42] fold3 epoch 03/12: loss=4.7286 (23s)
+[rt_P_5m_seed42] fold3 epoch 06/12: loss=3.6402 (45s)
+[rt_P_5m_seed42] fold3 epoch 09/12: loss=2.9329 (68s)
+[rt_P_5m_seed42] fold3 epoch 12/12: loss=2.7801 (90s)
+[rt_P_5m_seed42] fold3 DONE in 92.3s. own-GSD metrics={'mae_m': 3.567158534672735, 'rmse_m': 5.356188908727936, 'pearson': 0.37124049347604327, 'spearman': 0.3447250468748689, 'n_tiles': 50}
+=== train R 2 m start Thu Sep 24 01:04:16 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[rt_R_2m_seed42] device=mps gsd=2.0 proto=R n_px=77
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20660.89it/s]
+[rt_R_2m_seed42] fold0 epoch 01/12: loss=7.8200 (54s)
+[rt_R_2m_seed42] fold0 epoch 03/12: loss=3.4953 (189s)
+[rt_R_2m_seed42] fold0 epoch 06/12: loss=2.6703 (390s)
+[rt_R_2m_seed42] fold0 epoch 09/12: loss=2.1078 (588s)
+[rt_R_2m_seed42] fold0 epoch 12/12: loss=1.8539 (787s)
+[rt_R_2m_seed42] fold0 DONE in 793.7s. own-GSD metrics={'mae_m': 2.0516807619498967, 'rmse_m': 3.7125676132265646, 'pearson': 0.7167024589148678, 'spearman': 0.6333893987332637, 'n_tiles': 50}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7342.81it/s]
+[rt_R_2m_seed42] fold1 epoch 01/12: loss=7.1385 (68s)
+[rt_R_2m_seed42] fold1 epoch 03/12: loss=3.6666 (201s)
+[rt_R_2m_seed42] fold1 epoch 06/12: loss=2.6572 (404s)
+[rt_R_2m_seed42] fold1 epoch 09/12: loss=1.9932 (606s)
+[rt_R_2m_seed42] fold1 epoch 12/12: loss=1.6379 (807s)
+[rt_R_2m_seed42] fold1 DONE in 813.3s. own-GSD metrics={'mae_m': 2.349091984564548, 'rmse_m': 3.9879259074102498, 'pearson': 0.6915481661458095, 'spearman': 0.616215818570517, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7223.01it/s]
+[rt_R_2m_seed42] fold2 epoch 01/12: loss=6.9304 (69s)
+[rt_R_2m_seed42] fold2 epoch 03/12: loss=3.6925 (202s)
+[rt_R_2m_seed42] fold2 epoch 06/12: loss=2.5409 (403s)
+[rt_R_2m_seed42] fold2 epoch 09/12: loss=2.0590 (606s)
+[rt_R_2m_seed42] fold2 epoch 12/12: loss=1.5847 (807s)
+[rt_R_2m_seed42] fold2 DONE in 814.0s. own-GSD metrics={'mae_m': 2.2163546485031715, 'rmse_m': 3.8120595612890007, 'pearson': 0.6798110919602608, 'spearman': 0.6053850764369146, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7217.73it/s]
+[rt_R_2m_seed42] fold3 epoch 01/12: loss=7.7388 (68s)
+[rt_R_2m_seed42] fold3 epoch 03/12: loss=3.5605 (202s)
+[rt_R_2m_seed42] fold3 epoch 06/12: loss=2.6708 (402s)
+[rt_R_2m_seed42] fold3 epoch 09/12: loss=2.1465 (604s)
+[rt_R_2m_seed42] fold3 epoch 12/12: loss=1.7883 (805s)
+[rt_R_2m_seed42] fold3 DONE in 811.9s. own-GSD metrics={'mae_m': 2.1650708511214605, 'rmse_m': 3.659640476759366, 'pearson': 0.7377021381346834, 'spearman': 0.6639550197163673, 'n_tiles': 50}
+=== train R 3 m start Thu Sep 24 01:58:15 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[rt_R_3m_seed42] device=mps gsd=3.0 proto=R n_px=51
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20772.84it/s]
+[rt_R_3m_seed42] fold0 epoch 01/12: loss=8.4817 (68s)
+[rt_R_3m_seed42] fold0 epoch 03/12: loss=3.5391 (202s)
+[rt_R_3m_seed42] fold0 epoch 06/12: loss=2.8172 (402s)
+[rt_R_3m_seed42] fold0 epoch 09/12: loss=2.2621 (602s)
+[rt_R_3m_seed42] fold0 epoch 12/12: loss=1.9541 (804s)
+[rt_R_3m_seed42] fold0 DONE in 810.7s. own-GSD metrics={'mae_m': 2.0892797257028413, 'rmse_m': 3.7000668412641473, 'pearson': 0.7064679199650157, 'spearman': 0.6241400728435034, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20314.66it/s]
+[rt_R_3m_seed42] fold1 epoch 01/12: loss=8.0841 (67s)
+[rt_R_3m_seed42] fold1 epoch 03/12: loss=3.8458 (201s)
+[rt_R_3m_seed42] fold1 epoch 06/12: loss=2.8018 (401s)
+[rt_R_3m_seed42] fold1 epoch 09/12: loss=2.1691 (601s)
+[rt_R_3m_seed42] fold1 epoch 12/12: loss=1.8174 (802s)
+[rt_R_3m_seed42] fold1 DONE in 808.7s. own-GSD metrics={'mae_m': 2.438242473597234, 'rmse_m': 4.1797882431403055, 'pearson': 0.645388667057193, 'spearman': 0.5893022899088893, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 6947.66it/s]
+[rt_R_3m_seed42] fold2 epoch 01/12: loss=7.6842 (67s)
+[rt_R_3m_seed42] fold2 epoch 03/12: loss=3.7619 (201s)
+[rt_R_3m_seed42] fold2 epoch 06/12: loss=2.7474 (401s)
+[rt_R_3m_seed42] fold2 epoch 09/12: loss=2.3518 (601s)
+[rt_R_3m_seed42] fold2 epoch 12/12: loss=1.7641 (802s)
+[rt_R_3m_seed42] fold2 DONE in 808.7s. own-GSD metrics={'mae_m': 2.348246929883388, 'rmse_m': 3.971980410702807, 'pearson': 0.6450874515229356, 'spearman': 0.5786009741187734, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7297.18it/s]
+[rt_R_3m_seed42] fold3 epoch 01/12: loss=8.5424 (69s)
+[rt_R_3m_seed42] fold3 epoch 03/12: loss=3.8630 (201s)
+[rt_R_3m_seed42] fold3 epoch 06/12: loss=2.8837 (402s)
+[rt_R_3m_seed42] fold3 epoch 09/12: loss=2.3256 (602s)
+[rt_R_3m_seed42] fold3 epoch 12/12: loss=1.9415 (802s)
+[rt_R_3m_seed42] fold3 DONE in 808.6s. own-GSD metrics={'mae_m': 2.2643185402918395, 'rmse_m': 3.8224495079324448, 'pearson': 0.7146618000306668, 'spearman': 0.6430231339312877, 'n_tiles': 50}
+=== train R 5 m start Thu Sep 24 02:52:18 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[rt_R_5m_seed42] device=mps gsd=5.0 proto=R n_px=31
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7913.26it/s]
+[rt_R_5m_seed42] fold0 epoch 01/12: loss=9.3886 (68s)
+[rt_R_5m_seed42] fold0 epoch 03/12: loss=3.8329 (200s)
+[rt_R_5m_seed42] fold0 epoch 06/12: loss=3.0481 (399s)
+[rt_R_5m_seed42] fold0 epoch 09/12: loss=2.4187 (599s)
+[rt_R_5m_seed42] fold0 epoch 12/12: loss=2.0891 (798s)
+[rt_R_5m_seed42] fold0 DONE in 805.1s. own-GSD metrics={'mae_m': 2.189805705922698, 'rmse_m': 3.8322897789938617, 'pearson': 0.661470908795934, 'spearman': 0.5849940459035564, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22385.22it/s]
+[rt_R_5m_seed42] fold1 epoch 01/12: loss=9.2188 (67s)
+[rt_R_5m_seed42] fold1 epoch 03/12: loss=4.1441 (200s)
+[rt_R_5m_seed42] fold1 epoch 06/12: loss=2.9353 (401s)
+[rt_R_5m_seed42] fold1 epoch 09/12: loss=2.2021 (601s)
+[rt_R_5m_seed42] fold1 epoch 12/12: loss=1.9532 (801s)
+[rt_R_5m_seed42] fold1 DONE in 807.9s. own-GSD metrics={'mae_m': 2.557446749530113, 'rmse_m': 4.330775598367665, 'pearson': 0.6156755136639788, 'spearman': 0.5669708964199373, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7188.12it/s]
+[rt_R_5m_seed42] fold2 epoch 01/12: loss=8.8697 (67s)
+[rt_R_5m_seed42] fold2 epoch 03/12: loss=4.0066 (200s)
+[rt_R_5m_seed42] fold2 epoch 06/12: loss=2.8800 (399s)
+[rt_R_5m_seed42] fold2 epoch 09/12: loss=2.4044 (599s)
+[rt_R_5m_seed42] fold2 epoch 12/12: loss=1.8994 (798s)
+[rt_R_5m_seed42] fold2 DONE in 805.0s. own-GSD metrics={'mae_m': 2.4500141952746914, 'rmse_m': 4.140709851932588, 'pearson': 0.6211640254656833, 'spearman': 0.5707246342616084, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7245.84it/s]
+[rt_R_5m_seed42] fold3 epoch 01/12: loss=9.3407 (67s)
+[rt_R_5m_seed42] fold3 epoch 03/12: loss=3.9486 (199s)
+[rt_R_5m_seed42] fold3 epoch 06/12: loss=2.8871 (399s)
+[rt_R_5m_seed42] fold3 epoch 09/12: loss=2.4740 (601s)
+[rt_R_5m_seed42] fold3 epoch 12/12: loss=2.0829 (801s)
+[rt_R_5m_seed42] fold3 DONE in 807.7s. own-GSD metrics={'mae_m': 2.427729552898833, 'rmse_m': 3.9771761450160574, 'pearson': 0.6811240581131588, 'spearman': 0.6300801029189739, 'n_tiles': 50}
+=== eval start Thu Sep 24 03:46:11 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7755.92it/s]
+eval native fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 17595.56it/s]
+eval native fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 18625.49it/s]
+eval native fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 16837.76it/s]
+eval native fold3 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 17034.57it/s]
+eval P2 fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21622.84it/s]
+eval P2 fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 16853.79it/s]
+eval P2 fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 18791.22it/s]
+eval P2 fold3 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 17169.18it/s]
+eval R2 fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23827.50it/s]
+eval R2 fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 27286.98it/s]
+eval R2 fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 19612.64it/s]
+eval R2 fold3 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 16526.61it/s]
+eval P3 fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 17215.58it/s]
+eval P3 fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20936.87it/s]
+eval P3 fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 18598.72it/s]
+eval P3 fold3 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 19196.97it/s]
+eval R3 fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20953.27it/s]
+eval R3 fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 16902.30it/s]
+eval R3 fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21575.56it/s]
+eval R3 fold3 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 30229.41it/s]
+eval P5 fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 16293.74it/s]
+eval P5 fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 24910.81it/s]
+eval P5 fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 19670.97it/s]
+eval P5 fold3 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 24709.35it/s]
+eval R5 fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21179.63it/s]
+eval R5 fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 16032.46it/s]
+eval R5 fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 17577.32it/s]
+eval R5 fold3 done
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 6750.85it/s]
+oracle P 0.3 m done
+oracle P 1.2 m done
+oracle P 2.0 m done
+oracle P 2.4 m done
+oracle P 3.0 m done
+oracle P 5.0 m done
+oracle R 0.3 m done
+oracle R 1.2 m done
+oracle R 2.0 m done
+oracle R 2.4 m done
+oracle R 3.0 m done
+oracle R 5.0 m done
+=== analyze start Thu Sep 24 04:11:54 IST 2026
+Traceback (most recent call last):
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/method6_resolution_transfer.py", line 421, in <module>
+    main()
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/method6_resolution_transfer.py", line 417, in main
+    analyze(args)
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/method6_resolution_transfer.py", line 335, in analyze
+    S["matrix"][f"{name}|{pr}|{e:g}"] = {m: {"mean": float(np.nanmean(tile_vec(key, m))), "ci95": boot(tile_vec(key, m))}
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/method6_resolution_transfer.py", line 335, in <dictcomp>
+    S["matrix"][f"{name}|{pr}|{e:g}"] = {m: {"mean": float(np.nanmean(tile_vec(key, m))), "ci95": boot(tile_vec(key, m))}
+                                                                      ^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/method6_resolution_transfer.py", line 318, in tile_vec
+    return np.array([np.nanmean([x[m] if x[m] is not None else np.nan for x in T[key][t]]) for t in tiles])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/method6_resolution_transfer.py", line 318, in <listcomp>
+    return np.array([np.nanmean([x[m] if x[m] is not None else np.nan for x in T[key][t]]) for t in tiles])
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/method6_resolution_transfer.py", line 318, in <listcomp>
+    return np.array([np.nanmean([x[m] if x[m] is not None else np.nan for x in T[key][t]]) for t in tiles])
+                                         ~^^^
+KeyError: 'mae'
+!!! analyze FAILED
+=== CHAIN DONE Thu Sep 24 04:11:56 IST 2026

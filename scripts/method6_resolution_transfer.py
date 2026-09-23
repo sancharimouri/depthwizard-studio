@@ -306,6 +306,8 @@ def evaluate(args):
 def analyze(args):
     from scipy.stats import wilcoxon
     recs = [json.loads(l) for l in (OUT / "matrix_tiles.jsonl").read_text().splitlines()]
+    for r in recs:  # compute_metrics names MAE/RMSE mae_m/rmse_m
+        r["mae"], r["rmse"] = r.pop("mae_m"), r.pop("rmse_m")
     import collections
     T = collections.defaultdict(lambda: collections.defaultdict(list))  # (model,proto,e) -> tile -> [quadrant metrics]
     for r in recs:
