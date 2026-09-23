@@ -208,3 +208,35 @@ both P directions are poor, and neither beats the oracle.
 with an 8 m evaluation column for every model and 8 m rows; the oracle is computed at 8 m. The pre-registered
 dose-response rule stays on 0.3 → 5 m; 8 m is reported as an extended curve (descriptive). Estimate ≈ 6 min (P) +
 54 min (R) + ≈ 20 min eval ⇒ ≈ 80 min. Chain: `data/dfc2019/experiments/resolution_transfer/run_chain8.sh`.
+
+## 2026-09-24 — Phase 5 result (optional, 8 m; descriptive extension)
+
+Training: P 8 m 92–96 s/fold, R 8 m 778–807 s/fold (chain 04:14–05:23 IST, `chain8.log`). The matrix now also has
+an 8 m evaluation column (every model) and 8 m rows; `matrix_summary.json` was regenerated including 8 m.
+**Bookkeeping:** the regenerated JSON applies Holm across 4 GSDs (2/3/5/8); the Phase 4 section above keeps the
+pre-registered 3-GSD values from the first analysis run. No 2/3/5 m verdict changes (re-checked: P2/P3/P5 fail,
+R2/R3/R5 work, all asymmetric c→f better).
+
+| cell | P protocol (MAE/RMSE/r/ρ) | R protocol |
+|---|---|---|
+| 8 m-trained, eval 0.3 m | 4.64/6.98/0.172/0.209 | 3.06/4.65/**0.631**/0.585 |
+| 8 m-trained, eval 8 m (self) | 3.84/5.72/0.219/0.222 | 2.78/4.53/**0.557**/0.520 |
+| native, eval 8 m | 4.29/5.85/−0.031/−0.019 | 4.01/5.99/0.169/0.166 |
+| 5 m-trained, eval 8 m | 3.76/5.65/0.208/0.227 | 2.75/4.61/0.549/0.518 |
+| oracle, eval 0.3 m / 8 m | 3.39/4.58/0.582/0.509 · 3.97/5.35/0.214/0.207 | same at 0.3 m · 4.01/5.40/0.227/0.218 |
+
+- **Rule 1 at 8 m (descriptive):** P8 fails (0/4). **R8 also fails (0/4 CI-separated):** better than the oracle on the
+  mean for MAE (3.06 vs 3.39, 33/50 tiles), Pearson (0.631 vs 0.582, 26/50) and Spearman (0.585 vs 0.509, 37/50), but no
+  CI separation; RMSE ≈ equal (24/50).
+- **Symmetry at 8 m:** asymmetric, c→f better in both protocols (R: 0.631 vs 0.169, Δ +0.46 [0.40, 0.53]).
+- **Extended dose-response (native-eval Pearson; training 0.3 / 2 / 3 / 5 / 8 m):**
+  P 0.745 / 0.420 / 0.203 / 0.173 / 0.172 (MAE 1.98 / 3.76 / 3.95 / 4.19 / 4.64);
+  R 0.745 / 0.721 / 0.708 / 0.687 / **0.631** (MAE 1.98 / 2.19 / 2.26 / 2.44 / **3.06**).
+  Under R the 5 → 8 m step (−0.056 Pearson, +0.63 m MAE) is the largest single step — about half of the whole
+  0.3 → 8 m Pearson loss — i.e. **the R curve starts to bend between 5 and 8 m** (descriptive; the pre-registered cliff
+  rule applies to 0.3 → 5 m only, where there is none).
+- **Reading, with the same limits as Phase 4:** under the token-preserving protocol the synthetic 8 m model still
+  carries a real height signal (0.557 at its own GSD vs 0.227 for the oracle and 0.169 for the native model), but it no
+  longer clears the oracle bar at native resolution, and quality degrades faster beyond 5 m. That is where "the real
+  cliff" starts to show in this synthetic setting — still short of Sentinel-2's 10 m, and still WorldView-3 content,
+  one city, one seed.
