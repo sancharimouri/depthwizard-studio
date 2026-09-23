@@ -1,0 +1,120 @@
+*** Earth Engine *** Share your feedback by taking our Annual Developer Satisfaction Survey: https://google.qualtrics.com/jfe/form/SV_9oS0DRcPvElRMNw?source=python
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22343.26it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22437.79it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 18716.42it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 15338.50it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 14969.78it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 17592.22it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21303.69it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 25295.56it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 24357.36it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 25333.36it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20384.83it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23039.45it/s]
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/ee/deprecation.py:215: DeprecationWarning: 
+
+Attention required for COPERNICUS/DEM/GLO30! You are using a deprecated asset.
+To make sure your code keeps working, please update it.
+This dataset has been superseded by COPERNICUS/DEM/GLO30_2024_1
+
+Learn more: https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_DEM_GLO30
+
+  warnings.warn(warning, category=DeprecationWarning)
+olympic_wa_w0 {"ndsm_0.3": {"n": 90000, "rmse": 30.912203569745323, "brmse": 12.282464410135303, "mae": 28.397359361627657, "bias": -28.367329757154362, "medae": 30.18496584892273, "pearson": 0.4315369704649851, "spearman": 0.43814042545225096, "var_ratio": 0.046467813697410446, "p95_pred": 11.653035831451417, "p95_ref": 53.849998474121094, "p99_pred": 13.432531862258909, "p99_ref": 60.10019847869862}} {'srtm': (16.55, 18.59), 'glo30': (17.08, 21.28), 'fabdem': (20.31, 15.12)}
+olympic_wa_w1 {"ndsm_0.3": {"n": 90000, "rmse": 19.977364791407243, "brmse": 13.420811007950967, "mae": 14.937805234450764, "bias": -14.797869302633405, "medae": 9.702049612998962, "pearson": 0.37815964133266894, "spearman": 0.41858432214839164, "var_ratio": 0.0405380788203293, "p95_pred": 10.356597089767456, "p95_ref": 49.75, "p99_pred": 12.066929111480713, "p99_ref": 58.39999771118164}} {'srtm': (13.19, 13.13), 'glo30': (11.0, 12.33), 'fabdem': (18.74, 14.44)}
+tahoe_ca_w0 {"ndsm_0.3": {"n": 90000, "rmse": 15.784480972953407, "brmse": 9.122505287542248, "mae": 13.225087130512732, "bias": -12.881371699640217, "medae": 13.107049822807312, "pearson": 0.5031905599093975, "spearman": 0.5431741905522827, "var_ratio": 0.06618633119375764, "p95_pred": 8.441999816894532, "p95_ref": 32.0, "p99_pred": 10.963678617477417, "p99_ref": 36.439998626708984}} {'srtm': (7.61, 9.61), 'glo30': (5.71, 7.13), 'fabdem': (9.13, 6.27)}
+rasterio._err.CPLE_AppDefinedError: TIFFFillTile:Read error at row 4294967295, col 4294967295, tile 60; got 0 bytes, expected 358712
+
+The above exception was the direct cause of the following exception:
+
+rasterio._err.CPLE_AppDefinedError: TIFFReadEncodedTile() failed.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "rasterio/_warp.pyx", line 638, in rasterio._warp._reproject
+  File "rasterio/_warp.pyx", line 638, in rasterio._warp._reproject
+  File "rasterio/_warp.pyx", line 646, in rasterio._warp._reproject
+  File "rasterio/_err.pyx", line 325, in rasterio._err.StackChecker.exc_wrap_int
+rasterio._err.CPLE_AppDefinedError: wmbMUPuTjNtr7PKZVH2qKnveU%3D, band 1: IReadBlock failed at X offset 6, Y offset 6: TIFFReadEncodedTile() failed.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/forest_mountain_3dep_eval.py", line 322, in <module>
+    {"select": select, "run": run, "stats": stats}[sys.argv[1]]()
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/forest_mountain_3dep_eval.py", line 232, in run
+    ref[col] = read_on_grid(s, T2, (n, n))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/forest_mountain_3dep_eval.py", line 64, in read_on_grid
+    reproject(rasterio.band(src, 1), out, src_transform=src.transform, src_crs=src.crs, dst_transform=T,
+  File "/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/env.py", line 410, in wrapper
+    return f(*args, **kwds)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/warp.py", line 387, in reproject
+    dest = _reproject(
+           ^^^^^^^^^^^
+  File "rasterio/_warp.pyx", line 649, in rasterio._warp._reproject
+rasterio.errors.WarpOperationError: Chunk and warp failed
+*** Earth Engine *** Share your feedback by taking our Annual Developer Satisfaction Survey: https://google.qualtrics.com/jfe/form/SV_9oS0DRcPvElRMNw?source=python
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 6671.94it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 17412.06it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 15626.62it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 16527.52it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 18112.08it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22541.15it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 19764.31it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20799.76it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 24494.65it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23547.37it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22692.86it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22455.37it/s]
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/ee/deprecation.py:215: DeprecationWarning: 
+
+Attention required for COPERNICUS/DEM/GLO30! You are using a deprecated asset.
+To make sure your code keeps working, please update it.
+This dataset has been superseded by COPERNICUS/DEM/GLO30_2024_1
+
+Learn more: https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_DEM_GLO30
+
+  warnings.warn(warning, category=DeprecationWarning)
+tahoe_ca_w1 {"ndsm_0.3": {"n": 90000, "rmse": 18.811072652367535, "brmse": 8.62750419420863, "mae": 16.92020505575966, "bias": -16.715939270994088, "medae": 17.856086254119873, "pearson": 0.5419152373454055, "spearman": 0.5211985902530804, "var_ratio": 0.0804734889415365, "p95_pred": 9.95141911506653, "p95_ref": 35.27000045776367, "p99_pred": 12.145540103912353, "p99_ref": 39.84010017395014}} {'srtm': (10.24, 13.54), 'glo30': (8.25, 11.49), 'fabdem': (8.81, 6.72)}
+grsm_tn_w0 {"ndsm_0.3": {"n": 90000, "rmse": 21.91042060475981, "brmse": 7.4276281507725885, "mae": 20.613061830909714, "bias": -20.613026733872296, "medae": 19.876048147678375, "pearson": 0.13917721405987005, "spearman": -0.023366052992029075, "var_ratio": 0.20916961598701775, "p95_pred": 10.173727750778198, "p95_ref": 34.41999816894531, "p99_pred": 12.607182903289784, "p99_ref": 38.09000015258789}} {'srtm': (7.94, 9.9), 'glo30': (10.05, 12.31), 'fabdem': (7.95, 8.54)}
+grsm_tn_w1 {"ndsm_0.3": {"n": 90000, "rmse": 23.722359349052567, "brmse": 5.669152358654061, "mae": 23.040150020884806, "bias": -23.034996084652345, "medae": 23.294359922409058, "pearson": 0.03067024994531848, "spearman": 0.03420828426232455, "var_ratio": 0.302040368061094, "p95_pred": 12.842147541046144, "p95_ref": 39.22999954223633, "p99_pred": 14.564392108917234, "p99_ref": 43.75009998321528}} {'srtm': (9.18, 16.31), 'glo30': (11.18, 18.88), 'fabdem': (10.26, 6.23)}
+Traceback (most recent call last):
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/forest_mountain_3dep_eval.py", line 329, in <module>
+    {"select": select, "run": run, "stats": stats}[sys.argv[1]]()
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/forest_mountain_3dep_eval.py", line 283, in run
+    Hn, shift = to_navd88(H, lon, lat, vd)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/forest_mountain_3dep_eval.py", line 167, in to_navd88
+    assert np.isfinite(shift).all() and np.median(np.abs(shift)) > 0.05, f"datum no-op? {np.median(shift)}"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: datum no-op? 0.04532800604317799
+*** Earth Engine *** Share your feedback by taking our Annual Developer Satisfaction Survey: https://google.qualtrics.com/jfe/form/SV_9oS0DRcPvElRMNw?source=python
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7100.60it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21559.72it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22970.87it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22313.44it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23316.58it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 18863.06it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20024.04it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20111.02it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 26097.89it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 16998.49it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 18685.91it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 14373.83it/s]
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/ee/deprecation.py:215: DeprecationWarning: 
+
+Attention required for COPERNICUS/DEM/GLO30! You are using a deprecated asset.
+To make sure your code keeps working, please update it.
+This dataset has been superseded by COPERNICUS/DEM/GLO30_2024_1
+
+Learn more: https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_DEM_GLO30
+
+  warnings.warn(warning, category=DeprecationWarning)
+mlbs_va_w0 {"ndsm_0.3": {"n": 90000, "rmse": 15.82963364145664, "brmse": 7.33560595124153, "mae": 14.428209497783705, "bias": -14.027337115462993, "medae": 16.263418197631836, "pearson": 0.3952921994829194, "spearman": 0.2901520594781488, "var_ratio": 0.0926186426641308, "p95_pred": 9.13777532577515, "p95_ref": 27.760000228881836, "p99_pred": 11.0542961025238, "p99_ref": 30.559999465942383}} {'srtm': (5.86, 4.89), 'glo30': (5.71, 10.09), 'fabdem': (8.78, 6.01)}
+mlbs_va_w1 {"ndsm_0.3": {"n": 90000, "rmse": 10.185404937849786, "brmse": 7.57701856061625, "mae": 7.225462686957842, "bias": -6.80670724212902, "medae": 4.767105877399445, "pearson": 0.8124824574243361, "spearman": 0.8344899891553255, "var_ratio": 0.16138062549495075, "p95_pred": 12.058254480361938, "p95_ref": 29.489999771118164, "p99_pred": 14.157563848495476, "p99_ref": 32.20000076293945}} {'srtm': (6.5, 8.25), 'glo30': (4.29, 9.22), 'fabdem': (6.9, 5.12)}
