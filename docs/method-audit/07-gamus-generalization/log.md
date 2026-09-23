@@ -637,3 +637,50 @@ Method 6 is much better on sparse ground, slightly better on buildings, and **wo
   - Log: `terrain_rf_residual/kaggle/rf_run_log_A_local_fold4.txt`.
 - sklearn RF results with a fixed `random_state` don't depend on `n_jobs`. Mixing Kaggle (4 CPUs) and local (10 cores) folds is therefore equivalent to a single run.
 - Variant B, all 5 folds, is still pending. The pre-registered test runs only once A and B are both complete.
+
+---
+
+## 2026-09-23 — Part F result: Sentinel-2 terrain RF residual (Song, Chen & Yokoya 2026 HRF). **Pre-registered verdict: NOT ADOPTED (both variants).**
+
+**Run.**
+- Features: 1,241,260 (10 m pixel × RGT) samples, 32 tiles, 63 RGTs.
+- Split: `GroupKFold(5)` on RGT, i.e. held-out ICESat-2 tracks.
+- Model: sklearn 1.9.0 RF, 100 trees, `random_state=0`.
+- Where each fold ran:
+  - variant A: folds 0–3 on Kaggle (4 CPU), fold 4 locally;
+  - variant B: all 5 folds locally, 447–495 s per fold.
+- The fold assignment was verified identical at merge.
+- Files: `data/sentinel2_benchmark/terrain_rf_residual/{summary.json,per_tile.csv}` and `kaggle/` (out-of-fold predictions and logs).
+- Linear fallback was used in only 1 tile-fold.
+
+**Median over 32 tiles** (per-tile RMSE of FABDEM − r̂ vs. ICESat-2 ground; each tile's own out-of-fold samples):
+
+| | RMSE | bias-removed RMSE | bias | median \|e\| |
+|---|---|---|---|---|
+| raw FABDEM | 1.776 | 1.753 | +0.263 | 0.806 |
+| linear residual (per tile, training tracks) | **1.467** | **1.467** | +0.005 | 0.536 |
+| RF variant A (18 HRF features) | 2.436 | 2.417 | +0.059 | 0.598 |
+| RF variant B (A + WorldCover, ETH, CHMv2; 32 features) | 1.425 | 1.423 | +0.054 | 0.513 |
+
+**Pre-registered tests** (paired Wilcoxon, Holm across A/B; RF must beat both baselines on RMSE and bRMSE, p < 0.05, ≥ 20/32):
+
+| | vs raw RMSE | vs raw bRMSE | vs linear RMSE | vs linear bRMSE | verdict |
+|---|---|---|---|---|---|
+| RF A | 19/32, p_Holm 0.83 | 14/32, 0.37 | **8/32, worse** (p_Holm 1.6e-4) | 8/32, worse (2.7e-4) | **NOT ADOPTED** |
+| RF B | 21/32, p_Holm 0.26 | 15/32, 0.83 | **9/32, worse** (p_Holm 0.004) | 9/32, worse (0.007) | **NOT ADOPTED** |
+
+**Reading.**
+- As expected (FABDEM is itself an ML-corrected GLO-30), the HRF random forest adds nothing reliable over raw FABDEM.
+- Per tile, it **loses to the simple linear residual** on about 72% of tiles, significantly.
+- Variant B's lower median RMSE comes from a few tiles and doesn't survive the paired test.
+- Variant A is heavily hurt on the hilly tiles (Manali, Nainital, Shimla are its worst).
+
+**Post-hoc, descriptive only: the linear residual itself** (per tile, a + b·FABDEM fitted on the tile's other ICESat-2 tracks).
+- It beats raw FABDEM on RMSE: 27/32 tiles, p = 1.4e-5, median 1.776 → 1.467.
+- It does **not** significantly beat it on bias-removed RMSE: 19/32, p = 0.078.
+- So it is essentially an **offset correction**, which is exactly what the R4 offset guard discounts.
+- It was not a pre-registered adoption candidate. It is **not adopted**, and is noted as a possible future pre-registered test:
+  "per-tile ICESat-2 offset on FABDEM" wherever ICESat-2 tracks cover a tile.
+- By category (median RMSE, raw → linear): agricultural 0.69 → 0.62; coastal 1.32 → 0.80; hilly 5.84 → 5.62; urban 2.87 → 2.73.
+
+**Consequence.** The terrain product recommendation stays **raw FABDEM**.

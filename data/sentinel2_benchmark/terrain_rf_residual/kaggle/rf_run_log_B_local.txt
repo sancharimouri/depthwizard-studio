@@ -1,0 +1,7 @@
+{'engine': 'sklearn', 'n_samples': 1241260, 'n_tiles': 32, 'n_rgt': 63, 'sklearn': '1.9.0', 'cpu_count': 10, 'fold_sizes': [248332, 248049, 248314, 248268, 248297]}
+variant B fold 0: n_train 992928, n_test 248332, 447 s
+variant B fold 1: n_train 993211, n_test 248049, 495 s
+variant B fold 2: n_train 992946, n_test 248314, 448 s
+variant B fold 3: n_train 992992, n_test 248268, 452 s
+variant B fold 4: n_train 992963, n_test 248297, 488 s
+DONE

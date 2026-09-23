@@ -1,0 +1,7 @@
+{'engine': 'sklearn', 'n_samples': 1241260, 'n_tiles': 32, 'n_rgt': 63, 'sklearn': '1.9.0', 'cpu_count': 10, 'fold_sizes': [248332, 248049, 248314, 248268, 248297]}
+variant A fold 0: exists, skip
+variant A fold 1: exists, skip
+variant A fold 2: exists, skip
+variant A fold 3: exists, skip
+variant A fold 4: n_train 992963, n_test 248297, 276 s
+DONE
