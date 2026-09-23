@@ -204,3 +204,15 @@ the trees Method 6 learned from, whose tall-tree predictions it gets wrong in a 
 - **Script:** `scripts/gamus_zeroshot_eval.py` (streamed; output `data/gamus_eval/zeroshot_tiles.jsonl`).
   `h5py` was installed into `.venv` for this; `pyproject.toml` is untouched.
 - **Smoke test (4 DC tiles, seeds 43 and 44, not results):** 0 blocks shared with DFC2019. The script runs end to end.
+
+---
+
+## 2026-09-23 — Part E: deliverables audit (read-only) → `docs/deliverables-audit.md`
+
+- **No deliverable is fully met.**
+  - Partial: upload, texture drape plus an orbit "flythrough", 4-landscape region coverage.
+  - Missing from the app: the rDSM path, the metric-DSM path, GeoTIFF export, slope and height analysis, in-UI
+    validation, standalone packaging.
+- The elevation layer is **DEM-only** and is already labelled "DEM ELEVATION", so the label is accurate.
+- Screenshot: `docs/screenshots/2026-09-23_deliverables_audit_home.png`, headless Chrome, since the extension was not connected.
+- Frontend untouched (`git status frontend` shows only the pre-existing untracked `public/data/vhr/`).
