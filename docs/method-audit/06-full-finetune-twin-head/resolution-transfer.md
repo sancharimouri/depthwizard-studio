@@ -99,3 +99,5 @@ adopted recipe; the coarse runs differ only by the input transform. Measured nat
 ≈ 12 min/fold ⇒ 3 GSD × 4 folds ≈ 2.4 h; protocol P measured on its first fold (logged below). Launched as one
 nohup chain: P 2/3/5 m → R 2/3/5 m → Phase 3 eval → Phase 4 analysis
 (`data/dfc2019/experiments/resolution_transfer/chain.log`).
+- Measured P-protocol fold time (2 m, fold 0): **98 s** ⇒ P grid ≈ 18 min; chain total estimate ≈ 2.8–3 h
+  (R dominates), expected completion ≈ 03:30 IST.
