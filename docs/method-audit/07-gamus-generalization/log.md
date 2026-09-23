@@ -394,3 +394,55 @@ terrain; the GRSM item's STAC max is 949 m. The excluded fraction is reported. N
   - land-cover fractions and Shannon entropy;
   - or, alternatively, a ViT patch embedding.
 - The exact list is to be taken from the paper itself before Part F is pre-registered.
+
+---
+
+## 2026-09-23 — Part F pre-registration (optional part; committed now, **run only after A–E are documented**)
+
+**Method source.** Song, Chen & Yokoya (2026), *ISPRS J. Photogramm. Remote Sens.* 232:155–171, arXiv 2505.06905v3.
+- §5.2: residual r = H_pred − H_ICESat-2; H_corr = H_pred − r̂.
+- §5.2.1 HRF: a 64 × 64 window around each photon, about 27 handcrafted features in four groups:
+  - (i) predicted-height statistics: mean, std, min, max, p90, p10;
+  - (ii) Sobel magnitude: mean, std, p95;
+  - (iii) RGB per-channel mean and std, plus simple indices "such as (G−R)/(G+R)";
+  - (iv) fractions of 8 land-cover classes plus Shannon entropy.
+- §6.1: a random forest with 100 trees.
+
+**Our target (per the prompt): the TERRAIN product.**
+- H_pred = FABDEM (EGM2008, the 10 m grid per tile). The reference = ICESat-2 **ground** photons (`data/icesat2_photons/`).
+- Photons are aggregated per (10 m pixel, RGT) as the median ellipsoidal height, then converted per point to EGM2008
+  (`PROJ_NETWORK=ON`, |N| > 1 m asserted).
+- All 32 benchmark tiles.
+
+**Deviations from the paper, stated before running.**
+1. The paper works at 0.5 m, so its 64 px window is 32 m. Here 64 px of 10 m pixels is 640 m. The window is kept at
+   64 × 64 px (literal) and the scale difference is noted.
+2. The "predicted height" is FABDEM (terrain), not a monocular nDSM.
+3. Group (iii) indices: (G−R)/(G+R), (G−B)/(G+B), (R−B)/(R+B), computed on window means. The paper names only the first.
+4. Group (iv) needs the paper's OpenEarthMap segmentation model (0.5 m), which is unavailable and inapplicable at 10 m.
+   - **Variant A** = groups (i)–(iii): **18 features**.
+   - **Variant B** = A plus ESA WorldCover v200 (10 m, via Earth Engine) fractions of its 11 classes plus Shannon entropy,
+     plus window means of ETH GCH 2020 and DINOv3-CHMv2: **32 features**.
+   - B is the prompt's pre-registered variant B.
+5. Sentinel-2 RGB comes from each tile's benchmark GeoTIFF.
+
+**Split: held-out tracks.**
+- GroupKFold(5) with groups = RGT, global across all tiles. A track held out is absent from training in every tile.
+- Every (pixel, RGT) sample gets an out-of-fold prediction. No random photon splits.
+
+**Models.**
+- The RF uses `sklearn RandomForestRegressor(n_estimators=100, random_state=0)`, otherwise defaults, trained pooled across
+  tiles on the training tracks.
+- **Linear residual on FABDEM (recomputed):** per tile, r = a + b·FABDEM fitted by OLS on that tile's training-track
+  samples of the same fold. Where a tile has fewer than 10 training samples in a fold, it falls back to r̂ = 0 (raw); the count is reported.
+- **Raw FABDEM** = r̂ = 0.
+
+**Metrics.** Per tile, on out-of-fold samples: RMSE and bias-removed RMSE (std) of the corrected terrain vs. ground; bias and median |e| are reported.
+
+**Decision rule (per variant; Holm across A and B).** The RF is adopted only if it beats **both** raw FABDEM and the
+linear residual on RMSE **and** bias-removed RMSE, each with:
+- paired Wilcoxon (two-sided) Holm-adjusted p < 0.05; and
+- ≥ 20 of 32 tiles won.
+
+**Expected outcome: negative.** FABDEM is itself a globally trained ML correction of GLO-30 (random forest), it is already
+the best terrain product here (32/32 vs. GLO-30), and the residual left is small. One run, no tuning.
