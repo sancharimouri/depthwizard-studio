@@ -1,0 +1,757 @@
+{
+ "rule": "city leaf-on if median per-tile share of tree px with ExG>0.05 >= 0.4",
+ "n_per_city": 40,
+ "seed": 0,
+ "cities": {
+  "DC": {
+   "n_tiles_used": 40,
+   "median_frac_green": 0.06404332135235487,
+   "p25": 0.03765815229665512,
+   "p75": 0.11794395693359522,
+   "max_tile": 0.22095975189713613,
+   "n_tiles_ge_thresh": 0,
+   "leaf_on": false,
+   "tiles": [
+    {
+     "tile": "images/train/DC_54_39_RGB.h5",
+     "n_tree": 696194,
+     "frac": 0.010142287925492032,
+     "exg_median": -0.05369127480744111
+    },
+    {
+     "tile": "images/train/DC_65_43_RGB.h5",
+     "n_tree": 445454,
+     "frac": 0.03799494448360549,
+     "exg_median": -0.04230769214497042
+    },
+    {
+     "tile": "images/test/DC_33_53_RGB.h5",
+     "n_tree": 140637,
+     "frac": 0.04701465474946138,
+     "exg_median": -0.07518796964215049
+    },
+    {
+     "tile": "images/train/DC_34_39_RGB.h5",
+     "n_tree": 36733,
+     "frac": 0.13579070590477227,
+     "exg_median": -0.030769230650887575
+    },
+    {
+     "tile": "images/val/DC_53_44_RGB.h5",
+     "n_tree": 128134,
+     "frac": 0.050376949131378086,
+     "exg_median": -0.06249999956597223
+    },
+    {
+     "tile": "images/val/DC_38_45_RGB.h5",
+     "n_tree": 85100,
+     "frac": 0.046698002350176265,
+     "exg_median": -0.030769230650887575
+    },
+    {
+     "tile": "images/train/DC_59_51_RGB.h5",
+     "n_tree": 339124,
+     "frac": 0.08885540392304879,
+     "exg_median": -0.019607843009099065
+    },
+    {
+     "tile": "images/train/DC_40_54_RGB.h5",
+     "n_tree": 209033,
+     "frac": 0.010515086134725139,
+     "exg_median": -0.0689655169016477
+    },
+    {
+     "tile": "images/val/DC_33_26_RGB.h5",
+     "n_tree": 106905,
+     "frac": 0.05164398297553903,
+     "exg_median": -0.03804347805411153
+    },
+    {
+     "tile": "images/train/DC_48_59_RGB.h5",
+     "n_tree": 200976,
+     "frac": 0.040646644375447814,
+     "exg_median": -0.04950495033166683
+    },
+    {
+     "tile": "images/train/DC_30_12_RGB.h5",
+     "n_tree": 453410,
+     "frac": 0.02711453210118877,
+     "exg_median": -0.06538461513313609
+    },
+    {
+     "tile": "images/val/DC_49_41_RGB.h5",
+     "n_tree": 151964,
+     "frac": 0.06798320654891948,
+     "exg_median": -0.04366812217539711
+    },
+    {
+     "tile": "images/train/DC_19_11_RGB.h5",
+     "n_tree": 286427,
+     "frac": 0.17430619320105994,
+     "exg_median": -0.023255813412655504
+    },
+    {
+     "tile": "images/train/DC_37_36_RGB.h5",
+     "n_tree": 72011,
+     "frac": 0.017414006193498217,
+     "exg_median": -0.05263157871652816
+    },
+    {
+     "tile": "images/train/DC_19_13_RGB.h5",
+     "n_tree": 122875,
+     "frac": 0.11693184130213631,
+     "exg_median": -0.012195121901645846
+    },
+    {
+     "tile": "images/train/DC_07_20_RGB.h5",
+     "n_tree": 409275,
+     "frac": 0.11646447987294606,
+     "exg_median": -0.03703703680841335
+    },
+    {
+     "tile": "images/train/DC_33_46_RGB.h5",
+     "n_tree": 146408,
+     "frac": 0.01769029014807934,
+     "exg_median": -0.07692307650042265
+    },
+    {
+     "tile": "images/train/DC_20_34_RGB.h5",
+     "n_tree": 202200,
+     "frac": 0.12665182987141443,
+     "exg_median": -0.009433962219651123
+    },
+    {
+     "tile": "images/train/DC_41_58_RGB.h5",
+     "n_tree": 366627,
+     "frac": 0.054248595984474686,
+     "exg_median": -0.04188481653463447
+    },
+    {
+     "tile": "images/train/DC_09_20_RGB.h5",
+     "n_tree": 557785,
+     "frac": 0.08581263390015867,
+     "exg_median": -0.051724137633769325
+    },
+    {
+     "tile": "images/test/DC_51_33_RGB.h5",
+     "n_tree": 224443,
+     "frac": 0.08409707587227047,
+     "exg_median": -0.023809523715041574
+    },
+    {
+     "tile": "images/train/DC_44_53_RGB.h5",
+     "n_tree": 244136,
+     "frac": 0.03746682177147164,
+     "exg_median": -0.07079645986373248
+    },
+    {
+     "tile": "images/val/DC_30_52_RGB.h5",
+     "n_tree": 190921,
+     "frac": 0.1406183709492408,
+     "exg_median": -0.02040816316118284
+    },
+    {
+     "tile": "images/train/DC_10_18_RGB.h5",
+     "n_tree": 394593,
+     "frac": 0.20909139290357406,
+     "exg_median": -0.016597510304574646
+    },
+    {
+     "tile": "images/train/DC_47_64_RGB.h5",
+     "n_tree": 242106,
+     "frac": 0.08166670797088879,
+     "exg_median": -0.027586206706302022
+    },
+    {
+     "tile": "images/train/DC_72_34_RGB.h5",
+     "n_tree": 539474,
+     "frac": 0.037721929138382945,
+     "exg_median": -0.043956043714527236
+    },
+    {
+     "tile": "images/train/DC_42_50_RGB.h5",
+     "n_tree": 454323,
+     "frac": 0.003755037715457945,
+     "exg_median": -0.06249999921875001
+    },
+    {
+     "tile": "images/train/DC_28_42_RGB.h5",
+     "n_tree": 250291,
+     "frac": 0.0971109628392551,
+     "exg_median": -0.03225806430801249
+    },
+    {
+     "tile": "images/val/DC_33_27_RGB.h5",
+     "n_tree": 119494,
+     "frac": 0.06010343615579025,
+     "exg_median": -0.04729729697772097
+    },
+    {
+     "tile": "images/val/DC_13_17_RGB.h5",
+     "n_tree": 368498,
+     "frac": 0.12098030382797192,
+     "exg_median": -0.027999999888
+    },
+    {
+     "tile": "images/val/DC_63_42_RGB.h5",
+     "n_tree": 245539,
+     "frac": 0.07726674784861061,
+     "exg_median": -0.034246575225182964
+    },
+    {
+     "tile": "images/train/DC_34_50_RGB.h5",
+     "n_tree": 223253,
+     "frac": 0.1217452844978567,
+     "exg_median": -0.02702702692267557
+    },
+    {
+     "tile": "images/test/DC_44_21_RGB.h5",
+     "n_tree": 212157,
+     "frac": 0.21531224517692085,
+     "exg_median": 0.012499999921875001
+    },
+    {
+     "tile": "images/test/DC_20_37_RGB.h5",
+     "n_tree": 816050,
+     "frac": 0.008250719931376754,
+     "exg_median": -0.12432432365230095
+    },
+    {
+     "tile": "images/train/DC_06_27_RGB.h5",
+     "n_tree": 320752,
+     "frac": 0.1778975657205567,
+     "exg_median": -0.02366863891320332
+    },
+    {
+     "tile": "images/train/DC_58_34_RGB.h5",
+     "n_tree": 25540,
+     "frac": 0.036844166014095535,
+     "exg_median": -0.02025316450568819
+    },
+    {
+     "tile": "images/test/DC_07_29_RGB.h5",
+     "n_tree": 296901,
+     "frac": 0.09063627269695959,
+     "exg_median": -0.03571428550170068
+    },
+    {
+     "tile": "images/val/DC_42_43_RGB.h5",
+     "n_tree": 130930,
+     "frac": 0.01228900939433285,
+     "exg_median": -0.042857142653061224
+    },
+    {
+     "tile": "images/train/DC_45_23_RGB.h5",
+     "n_tree": 364365,
+     "frac": 0.22095975189713613,
+     "exg_median": 0.013793103353151011
+    },
+    {
+     "tile": "images/train/DC_33_05_RGB.h5",
+     "n_tree": 240005,
+     "frac": 0.05090310618528781,
+     "exg_median": -0.007246376794090877
+    }
+   ]
+  },
+  "NYC": {
+   "n_tiles_used": 38,
+   "median_frac_green": 0.03351278097138938,
+   "p25": 0.011683024176340422,
+   "p75": 0.10208622582182773,
+   "max_tile": 0.4393879699539492,
+   "n_tiles_ge_thresh": 1,
+   "leaf_on": false,
+   "tiles": [
+    {
+     "tile": "images/train/NYC_25588_IMG.h5",
+     "n_tree": 61193,
+     "frac": 0.04196558429885771,
+     "exg_median": -0.002941176461937716
+    },
+    {
+     "tile": "images/test/NYC_04591_IMG.h5",
+     "n_tree": 354229,
+     "frac": 0.010182678436830413,
+     "exg_median": -0.015151515074992348
+    },
+    {
+     "tile": "images/test/NYC_20955_IMG.h5",
+     "n_tree": 50628,
+     "frac": 0.05706328513865845,
+     "exg_median": 0.0
+    },
+    {
+     "tile": "images/test/NYC_22263_IMG.h5",
+     "n_tree": 204783,
+     "frac": 0.011026305894532261,
+     "exg_median": -0.005221932101248219
+    },
+    {
+     "tile": "images/test/NYC_22714_IMG.h5",
+     "n_tree": 154829,
+     "frac": 0.4393879699539492,
+     "exg_median": 0.041841004009033456
+    },
+    {
+     "tile": "images/test/NYC_16220_IMG.h5",
+     "n_tree": 231292,
+     "frac": 0.06311502343358179,
+     "exg_median": 0.0068493150215800346
+    },
+    {
+     "tile": "images/train/NYC_29676_IMG.h5",
+     "n_tree": 892601,
+     "frac": 0.02238850281368719,
+     "exg_median": -0.02671755714993299
+    },
+    {
+     "tile": "images/test/NYC_05701_IMG.h5",
+     "n_tree": 198544,
+     "frac": 0.001249093399951648,
+     "exg_median": -0.010309278297374854
+    },
+    {
+     "tile": "images/test/NYC_05162_IMG.h5",
+     "n_tree": 941226,
+     "frac": 0.003301013784149609,
+     "exg_median": -0.027586206801426875
+    },
+    {
+     "tile": "images/train/NYC_25409_IMG.h5",
+     "n_tree": 14333,
+     "frac": 0.012628200655829206,
+     "exg_median": -0.00539083556498427
+    },
+    {
+     "tile": "images/train/NYC_31519_IMG.h5",
+     "n_tree": 595354,
+     "frac": 0.03452399748720929,
+     "exg_median": -0.018469656943351828
+    },
+    {
+     "tile": "images/train/NYC_30769_IMG.h5",
+     "n_tree": 80179,
+     "frac": 0.14516269846219085,
+     "exg_median": 0.01503759387189779
+    },
+    {
+     "tile": "images/test/NYC_08113_IMG.h5",
+     "n_tree": 262605,
+     "frac": 0.017794786847165896,
+     "exg_median": 0.003984063729147156
+    },
+    {
+     "tile": "images/train/NYC_24821_IMG.h5",
+     "n_tree": 199825,
+     "frac": 0.03573626923558113,
+     "exg_median": -0.0030487804785098156
+    },
+    {
+     "tile": "images/train/NYC_24328_IMG.h5",
+     "n_tree": 704314,
+     "frac": 0.017531953077746572,
+     "exg_median": -0.026490066137450113
+    },
+    {
+     "tile": "images/test/NYC_11779_IMG.h5",
+     "n_tree": 0,
+     "frac": null
+    },
+    {
+     "tile": "images/train/NYC_25936_IMG.h5",
+     "n_tree": 90236,
+     "frac": 0.16889046500288132,
+     "exg_median": 0.01162790693167478
+    },
+    {
+     "tile": "images/test/NYC_21614_IMG.h5",
+     "n_tree": 299930,
+     "frac": 0.05339912646284133,
+     "exg_median": 0.012738853462615116
+    },
+    {
+     "tile": "images/train/NYC_24152_IMG.h5",
+     "n_tree": 158174,
+     "frac": 0.08684107375422004,
+     "exg_median": 0.017543859546527138
+    },
+    {
+     "tile": "images/train/NYC_29653_IMG.h5",
+     "n_tree": 27958,
+     "frac": 0.01237570641676801,
+     "exg_median": -0.002890173402051522
+    },
+    {
+     "tile": "images/test/NYC_05703_IMG.h5",
+     "n_tree": 17260,
+     "frac": 0.10533024333719583,
+     "exg_median": 0.008298755152287323
+    },
+    {
+     "tile": "images/train/NYC_27821_IMG.h5",
+     "n_tree": 311861,
+     "frac": 0.1052359865452878,
+     "exg_median": 0.0021834061087698557
+    },
+    {
+     "tile": "images/train/NYC_25354_IMG.h5",
+     "n_tree": 255680,
+     "frac": 0.03250156445556946,
+     "exg_median": -0.004878048768590125
+    },
+    {
+     "tile": "images/test/NYC_22778_IMG.h5",
+     "n_tree": 274855,
+     "frac": 0.14083061978133926,
+     "exg_median": 0.017721518942477168
+    },
+    {
+     "tile": "images/train/NYC_24304_IMG.h5",
+     "n_tree": 198683,
+     "frac": 0.013136503878036873,
+     "exg_median": -0.00714285712585034
+    },
+    {
+     "tile": "images/test/NYC_20323_IMG.h5",
+     "n_tree": 2307,
+     "frac": 0.18335500650195058,
+     "exg_median": 0.008196721289079997
+    },
+    {
+     "tile": "images/test/NYC_20856_IMG.h5",
+     "n_tree": 24800,
+     "frac": 0.39064516129032256,
+     "exg_median": 0.04247104230706161
+    },
+    {
+     "tile": "images/test/NYC_20617_IMG.h5",
+     "n_tree": 22660,
+     "frac": 0.010635481023830539,
+     "exg_median": -0.009999999975
+    },
+    {
+     "tile": "images/test/NYC_03117_IMG.h5",
+     "n_tree": 321047,
+     "frac": 0.020996925683778388,
+     "exg_median": -0.009009008981954928
+    },
+    {
+     "tile": "images/train/NYC_23322_IMG.h5",
+     "n_tree": 441084,
+     "frac": 0.13403115959771836,
+     "exg_median": 0.0
+    },
+    {
+     "tile": "images/train/NYC_30275_IMG.h5",
+     "n_tree": 0,
+     "frac": null
+    },
+    {
+     "tile": "images/test/NYC_04780_IMG.h5",
+     "n_tree": 725523,
+     "frac": 0.006555271163009305,
+     "exg_median": -0.020202020133999934
+    },
+    {
+     "tile": "images/test/NYC_05530_IMG.h5",
+     "n_tree": 844395,
+     "frac": 0.010575619230336513,
+     "exg_median": -0.021943573598922968
+    },
+    {
+     "tile": "images/test/NYC_15097_IMG.h5",
+     "n_tree": 2183,
+     "frac": 0.011452130096197893,
+     "exg_median": 0.019047618987150416
+    },
+    {
+     "tile": "images/test/NYC_17113_IMG.h5",
+     "n_tree": 104386,
+     "frac": 0.0926369436514475,
+     "exg_median": 0.0
+    },
+    {
+     "tile": "images/test/NYC_03477_IMG.h5",
+     "n_tree": 333131,
+     "frac": 0.01596669178191162,
+     "exg_median": -0.011560693608206088
+    },
+    {
+     "tile": "images/test/NYC_05161_IMG.h5",
+     "n_tree": 929679,
+     "frac": 0.003357072710042929,
+     "exg_median": -0.029411764597750866
+    },
+    {
+     "tile": "images/train/NYC_28006_IMG.h5",
+     "n_tree": 496947,
+     "frac": 0.12329483828255328,
+     "exg_median": 0.002673796784294661
+    },
+    {
+     "tile": "images/train/NYC_32822_IMG.h5",
+     "n_tree": 268725,
+     "frac": 0.06843799423202158,
+     "exg_median": 0.007812499979654948
+    },
+    {
+     "tile": "images/train/NYC_23747_IMG.h5",
+     "n_tree": 220412,
+     "frac": 0.008647442063045569,
+     "exg_median": -0.0065573770276807315
+    }
+   ]
+  },
+  "PHL": {
+   "n_tiles_used": 39,
+   "median_frac_green": 0.3150431565967941,
+   "p25": 0.2248079921815987,
+   "p75": 0.41317516212336985,
+   "max_tile": 0.9234770646145909,
+   "n_tiles_ge_thresh": 12,
+   "leaf_on": false,
+   "tiles": [
+    {
+     "tile": "images/val/PHL_6667_RGB.h5",
+     "n_tree": 206029,
+     "frac": 0.2885952948371346,
+     "exg_median": 0.030985915405673477
+    },
+    {
+     "tile": "images/train/PHL_1644_RGB.h5",
+     "n_tree": 447706,
+     "frac": 0.46579004972012883,
+     "exg_median": 0.04687499987792969
+    },
+    {
+     "tile": "images/train/PHL_1376_RGB.h5",
+     "n_tree": 97406,
+     "frac": 0.22022257355809705,
+     "exg_median": 0.025706940807951308
+    },
+    {
+     "tile": "images/train/PHL_5499_RGB.h5",
+     "n_tree": 69783,
+     "frac": 0.9234770646145909,
+     "exg_median": 0.1709401704531619
+    },
+    {
+     "tile": "images/train/PHL_2069_RGB.h5",
+     "n_tree": 221186,
+     "frac": 0.36830088703625,
+     "exg_median": 0.039603960265333464
+    },
+    {
+     "tile": "images/train/PHL_5890_RGB.h5",
+     "n_tree": 118857,
+     "frac": 0.40215553143693683,
+     "exg_median": 0.042372881176386094
+    },
+    {
+     "tile": "images/val/PHL_6331_RGB.h5",
+     "n_tree": 4855,
+     "frac": 0.31575695159629247,
+     "exg_median": 0.034482758472057076
+    },
+    {
+     "tile": "images/train/PHL_2882_RGB.h5",
+     "n_tree": 173125,
+     "frac": 0.36349458483754515,
+     "exg_median": 0.035460992823969285
+    },
+    {
+     "tile": "images/test/PHL_4206_RGB.h5",
+     "n_tree": 113414,
+     "frac": 0.3397905020544201,
+     "exg_median": 0.036496350276164595
+    },
+    {
+     "tile": "images/train/PHL_2558_RGB.h5",
+     "n_tree": 1622,
+     "frac": 0.3150431565967941,
+     "exg_median": 0.03640339241663482
+    },
+    {
+     "tile": "images/test/PHL_4589_RGB.h5",
+     "n_tree": 106615,
+     "frac": 0.09428316840969844,
+     "exg_median": 0.02127659566923193
+    },
+    {
+     "tile": "images/val/PHL_6251_RGB.h5",
+     "n_tree": 135113,
+     "frac": 0.4001983524901379,
+     "exg_median": 0.04268292669913742
+    },
+    {
+     "tile": "images/train/PHL_2676_RGB.h5",
+     "n_tree": 315543,
+     "frac": 0.8314239263745353,
+     "exg_median": 0.15748031372062746
+    },
+    {
+     "tile": "images/train/PHL_0923_RGB.h5",
+     "n_tree": 182171,
+     "frac": 0.11934391313655851,
+     "exg_median": 0.015999999957333335
+    },
+    {
+     "tile": "images/train/PHL_1721_RGB.h5",
+     "n_tree": 208673,
+     "frac": 0.4241947928098029,
+     "exg_median": 0.0430769229443787
+    },
+    {
+     "tile": "images/test/PHL_3585_RGB.h5",
+     "n_tree": 104525,
+     "frac": 0.2692561588136809,
+     "exg_median": 0.03067484653167225
+    },
+    {
+     "tile": "images/train/PHL_2035_RGB.h5",
+     "n_tree": 140928,
+     "frac": 0.19661103542234332,
+     "exg_median": 0.020242914897801965
+    },
+    {
+     "tile": "images/test/PHL_4604_RGB.h5",
+     "n_tree": 18908,
+     "frac": 0.3268986672308018,
+     "exg_median": 0.03874092000304862
+    },
+    {
+     "tile": "images/train/PHL_1453_RGB.h5",
+     "n_tree": 98235,
+     "frac": 0.14175192141293835,
+     "exg_median": 0.019531249923706057
+    },
+    {
+     "tile": "images/train/PHL_3016_RGB.h5",
+     "n_tree": 0,
+     "frac": null
+    },
+    {
+     "tile": "images/test/PHL_5292_RGB.h5",
+     "n_tree": 125015,
+     "frac": 0.26219253689557254,
+     "exg_median": 0.03448275848857181
+    },
+    {
+     "tile": "images/train/PHL_2640_RGB.h5",
+     "n_tree": 44253,
+     "frac": 0.45068130974171244,
+     "exg_median": 0.04504504490977464
+    },
+    {
+     "tile": "images/train/PHL_5576_RGB.h5",
+     "n_tree": 119706,
+     "frac": 0.3620202830267489,
+     "exg_median": 0.04244031818981348
+    },
+    {
+     "tile": "images/test/PHL_4017_RGB.h5",
+     "n_tree": 46248,
+     "frac": 0.43764054661823215,
+     "exg_median": 0.04347826071203529
+    },
+    {
+     "tile": "images/test/PHL_4389_RGB.h5",
+     "n_tree": 93100,
+     "frac": 0.23553168635875402,
+     "exg_median": 0.02573529402303201
+    },
+    {
+     "tile": "images/test/PHL_5023_RGB.h5",
+     "n_tree": 19878,
+     "frac": 0.2456987624509508,
+     "exg_median": 0.03311258267181264
+    },
+    {
+     "tile": "images/train/PHL_1423_RGB.h5",
+     "n_tree": 164464,
+     "frac": 0.4251811946687421,
+     "exg_median": 0.044827586052318666
+    },
+    {
+     "tile": "images/test/PHL_3856_RGB.h5",
+     "n_tree": 47918,
+     "frac": 0.130890270879419,
+     "exg_median": 0.02389078490139664
+    },
+    {
+     "tile": "images/val/PHL_6853_RGB.h5",
+     "n_tree": 153278,
+     "frac": 0.1716554234789076,
+     "exg_median": 0.002857142848979592
+    },
+    {
+     "tile": "images/test/PHL_4130_RGB.h5",
+     "n_tree": 143608,
+     "frac": 0.3560386607988413,
+     "exg_median": 0.03597122289218985
+    },
+    {
+     "tile": "images/test/PHL_3682_RGB.h5",
+     "n_tree": 149578,
+     "frac": 0.2905106365909425,
+     "exg_median": 0.027522935695648516
+    },
+    {
+     "tile": "images/test/PHL_4740_RGB.h5",
+     "n_tree": 62099,
+     "frac": 0.24312790866197523,
+     "exg_median": 0.03448275850178359
+    },
+    {
+     "tile": "images/train/PHL_0864_RGB.h5",
+     "n_tree": 1029287,
+     "frac": 0.6356565272853927,
+     "exg_median": 0.058823529254482546
+    },
+    {
+     "tile": "images/test/PHL_4668_RGB.h5",
+     "n_tree": 66831,
+     "frac": 0.12129101764151366,
+     "exg_median": 0.019801980132666732
+    },
+    {
+     "tile": "images/train/PHL_3215_RGB.h5",
+     "n_tree": 273183,
+     "frac": 0.25343451093223224,
+     "exg_median": 0.02580645144640999
+    },
+    {
+     "tile": "images/test/PHL_4291_RGB.h5",
+     "n_tree": 51447,
+     "frac": 0.47460493323225844,
+     "exg_median": 0.0467625897598468
+    },
+    {
+     "tile": "images/train/PHL_3001_RGB.h5",
+     "n_tree": 73131,
+     "frac": 0.44059290861604516,
+     "exg_median": 0.041841004009033456
+    },
+    {
+     "tile": "images/test/PHL_4595_RGB.h5",
+     "n_tree": 39523,
+     "frac": 0.09824659059281937,
+     "exg_median": 0.020895522325685006
+    },
+    {
+     "tile": "images/test/PHL_3773_RGB.h5",
+     "n_tree": 40703,
+     "frac": 0.22939341080510037,
+     "exg_median": 0.022900763300506964
+    },
+    {
+     "tile": "images/test/PHL_3641_RGB.h5",
+     "n_tree": 281295,
+     "frac": 0.20926074050374163,
+     "exg_median": 0.025906735684179442
+    }
+   ]
+  }
+ }
+}

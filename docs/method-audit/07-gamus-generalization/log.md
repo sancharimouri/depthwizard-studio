@@ -163,3 +163,32 @@ the trees Method 6 learned from, whose tall-tree predictions it gets wrong in a 
   (Terraces have no C1 magnitude threshold. The old seam-fixed model passes all of these on these crops,
   so any failure is a regression. Under the DC pilot model the river median was 2.25 m, a C1 fail.)
 - A model that lifts canopy by degrading these is not adopted.
+
+---
+
+## 2026-09-23 — Part C.0 result: **pre-registered STOP. Part C's fine-tune is not run.**
+
+`scripts/gamus_leafon_precheck.py` → `data/gamus_eval/leafon_precheck.json`. The values are the median over tiles of the per-tile share of tree pixels with ExG > 0.05. The sample is 40 random tiles per city from all splits, seed 0; tiles with < 1,000 tree px are skipped.
+
+| city | tiles used | median share green [p25, p75] | tiles ≥ 0.40 | leaf-on (≥ 0.40)? |
+|---|---|---|---|---|
+| DC | 40 | **0.064** [0.038, 0.118] | 0 | no |
+| NYC | 38 | **0.034** [0.012, 0.102] | 1 | no |
+| PHL | 39 | **0.315** [0.225, 0.413] | 12 | no |
+| *ref: DFC2019 JAX (Method 6 training)* | 50 | 0.40 | | threshold |
+| *ref: Sikkim `a_forest`* | | 0.93 | | |
+
+- **No city clears the leaf-on threshold, so Part C's full fine-tune is not run**, per the rule committed in `b83399a`.
+- This agrees with the DC pilot's diagnosis:
+  - the tall-canopy supervision GAMUS offers is leaf-off (DC, NYC) or mixed-season (PHL);
+  - more of it is not expected to lift the canopy ceiling on leaf-on forest, whatever the data volume.
+- DC and NYC come out lower than the earlier 9% because this is a per-tile median, while the earlier figure used a different sample. Same conclusion.
+- **Post-hoc observation, not acted on:**
+  - PHL imagery is mixed-season: 12 of 39 sampled tiles are individually ≥ 0.40, and the max tile is 0.92.
+  - A tile-level "leaf-on PHL" subset (roughly 30% of PHL, about 1,000 tiles) could be selected by ExG.
+  - Doing so would re-scope a city-level rule after seeing its result, so it is **not run**. It is listed as an open option.
+  - Also note that PHL's canopy is short (tree p99 21.2 m, `06-.../vhr_dsm_pipeline.md`). A leaf-on PHL subset would add greenness, not height.
+- **Consequences:**
+  - Part C(3) and its adoption rule do not apply.
+  - Part D runs Method 6 only ("Part C model, if adopted" is void).
+  - The added Sikkim non-regression criterion stays on record for any future GAMUS fine-tune.
