@@ -31,3 +31,4 @@ data/checkpoints/*
 !data/checkpoints/README.md
 models/hub/
 models/xet/
+.claude/settings.local.json
