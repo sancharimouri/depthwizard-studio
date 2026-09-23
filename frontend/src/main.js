@@ -34,11 +34,11 @@ function layerDescriptionText(layer, regionKey = currentRegionKey) {
         case "depth-flat":
             return "DAv2 relative depth — flat, not absolute elevation";
         case "elevation-flat":
-            return `Metric elevation from ${source} — flat`;
+            return `DEM elevation from ${source} — flat`;
         case "dsm-3d":
             return "DAv2 relative depth draped on extruded terrain";
         case "elevation-3d":
-            return `Metric elevation from ${source} — color-ramped by elevation`;
+            return `DEM elevation from ${source} — color-ramped by elevation`;
         case "satellite-3d":
             return "Sentinel-2 RGB draped on extruded terrain";
         default:
@@ -228,7 +228,7 @@ const STAGES = [
     { layer: "depth-flat", caption: "Relative Depth", duration: 900 },
     { layer: "elevation-flat", caption: "Elevation", duration: 900 },
     { layer: "dsm-3d", caption: "DSM", duration: 1000 },
-    { layer: "elevation-3d", caption: "Metric Elevation", duration: 1000 },
+    { layer: "elevation-3d", caption: "DEM Elevation", duration: 1000 },
     { layer: "satellite-3d", caption: "True Color", duration: 1300 },
 ];
 
