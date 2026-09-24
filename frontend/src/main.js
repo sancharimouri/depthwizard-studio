@@ -3,6 +3,7 @@ import { createTerrain } from "./terrain.js";
 import { createTerrainViewer } from "./viewer.js";
 import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
+import { createInputView } from "./input-view.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -456,273 +457,6 @@ floodButton?.addEventListener("click", () => {
 });
 
 
-// ============================================================
-// WORKBENCH — DIRECT UPLOAD (Scene Input box 1, alternative to scene
-// search). Was previously wired to a "upload-trigger" button that got
-// deleted from Page 1's markup in an earlier cleanup, leaving this
-// modal/logic as dead code with nothing to open it — rebuilt here as
-// Workbench's actual upload entry point instead.
-// ============================================================
-
-const sceneUploadTrigger = document.getElementById("scene-upload-trigger");
-const sceneUploadModal = document.getElementById("scene-upload-modal");
-const sceneUploadBackdrop = document.getElementById("scene-upload-backdrop");
-const sceneUploadCancel = document.getElementById("scene-upload-cancel");
-const sceneUploadDropzone = document.getElementById("scene-upload-dropzone");
-const sceneUploadInput = document.getElementById("scene-upload-input");
-
-function openSceneUploadModal() {
-    if (sceneUploadModal) {
-        sceneUploadModal.hidden = false;
-    }
-}
-
-function closeSceneUploadModal() {
-    if (sceneUploadModal) {
-        sceneUploadModal.hidden = true;
-    }
-    sceneUploadDropzone?.classList.remove("drag-over");
-}
-
-function handleUploadedFile(file) {
-    if (!file) {
-        return;
-    }
-
-    closeSceneUploadModal();
-    selectUploadedScene(file);
-}
-
-sceneUploadTrigger?.addEventListener("click", openSceneUploadModal);
-sceneUploadCancel?.addEventListener("click", closeSceneUploadModal);
-sceneUploadBackdrop?.addEventListener("click", closeSceneUploadModal);
-
-sceneUploadInput?.addEventListener("change", () => {
-    handleUploadedFile(sceneUploadInput.files?.[0]);
-});
-
-sceneUploadDropzone?.addEventListener("dragover", event => {
-    event.preventDefault();
-    sceneUploadDropzone.classList.add("drag-over");
-});
-
-sceneUploadDropzone?.addEventListener("dragleave", () => {
-    sceneUploadDropzone.classList.remove("drag-over");
-});
-
-sceneUploadDropzone?.addEventListener("drop", event => {
-    event.preventDefault();
-    sceneUploadDropzone.classList.remove("drag-over");
-    handleUploadedFile(event.dataTransfer?.files?.[0]);
-});
-
-document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && sceneUploadModal && !sceneUploadModal.hidden) {
-        closeSceneUploadModal();
-    }
-});
-
-
-// ============================================================
-// LIVE LOCATION AUTOCOMPLETE (OpenStreetMap Nominatim, no API key)
-// ============================================================
-
-const GEOCODE_DEBOUNCE_MS = 400;
-const GEOCODE_MIN_QUERY_LENGTH = 3;
-
-const geocodeInput = document.getElementById("geocode-location-input");
-const geocodeDropdown = document.getElementById("geocode-dropdown");
-const geocodeDetails = document.getElementById("geocode-details");
-
-let selectedGeocodeResult = null;
-let geocodeDebounceTimer = null;
-let geocodeRequestId = 0;
-
-async function queryNominatim(query) {
-    const url =
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&q=` +
-        encodeURIComponent(query);
-
-    const response = await fetch(url, {
-        headers: { "Accept": "application/json" },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Nominatim request failed: ${response.status}`);
-    }
-
-    return response.json();
-}
-
-function renderGeocodeStatus(text) {
-    if (!geocodeDropdown) {
-        return;
-    }
-    geocodeDropdown.innerHTML = `<div class="geocode-status">${text}</div>`;
-    geocodeDropdown.hidden = false;
-}
-
-function renderGeocodeResults(results) {
-    if (!geocodeDropdown) {
-        return;
-    }
-
-    if (!results || results.length === 0) {
-        renderGeocodeStatus("No matches");
-        return;
-    }
-
-    geocodeDropdown.innerHTML = "";
-
-    results.forEach(result => {
-        const item = document.createElement("button");
-        item.type = "button";
-        item.className = "geocode-result";
-        item.textContent = result.display_name;
-        item.addEventListener("click", () => selectGeocodeResult(result));
-        geocodeDropdown.appendChild(item);
-    });
-
-    geocodeDropdown.hidden = false;
-}
-
-function renderGeocodeDetails(result) {
-    if (!geocodeDetails) {
-        return;
-    }
-
-    const address = result.address ?? {};
-    const region = address.state || address.region || address.county || "";
-    const regionCountry = [region, address.country].filter(Boolean).join(", ") || "—";
-
-    geocodeDetails.innerHTML = `
-        <div class="geocode-detail-row"><span>Place</span><span>${result.display_name}</span></div>
-        <div class="geocode-detail-row"><span>Lat, Lng</span><span class="numeric-mono">${Number(result.lat).toFixed(4)}, ${Number(result.lon).toFixed(4)}</span></div>
-        <div class="geocode-detail-row"><span>Region</span><span>${regionCountry}</span></div>
-    `;
-    geocodeDetails.hidden = false;
-}
-
-function selectGeocodeResult(result) {
-    selectedGeocodeResult = result;
-
-    if (geocodeInput) {
-        geocodeInput.value = result.display_name;
-    }
-    if (geocodeDropdown) {
-        geocodeDropdown.hidden = true;
-        geocodeDropdown.innerHTML = "";
-    }
-
-    renderGeocodeDetails(result);
-
-    if (sceneSearchTrigger) {
-        sceneSearchTrigger.disabled = false;
-    }
-}
-
-geocodeInput?.addEventListener("input", () => {
-    const query = geocodeInput.value.trim();
-    const requestId = ++geocodeRequestId;
-
-    selectedGeocodeResult = null;
-    if (geocodeDetails) {
-        geocodeDetails.hidden = true;
-    }
-    if (sceneSearchTrigger) {
-        sceneSearchTrigger.disabled = true;
-    }
-
-    if (geocodeDebounceTimer) {
-        clearTimeout(geocodeDebounceTimer);
-    }
-
-    if (query.length < GEOCODE_MIN_QUERY_LENGTH) {
-        if (geocodeDropdown) {
-            geocodeDropdown.hidden = true;
-        }
-        return;
-    }
-
-    geocodeDebounceTimer = setTimeout(async () => {
-        renderGeocodeStatus("Searching…");
-
-        try {
-            const results = await queryNominatim(query);
-            if (requestId !== geocodeRequestId) {
-                return; // a newer keystroke has already superseded this lookup
-            }
-            renderGeocodeResults(results);
-        } catch (error) {
-            if (requestId !== geocodeRequestId) {
-                return;
-            }
-            console.error("Nominatim lookup failed:", error);
-            renderGeocodeStatus("Lookup failed — try again");
-        }
-    }, GEOCODE_DEBOUNCE_MS);
-});
-
-document.addEventListener("click", event => {
-    if (
-        geocodeDropdown && !geocodeDropdown.hidden &&
-        event.target !== geocodeInput && !geocodeDropdown.contains(event.target)
-    ) {
-        geocodeDropdown.hidden = true;
-    }
-});
-
-
-// ============================================================
-// LIVE SCENE SEARCH (Workbench "Scene Input" flow) — queries the real
-// Copernicus Data Space Ecosystem (Sentinel Hub Catalog + Process APIs)
-// through our own backend proxy at backend/main.py, which holds the
-// CDSE client secret server-side. AOI / date range / cloud cover here
-// are real request parameters, not mock knobs.
-// ============================================================
-
-const CDSE_SEARCH_URL = "/api/cdse/search";
-const CDSE_PREVIEW_URL = "/api/cdse/preview";
-
-const sceneAoiInput = document.getElementById("scene-aoi");
-const sceneDateFromInput = document.getElementById("scene-date-from");
-const sceneDateToInput = document.getElementById("scene-date-to");
-const sceneCloudInput = document.getElementById("scene-cloud");
-
-// The AOI bbox (WGS84) from the most recent search — reused as the crop
-// extent when requesting a true-color preview for a selected scene.
-let currentSearchAoiBbox = null;
-
-async function postJson(url, body) {
-    const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-        let detail = `HTTP ${response.status}`;
-        try {
-            const errorBody = await response.json();
-            detail = errorBody.detail || detail;
-        } catch {
-            // response wasn't JSON — fall back to the status line
-        }
-        throw new Error(detail);
-    }
-
-    return response;
-}
-
-const sceneSearchTrigger = document.getElementById("scene-search-trigger");
-const sceneSearchModal = document.getElementById("scene-search-modal");
-const sceneSearchBackdrop = document.getElementById("scene-search-backdrop");
-const sceneSearchCancel = document.getElementById("scene-search-cancel");
-const sceneSearchButton = document.getElementById("scene-search-button");
-const sceneSearchStatus = document.getElementById("scene-search-status");
-const sceneSearchResults = document.getElementById("scene-search-results");
-const sceneSearchLocationReadout = document.getElementById("scene-search-location-readout");
-
 const previewEmpty = document.getElementById("preview-empty");
 const previewContent = document.getElementById("preview-content");
 const previewImage = document.getElementById("preview-image");
@@ -767,231 +501,32 @@ function markSceneSelected() {
     revealScenePreview();
 }
 
-function openSceneSearchModal() {
-    if (sceneSearchModal) {
-        sceneSearchModal.hidden = false;
-    }
-    if (sceneSearchStatus) {
-        sceneSearchStatus.hidden = true;
-    }
-    if (sceneSearchResults) {
-        sceneSearchResults.hidden = true;
-        sceneSearchResults.innerHTML = "";
-    }
-    if (sceneSearchButton) {
-        sceneSearchButton.disabled = false;
-        sceneSearchButton.textContent = "SEARCH";
-    }
-    if (sceneSearchLocationReadout && selectedGeocodeResult) {
-        const coords = document.createElement("span");
-        coords.className = "numeric-mono";
-        coords.textContent =
-            `${Number(selectedGeocodeResult.lat).toFixed(4)}, ${Number(selectedGeocodeResult.lon).toFixed(4)}`;
 
-        sceneSearchLocationReadout.replaceChildren(
-            `📍 ${selectedGeocodeResult.display_name} · `,
-            coords
-        );
-    }
-}
+// ============================================================
+// PAGE 1 INPUT VIEW → GENERATION GRID. The input view (src/input-view.js)
+// owns selection; START GENERATION there hands the chosen input over to
+// the generation grid (preview box + calculation log) and runs the
+// pipeline sequence.
+// ============================================================
 
-function closeSceneSearchModal() {
-    if (sceneSearchModal) {
-        sceneSearchModal.hidden = true;
-    }
-}
+const inputViewEl = document.getElementById("input-view");
+const workbenchGridEl = document.querySelector("#page-workbench .workbench-grid");
 
-async function selectScene(scene, cardEl) {
-    if (!currentSearchAoiBbox) {
-        return;
-    }
-
-    document.querySelectorAll(".scene-result-card").forEach(el => {
-        el.disabled = true;
-    });
-    if (cardEl) {
-        cardEl.classList.add("is-loading");
-    }
-    if (sceneSearchStatus) {
-        sceneSearchStatus.hidden = false;
-        sceneSearchStatus.className = "scene-search-status";
-        sceneSearchStatus.innerHTML =
-            `<span class="scene-search-spinner"></span> Requesting true-color preview from Sentinel Hub Process API…`;
-    }
-
-    try {
-        const response = await postJson(CDSE_PREVIEW_URL, {
-            bbox: currentSearchAoiBbox,
-            date: scene.date,
-        });
-        const blob = await response.blob();
-
-        pendingScenePreview = {
-            src: URL.createObjectURL(blob),
-            meta: `${scene.id} · ${scene.date} · ${scene.cloud}% cloud · live Sentinel-2 L2A (CDSE)`,
-        };
-        sceneSelectionSummary = { type: "search", geocode: selectedGeocodeResult, scene };
-
-        markSceneSelected();
-        closeSceneSearchModal();
-    } catch (error) {
-        console.error("CDSE preview request failed:", error);
-        if (sceneSearchStatus) {
-            sceneSearchStatus.hidden = false;
-            sceneSearchStatus.className = "scene-search-status is-error";
-            sceneSearchStatus.textContent = `Preview failed: ${error.message}`;
-        }
-        document.querySelectorAll(".scene-result-card").forEach(el => {
-            el.disabled = false;
-        });
-        if (cardEl) {
-            cardEl.classList.remove("is-loading");
-        }
-    }
-}
-
-function selectUploadedScene(file) {
-    pendingScenePreview = {
-        src: URL.createObjectURL(file),
-        meta: `${file.name} · uploaded directly · prototype pick, not a live reconstruction`,
-    };
-    sceneSelectionSummary = { type: "upload", file };
-
+function startFromInput(selection) {
+    pendingScenePreview = { src: selection.previewUrl, meta: selection.metaLine };
+    sceneSelectionSummary = { type: "input", ...selection };
     markSceneSelected();
+
+    inputViewEl.hidden = true;
+    workbenchGridEl?.classList.remove("is-hidden");
+    staggerGridEntrance();
+    runGenerationSequence();
 }
 
-const SCENE_THUMB_PX = 96;
-
-// The Catalog (STAC) response has no thumbnail/quicklook asset — its
-// "data" asset is an S3 directory href, not a fetchable image — so each
-// result's thumbnail is a small real Process API crop of that scene over
-// the search AOI, not a fabricated placeholder image.
-async function loadSceneThumbnail(scene, thumbEl) {
-    if (!currentSearchAoiBbox || !thumbEl) {
-        return;
-    }
-
-    try {
-        const response = await postJson(CDSE_PREVIEW_URL, {
-            bbox: currentSearchAoiBbox,
-            date: scene.date,
-            width: SCENE_THUMB_PX,
-            height: SCENE_THUMB_PX,
-        });
-        const blob = await response.blob();
-
-        const img = document.createElement("img");
-        img.className = "scene-result-thumb";
-        img.src = URL.createObjectURL(blob);
-        img.alt = `${scene.id} quicklook`;
-        thumbEl.replaceWith(img);
-    } catch (error) {
-        console.error(`Thumbnail request failed for ${scene.id}:`, error);
-        // Leave the placeholder tile in place — no fabricated imagery.
-    }
+if (inputViewEl) {
+    createInputView(inputViewEl, { onStart: startFromInput });
 }
 
-function renderSceneResults(scenes) {
-    if (!sceneSearchResults) {
-        return;
-    }
-
-    sceneSearchResults.innerHTML = "";
-
-    scenes.forEach(scene => {
-        const card = document.createElement("button");
-        card.className = "scene-result-card";
-        card.innerHTML = `
-            <div class="scene-result-thumb scene-result-thumb-placeholder">S2</div>
-            <div>
-                <div class="scene-result-name">${scene.id}</div>
-                <div class="scene-result-sub">${scene.date} · ${scene.cloud}% cloud · 10m</div>
-            </div>
-        `;
-        card.addEventListener("click", () => selectScene(scene, card));
-        sceneSearchResults.appendChild(card);
-
-        loadSceneThumbnail(scene, card.querySelector(".scene-result-thumb"));
-    });
-
-    sceneSearchResults.hidden = false;
-}
-
-async function runSceneSearch() {
-    if (!selectedGeocodeResult) {
-        return;
-    }
-
-    if (sceneSearchButton) {
-        sceneSearchButton.disabled = true;
-        sceneSearchButton.textContent = "SEARCHING…";
-    }
-    if (sceneSearchResults) {
-        sceneSearchResults.hidden = true;
-    }
-    if (sceneSearchStatus) {
-        sceneSearchStatus.hidden = false;
-        sceneSearchStatus.className = "scene-search-status";
-
-        const center = `${Number(selectedGeocodeResult.lat).toFixed(4)}, ${Number(selectedGeocodeResult.lon).toFixed(4)}`;
-        sceneSearchStatus.innerHTML =
-            `<span class="scene-search-spinner"></span> Querying Copernicus Data Space Ecosystem near ${center}…`;
-    }
-
-    try {
-        const response = await postJson(CDSE_SEARCH_URL, {
-            lat: Number(selectedGeocodeResult.lat),
-            lon: Number(selectedGeocodeResult.lon),
-            aoi_km: Number(sceneAoiInput?.value ?? 10),
-            date_from: sceneDateFromInput?.value,
-            date_to: sceneDateToInput?.value,
-            max_cloud: Number(sceneCloudInput?.value ?? 20),
-        });
-        const data = await response.json();
-
-        currentSearchAoiBbox = data.bbox;
-
-        if (sceneSearchStatus) {
-            sceneSearchStatus.hidden = true;
-        }
-
-        if (!data.scenes || data.scenes.length === 0) {
-            if (sceneSearchStatus) {
-                sceneSearchStatus.hidden = false;
-                sceneSearchStatus.className = "scene-search-status is-error";
-                sceneSearchStatus.textContent =
-                    "No Sentinel-2 scenes matched — try a wider date range or higher cloud limit.";
-            }
-        } else {
-            renderSceneResults(data.scenes);
-        }
-    } catch (error) {
-        console.error("CDSE catalog search failed:", error);
-        if (sceneSearchStatus) {
-            sceneSearchStatus.hidden = false;
-            sceneSearchStatus.className = "scene-search-status is-error";
-            sceneSearchStatus.textContent = `Search failed: ${error.message}`;
-        }
-    } finally {
-        if (sceneSearchButton) {
-            sceneSearchButton.disabled = false;
-            sceneSearchButton.textContent = "SEARCH";
-        }
-    }
-}
-
-sceneSearchTrigger?.addEventListener("click", openSceneSearchModal);
-sceneSearchCancel?.addEventListener("click", closeSceneSearchModal);
-sceneSearchBackdrop?.addEventListener("click", closeSceneSearchModal);
-sceneSearchButton?.addEventListener("click", runSceneSearch);
-
-document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && sceneSearchModal && !sceneSearchModal.hidden) {
-        closeSceneSearchModal();
-    }
-});
-
-startGenerationButton?.addEventListener("click", runGenerationSequence);
 
 
 // ============================================================
@@ -1128,25 +663,9 @@ function appendCalcLogLine(scrollEl, text) {
 function buildCalcLogLines() {
     const opening = [];
 
-    if (sceneSelectionSummary?.type === "search") {
-        const geocode = sceneSelectionSummary.geocode;
-        const scene = sceneSelectionSummary.scene;
-
-        if (geocode) {
-            opening.push(
-                `Location resolved via Nominatim: ${geocode.display_name}`,
-                `Coordinates: ${Number(geocode.lat).toFixed(4)}, ${Number(geocode.lon).toFixed(4)}`
-            );
-        }
-        if (scene) {
-            opening.push(`Selected scene ${scene.id} · ${scene.date} · ${scene.cloud}% cloud`);
-        }
-    } else if (sceneSelectionSummary?.type === "upload") {
-        const file = sceneSelectionSummary.file;
-        opening.push(
-            `Direct upload received: ${file.name} (${Math.max(1, Math.round(file.size / 1024))} KB)`,
-            `No STAC lookup for a direct upload — prototype pipeline defaults to Darjeeling reference data`
-        );
+    if (sceneSelectionSummary?.type === "input") {
+        opening.push(...sceneSelectionSummary.logLines);
+        opening.push("Generation stages below are a placeholder: they show the Darjeeling reference outputs");
     }
 
     opening.push("Handing off to reconstruction pipeline…");
@@ -2101,7 +1620,6 @@ document.addEventListener("keydown", event => {
 // top-to-bottom, one subtle cascade rather than 8 independent panels. ----
 
 const GRID_ENTER_ORDER = [
-    "scene-input-box",
     "depth-preview-box",
     "dsm-3d-box",
     "calc-logs-box",

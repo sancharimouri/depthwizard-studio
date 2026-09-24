@@ -337,6 +337,26 @@ terrain.** None of the research-track work is deployed into it.
   which enforces routing: Sentinel-2 is always Tier 1 (DEM only); DFC2019 and VHR are Tier 2.
 - **Caveat:** DFC2019 has no georeference, so Tier 2 there means above-ground height only, with no DEM.
 
+**Page 1 input view — Prompt 2 of prompts.pages (2026-09-25; `frontend/src/input-view.js`, `backend/input/store.py`,
+`backend/api/input_routes.py`, `backend/dem/fabdem.py`).**
+- **Layout:** Library / Upload / Search Online tabs on the left half; preview, metadata, tier card, DEM card and START GENERATION
+  on the right half. The old scene-input box and its two modals are gone; START hands the input to the existing generation grid.
+- **Tier colours (user to confirm):** green = Tier 2, orange = Tier 1, neutral = relative preview only. Tokens `--tier2-rgb` /
+  `--tier1-rgb`; same hue in both themes.
+- **Upload:** GSD comes from the geotransform (degrees converted to metres; the coarser axis is used).
+  - ≤ 2.4 m → Tier 2; the user uploads a DEM (checked: georeferenced, 1 band, ≥ 90% footprint overlap) or has FABDEM fetched.
+  - \> 2.4 m → Tier 1; FABDEM is fetched automatically.
+  - No georeference → relative preview only (placeholder).
+  - Files go to `data/uploads/<id>/` (gitignored, session storage, never cleaned automatically).
+- **FABDEM:** Earth Engine `computePixels` at native 30 m, with the projection set before resampling (the 1° bug).
+- **Search Online:** CDSE search → `POST /api/input/scene` → FABDEM, always Tier 1 and locked.
+  - "Use your own Copernicus API key": headers `X-CDSE-Client-Id/-Secret`; memory only; a bad key → 401.
+- **Quota:** `GET /api/cdse/quota`. It shows the documented General-User limits (300 req/min, 10,000 req/month, 300 PU/min,
+  10,000 PU/month, monthly reset), the account typology from the token, and this server's own spend (from
+  `x-processingunits-spent`). It deliberately shows no "remaining" figure, because CDSE doesn't publish one; it throttles
+  with HTTP 429, which is passed through with Retry-After.
+- **Placeholder:** the generation stages after START still show the Darjeeling reference outputs (labelled in the UI and log).
+
 **Expanded-view chrome (2026-09-25; `frontend/src/expanded-chrome.js`):**
 - **Icon toolbar** (outline icons; names as tooltips only), in `reference.jpg` order: Screenshot, Record (disabled placeholder),
   Measure ▾, View ▾, Flythrough, Save + Library ▾, Mouse pointer, Notes, Trash (clears the current selection).
