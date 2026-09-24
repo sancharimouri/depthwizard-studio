@@ -136,3 +136,68 @@ threshold beyond rule 1.
 **Wall time (R4).** The measured R 8 m run was 53 min for 4 folds (`chain8.log`). So R10 + R12 ≈ 1.8 h, plus eval
 ≈ 10–15 min ⇒ **≈ 2 h**. Launched as one nohup chain: `data/dfc2019/experiments/resolution_transfer/run_chain_b.sh`
 → `chainB.log`.
+
+## 2026-09-24 — Phase C pre-registration (committed before the real runs; only 20-step smoke tests run so far)
+
+**Script.** `scripts/s2_token_grid_phase_c.py` (`prep` / `train --arm {P,R}` / `analyze`). Output goes to
+`data/sentinel2_benchmark/token_grid_test/`.
+
+**The only manipulated variable is the token-grid geometry.** Held constant across the arms:
+- tiles, folds, crops (identical pixels), target, model, loss;
+- optimiser, LR schedule, seed, step count, batch, and the crop sampling order (same RNG seed per fold).
+
+**Tiles.** All **32** benchmark tiles in `manifest.csv`. The flagged/unflagged split of A4 was a DAv2 sign-flip
+criterion, which is irrelevant here because there is no frozen DAv2. Every tile has a 100%-finite 30 m FABDEM and
+6.8k–84k ICESat-2 ground cells.
+
+**Folds.** The 4 tile quadrants, as in every prior Sentinel-2 run. Train on 3 quadrants of every tile, evaluate on the
+held-out quadrant.
+
+**Crops.** 60 × 60 px at 10 m (600 m). 64 per quadrant (8 × 8), with origins at multiples of 3 so they align to the
+30 m grid. That gives 6,144 training crops per fold.
+
+**Target: FABDEM, interpolation-safe (native-30m construction).**
+- Raw FABDEM (`fabdem_raw/*.tif`) is warped directly onto an exact 3× coarsening of the tile's 10 m grid (333 × 333 at
+  30 m, bilinear at ~1:1).
+- Predictions are 3 × 3-average-pooled to that grid and the loss is computed there. No target value finer than FABDEM's
+  own ~30 m resolution exists anywhere.
+- Checked: the warp matches the 3 × 3 block mean of the benchmark's 10 m FABDEM product. Mean difference ≈ 0 m; p95
+  |d| is 0.1 m on plains and 7 m on steep Almora (bilinear vs block mean).
+
+**What is learned.** Within-crop relief: FABDEM minus its crop mean. Absolute elevation is unidentifiable from a
+600 m RGB crop. At evaluation both arms receive the crop's FABDEM mean as offset, so any difference is relief only.
+
+**Model.** Method 6's `TwinHeadDav2`: DAv2-Small, full fine-tune, pretrained head init, `height_scale` = std of the
+fold's training relief. The mu head only. Mean-removed Huber loss (β = 1 m). AdamW, LR 5e-6 / 2.5e-4, 5% warm-up +
+linear decay, grad clip 1.0.
+
+*Deviation from Method 6, stated:* no Gaussian-NLL stage and no height-balanced sampler. Those were tuned for absolute
+AGL. The same loss is used in both arms.
+
+**Arms.**
+
+| Arm | Input to ViT | Token grid | m / token | Real px / token side |
+|---|---|---|---|---|
+| P | 60 px, reflect-pad → 70 | 70/14 = **5×5 = 25** | 140 m | 14 (A4's and DFC-P's ratio) |
+| R | 60 px, bilinear ×9 → 540, reflect-pad → 546; output cropped to 540, 9 × 9 average-pooled to 60 | 546/14 = **39×39 = 1,521** | 15.4 m | 1.54 |
+
+R's 540/546 replaces the 518 first coded, because MPS cannot area-pool 518 → 60. That was an implementation fix found
+in the smoke test, before any result was seen.
+
+**Evaluation, per tile, pooled over its 4 held-out quadrants:**
+- **ICESat-2 check (primary, independent of the training reference).** ICESat-2 ground photons are grouped per (10 m
+  cell, RGT) as the median, then converted to EGM2008 (FABDEM's datum; PROJ grid asserted). Score: RMSE of
+  (crop FABDEM mean + predicted relief at 10 m) against those heights.
+- **DEM held-out check (secondary).** RMSE on the 30 m grid against FABDEM.
+- **Context, not tested:** a flat crop-mean baseline and raw 10 m FABDEM at the same cells. FABDEM is expected to win
+  both, since it *is* the terrain product; this phase compares R with P, not with FABDEM.
+
+**Pass rule (user's, made conservative).** "R genuinely helps" if, on the ICESat-2 check, all three hold:
+- R has lower RMSE than P on a **majority** of scored tiles;
+- R's mean RMSE is lower;
+- the paired two-sided Wilcoxon over tiles gives **p < 0.05 after Holm across the 2 checks** (ICESat-2, DEM).
+
+The 95% tile-bootstrap CI of R − P is reported as well.
+
+**Phase D gate.** Only if that rule passes: note that data starvation (32 tiles) remains a separate, untested variable.
+Do not test it this session.
