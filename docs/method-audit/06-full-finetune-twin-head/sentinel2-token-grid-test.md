@@ -550,3 +550,45 @@ Script: `scripts/s2_rank_raw_spearman.py`. Output: `rank_loss/raw_spearman/`.
   so an isotonic step isn't indicated.
 
 Also reported: rank model vs oracle within-crop Spearman (paired Wilcoxon, wins, bootstrap CI).
+
+## 2026-09-24 — Raw-Spearman check result: **Case 3. The raw ranking is weak and the linear calibration already expresses it. Isotonic is not indicated; the line stays closed.**
+
+**Reproduction of the re-fit** (vs the committed `eval_rank_fold*.json`, 128 tile-folds):
+- per-tile calibrated ICESat-2 RMSE: median relative difference **0.6%**, maximum 17% (one tile-fold);
+- calibration slope sign agrees on **96.9%**.
+
+MPS training is not bit-deterministic, so these are **statistically equivalent re-fits**, not the identical networks.
+They were scored on 6,358 held-out crops with ICESat-2 cells in total. Log: `rank_loss/raw_spearman.log`; results:
+`rank_loss/raw_spearman/summary.json`.
+
+**Results.** 32 tiles; mean over tiles [95% tile-bootstrap CI]; within-crop = crops with ≥ 10 ICESat-2 cells.
+
+| Raw signal vs ICESat-2 height | Within-crop Spearman (primary) | Pooled within-crop | Whole-tile Spearman (secondary, caveated) |
+|---|---|---|---|
+| **Rank model, raw output** | **0.134** [0.078, 0.194] | 0.099 | 0.251 [0.148, 0.355] |
+| **Frozen DAv2-Large (oracle's raw signal)** | **0.109** [0.052, 0.171] | 0.100 | 0.299 [0.155, 0.434] |
+| FABDEM 10 m (reference ceiling) | 0.631 [0.533, 0.728] | 0.582 | 0.888 [0.826, 0.941] |
+| Linear calibration's implied r (rank model) | 0.109 [0.055, 0.170] | — | — |
+
+**Tests:**
+- **Rank model vs oracle, within-crop:** Δ +0.025 [−0.056, +0.108], model higher on 19/32 tiles, Wilcoxon p = 0.55.
+  **No difference.**
+- **Raw Spearman − calibration-implied r:** Δ **+0.025** [−0.011, +0.063], higher on **16/32**, Wilcoxon p = 0.41.
+  All three Case-2 conditions fail (the mean gap is < 0.10, it isn't a majority, and p is not < 0.05).
+
+**Reading:**
+- **The measure works.** FABDEM ranks ICESat-2 heights within the same 600 m crops at ρ ≈ 0.63. So the low values
+  below come from the image-based signals, not from ICESat-2 noise or too few cells.
+- **Both image-based signals barely rank terrain within a crop.** The tile means are 0.13 (rank model) and 0.11
+  (DAv2-L). The pooled values are 0.099 and 0.100, just under the 0.10 near-zero line. The tile means sit just above it,
+  which is why the rule lands on Case 3 rather than Case 1. Either way the substance is the same: the ranking is weak,
+  about one fifth of the DEM's.
+- **Calibration was never the bottleneck.** The linear step already expresses essentially all the ranking there is:
+  the implied r of 0.109 against the raw Spearman of 0.134 is a gap of 0.025, not significant. An isotonic (monotone
+  nonlinear) mapping can't reorder values within a crop, and there's no unexpressed ranking signal for it to recover.
+- **The whole-tile values** (0.25 / 0.30) are higher only because they include between-crop elevation trends: for the
+  oracle, a whole-tile depth trend. That is exactly the part the crop-mean-from-FABDEM already supplies, so it is not
+  evidence of usable relief.
+
+**Verdict.** As pre-agreed, the Sentinel-2 learned terrain-correction line **stays closed**, and no isotonic follow-up
+is warranted.

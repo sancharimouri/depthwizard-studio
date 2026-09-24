@@ -83,6 +83,7 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 - **Rank-loss test (final check; the line is now closed).** Same setup, loss → Method 4 v2 `rank_pair_loss`, per-tile post-hoc slope calibration.
   Against the identically calibrated frozen-DAv2 oracle: ICESat-2 16.25 vs. 16.74 m, 18/32 tiles, **Holm p = 0.54** (no real signal); still about 5.7× worse than FABDEM.
   Descriptive, not pre-registered: it beats Phase C's magnitude loss by 0.35 m (28/32). **The Sentinel-2 learned-terrain-correction line is CLOSED; don't reopen.**
+- **Raw-Spearman check (Case 3):** within-crop Spearman vs. ICESat-2 is rank model 0.134, DAv2-L 0.109, FABDEM 0.631. It is fully expressed by the linear calibration (gap +0.025, 16/32, p = 0.41), so **isotonic is not indicated**.
 
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
 - **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:

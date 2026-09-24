@@ -1,0 +1,135 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8009.14it/s]
+[rank_fold0] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold0] step 1/600 loss 0.6947 ETA 7.0 min
+[rank_fold0] step 100/600 loss 0.3917 ETA 0.9 min
+[rank_fold0] step 200/600 loss 0.2458 ETA 0.7 min
+[rank_fold0] step 300/600 loss 0.2276 ETA 0.5 min
+[rank_fold0] step 400/600 loss 0.2093 ETA 0.3 min
+[rank_fold0] step 500/600 loss 0.2101 ETA 0.2 min
+[rank_fold0] step 600/600 loss 0.2011 ETA 0.0 min
+fold0: 1547 held-out crops with ICESat-2 cells
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7391.05it/s]
+[rank_fold1] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold1] step 1/600 loss 0.4594 ETA 2.4 min
+[rank_fold1] step 100/600 loss 0.3531 ETA 0.8 min
+[rank_fold1] step 200/600 loss 0.2335 ETA 0.6 min
+[rank_fold1] step 300/600 loss 0.2283 ETA 0.5 min
+[rank_fold1] step 400/600 loss 0.2174 ETA 0.3 min
+[rank_fold1] step 500/600 loss 0.2121 ETA 0.2 min
+[rank_fold1] step 600/600 loss 0.2024 ETA 0.0 min
+fold1: 1591 held-out crops with ICESat-2 cells
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7592.34it/s]
+[rank_fold2] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold2] step 1/600 loss 0.4518 ETA 2.5 min
+[rank_fold2] step 100/600 loss 0.4351 ETA 0.8 min
+[rank_fold2] step 200/600 loss 0.2357 ETA 0.6 min
+[rank_fold2] step 300/600 loss 0.2220 ETA 0.5 min
+[rank_fold2] step 400/600 loss 0.2119 ETA 0.3 min
+[rank_fold2] step 500/600 loss 0.2028 ETA 0.2 min
+[rank_fold2] step 600/600 loss 0.1991 ETA 0.0 min
+fold2: 1600 held-out crops with ICESat-2 cells
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7721.74it/s]
+[rank_fold3] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold3] step 1/600 loss 0.7135 ETA 2.4 min
+[rank_fold3] step 100/600 loss 0.3734 ETA 0.8 min
+[rank_fold3] step 200/600 loss 0.2343 ETA 0.6 min
+[rank_fold3] step 300/600 loss 0.2251 ETA 0.5 min
+[rank_fold3] step 400/600 loss 0.2104 ETA 0.3 min
+[rank_fold3] step 500/600 loss 0.2024 ETA 0.2 min
+[rank_fold3] step 600/600 loss 0.1932 ETA 0.0 min
+fold3: 1620 held-out crops with ICESat-2 cells
+{
+ "reproduction": {
+  "tile_folds": 128,
+  "max_rel_diff_icesat_rmse": 0.16986743372765556,
+  "median_rel_diff_icesat_rmse": 0.005733854798824189,
+  "slope_sign_agreement": 0.96875
+ },
+ "min_cells_per_crop": 10,
+ "n_tiles": 32,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.13435287105568716,
+   "ci95": [
+    0.07848146931268364,
+    0.19420528342738685
+   ],
+   "n": 32
+  },
+  "within_crop_oracle": {
+   "mean": 0.10926796367905915,
+   "ci95": [
+    0.05172660220102505,
+    0.1709441164382162
+   ],
+   "n": 32
+  },
+  "within_crop_fab": {
+   "mean": 0.6311978037482313,
+   "ci95": [
+    0.5329990006574293,
+    0.7282063308415325
+   ],
+   "n": 32
+  },
+  "calib_implied_r": {
+   "mean": 0.10892144302264467,
+   "ci95": [
+    0.05530010504009746,
+    0.16968639630873789
+   ],
+   "n": 32
+  },
+  "whole_tile_model": {
+   "mean": 0.2513994654671676,
+   "ci95": [
+    0.14770435844330512,
+    0.35462038435526644
+   ],
+   "n": 32
+  },
+  "whole_tile_oracle": {
+   "mean": 0.29895694838151904,
+   "ci95": [
+    0.15540023694208657,
+    0.433847556403903
+   ],
+   "n": 32
+  },
+  "whole_tile_fab": {
+   "mean": 0.8880792423146393,
+   "ci95": [
+    0.825852290245521,
+    0.9408792573357642
+   ],
+   "n": 32
+  },
+  "pooled_within_crop_model": 0.09858003223255896,
+  "pooled_within_crop_oracle": 0.09973478336080752,
+  "pooled_within_crop_fab": 0.5817113278422587
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.025084907376628024,
+   "ci95": [
+    -0.05594699094689351,
+    0.10777167243309188
+   ],
+   "model_higher": 19,
+   "n": 32,
+   "wilcoxon_p": 0.5483431480824947
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": 0.02543142803304249,
+   "ci95": [
+    -0.010773649199017053,
+    0.063246916889348
+   ],
+   "spearman_higher": 16,
+   "n": 32,
+   "wilcoxon_p": 0.4104635491967201
+  }
+ },
+ "case": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+}

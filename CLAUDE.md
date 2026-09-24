@@ -354,6 +354,8 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
 - **Final rank-loss check** (`scripts/s2_rank_loss_test.py`): the same setup with only the loss changed to Method 4 v2's `rank_pair_loss`,
   plus per-tile post-hoc calibration. It does not beat the identically calibrated frozen-DAv2 oracle on ICESat-2 (18/32, Holm p = 0.54).
   **The Sentinel-2 learned-terrain-correction line is closed; the product stays DEM-only.**
+  The raw-Spearman check confirms calibration isn't the bottleneck. Within-crop Spearman is 0.13 (rank model) vs. 0.11 (DAv2-L) vs. 0.63 (FABDEM), and
+  the linear step already expresses it (gap +0.025, p = 0.41), so there is no isotonic follow-up.
 - **Kaggle GPU run:** `scripts/s2_token_grid_phase_c_kaggle.py`, bit-exact CPU parity with `scripts/s2_token_grid_phase_c.py`.
 
 ## SIH26175 brief — evaluation criteria (standing reference; full text `docs/SIH26175_problem_statement.md`)
