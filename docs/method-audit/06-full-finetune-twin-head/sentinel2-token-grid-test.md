@@ -221,3 +221,52 @@ Do not test it this session.
 2. **Primary result:** the Kaggle run, if all 8 folds complete there.
 3. **Fallback:** the local MPS run (`run_phase_c.sh`, which starts after Phase B).
 4. If both complete, the second one is reported as a **cross-device replication**, and the verdict is the primary's.
+
+## 2026-09-24 — Phase B result: **R fails the rule at 10 m and 12 m. The stop condition fires.**
+
+**Run.** Chain 08:40–10:49 IST (`chainB.log`), no failures: R 10 m and R 12 m, 4 folds each, about 13–18 min per
+fold. Then eval and `analyze`, written to `matrix_summary.json`. The analysis reproduces the earlier R 5 m / 8 m
+numbers exactly (0.687 / 0.631), so the extended matrix is consistent with the committed one.
+
+**Rule 1: evaluated at native 0.3 m against the 0.3 m oracle.** The oracle is MAE 3.392 [2.963, 3.865], RMSE 4.579
+[3.985, 5.229], Pearson 0.582 [0.521, 0.639], Spearman 0.509 [0.456, 0.559]. Each cell shows the mean, its
+[95% tile-bootstrap CI], and wins out of 50 tiles.
+
+| Train GSD (R) | MAE | RMSE | Pearson | Spearman | Metrics better with non-overlapping CI | Rule 1 |
+|---|---|---|---|---|---|---|
+| 5 m (reference) | 2.437 [2.11, 2.80] 44/50 | 4.101 [3.48, 4.82] 38/50 | 0.687 [0.646, 0.724] 38/50 | 0.624 [0.583, 0.660] 42/50 | 3/4 | works |
+| 8 m (reference) | 3.062 [2.74, 3.42] 33/50 | 4.647 [4.02, 5.37] 24/50 | 0.631 [0.590, 0.668] 26/50 | 0.585 [0.546, 0.621] 37/50 | 0/4 | fails |
+| **10 m** | 3.261 [2.93, 3.63] 29/50 | 4.819 [4.17, 5.58] 21/50 | 0.610 [0.572, 0.645] 26/50 | 0.576 [0.537, 0.610] 37/50 | **0/4** | **fails** |
+| **12 m** | 3.500 [3.16, 3.88] 21/50 | 5.028 [4.36, 5.81] 18/50 | 0.551 [0.511, 0.590] 18/50 | 0.523 [0.482, 0.561] 27/50 | **0/4** | **fails** |
+
+Holm-adjusted Wilcoxon p (across the R models):
+- R10: MAE 0.62, RMSE 0.43, Pearson 0.40, **Spearman 3e-4** (37/50 tiles; the point estimate is better, but the CIs
+  overlap, so this doesn't count under rule 1).
+- R12: MAE 0.62, RMSE **0.025 (worse than the oracle)**, Pearson 0.17, Spearman 0.65.
+
+**Extended curve.** Native-eval Pearson against training GSD, under R:
+
+| Training GSD | 0.3 m (native) | 2 m | 3 m | 5 m | 8 m | 10 m | 12 m |
+|---|---|---|---|---|---|---|---|
+| Pearson | 0.745 | 0.721 | 0.708 | 0.687 | 0.631 | 0.610 | 0.551 |
+
+MAE: 1.98 → 2.19 → 2.26 → 2.44 → 3.06 → 3.26 → 3.50.
+- The bend seen between 5 and 8 m continues: it **reaches the oracle around 10–12 m** and falls below it at 12 m on
+  Pearson, MAE and RMSE.
+- It degrades steadily; it doesn't collapse. At 10 m the model still ranks heights about as well as the per-tile oracle,
+  but it no longer beats it.
+- Coarse→fine is still better than fine→coarse at every GSD: Pearson c→f 0.610 vs f→c 0.123 at 10 m; 0.551 vs 0.091 at
+  12 m.
+
+**Stop condition (pre-registered): fired.**
+- Under the most favourable version of R (synthetic degradation of the *same* sensor and city it is tested on, with the
+  token grid fully preserved), 10 m-trained Method 6 **does not beat a dense per-tile oracle**.
+- The synthetic evidence therefore predicts that real Sentinel-2 under R is **unlikely** to help. The reasons don't
+  depend on the architecture: at about 10 m the imagery no longer carries enough height-relevant detail about
+  0.3 m-scale structure for this model to beat the oracle.
+
+**Phase C:** still to be run, as pre-registered, with **tempered expectations**. It is a different question: 10 m
+terrain relief against ICESat-2, not DFC2019 AGL. Real data can differ from the synthetic prediction, but a clean R win
+would now be surprising.
+
+**Caveats:** one seed (42); one WorldView-3 city; synthetic area-average degradation, not a real sensor PSF.

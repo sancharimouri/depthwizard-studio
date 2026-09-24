@@ -1,0 +1,331 @@
+=== train R 10 m start Thu Sep 24 08:40:34 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[rt_R_10m_seed42] device=mps gsd=10.0 proto=R n_px=15
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7985.12it/s]
+[rt_R_10m_seed42] fold0 epoch 01/12: loss=10.0164 (56s)
+[rt_R_10m_seed42] fold0 epoch 03/12: loss=4.5100 (159s)
+[rt_R_10m_seed42] fold0 epoch 06/12: loss=3.8386 (557s)
+[rt_R_10m_seed42] fold0 epoch 09/12: loss=3.2196 (896s)
+[rt_R_10m_seed42] fold0 epoch 12/12: loss=2.7190 (1098s)
+[rt_R_10m_seed42] fold0 DONE in 1105.2s. own-GSD metrics={'mae_m': 2.794197560348475, 'rmse_m': 4.410829574186367, 'pearson': 0.5348592689707273, 'spearman': 0.4782509978659872, 'n_tiles': 50}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8590.22it/s]
+[rt_R_10m_seed42] fold1 epoch 01/12: loss=9.1806 (89s)
+[rt_R_10m_seed42] fold1 epoch 03/12: loss=4.4044 (250s)
+[rt_R_10m_seed42] fold1 epoch 06/12: loss=3.4392 (445s)
+[rt_R_10m_seed42] fold1 epoch 09/12: loss=2.7065 (647s)
+[rt_R_10m_seed42] fold1 epoch 12/12: loss=2.3681 (849s)
+[rt_R_10m_seed42] fold1 DONE in 855.6s. own-GSD metrics={'mae_m': 3.025315923430115, 'rmse_m': 4.94326005286496, 'pearson': 0.49630260158019346, 'spearman': 0.47109327968184045, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8238.59it/s]
+[rt_R_10m_seed42] fold2 epoch 01/12: loss=8.9131 (67s)
+[rt_R_10m_seed42] fold2 epoch 03/12: loss=4.6861 (198s)
+[rt_R_10m_seed42] fold2 epoch 06/12: loss=3.6220 (399s)
+[rt_R_10m_seed42] fold2 epoch 09/12: loss=2.9342 (590s)
+[rt_R_10m_seed42] fold2 epoch 12/12: loss=2.4240 (773s)
+[rt_R_10m_seed42] fold2 DONE in 779.4s. own-GSD metrics={'mae_m': 3.0795276579384585, 'rmse_m': 4.890211474060461, 'pearson': 0.4647412700495975, 'spearman': 0.44715376075820545, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7451.49it/s]
+[rt_R_10m_seed42] fold3 epoch 01/12: loss=10.3614 (64s)
+[rt_R_10m_seed42] fold3 epoch 03/12: loss=4.7341 (192s)
+[rt_R_10m_seed42] fold3 epoch 06/12: loss=3.6450 (390s)
+[rt_R_10m_seed42] fold3 epoch 09/12: loss=3.0122 (590s)
+[rt_R_10m_seed42] fold3 epoch 12/12: loss=2.5492 (791s)
+[rt_R_10m_seed42] fold3 DONE in 798.2s. own-GSD metrics={'mae_m': 2.967020482331477, 'rmse_m': 4.6388179782175545, 'pearson': 0.5371707163030872, 'spearman': 0.5167303765711592, 'n_tiles': 50}
+=== train R 12 m start Thu Sep 24 09:39:44 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+[rt_R_12m_seed42] device=mps gsd=12.0 proto=R n_px=13
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 61902.97it/s]
+[rt_R_12m_seed42] fold0 epoch 01/12: loss=10.2891 (71s)
+[rt_R_12m_seed42] fold0 epoch 03/12: loss=4.8075 (217s)
+[rt_R_12m_seed42] fold0 epoch 06/12: loss=4.1343 (424s)
+[rt_R_12m_seed42] fold0 epoch 09/12: loss=3.3674 (642s)
+[rt_R_12m_seed42] fold0 epoch 12/12: loss=2.9459 (848s)
+[rt_R_12m_seed42] fold0 DONE in 854.9s. own-GSD metrics={'mae_m': 3.196413447531203, 'rmse_m': 4.893744321139107, 'pearson': 0.47238255342131713, 'spearman': 0.43807169492334375, 'n_tiles': 50}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7559.39it/s]
+[rt_R_12m_seed42] fold1 epoch 01/12: loss=9.1806 (75s)
+[rt_R_12m_seed42] fold1 epoch 03/12: loss=4.7919 (219s)
+[rt_R_12m_seed42] fold1 epoch 06/12: loss=3.7887 (431s)
+[rt_R_12m_seed42] fold1 epoch 09/12: loss=3.1547 (628s)
+[rt_R_12m_seed42] fold1 epoch 12/12: loss=2.6713 (831s)
+[rt_R_12m_seed42] fold1 DONE in 838.2s. own-GSD metrics={'mae_m': 3.278673228332528, 'rmse_m': 5.249223755112948, 'pearson': 0.45594723261691217, 'spearman': 0.43209534876647276, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7445.26it/s]
+[rt_R_12m_seed42] fold2 epoch 01/12: loss=9.1401 (70s)
+[rt_R_12m_seed42] fold2 epoch 03/12: loss=5.1570 (207s)
+[rt_R_12m_seed42] fold2 epoch 06/12: loss=3.6877 (410s)
+[rt_R_12m_seed42] fold2 epoch 09/12: loss=3.1908 (606s)
+[rt_R_12m_seed42] fold2 epoch 12/12: loss=2.6448 (813s)
+[rt_R_12m_seed42] fold2 DONE in 820.0s. own-GSD metrics={'mae_m': 3.1773810101806754, 'rmse_m': 4.908592538846689, 'pearson': 0.4453777038947708, 'spearman': 0.41668665935387883, 'n_tiles': 50}
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7888.78it/s]
+[rt_R_12m_seed42] fold3 epoch 01/12: loss=10.0863 (71s)
+[rt_R_12m_seed42] fold3 epoch 03/12: loss=4.8604 (211s)
+[rt_R_12m_seed42] fold3 epoch 06/12: loss=3.7911 (424s)
+[rt_R_12m_seed42] fold3 epoch 09/12: loss=3.1728 (641s)
+[rt_R_12m_seed42] fold3 epoch 12/12: loss=2.7894 (855s)
+[rt_R_12m_seed42] fold3 DONE in 861.7s. own-GSD metrics={'mae_m': 3.1296418966966906, 'rmse_m': 4.90789511647767, 'pearson': 0.4703136171723542, 'spearman': 0.4679297381066889, 'n_tiles': 50}
+=== eval start Thu Sep 24 10:36:07 IST 2026
+/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py:356: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8395.28it/s]
+eval native fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 19452.91it/s]
+eval native fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 33106.86it/s]
+eval native fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23817.60it/s]
+eval native fold3 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20134.90it/s]
+eval R10 fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23054.01it/s]
+eval R10 fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 25206.05it/s]
+eval R10 fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 24307.69it/s]
+eval R10 fold3 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 25526.76it/s]
+eval R12 fold0 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23087.17it/s]
+eval R12 fold1 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 22605.50it/s]
+eval R12 fold2 done
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21067.31it/s]
+eval R12 fold3 done
+oracle P 0.3 m done
+oracle P 1.2 m done
+oracle P 2.0 m done
+oracle P 2.4 m done
+oracle P 3.0 m done
+oracle P 5.0 m done
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 6803.53it/s]
+oracle P 10.0 m done
+oracle P 12.0 m done
+oracle R 0.3 m done
+oracle R 1.2 m done
+oracle R 2.0 m done
+oracle R 2.4 m done
+oracle R 3.0 m done
+oracle R 5.0 m done
+oracle R 10.0 m done
+oracle R 12.0 m done
+=== analyze start Thu Sep 24 10:48:59 IST 2026
+{
+ "P": {
+  "transfer": {
+   "P2": {
+    "mae": {
+     "model": 3.755490074102529,
+     "oracle": 3.3924391317553098,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 15,
+     "wilcoxon_p": 0.004757046552823496,
+     "wilcoxon_p_holm": 0.004757046552823496
+    },
+    "rmse": {
+     "model": 6.118205388953126,
+     "oracle": 4.578651016740662,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 4,
+     "wilcoxon_p": 4.218847493575595e-12,
+     "wilcoxon_p_holm": 4.218847493575595e-12
+    },
+    "pearson": {
+     "model": 0.42012221600485977,
+     "oracle": 0.5823925400613021,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 12,
+     "wilcoxon_p": 5.951474850718341e-07,
+     "wilcoxon_p_holm": 5.951474850718341e-07
+    },
+    "spearman": {
+     "model": 0.45294584604587196,
+     "oracle": 0.5093394403236355,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 18,
+     "wilcoxon_p": 0.010566648384996213,
+     "wilcoxon_p_holm": 0.010566648384996213
+    },
+    "n_metrics_better_ci_nonoverlap": 0,
+    "transfer_works": false,
+    "symmetry": {
+     "mae": {
+      "coarse_to_fine": 3.755490074102529,
+      "fine_to_coarse": 4.075322057060812,
+      "diff_c2f_minus_f2c": -0.3198319829582837,
+      "diff_ci95": [
+       -0.4970382628602067,
+       -0.14518733846012669
+      ],
+      "wilcoxon_p": 0.001909205638362721
+     },
+     "rmse": {
+      "coarse_to_fine": 6.118205388953126,
+      "fine_to_coarse": 5.889327530107125,
+      "diff_c2f_minus_f2c": 0.2288778588460026,
+      "diff_ci95": [
+       -0.025438358833943426,
+       0.4844023057255011
+      ],
+      "wilcoxon_p": 0.10525460779046192
+     },
+     "pearson": {
+      "coarse_to_fine": 0.42012221600485977,
+      "fine_to_coarse": 0.07845308102464284,
+      "diff_c2f_minus_f2c": 0.34166913498021695,
+      "diff_ci95": [
+       0.2860649273569337,
+       0.3970224173668898
+      ],
+      "wilcoxon_p": 3.0020430585864233e-13,
+      "p_holm": 1.2008172234345693e-12
+     },
+     "spearman": {
+      "coarse_to_fine": 0.45294584604587196,
+      "fine_to_coarse": 0.06323889897863083,
+      "diff_c2f_minus_f2c": 0.3897069470672412,
+      "diff_ci95": [
+       0.33769267090832383,
+       0.44353618214311663
+      ],
+      "wilcoxon_p": 1.7763568394002505e-15
+     },
+     "verdict": "asymmetric: coarse->fine better"
+    }
+   },
+   "P3": {
+    "mae": {
+     "model": 3.954918698208494,
+     "oracle": 3.3924391317553098,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 12,
+     "wilcoxon_p": 2.5552926345540072e-05,
+     "wilcoxon_p_holm": 5.1105852691080145e-05
+    },
+    "rmse": {
+     "model": 6.3726847706262415,
+     "oracle": 4.578651016740662,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 2,
+     "wilcoxon_p": 8.881784197001252e-15,
+     "wilcoxon_p_holm": 1.7763568394002505e-14
+    },
+    "pearson": {
+     "model": 0.2027182848873613,
+     "oracle": 0.5823925400613021,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 2,
+     "wilcoxon_p": 1.6058265828178264e-12,
+     "wilcoxon_p_holm": 3.211653165635653e-12
+    },
+    "spearman": {
+     "model": 0.2516181527505477,
+     "oracle": 0.5093394403236355,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 6,
+     "wilcoxon_p": 2.5226754019058717e-10,
+     "wilcoxon_p_holm": 5.045350803811743e-10
+    },
+    "n_metrics_better_ci_nonoverlap": 0,
+    "transfer_works": false,
+    "symmetry": {
+     "mae": {
+      "coarse_to_fine": 3.954918698208494,
+      "fine_to_coarse": 4.242903929767529,
+      "diff_c2f_minus_f2c": -0.28798523155903544,
+      "diff_ci95": [
+       -0.4380620328876741,
+       -0.14377787159626534
+      ],
+      "wilcoxon_p": 0.00039864755038721
+     },
+     "rmse": {
+      "coarse_to_fine": 6.3726847706262415,
+      "fine_to_coarse": 5.956519813151076,
+      "diff_c2f_minus_f2c": 0.4161649574751645,
+      "diff_ci95": [
+       0.2691030312497184,
+       0.5630183016069139
+      ],
+      "wilcoxon_p": 1.9767201369091936e-06
+     },
+     "pearson": {
+      "coarse_to_fine": 0.2027182848873613,
+      "fine_to_coarse": 0.046109614031420276,
+      "diff_c2f_minus_f2c": 0.156608670855941,
+      "diff_ci95": [
+       0.10992434679525892,
+       0.20507455735853405
+      ],
+      "wilcoxon_p": 9.745764195656648e-08,
+      "p_holm": 9.745764195656648e-08
+     },
+     "spearman": {
+      "coarse_to_fine": 0.2516181527505477,
+      "fine_to_coarse": 0.051409686813603,
+      "diff_c2f_minus_f2c": 0.2002084659369448,
+      "diff_ci95": [
+       0.15025544099787833,
+       0.24896789953688903
+      ],
+      "wilcoxon_p": 1.9326371614170057e-09
+     },
+     "verdict": "asymmetric: coarse->fine better"
+    }
+   },
+   "P5": {
+    "mae": {
+     "model": 4.187718739580232,
+     "oracle": 3.3924391317553098,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 9,
+     "wilcoxon_p": 5.802245794939154e-09,
+     "wilcoxon_p_holm": 1.740673738481746e-08
+    },
+    "rmse": {
+     "model": 6.718458430197853,
+     "oracle": 4.578651016740662,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 0,
+     "wilcoxon_p": 1.7763568394002505e-15,
+     "wilcoxon_p_holm": 7.105427357601002e-15
+    },
+    "pearson": {
+     "model": 0.17304217137176836,
+     "oracle": 0.5823925400613021,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 2,
+     "wilcoxon_p": 5.453415496958769e-13,
+     "wilcoxon_p_holm": 1.6360246490876307e-12
+    },
+    "spearman": {
+     "model": 0.22833214646771385,
+     "oracle": 0.5093394403236355,
+     "better": false,
+     "ci_nonoverlap": false,
+     "wins": 4,
+     "wilcoxon_p": 3.40367733997482e-11,
+     "wilcoxon_p_holm": 1.021103201992446e-10
+    },
+    "n_metrics_better_ci_nonoverlap": 0,
+    "transfer_works": false,
+    "symmetry": {
+     "mae": {
+      "coarse_to_fine": 4.187718739580232,
+      "fine_to_coarse": 4.2929585541825475,
+      "diff_c2f_minus_f2c": -0.10523981460231598,
+      "diff_ci95": [
+       -0.23238926088990816,
+       0.02060
+=== CHAINB DONE Thu Sep 24 10:49:02 IST 2026
