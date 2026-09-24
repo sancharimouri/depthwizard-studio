@@ -78,7 +78,7 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
   Method 6 staged on Sentinel-2 had 36×36 tokens (R-like by count) and still failed ICESat-2 (2/25).
 - **Phase B (synthetic).** R fails at 10 m and 12 m (0/4 metrics). Pearson for 5 / 8 / 10 / 12 m is 0.687 / 0.631 / 0.610 / 0.551 vs. the oracle's 0.582.
 - **Phase C (real Sentinel-2, Kaggle T4).** Identical 600 m crops and FABDEM-30 m target; only the token geometry differs.
-  R and P tie: ICESat-2 RMSE 16.54 vs. 16.60 m, 16/32 tiles, Holm p = 0.82. Both are about 6× worse than raw FABDEM (2.86 m).
+  R and P tie: ICESat-2 RMSE 16.54 vs. 16.60 m, 16/32 tiles, Holm p = 0.82. Both are about 6× worse than raw FABDEM (2.85 m).
 - **Phase D:** not triggered.
 
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**

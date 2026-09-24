@@ -309,7 +309,7 @@ measurable benefit** over the true-pixel-count grid on real Sentinel-2.
 
 **Context (not tested; honest framing):**
 - Both arms learn only a little relief: they beat the flat crop mean by about 0.7 m of RMSE, and are **about 6× worse
-  than raw FABDEM** (2.86 m).
+  than raw FABDEM** (2.85 m).
 - Learning 600 m-scale terrain relief from 10 m RGB is weak in either geometry. This agrees with every earlier
   Sentinel-2 result: the product stays DEM-only.
 
