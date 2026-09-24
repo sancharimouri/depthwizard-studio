@@ -1005,3 +1005,56 @@ lower bound, 0.345, is above 0.134. It is below the 0.50 strong-pass mark and be
   is object height (AGL), while the coarse-sensor crops are 600 m and their target is terrain. It validates the
   measurement and training machinery, not a claim that 600 m terrain relief would be detectable at 0.3 m.
 - One seed and two US cities. The 5 OMA tiles are selected by data availability.
+
+## 2026-09-24 — L1C vs L2A result: **the pre-registered bar is not met, but a small, reliable L1C advantage exists, confined to hilly tiles. Not "ruled out".**
+
+**The run.** Chain 19:02–19:35 IST (`l1c_test/chain.log`), no failures. 16 tiles (4 per category); 4 arms × 4 folds at
+about 77 s each.
+- The L2A re-fetch is pixel-identical to the benchmark on **16/16** tiles (min identical fraction 1.0, max |d| 0).
+- L1C clipping 0.000; L2A ≤ 0.002 (`fetch_report.csv`).
+
+**Primary pair** (the identical ×2.5 rendering; paired over 16 tiles; `comparison.json`):
+
+| Measure | L1C | L2A | L1C − L2A [95% CI] | L1C better | Wilcoxon p |
+|---|---|---|---|---|---|
+| **Rank model raw within-crop ρ** | **0.218** | **0.175** | **+0.043 [+0.015, +0.075]** | **13/16** | **0.004** |
+| Frozen DAv2-L raw within-crop ρ | 0.172 | 0.116 | +0.056 [−0.009, +0.139] | 8/16 | 0.56 |
+| Rank model calibrated ICESat-2 RMSE (m) | 13.01 | 14.86 | −1.85 [−4.19, −0.06] | 12/16 | 0.058 |
+
+**Secondary pair (per-tile stretch) replicates it.**
+- Rank model raw ρ: 0.241 vs 0.188, +0.052 [+0.017, +0.095], 13/16, p = 0.008.
+- Oracle raw ρ: 0.186 vs 0.093, +0.093, 12/16, p = 0.029.
+- Calibrated RMSE: 13.15 vs 14.98, −1.83 m, p = 0.083.
+
+**Per arm** (rank model vs oracle, calibrated): **none** has real signal against its oracle.
+- L1C-gain: 13.01 vs 13.05 m, 5/16.
+- L2A-gain: 14.86 vs 15.66 m, 9/16.
+- The FABDEM within-crop reference is ρ 0.584 on these 16 tiles; the flat baseline is 16.04 m.
+
+**Verdict under the pre-registered rule.** "L1C meaningfully higher" requires a mean ≥ +0.10. The observed +0.043 fails
+that, so the formal outcome is the **"not meaningfully higher"** branch. No divergence flag (both pairs); the secondary
+agrees with the primary.
+
+**But "similar, so it's ruled out" doesn't describe the data, and it isn't claimed here.**
+- The L1C advantage is small but **statistically reliable** in both renderings (p = 0.004 / 0.008; the CIs exclude 0).
+- It is backed by a lower calibrated RMSE (−1.85 m, about 12%) and by the frozen oracle in the stretch pair.
+
+**Post-hoc (labelled; n = 4 per category).** The effect is **entirely hilly**:
+- Hilly: Δρ = +0.131 (gain) / +0.179 (stretch), L1C better on **4/4** tiles, calibrated RMSE **−7.3 m**. Dehradun −16.0 /
+  −12.6 m, Almora −7.1 / −11.0 m, Dharamshala −5.8 / −3.3 m.
+- Agricultural, coastal and urban: Δρ 0.000–0.025, ΔRMSE ≈ 0.
+
+**Candidate mechanism** (a hypothesis, not tested):
+- **Aerial perspective, i.e. altitude-dependent path radiance.** There is less atmosphere above high terrain, so
+  top-of-atmosphere brightness (strongest in blue; the L1C − L2A offset is ~+0.08 in B02) partly encodes elevation in
+  mountains.
+- Sen2Cor removes this per pixel, using a DEM.
+- That is a height cue, but an **atmospheric** one, not a shading cue. It is also partly the DEM's own information
+  re-entering through L1C.
+
+**Practical relevance.** None for the product. Even L1C's calibrated rank model (13.0 m) only ties its own oracle, and
+it is ~4.5× worse than FABDEM.
+
+**Scientific relevance.** This is the first input change in this line that moves raw ranking in a statistically
+reliable way: preprocessing matters on mountain tiles. If pursued, the natural check is a pre-registered hilly-only test
+with more tiles, including a per-pixel blue-band / altitude correlation on L1C. **Not started.**

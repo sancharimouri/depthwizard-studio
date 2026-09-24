@@ -1,0 +1,252 @@
+{
+ "primary_raw_model_gain": {
+  "l1c_gain_mean": 0.21770020905316115,
+  "l2a_gain_mean": 0.1750102491448603,
+  "diff_mean": 0.042689959908300865,
+  "ci95": [
+   0.015136654980391786,
+   0.07498780412288082
+  ],
+  "l1c_gain_better": 13,
+  "n": 16,
+  "wilcoxon_p": 0.004180908203125
+ },
+ "raw_oracle_gain": {
+  "l1c_gain_mean": 0.172125783880025,
+  "l2a_gain_mean": 0.11599116168342469,
+  "diff_mean": 0.05613462219660033,
+  "ci95": [
+   -0.009472367913474507,
+   0.13948021754133633
+  ],
+  "l1c_gain_better": 8,
+  "n": 16,
+  "wilcoxon_p": 0.5618896484375
+ },
+ "calibrated_rmse_model_gain": {
+  "l1c_gain_mean": 13.014288076384526,
+  "l2a_gain_mean": 14.863423473912395,
+  "diff_mean": -1.8491353975278688,
+  "ci95": [
+   -4.185022888924648,
+   -0.06267198536642749
+  ],
+  "l1c_gain_better": 12,
+  "n": 16,
+  "wilcoxon_p": 0.05767822265625
+ },
+ "secondary_raw_model_stretch": {
+  "l1c_stretch_mean": 0.24070982752434528,
+  "l2a_stretch_mean": 0.18826171199389996,
+  "diff_mean": 0.052448115530445316,
+  "ci95": [
+   0.017095420763517753,
+   0.09504568137573138
+  ],
+  "l1c_stretch_better": 13,
+  "n": 16,
+  "wilcoxon_p": 0.00762939453125
+ },
+ "raw_oracle_stretch": {
+  "l1c_stretch_mean": 0.18609467995993417,
+  "l2a_stretch_mean": 0.09297426408670585,
+  "diff_mean": 0.09312041587322831,
+  "ci95": [
+   0.01025206429868819,
+   0.1984350633684108
+  ],
+  "l1c_stretch_better": 12,
+  "n": 16,
+  "wilcoxon_p": 0.02899169921875
+ },
+ "calibrated_rmse_model_stretch": {
+  "l1c_stretch_mean": 13.150019402233529,
+  "l2a_stretch_mean": 14.982171586745892,
+  "diff_mean": -1.8321521845123652,
+  "ci95": [
+   -3.9571483088836903,
+   -0.20333370722946012
+  ],
+  "l1c_stretch_better": 11,
+  "n": 16,
+  "wilcoxon_p": 0.083251953125
+ },
+ "per_arm": {
+  "l2a_gain": {
+   "raw_within_crop_model": {
+    "mean": 0.1750102491448603,
+    "ci95": [
+     0.10439232779349279,
+     0.2542924226802953
+    ],
+    "n": 16
+   },
+   "raw_within_crop_oracle": {
+    "mean": 0.11599116168342469,
+    "ci95": [
+     0.04303101891070085,
+     0.20963239986021995
+    ],
+    "n": 16
+   },
+   "raw_within_crop_fab": {
+    "mean": 0.5843658377228516,
+    "ci95": [
+     0.4449133074489027,
+     0.7233100801060242
+    ],
+    "n": 16
+   },
+   "calib_implied_r": {
+    "mean": 0.1134391095039573,
+    "ci95": [
+     0.03535899686744168,
+     0.2055959724878769
+    ],
+    "n": 16
+   },
+   "icesat2": {
+    "model_mean_rmse": 14.863423473912395,
+    "oracle_mean_rmse": 15.655664100893986,
+    "model_wins": 9,
+    "wilcoxon_p_holm": 0.528167724609375,
+    "flat_mean_rmse": 16.03613383363728
+   },
+   "verdict_real_signal": false,
+   "case_raw": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+  },
+  "l1c_gain": {
+   "raw_within_crop_model": {
+    "mean": 0.21770020905316115,
+    "ci95": [
+     0.12435940637096783,
+     0.3243074986048135
+    ],
+    "n": 16
+   },
+   "raw_within_crop_oracle": {
+    "mean": 0.172125783880025,
+    "ci95": [
+     0.059462396114980415,
+     0.3023643662851014
+    ],
+    "n": 16
+   },
+   "raw_within_crop_fab": {
+    "mean": 0.5843658377228516,
+    "ci95": [
+     0.4449133074489027,
+     0.7233100801060242
+    ],
+    "n": 16
+   },
+   "calib_implied_r": {
+    "mean": 0.18988406979079342,
+    "ci95": [
+     0.08159961942021823,
+     0.31590869778669267
+    ],
+    "n": 16
+   },
+   "icesat2": {
+    "model_mean_rmse": 13.014288076384526,
+    "oracle_mean_rmse": 13.050977218894182,
+    "model_wins": 5,
+    "wilcoxon_p_holm": 0.318115234375,
+    "flat_mean_rmse": 16.03613383363728
+   },
+   "verdict_real_signal": false,
+   "case_raw": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+  },
+  "l2a_stretch": {
+   "raw_within_crop_model": {
+    "mean": 0.18826171199389996,
+    "ci95": [
+     0.11922748507216825,
+     0.26890715957270717
+    ],
+    "n": 16
+   },
+   "raw_within_crop_oracle": {
+    "mean": 0.09297426408670585,
+    "ci95": [
+     0.023993026939110637,
+     0.18661578300123904
+    ],
+    "n": 16
+   },
+   "raw_within_crop_fab": {
+    "mean": 0.5843658377228516,
+    "ci95": [
+     0.4449133074489027,
+     0.7233100801060242
+    ],
+    "n": 16
+   },
+   "calib_implied_r": {
+    "mean": 0.10856624180242826,
+    "ci95": [
+     0.030651925015143668,
+     0.20148522100905797
+    ],
+    "n": 16
+   },
+   "icesat2": {
+    "model_mean_rmse": 14.982171586745892,
+    "oracle_mean_rmse": 15.540997011854254,
+    "model_wins": 7,
+    "wilcoxon_p_holm": 0.632171630859375,
+    "flat_mean_rmse": 16.03613383363728
+   },
+   "verdict_real_signal": false,
+   "case_raw": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+  },
+  "l1c_stretch": {
+   "raw_within_crop_model": {
+    "mean": 0.24070982752434528,
+    "ci95": [
+     0.1408803440571527,
+     0.35664174330180426
+    ],
+    "n": 16
+   },
+   "raw_within_crop_oracle": {
+    "mean": 0.18609467995993417,
+    "ci95": [
+     0.06964176492568805,
+     0.3163634803018644
+    ],
+    "n": 16
+   },
+   "raw_within_crop_fab": {
+    "mean": 0.5843658377228516,
+    "ci95": [
+     0.4449133074489027,
+     0.7233100801060242
+    ],
+    "n": 16
+   },
+   "calib_implied_r": {
+    "mean": 0.17104975936758304,
+    "ci95": [
+     0.06451307607406151,
+     0.2974816884329196
+    ],
+    "n": 16
+   },
+   "icesat2": {
+    "model_mean_rmse": 13.150019402233529,
+    "oracle_mean_rmse": 13.017488309255183,
+    "model_wins": 6,
+    "wilcoxon_p_holm": 0.820892333984375,
+    "flat_mean_rmse": 16.03613383363728
+   },
+   "verdict_real_signal": false,
+   "case_raw": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+  }
+ },
+ "divergence_primary": false,
+ "divergence_secondary": false,
+ "decision": "L1C not meaningfully higher -> atmospheric correction ruled out as the cause",
+ "secondary_consistent": true
+}

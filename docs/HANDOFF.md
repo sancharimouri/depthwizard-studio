@@ -87,6 +87,10 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 - **Landsat 8/9 pan (15 m) sensor-identity test: Case B.** Same footprints, grid, recipe and ICESat-2 cells.
   Raw within-crop ρ: rank model 0.116 vs. S2 0.134 (p = 0.09); DAv2-L 0.115 vs. 0.109. Calibrated 16.36 vs. 16.25 m (p = 0.80). No raw/calibrated divergence.
   **Not Sentinel-2-specific.** Any further data should target GSD ≤ ~5 m, regardless of sensor. Nothing started.
+- **L1C vs L2A (16 tiles, same acquisitions):** the pre-registered bar (≥ +0.10) is not met, but there is a small, reliable L1C advantage.
+  Raw ρ 0.218 vs. 0.175, +0.043, 13/16, p = 0.004; replicated with a stretch (p = 0.008). Calibrated −1.85 m.
+  Post-hoc it is **entirely hilly** (Δρ +0.13 to +0.18, 4/4 tiles, −7.3 m). Likely altitude-dependent haze (aerial perspective) that Sen2Cor removes.
+  No product relevance (L1C only ties its oracle; ~4.5× worse than FABDEM). A possible follow-up (a hilly-only test) is not started.
 - **DFC2019 positive control (2026-09-24): PASS (not strong).** The same unchanged recipe and measure on native 0.3 m DFC2019 against dense LiDAR AGL (31 tiles, `scripts/dfc2019_rank_positive_control.py`).
   Raw within-crop ρ: rank model **0.379** [0.345, 0.413] and DAv2-L 0.441, against 0.13/0.11 on Sentinel-2. Every tile is > 0.134.
   **The raw-Spearman nulls on coarse sensors are real, not a blind spot.** But calibrated RMSE: the rank model loses to frozen DAv2-L even here (3.92 vs. 3.35 m, 5/31).

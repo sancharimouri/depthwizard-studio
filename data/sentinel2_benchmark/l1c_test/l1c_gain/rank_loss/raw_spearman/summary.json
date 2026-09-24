@@ -1,0 +1,267 @@
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 16,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.21770020905316115,
+   "ci95": [
+    0.12435940637096783,
+    0.3243074986048135
+   ],
+   "n": 16
+  },
+  "within_crop_oracle": {
+   "mean": 0.172125783880025,
+   "ci95": [
+    0.059462396114980415,
+    0.3023643662851014
+   ],
+   "n": 16
+  },
+  "within_crop_fab": {
+   "mean": 0.5843658377228516,
+   "ci95": [
+    0.4449133074489027,
+    0.7233100801060242
+   ],
+   "n": 16
+  },
+  "calib_implied_r": {
+   "mean": 0.18988406979079342,
+   "ci95": [
+    0.08159961942021823,
+    0.31590869778669267
+   ],
+   "n": 16
+  },
+  "whole_tile_model": {
+   "mean": -0.0300976344894245,
+   "ci95": [
+    -0.20546399521733957,
+    0.15688970691746856
+   ],
+   "n": 16
+  },
+  "whole_tile_oracle": {
+   "mean": 0.38575682968180003,
+   "ci95": [
+    0.14543525050366962,
+    0.6029271821510148
+   ],
+   "n": 16
+  },
+  "whole_tile_fab": {
+   "mean": 0.8834169105835439,
+   "ci95": [
+    0.7889052503792633,
+    0.9594542265679153
+   ],
+   "n": 16
+  },
+  "pooled_within_crop_model": 0.16510199624984204,
+  "pooled_within_crop_oracle": 0.07917996381085694,
+  "pooled_within_crop_fab": 0.49871768813447326
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.04557442517313617,
+   "ci95": [
+    -0.026171039399927497,
+    0.1279975144548941
+   ],
+   "model_higher": 9,
+   "n": 16,
+   "wilcoxon_p": 0.632171630859375
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": 0.027816139262367753,
+   "ci95": [
+    -0.01519850222850094,
+    0.07133874352177533
+   ],
+   "spearman_higher": 11,
+   "n": 16,
+   "wilcoxon_p": 0.375457763671875
+  }
+ },
+ "per_tile": {
+  "almora": {
+   "within_crop_model": 0.611038718149144,
+   "within_crop_oracle": 0.14803026311381834,
+   "within_crop_fab": 0.9893128592415622,
+   "n_cells_scored": 26180,
+   "calib_relief_r2": 0.4928170205552681,
+   "calib_implied_r": 0.7020092738385071,
+   "whole_tile_model": 0.2558924888722276,
+   "whole_tile_oracle": 0.6704949531149056,
+   "whole_tile_fab": 0.9995541286397547
+  },
+  "amalapuram": {
+   "within_crop_model": 0.08720029004647105,
+   "within_crop_oracle": 0.03859517779301476,
+   "within_crop_fab": 0.1218978287868281,
+   "n_cells_scored": 58287,
+   "calib_relief_r2": -0.16630558175245858,
+   "calib_implied_r": 0.0,
+   "whole_tile_model": 0.14278225329877942,
+   "whole_tile_oracle": 0.09224410661894956,
+   "whole_tile_fab": 0.3896645063061284
+  },
+  "bathinda": {
+   "within_crop_model": 0.20552859556383057,
+   "within_crop_oracle": -0.0058484490628997075,
+   "within_crop_fab": 0.5527475543947389,
+   "n_cells_scored": 75844,
+   "calib_relief_r2": 0.0704442971228807,
+   "calib_implied_r": 0.265413445633187,
+   "whole_tile_model": -0.38498467345257864,
+   "whole_tile_oracle": 0.1882698612355526,
+   "whole_tile_fab": 0.9417050849420237
+  },
+  "bengaluru": {
+   "within_crop_model": 0.049540682345040575,
+   "within_crop_oracle": 0.14376734964228907,
+   "within_crop_fab": 0.7848052562279996,
+   "n_cells_scored": 22173,
+   "calib_relief_r2": -0.07163424760869797,
+   "calib_implied_r": 0.0,
+   "whole_tile_model": -0.3965891256868254,
+   "whole_tile_oracle": 0.4210920470926731,
+   "whole_tile_fab": 0.9690989682616448
+  },
+  "bhitarkanika": {
+   "within_crop_model": 0.07360856107817995,
+   "within_crop_oracle": -0.007834498208124485,
+   "within_crop_fab": 0.1561037828525038,
+   "n_cells_scored": 39303,
+   "calib_relief_r2": -0.25052854706467476,
+   "calib_implied_r": 0.0,
+   "whole_tile_model": 0.2115117626129003,
+   "whole_tile_oracle": -0.07430275980630406,
+   "whole_tile_fab": 0.5141987960195967
+  },
+  "chennai": {
+   "within_crop_model": 0.11142996322990058,
+   "within_crop_oracle": 0.040485186264811006,
+   "within_crop_fab": 0.34330614398845166,
+   "n_cells_scored": 30490,
+   "calib_relief_r2": 0.011959587544578376,
+   "calib_implied_r": 0.10935989916133965,
+   "whole_tile_model": 0.26389619372221357,
+   "whole_tile_oracle": 0.8221576895652098,
+   "whole_tile_fab": 0.9069004841324113
+  },
+  "dehradun": {
+   "within_crop_model": 0.6381712140728377,
+   "within_crop_oracle": 0.751836464508335,
+   "within_crop_fab": 0.9717217228141181,
+   "n_cells_scored": 6206,
+   "calib_relief_r2": 0.5649815762389241,
+   "calib_implied_r": 0.7516525635151683,
+   "whole_tile_model": 0.7187794623864978,
+   "whole_tile_oracle": 0.9311651426141584,
+   "whole_tile_fab": 0.9997883193384074
+  },
+  "delhi": {
+   "within_crop_model": 0.04788560490398354,
+   "within_crop_oracle": 0.13034613967953151,
+   "within_crop_fab": 0.490107864795204,
+   "n_cells_scored": 14340,
+   "calib_relief_r2": -0.0260676908141817,
+   "calib_implied_r": 0.0,
+   "whole_tile_model": -0.07755051657976719,
+   "whole_tile_oracle": 0.8856873494363392,
+   "whole_tile_fab": 0.9738532984055494
+  },
+  "dharamshala": {
+   "within_crop_model": 0.6573340694670188,
+   "within_crop_oracle": 0.7634180629440637,
+   "within_crop_fab": 0.9776153227463059,
+   "n_cells_scored": 12393,
+   "calib_relief_r2": 0.19397003368261045,
+   "calib_implied_r": 0.44042029208769484,
+   "whole_tile_model": -0.3607460100504121,
+   "whole_tile_oracle": 0.9732080608299414,
+   "whole_tile_fab": 0.9998622222272824
+  },
+  "digha": {
+   "within_crop_model": 0.08225611887504163,
+   "within_crop_oracle": 0.08043630086244292,
+   "within_crop_fab": 0.25576190539175186,
+   "n_cells_scored": 55170,
+   "calib_relief_r2": -0.19364077767894572,
+   "calib_implied_r": 0.0,
+   "whole_tile_model": -0.2354057172075967,
+   "whole_tile_oracle": 0.7313005452214796,
+   "whole_tile_fab": 0.8332770770022663
+  },
+  "fatehpur": {
+   "within_crop_model": 0.10490052958269361,
+   "within_crop_oracle": 0.02224272678933059,
+   "within_crop_fab": 0.39152558021813694,
+   "n_cells_scored": 54655,
+   "calib_relief_r2": -0.023912281806278912,
+   "calib_implied_r": 0.0,
+   "whole_tile_model": -0.32596919903498517,
+   "whole_tile_oracle": 0.15477974618830206,
+   "whole_tile_fab": 0.9304356497816229
+  },
+  "goa_estuary": {
+   "within_crop_model": 0.2653799865548589,
+   "within_crop_oracle": 0.2942231271768529,
+   "within_crop_fab": 0.5871539268302721,
+   "n_cells_scored": 39708,
+   "calib_relief_r2": 0.04271169328375524,
+   "calib_implied_r": 0.20666807514407065,
+   "whole_tile_model": 0.41368228451130484,
+   "whole_tile_oracle": 0.502447848768429,
+   "whole_tile_fab": 0.7646993240721914
+  },
+  "hisar": {
+   "within_crop_model": 0.12196266274780032,
+   "within_crop_oracle": -0.07659482357213557,
+   "within_crop_fab": 0.5093280493427896,
+   "n_cells_scored": 57787,
+   "calib_relief_r2": 0.001593180071575051,
+   "calib_implied_r": 0.03991465985794005,
+   "whole_tile_model": -0.3482499115926497,
+   "whole_tile_oracle": -0.2985921367127627,
+   "whole_tile_fab": 0.9515847490896335
+  },
+  "hyderabad": {
+   "within_crop_model": 0.11011295176250134,
+   "within_crop_oracle": 0.2418844423235099,
+   "within_crop_fab": 0.7283194524496703,
+   "n_cells_scored": 30811,
+   "calib_relief_r2": 0.025212936562417854,
+   "calib_implied_r": 0.15878581977751619,
+   "whole_tile_model": -0.307476706496241,
+   "whole_tile_oracle": 0.47434741495822125,
+   "whole_tile_fab": 0.9806187063109748
+  },
+  "karnal": {
+   "within_crop_model": 0.10787048546462431,
+   "within_crop_oracle": -0.12143879088044322,
+   "within_crop_fab": 0.5137599750066577,
+   "n_cells_scored": 41710,
+   "calib_relief_r2": 0.001925669135279029,
+   "calib_implied_r": 0.043882446778626974,
+   "whole_tile_model": -0.5166211903521465,
+   "whole_tile_oracle": -0.7942084215559087,
+   "whole_tile_fab": 0.9798699659679101
+  },
+  "kohima": {
+   "within_crop_model": 0.2089829110066518,
+   "within_crop_oracle": 0.31046386270600346,
+   "within_crop_fab": 0.9763861784786332,
+   "n_cells_scored": 15789,
+   "calib_relief_r2": 0.10242473164264809,
+   "calib_implied_r": 0.320038640858644,
+   "whole_tile_model": 0.46548645321848686,
+   "whole_tile_oracle": 0.49201782733961485,
+   "whole_tile_fab": 0.9995592888393033
+  }
+ },
+ "case": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+}

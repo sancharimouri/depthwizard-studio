@@ -1,0 +1,843 @@
+=== fetch start Thu Sep 24 19:02:39 IST 2026
+bathinda       2025-12-07 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0219, 0.0382, 0.0826]; clip L2A 0.000 L1C 0.000
+fatehpur       2025-11-28 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.014, 0.0319, 0.0794]; clip L2A 0.000 L1C 0.000
+hisar          2025-12-24 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0187, 0.0308, 0.0766]; clip L2A 0.000 L1C 0.000
+karnal         2025-12-24 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0264, 0.0364, 0.0849]; clip L2A 0.000 L1C 0.000
+amalapuram     2025-02-13 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0245, 0.0327, 0.0645]; clip L2A 0.000 L1C 0.000
+bhitarkanika   2025-12-14 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0577, 0.0753, 0.1225]; clip L2A 0.000 L1C 0.000
+digha          2025-12-14 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0327, 0.0422, 0.0812]; clip L2A 0.000 L1C 0.000
+goa_estuary    2025-12-29 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.033, 0.0478, 0.0833]; clip L2A 0.000 L1C 0.000
+almora         2025-12-11 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0157, 0.0294, 0.0668]; clip L2A 0.000 L1C 0.000
+dehradun       2025-12-09 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0221, 0.0364, 0.064]; clip L2A 0.000 L1C 0.000
+dharamshala    2025-12-27 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0196, 0.032, 0.0645]; clip L2A 0.000 L1C 0.000
+kohima         2025-12-13 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0134, 0.0242, 0.0576]; clip L2A 0.000 L1C 0.000
+bengaluru      2025-12-08 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0088, 0.0206, 0.0522]; clip L2A 0.001 L1C 0.000
+chennai        2025-10-31 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0173, 0.0297, 0.0564]; clip L2A 0.002 L1C 0.000
+delhi          2025-12-24 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0239, 0.0393, 0.0796]; clip L2A 0.000 L1C 0.000
+hyderabad      2025-12-28 L2A refetch identical 1.0000 (max|d| 0); L1C-L2A median refl [0.0101, 0.0247, 0.0642]; clip L2A 0.000 L1C 0.000
+=== l2a_gain start Thu Sep 24 19:11:30 IST 2026
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 6929.80it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7625.72it/s]
+[rank_fold0] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold0] step 1/600 loss 0.6558 ETA 4.8 min
+[rank_fold0] step 100/600 loss 0.3514 ETA 1.2 min
+[rank_fold0] step 200/600 loss 0.2349 ETA 0.9 min
+[rank_fold0] step 300/600 loss 0.2162 ETA 0.7 min
+[rank_fold0] step 400/600 loss 0.2152 ETA 0.5 min
+[rank_fold0] step 500/600 loss 0.2115 ETA 0.2 min
+[rank_fold0] step 600/600 loss 0.2026 ETA 0.0 min
+[l2a_gain] fold0 done 106s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8074.30it/s]
+[rank_fold1] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold1] step 1/600 loss 0.4274 ETA 2.5 min
+[rank_fold1] step 100/600 loss 0.3373 ETA 1.2 min
+[rank_fold1] step 200/600 loss 0.2334 ETA 0.9 min
+[rank_fold1] step 300/600 loss 0.2280 ETA 0.7 min
+[rank_fold1] step 400/600 loss 0.2160 ETA 0.5 min
+[rank_fold1] step 500/600 loss 0.2118 ETA 0.2 min
+[rank_fold1] step 600/600 loss 0.2029 ETA 0.0 min
+[l2a_gain] fold1 done 114s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7836.86it/s]
+[rank_fold2] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold2] step 1/600 loss 0.4249 ETA 2.4 min
+[rank_fold2] step 100/600 loss 0.4190 ETA 1.4 min
+[rank_fold2] step 200/600 loss 0.2338 ETA 1.1 min
+[rank_fold2] step 300/600 loss 0.2218 ETA 0.8 min
+[rank_fold2] step 400/600 loss 0.2132 ETA 0.5 min
+[rank_fold2] step 500/600 loss 0.2016 ETA 0.3 min
+[rank_fold2] step 600/600 loss 0.2006 ETA 0.0 min
+[l2a_gain] fold2 done 120s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7989.57it/s]
+[rank_fold3] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold3] step 1/600 loss 0.6725 ETA 2.4 min
+[rank_fold3] step 100/600 loss 0.3400 ETA 0.8 min
+[rank_fold3] step 200/600 loss 0.2332 ETA 0.7 min
+[rank_fold3] step 300/600 loss 0.2193 ETA 0.5 min
+[rank_fold3] step 400/600 loss 0.2110 ETA 0.3 min
+[rank_fold3] step 500/600 loss 0.2008 ETA 0.2 min
+[rank_fold3] step 600/600 loss 0.1916 ETA 0.0 min
+[l2a_gain] fold3 done 76s
+{
+ "n_tiles": 16,
+ "slopes": {
+  "model_median": 3.6233768647838493,
+  "oracle_median": 20.392817712321687,
+  "model_frac_negative": 0.0,
+  "oracle_frac_negative": 0.0625
+ },
+ "verdict_real_signal": false
+}
+icesat2 {"model_mean_rmse": 14.863423473912395, "oracle_mean_rmse": 15.655664100893986, "model_minus_oracle": -0.7922406269815931, "ci95": [-2.1626735082392536, 0.31584811242735794], "model_wins": 9, "wilcoxon_p": 0.528167724609375, "wilcoxon_p_holm": 0.528167724609375, "flat_mean_rmse": 16.03613383363728, "fabdem_mean_rmse": 2.617253995272147, "context_phaseC_armP_mean_rmse": 15.34198139710944, "context_rank_minus_phaseC_P": {"mean": -0.47855792319704415, "ci95": [-1.1904345958768097, 0.15473964043771818], "rank_wins": 14, "wilcoxon_p": 0.0155029296875}}
+dem_heldout {"model_mean_rmse": 15.805821994241056, "oracle_mean_rmse": 16.6748854528501, "model_minus_oracle": -0.869063458609043, "ci95": [-2.1231984116573828, 0.059130607725790235], "model_wins": 10, "wilcoxon_p": 0.19281005859375, "wilcoxon_p_holm": 0.3856201171875}
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 16,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.1750102491448603,
+   "ci95": [
+    0.10439232779349279,
+    0.2542924226802953
+   ],
+   "n": 16
+  },
+  "within_crop_oracle": {
+   "mean": 0.11599116168342469,
+   "ci95": [
+    0.04303101891070085,
+    0.20963239986021995
+   ],
+   "n": 16
+  },
+  "within_crop_fab": {
+   "mean": 0.5843658377228516,
+   "ci95": [
+    0.4449133074489027,
+    0.7233100801060242
+   ],
+   "n": 16
+  },
+  "calib_implied_r": {
+   "mean": 0.1134391095039573,
+   "ci95": [
+    0.03535899686744168,
+    0.2055959724878769
+   ],
+   "n": 16
+  },
+  "whole_tile_model": {
+   "mean": 0.09249233176401792,
+   "ci95": [
+    -0.10560249609128403,
+    0.2904231208119175
+   ],
+   "n": 16
+  },
+  "whole_tile_oracle": {
+   "mean": 0.30225293114012086,
+   "ci95": [
+    0.09292710703789635,
+    0.5020868512251185
+   ],
+   "n": 16
+  },
+  "whole_tile_fab": {
+   "mean": 0.8834169105835439,
+   "ci95": [
+    0.7889052503792633,
+    0.9594542265679153
+   ],
+   "n": 16
+  },
+  "pooled_within_crop_model": 0.1424307827197862,
+  "pooled_within_crop_oracle": 0.07389371030425816,
+  "pooled_within_crop_fab": 0.49871768813447326
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.059019087461435624,
+   "ci95": [
+    -0.012940719493034547,
+    0.13292434396610947
+   ],
+   "model_higher": 12,
+   "n": 16,
+   "wilcoxon_p": 0.129730224609375
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": 0.061571139640902973,
+   "ci95": [
+    0.0014229366535027542,
+    0.14023376504018878
+   ],
+   "spearman_higher": 11,
+   "n": 16,
+   "wilcoxon_p": 0.116668701171875
+  }
+ },
+ "case": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+}
+=== l1c_gain start Thu Sep 24 19:18:48 IST 2026
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 6845.97it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8125.97it/s]
+[rank_fold0] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold0] step 1/600 loss 0.7325 ETA 3.0 min
+[rank_fold0] step 100/600 loss 0.3405 ETA 0.8 min
+[rank_fold0] step 200/600 loss 0.2260 ETA 0.7 min
+[rank_fold0] step 300/600 loss 0.2153 ETA 0.5 min
+[rank_fold0] step 400/600 loss 0.2036 ETA 0.3 min
+[rank_fold0] step 500/600 loss 0.1984 ETA 0.2 min
+[rank_fold0] step 600/600 loss 0.1938 ETA 0.0 min
+[l1c_gain] fold0 done 78s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 19045.71it/s]
+[rank_fold1] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold1] step 1/600 loss 0.3370 ETA 2.8 min
+[rank_fold1] step 100/600 loss 0.3332 ETA 0.9 min
+[rank_fold1] step 200/600 loss 0.2320 ETA 0.7 min
+[rank_fold1] step 300/600 loss 0.2181 ETA 0.5 min
+[rank_fold1] step 400/600 loss 0.2005 ETA 0.3 min
+[rank_fold1] step 500/600 loss 0.1976 ETA 0.2 min
+[rank_fold1] step 600/600 loss 0.1851 ETA 0.0 min
+[l1c_gain] fold1 done 77s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 26707.61it/s]
+[rank_fold2] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold2] step 1/600 loss 0.5161 ETA 2.3 min
+[rank_fold2] step 100/600 loss 0.4189 ETA 0.8 min
+[rank_fold2] step 200/600 loss 0.2263 ETA 0.7 min
+[rank_fold2] step 300/600 loss 0.2084 ETA 0.5 min
+[rank_fold2] step 400/600 loss 0.1942 ETA 0.3 min
+[rank_fold2] step 500/600 loss 0.1919 ETA 0.2 min
+[rank_fold2] step 600/600 loss 0.1848 ETA 0.0 min
+[l1c_gain] fold2 done 77s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 17687.60it/s]
+[rank_fold3] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold3] step 1/600 loss 0.5281 ETA 2.3 min
+[rank_fold3] step 100/600 loss 0.3365 ETA 0.8 min
+[rank_fold3] step 200/600 loss 0.2259 ETA 0.7 min
+[rank_fold3] step 300/600 loss 0.2129 ETA 0.5 min
+[rank_fold3] step 400/600 loss 0.2033 ETA 0.3 min
+[rank_fold3] step 500/600 loss 0.1972 ETA 0.2 min
+[rank_fold3] step 600/600 loss 0.1874 ETA 0.0 min
+[l1c_gain] fold3 done 76s
+{
+ "n_tiles": 16,
+ "slopes": {
+  "model_median": 3.917609832079455,
+  "oracle_median": 22.110316740441192,
+  "model_frac_negative": 0.0,
+  "oracle_frac_negative": 0.0625
+ },
+ "verdict_real_signal": false
+}
+icesat2 {"model_mean_rmse": 13.014288076384526, "oracle_mean_rmse": 13.050977218894182, "model_minus_oracle": -0.03668914250965499, "ci95": [-2.05939076039745, 1.5127506050634927], "model_wins": 5, "wilcoxon_p": 0.1590576171875, "wilcoxon_p_holm": 0.318115234375, "flat_mean_rmse": 16.03613383363728, "fabdem_mean_rmse": 2.617253995272147, "context_phaseC_armP_mean_rmse": 15.34198139710944, "context_rank_minus_phaseC_P": {"mean": -2.327693320724913, "ci95": [-5.193874620719697, -0.2675372034339117], "rank_wins": 14, "wilcoxon_p": 0.000762939453125}}
+dem_heldout {"model_mean_rmse": 13.518363813055295, "oracle_mean_rmse": 13.498084619357186, "model_minus_oracle": 0.020279193698109543, "ci95": [-1.9804816727890342, 1.5629913390561347], "model_wins": 7, "wilcoxon_p": 0.375457763671875, "wilcoxon_p_holm": 0.375457763671875}
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 16,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.21770020905316115,
+   "ci95": [
+    0.12435940637096783,
+    0.3243074986048135
+   ],
+   "n": 16
+  },
+  "within_crop_oracle": {
+   "mean": 0.172125783880025,
+   "ci95": [
+    0.059462396114980415,
+    0.3023643662851014
+   ],
+   "n": 16
+  },
+  "within_crop_fab": {
+   "mean": 0.5843658377228516,
+   "ci95": [
+    0.4449133074489027,
+    0.7233100801060242
+   ],
+   "n": 16
+  },
+  "calib_implied_r": {
+   "mean": 0.18988406979079342,
+   "ci95": [
+    0.08159961942021823,
+    0.31590869778669267
+   ],
+   "n": 16
+  },
+  "whole_tile_model": {
+   "mean": -0.0300976344894245,
+   "ci95": [
+    -0.20546399521733957,
+    0.15688970691746856
+   ],
+   "n": 16
+  },
+  "whole_tile_oracle": {
+   "mean": 0.38575682968180003,
+   "ci95": [
+    0.14543525050366962,
+    0.6029271821510148
+   ],
+   "n": 16
+  },
+  "whole_tile_fab": {
+   "mean": 0.8834169105835439,
+   "ci95": [
+    0.7889052503792633,
+    0.9594542265679153
+   ],
+   "n": 16
+  },
+  "pooled_within_crop_model": 0.16510199624984204,
+  "pooled_within_crop_oracle": 0.07917996381085694,
+  "pooled_within_crop_fab": 0.49871768813447326
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.04557442517313617,
+   "ci95": [
+    -0.026171039399927497,
+    0.1279975144548941
+   ],
+   "model_higher": 9,
+   "n": 16,
+   "wilcoxon_p": 0.632171630859375
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": 0.027816139262367753,
+   "ci95": [
+    -0.01519850222850094,
+    0.07133874352177533
+   ],
+   "spearman_higher": 11,
+   "n": 16,
+   "wilcoxon_p": 0.375457763671875
+  }
+ },
+ "case": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+}
+=== l2a_stretch start Thu Sep 24 19:24:21 IST 2026
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 7268.88it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7563.33it/s]
+[rank_fold0] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold0] step 1/600 loss 1.1728 ETA 3.4 min
+[rank_fold0] step 100/600 loss 0.3715 ETA 0.9 min
+[rank_fold0] step 200/600 loss 0.2268 ETA 0.7 min
+[rank_fold0] step 300/600 loss 0.2114 ETA 0.5 min
+[rank_fold0] step 400/600 loss 0.2007 ETA 0.3 min
+[rank_fold0] step 500/600 loss 0.2004 ETA 0.2 min
+[rank_fold0] step 600/600 loss 0.1942 ETA 0.0 min
+[l2a_stretch] fold0 done 79s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 18710.60it/s]
+[rank_fold1] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold1] step 1/600 loss 0.6093 ETA 3.0 min
+[rank_fold1] step 100/600 loss 0.3563 ETA 0.9 min
+[rank_fold1] step 200/600 loss 0.2364 ETA 0.7 min
+[rank_fold1] step 300/600 loss 0.2232 ETA 0.5 min
+[rank_fold1] step 400/600 loss 0.2143 ETA 0.3 min
+[rank_fold1] step 500/600 loss 0.2062 ETA 0.2 min
+[rank_fold1] step 600/600 loss 0.1966 ETA 0.0 min
+[l2a_stretch] fold1 done 80s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 23933.14it/s]
+[rank_fold2] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold2] step 1/600 loss 0.5821 ETA 2.5 min
+[rank_fold2] step 100/600 loss 0.3954 ETA 0.9 min
+[rank_fold2] step 200/600 loss 0.2295 ETA 0.7 min
+[rank_fold2] step 300/600 loss 0.2207 ETA 0.5 min
+[rank_fold2] step 400/600 loss 0.2104 ETA 0.3 min
+[rank_fold2] step 500/600 loss 0.2015 ETA 0.2 min
+[rank_fold2] step 600/600 loss 0.1991 ETA 0.0 min
+[l2a_stretch] fold2 done 80s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 29273.73it/s]
+[rank_fold3] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold3] step 1/600 loss 1.0331 ETA 2.5 min
+[rank_fold3] step 100/600 loss 0.3661 ETA 0.9 min
+[rank_fold3] step 200/600 loss 0.2341 ETA 0.7 min
+[rank_fold3] step 300/600 loss 0.2169 ETA 0.5 min
+[rank_fold3] step 400/600 loss 0.2100 ETA 0.4 min
+[rank_fold3] step 500/600 loss 0.2020 ETA 0.2 min
+[rank_fold3] step 600/600 loss 0.1871 ETA 0.0 min
+[l2a_stretch] fold3 done 79s
+{
+ "n_tiles": 16,
+ "slopes": {
+  "model_median": 3.4583813212640053,
+  "oracle_median": 16.17000585323984,
+  "model_frac_negative": 0.0,
+  "oracle_frac_negative": 0.09375
+ },
+ "verdict_real_signal": false
+}
+icesat2 {"model_mean_rmse": 14.982171586745892, "oracle_mean_rmse": 15.540997011854254, "model_minus_oracle": -0.5588254251083622, "ci95": [-2.00239950328827, 0.7892450713795708], "model_wins": 7, "wilcoxon_p": 0.632171630859375, "wilcoxon_p_holm": 0.632171630859375, "flat_mean_rmse": 16.03613383363728, "fabdem_mean_rmse": 2.617253995272147, "context_phaseC_armP_mean_rmse": 15.34198139710944, "context_rank_minus_phaseC_P": {"mean": -0.3598098103635466, "ci95": [-1.0138248117645512, 0.2603537166240088], "rank_wins": 12, "wilcoxon_p": 0.033538818359375}}
+dem_heldout {"model_mean_rmse": 15.846919251752668, "oracle_mean_rmse": 16.45533915124418, "model_minus_oracle": -0.6084198994915099, "ci95": [-1.7973355048053872, 0.4972845578351677], "model_wins": 11, "wilcoxon_p": 0.231201171875, "wilcoxon_p_holm": 0.46240234375}
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 16,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.18826171199389996,
+   "ci95": [
+    0.11922748507216825,
+    0.26890715957270717
+   ],
+   "n": 16
+  },
+  "within_crop_oracle": {
+   "mean": 0.09297426408670585,
+   "ci95": [
+    0.023993026939110637,
+    0.18661578300123904
+   ],
+   "n": 16
+  },
+  "within_crop_fab": {
+   "mean": 0.5843658377228516,
+   "ci95": [
+    0.4449133074489027,
+    0.7233100801060242
+   ],
+   "n": 16
+  },
+  "calib_implied_r": {
+   "mean": 0.10856624180242826,
+   "ci95": [
+    0.030651925015143668,
+    0.20148522100905797
+   ],
+   "n": 16
+  },
+  "whole_tile_model": {
+   "mean": 0.20577436516529524,
+   "ci95": [
+    0.08411874038431244,
+    0.3325902394571864
+   ],
+   "n": 16
+  },
+  "whole_tile_oracle": {
+   "mean": 0.25345708277238665,
+   "ci95": [
+    0.02268908020612059,
+    0.4751330194604922
+   ],
+   "n": 16
+  },
+  "whole_tile_fab": {
+   "mean": 0.8834169105835439,
+   "ci95": [
+    0.7889052503792633,
+    0.9594542265679153
+   ],
+   "n": 16
+  },
+  "pooled_within_crop_model": 0.15592662907866522,
+  "pooled_within_crop_oracle": 0.05416403553096368,
+  "pooled_within_crop_fab": 0.49871768813447326
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.0952874479071941,
+   "ci95": [
+    0.01937073988008817,
+    0.17399232623601363
+   ],
+   "model_higher": 12,
+   "n": 16,
+   "wilcoxon_p": 0.0506591796875
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": 0.07969547019147169,
+   "ci95": [
+    0.010330532153601283,
+    0.16673728586619202
+   ],
+   "spearman_higher": 11,
+   "n": 16,
+   "wilcoxon_p": 0.0443115234375
+  }
+ },
+ "case": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+}
+=== l1c_stretch start Thu Sep 24 19:30:03 IST 2026
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 7184.89it/s]
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7742.75it/s]
+[rank_fold0] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold0] step 1/600 loss 1.1157 ETA 2.8 min
+[rank_fold0] step 100/600 loss 0.3453 ETA 0.9 min
+[rank_fold0] step 200/600 loss 0.2162 ETA 0.7 min
+[rank_fold0] step 300/600 loss 0.1949 ETA 0.5 min
+[rank_fold0] step 400/600 loss 0.1945 ETA 0.4 min
+[rank_fold0] step 500/600 loss 0.1884 ETA 0.2 min
+[rank_fold0] step 600/600 loss 0.1852 ETA 0.0 min
+[l1c_stretch] fold0 done 82s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 31219.60it/s]
+[rank_fold1] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold1] step 1/600 loss 0.5822 ETA 2.4 min
+[rank_fold1] step 100/600 loss 0.3411 ETA 0.9 min
+[rank_fold1] step 200/600 loss 0.2097 ETA 0.7 min
+[rank_fold1] step 300/600 loss 0.2070 ETA 0.5 min
+[rank_fold1] step 400/600 loss 0.1934 ETA 0.4 min
+[rank_fold1] step 500/600 loss 0.1876 ETA 0.2 min
+[rank_fold1] step 600/600 loss 0.1778 ETA 0.0 min
+[l1c_stretch] fold1 done 79s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 8061.38it/s]
+[rank_fold2] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold2] step 1/600 loss 0.8291 ETA 2.2 min
+[rank_fold2] step 100/600 loss 0.3986 ETA 0.9 min
+[rank_fold2] step 200/600 loss 0.2160 ETA 0.7 min
+[rank_fold2] step 300/600 loss 0.2028 ETA 0.5 min
+[rank_fold2] step 400/600 loss 0.1931 ETA 0.3 min
+[rank_fold2] step 500/600 loss 0.1852 ETA 0.2 min
+[rank_fold2] step 600/600 loss 0.1810 ETA 0.0 min
+[l1c_stretch] fold2 done 76s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 7604.04it/s]
+[rank_fold3] device=mps train crops 3072 steps 600 x batch 4
+[rank_fold3] step 1/600 loss 0.9387 ETA 2.3 min
+[rank_fold3] step 100/600 loss 0.3463 ETA 0.8 min
+[rank_fold3] step 200/600 loss 0.2191 ETA 0.7 min
+[rank_fold3] step 300/600 loss 0.2080 ETA 0.5 min
+[rank_fold3] step 400/600 loss 0.1941 ETA 0.3 min
+[rank_fold3] step 500/600 loss 0.1920 ETA 0.2 min
+[rank_fold3] step 600/600 loss 0.1823 ETA 0.0 min
+[l1c_stretch] fold3 done 73s
+{
+ "n_tiles": 16,
+ "slopes": {
+  "model_median": 3.475675984806043,
+  "oracle_median": 25.412863483733304,
+  "model_frac_negative": 0.0,
+  "oracle_frac_negative": 0.0
+ },
+ "verdict_real_signal": false
+}
+icesat2 {"model_mean_rmse": 13.150019402233529, "oracle_mean_rmse": 13.017488309255183, "model_minus_oracle": 0.1325310929783431, "ci95": [-2.0723029136114577, 2.2659266619614438], "model_wins": 6, "wilcoxon_p": 0.820892333984375, "wilcoxon_p_holm": 0.820892333984375, "flat_mean_rmse": 16.03613383363728, "fabdem_mean_rmse": 2.617253995272147, "context_phaseC_armP_mean_rmse": 15.34198139710944, "context_rank_minus_phaseC_P": {"mean": -2.1919619948759115, "ci95": [-4.84934973332189, -0.22229090633259682], "rank_wins": 13, "wilcoxon_p": 0.002685546875}}
+dem_heldout {"model_mean_rmse": 13.295877661753984, "oracle_mean_rmse": 13.516613891734403, "model_minus_oracle": -0.22073622998042042, "ci95": [-2.346723276827852, 1.67738784026183], "model_wins": 11, "wilcoxon_p": 0.348388671875, "wilcoxon_p_holm": 0.69677734375}
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 16,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.24070982752434528,
+   "ci95": [
+    0.1408803440571527,
+    0.35664174330180426
+   ],
+   "n": 16
+  },
+  "within_crop_oracle": {
+   "mean": 0.18609467995993417,
+   "ci95": [
+    0.06964176492568805,
+    0.3163634803018644
+   ],
+   "n": 16
+  },
+  "within_crop_fab": {
+   "mean": 0.5843658377228516,
+   "ci95": [
+    0.4449133074489027,
+    0.7233100801060242
+   ],
+   "n": 16
+  },
+  "calib_implied_r": {
+   "mean": 0.17104975936758304,
+   "ci95": [
+    0.06451307607406151,
+    0.2974816884329196
+   ],
+   "n": 16
+  },
+  "whole_tile_model": {
+   "mean": 0.2770480767920141,
+   "ci95": [
+    0.15698403169934946,
+    0.40310127687827485
+   ],
+   "n": 16
+  },
+  "whole_tile_oracle": {
+   "mean": 0.3701713298678264,
+   "ci95": [
+    0.09999154099493089,
+    0.610579359503095
+   ],
+   "n": 16
+  },
+  "whole_tile_fab": {
+   "mean": 0.8834169105835439,
+   "ci95": [
+    0.7889052503792633,
+    0.9594542265679153
+   ],
+   "n": 16
+  },
+  "pooled_within_crop_model": 0.18467558711648802,
+  "pooled_within_crop_oracle": 0.09074294052081311,
+  "pooled_within_crop_fab": 0.49871768813447326
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.054615147564411104,
+   "ci95": [
+    -0.010631635280537515,
+    0.12594763444484933
+   ],
+   "model_higher": 10,
+   "n": 16,
+   "wilcoxon_p": 0.231201171875
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": 0.0696600681567622,
+   "ci95": [
+    0.003790089273892182,
+    0.15229522576954155
+   ],
+   "spearman_higher": 11,
+   "n": 16,
+   "wilcoxon_p": 0.116668701171875
+  }
+ },
+ "case": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+}
+=== compare Thu Sep 24 19:35:38 IST 2026
+{
+ "primary_raw_model_gain": {
+  "l1c_gain_mean": 0.21770020905316115,
+  "l2a_gain_mean": 0.1750102491448603,
+  "diff_mean": 0.042689959908300865,
+  "ci95": [
+   0.015136654980391786,
+   0.07498780412288082
+  ],
+  "l1c_gain_better": 13,
+  "n": 16,
+  "wilcoxon_p": 0.004180908203125
+ },
+ "raw_oracle_gain": {
+  "l1c_gain_mean": 0.172125783880025,
+  "l2a_gain_mean": 0.11599116168342469,
+  "diff_mean": 0.05613462219660033,
+  "ci95": [
+   -0.009472367913474507,
+   0.13948021754133633
+  ],
+  "l1c_gain_better": 8,
+  "n": 16,
+  "wilcoxon_p": 0.5618896484375
+ },
+ "calibrated_rmse_model_gain": {
+  "l1c_gain_mean": 13.014288076384526,
+  "l2a_gain_mean": 14.863423473912395,
+  "diff_mean": -1.8491353975278688,
+  "ci95": [
+   -4.185022888924648,
+   -0.06267198536642749
+  ],
+  "l1c_gain_better": 12,
+  "n": 16,
+  "wilcoxon_p": 0.05767822265625
+ },
+ "secondary_raw_model_stretch": {
+  "l1c_stretch_mean": 0.24070982752434528,
+  "l2a_stretch_mean": 0.18826171199389996,
+  "diff_mean": 0.052448115530445316,
+  "ci95": [
+   0.017095420763517753,
+   0.09504568137573138
+  ],
+  "l1c_stretch_better": 13,
+  "n": 16,
+  "wilcoxon_p": 0.00762939453125
+ },
+ "raw_oracle_stretch": {
+  "l1c_stretch_mean": 0.18609467995993417,
+  "l2a_stretch_mean": 0.09297426408670585,
+  "diff_mean": 0.09312041587322831,
+  "ci95": [
+   0.01025206429868819,
+   0.1984350633684108
+  ],
+  "l1c_stretch_better": 12,
+  "n": 16,
+  "wilcoxon_p": 0.02899169921875
+ },
+ "calibrated_rmse_model_stretch": {
+  "l1c_stretch_mean": 13.150019402233529,
+  "l2a_stretch_mean": 14.982171586745892,
+  "diff_mean": -1.8321521845123652,
+  "ci95": [
+   -3.9571483088836903,
+   -0.20333370722946012
+  ],
+  "l1c_stretch_better": 11,
+  "n": 16,
+  "wilcoxon_p": 0.083251953125
+ },
+ "per_arm": {
+  "l2a_gain": {
+   "raw_within_crop_model": {
+    "mean": 0.1750102491448603,
+    "ci95": [
+     0.10439232779349279,
+     0.2542924226802953
+    ],
+    "n": 16
+   },
+   "raw_within_crop_oracle": {
+    "mean": 0.11599116168342469,
+    "ci95": [
+     0.04303101891070085,
+     0.20963239986021995
+    ],
+    "n": 16
+   },
+   "raw_within_crop_fab": {
+    "mean": 0.5843658377228516,
+    "ci95": [
+     0.4449133074489027,
+     0.7233100801060242
+    ],
+    "n": 16
+   },
+   "calib_implied_r": {
+    "mean": 0.1134391095039573,
+    "ci95": [
+     0.03535899686744168,
+     0.2055959724878769
+    ],
+    "n": 16
+   },
+   "icesat2": {
+    "model_mean_rmse": 14.863423473912395,
+    "oracle_mean_rmse": 15.655664100893986,
+    "model_wins": 9,
+    "wilcoxon_p_holm": 0.528167724609375,
+    "flat_mean_rmse": 16.03613383363728
+   },
+   "verdict_real_signal": false,
+   "case_raw": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+  },
+  "l1c_gain": {
+   "raw_within_crop_model": {
+    "mean": 0.21770020905316115,
+    "ci95": [
+     0.12435940637096783,
+     0.3243074986048135
+    ],
+    "n": 16
+   },
+   "raw_within_crop_oracle": {
+    "mean": 0.172125783880025,
+    "ci95": [
+     0.059462396114980415,
+     0.3023643662851014
+    ],
+    "n": 16
+   },
+   "raw_within_crop_fab": {
+    "mean": 0.5843658377228516,
+    "ci95": [
+     0.4449133074489027,
+     0.7233100801060242
+    ],
+    "n": 16
+   },
+   "calib_implied_r": {
+    "mean": 0.18988406979079342,
+    "ci95": [
+     0.08159961942021823,
+     0.31590869778669267
+    ],
+    "n": 16
+   },
+   "icesat2": {
+    "model_mean_rmse": 13.014288076384526,
+    "oracle_mean_rmse": 13.050977218894182,
+    "model_wins": 5,
+    "wilcoxon_p_holm": 0.318115234375,
+    "flat_mean_rmse": 16.03613383363728
+   },
+   "verdict_real_signal": false,
+   "case_raw": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+  },
+  "l2a_stretch": {
+   "raw_within_crop_model": {
+    "mean": 0.18826171199389996,
+    "ci95": [
+     0.11922748507216825,
+     0.26890715957270717
+    ],
+    "n": 16
+   },
+   "raw_within_crop_oracle": {
+    "mean": 0.09297426408670585,
+    "ci95": [
+     0.023993026939110637,
+     0.18661578300123904
+    ],
+    "n": 16
+   },
+   "raw_within_crop_fab": {
+    "mean": 0.5843658377228516,
+    "ci95": [
+     0.4449133074489027,
+     0.7233100801060242
+    ],
+    "n": 16
+   },
+   "calib_implied_r": {
+    "mean": 0.10856624180242826,
+    "ci95": [
+     0.030651925015143668,
+     0.20148522100905797
+    ],
+    "n": 16
+   },
+   "icesat2": {
+    "model_mean_rmse": 14.982171586745892,
+    "oracle_mean_rmse": 15.540997011854254,
+    "model_wins": 7,
+    "wilcoxon_p_holm": 0.632171630859375,
+    "flat_mean_rmse": 16.03613383363728
+   },
+   "verdict_real_signal": false,
+   "case_raw": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+  },
+  "l1c_stretch": {
+   "raw_within_crop_model": {
+    "mean": 0.24070982752434528,
+    "ci95": [
+     0.1408803440571527,
+     0.35664174330180426
+    ],
+    "n": 16
+   },
+   "raw_within_crop_oracle": {
+    "mean": 0.18609467995993417,
+    "ci95": [
+     0.06964176492568805,
+     0.3163634803018644
+    ],
+    "n": 16
+   },
+   "raw_within_crop_fab": {
+    "mean": 0.5843658377228516,
+    "ci95": [
+     0.4449133074489027,
+     0.7233100801060242
+    ],
+    "n": 16
+   },
+   "calib_implied_r": {
+    "mean": 0.17104975936758304,
+    "ci95": [
+     0.06451307607406151,
+     0.2974816884329196
+    ],
+    "n": 16
+   },
+   "icesat2": {
+    "model_mean_rmse": 13.150019402233529,
+    "oracle_mean_rmse": 13.017488309255183,
+    "model_wins": 6,
+    "wilcoxon_p_holm": 0.820892333984375,
+    "flat_mean_rmse": 16.03613383363728
+   },
+   "verdict_real_signal": false,
+   "case_raw": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+  }
+ },
+ "divergence_primary": false,
+ "divergence_secondary": false,
+ "decision": "L1C not meaningfully higher -> atmospheric correction ruled out as the cause",
+ "secondary_consistent": true
+}
+=== L1C CHAIN DONE Thu Sep 24 19:35:39 IST 2026
