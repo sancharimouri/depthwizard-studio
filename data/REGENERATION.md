@@ -168,3 +168,16 @@ Rows 2, 7, 10 and 12 each cover two paths, so the 16 rows cover the 20 inventori
 | Artifact | Committed? | Regenerate with | Notes |
 |---|---|---|---|
 | `data/dfc2019/experiments/resolution_transfer/rt_{P,R}_{2,3,5,8}m_seed42/fold{0-3}.pt`, `gate_native_fold0/fold0.pt` | no (33 × 99 MB) | `.venv/bin/python scripts/method6_resolution_transfer.py train --gsd <g> --proto <P\|R>` (chains: `run_chain.sh`, `run_chain8.sh`) | Seed 42; the native gate reproduces the adopted fold-0 MAE bit-for-bit. Per-fold results are committed (`train_results.json`), as are `matrix_tiles.jsonl` and `matrix_summary.json`. |
+
+**Kaggle zip cleanup (2026-09-24).** Two stray Kaggle zips were deleted after their contents were checked:
+- **`kaggle/gamus_f_kaggle_bundle.zip` (212 MB).** Fully redundant:
+  - `terrain_rf_kaggle.py` and `read.md` are byte-identical to the tracked `kaggle/terrain_rf_kaggle.py` and
+    `kaggle/bundle_f/read.md`;
+  - `samples.parquet` has the same SHA-1 (`abcae078…`) as `data/sentinel2_benchmark/terrain_rf_residual/samples.parquet`.
+
+  To rebuild: `cd kaggle && zip -0 -r gamus_f_kaggle_bundle.zip bundle_f`.
+- **`kaggle_phase2.5_scripts_update.zip` (14 KB).**
+  - Its `evaluate_method4.py` is identical to `scripts/evaluate_method4.py`.
+  - Its `evaluate_method4_v2_kaggle.py` (the Phase 2.5 Kaggle build, 2026-09-20 00:07, without `--sid-bins`) is preserved
+    as **`scripts/evaluate_method4_v2_kaggle_phase2_5.py`**. It is byte-identical to `scripts 2/evaluate_method4_v2_kaggle.py`.
+  - The later SID-bins build stays at `kaggle_phase2.5_package/scripts/evaluate_method4_v2_kaggle.py`.
