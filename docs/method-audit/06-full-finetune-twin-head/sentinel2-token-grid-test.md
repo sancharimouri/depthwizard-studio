@@ -1150,3 +1150,95 @@ reflectance by the local sun-incidence angle, which would flatten exactly the sl
 - The cheap, training-free test: correlate the L2A/L1C ratio with cos(incidence) from FABDEM slope/aspect and the
   scene sun angles.
 - **Not started;** the user decides.
+
+## 2026-09-24 — Terrain-relief positive control (VHR NAIP vs 3DEP LiDAR terrain, 600 m crops): pre-registration (committed before the real run; only 5-step CPU parity runs so far)
+
+**Question.** The DFC2019 control validated the machinery on 18 m crops of object height. Does the same pipeline detect
+**terrain relief** at **Sentinel-2's measurement scale** (600 m crops, 30 m target cells) when the imagery is VHR? If it
+can't, the DFC2019 validation doesn't extend to terrain-relief measurement, and every terrain-relief null needs
+re-examining.
+
+**Data** (`scripts/terrain_relief_positive_control.py`). It reuses Part D's infrastructure
+(`forest_mountain_3dep_eval.py`: Planetary Computer STAC and signing, site boxes, forest criteria, leaf-on NAIP rule).
+- **Sites and items:** Part D's sites and backups (Olympic WA, Tahoe CA, Front Range CO, GRSM TN, MLBS VA, White Mtns NH).
+  - Part D's per-site forest criteria: HAG item valid ≥ 95%, HAG mean ≥ 8 m, relaxed to ≥ 5 m.
+  - Every eligible item, **ranked by DTM relief** (STAC DTM stddev, descending).
+  - Up to **3 tiles per site**, at most 15; the run needs **10–15**.
+  - Eligible counts: Olympic 4, Tahoe 3, Front Range 0 (as in Part D), GRSM 6, MLBS 5, White Mtns 2. Item DTM std is
+    73–245 m.
+- **Tile:** the centred 7.2 km × 7.2 km square of the item. It is kept if the DTM is ≥ 98% valid and one leaf-on NAIP
+  year covers ≥ 99%.
+  - NAIP rule: June–September, GSD ≤ 1.0 m, the year closest to the LiDAR year (ties go to the finer GSD). The next
+    closest year is tried if coverage fails.
+  - All four Olympic items already fail the DTM rule (64–96% valid in the centred square).
+  - The resulting list and its per-tile gaps go in the selection log below, before any training result.
+- **Imagery:** NAIP RGB on a common **1.0 m** grid in the item's UTM zone. 1.0 m items are warped bilinearly; 0.6 m items
+  are area-averaged to 1.0 m. uint8 DN as delivered, no stretch.
+- **Truth:** the 3DEP LiDAR **DTM** (`3dep-lidar-dtm`, bare-earth terrain, 2 m, NAVD88), warped bilinearly to 1 m, in
+  every slot:
+  - `fab30` = the 30 m block mean (target and calibration);
+  - "ICESat-2 cells" = the DTM at the centre of every 30 m block (20 × 20 = 400 per crop);
+  - `fab10` = the DTM, used only for the trivial reference slot and the finite mask.
+  - This is terrain elevation, not canopy or object height.
+
+**Pixel dimensions, confirmed before running anything:**
+
+| | Sentinel-2 (reference) | This control |
+|---|---|---|
+| Input GSD | 10 m | **1.0 m** (NAIP; 0.6 m items averaged to 1.0 m) |
+| Crop | 60 px = 600 m | **600 px = 600 m** |
+| Model input, arm P (true pixel count) | 60 → 70 px, **5 × 5 tokens**, 140 m/token | 600 → **602 px, 43 × 43 tokens**, 14 m/token |
+| Target cells per crop | 20 × 20 at 30 m (K = 3) | **20 × 20 at 30 m (K = 30)** |
+| Truth cells per crop | ICESat-2, sparse | 400 DTM cells |
+| Tile / crops per quadrant | 1000 px = 10 km / 8 × 8 | **7200 px = 7.2 km / 6 × 6** (a 3DEP item is 8.2 km) |
+
+**Pipeline.**
+- Unchanged: `s2_rank_loss_test` (`fit`, `calibrated_eval`, `scores_all`, `oracle_scores`, `analyze`) and
+  `s2_rank_raw_spearman` (`cells_for_fold`, `summarize`), with the same trained models.
+- That keeps `rank_pair_loss` (2000 pairs, margin 0.25), 600 × 4 steps, seed 42, AdamW 5e-6 / 2.5e-4, 4 quadrant folds,
+  per-tile slope calibration and `MIN_CELLS` = 10.
+- The only change is the pixel-geometry constants, patched on the imported modules (as the Landsat run patches the
+  cache path): N, K, P_PAD, `crop_origins`.
+- **Oracle:** frozen DAv2-Large on the whole tile.
+  - 7200² exceeds `run_inference`'s 50 Mpx budget, so it gets the tile 2× area-averaged. It resizes to 518 px either
+    way, which is about 14 m/px effective.
+  - The depth is repeated 2× back to 7200.
+
+**Execution: Kaggle GPU** (`scripts/terrain_relief_kaggle.py`, the CLAUDE.md offload pattern).
+- It is self-contained, and the model code is copied verbatim.
+- Calibration and per-crop Spearman run in float64 on the GPU. It checkpoints every 100 steps for resume, and the
+  notebook has a stall and crash watchdog.
+- **Parity, CPU vs the original imported pipeline** (Tahoe tile, fold 0, 5 steps):
+  - the loss trace is identical;
+  - all 14 calibrated-eval fields match structurally, with a maximum relative difference of **2.1e-7**;
+  - 36/36 crops have the same Spearman None-pattern, with a maximum |Δρ| of **3.8e-5**.
+  - A resume from checkpoint reproduces the result exactly.
+
+**Reported, in the existing table format:**
+1. Raw within-crop Spearman (primary), rank model vs the DTM, with DAv2-L raw and the calibration-implied r alongside.
+2. Calibrated RMSE vs the identically calibrated per-tile oracle, with wins, Holm p and `verdict_real_signal`.
+
+**Decision rule** (mirrors the DFC2019 control):
+- **PASS:** the rank model's mean within-crop Spearman is **≥ 0.30** *and* its 95% tile-bootstrap CI lower bound is
+  **> 0.134**. It is labelled a **strong pass** if the mean is ≥ 0.50.
+  - On a pass, the Sentinel-2 / Landsat / CBERS near-zero terrain results stand as genuine absence of signal, now
+    validated on the correct feature type and scale.
+- **FAIL:** anything else. The DFC2019 validation then does **not** extend to terrain-relief measurement, and every
+  terrain-relief null needs re-examining. This will be reported as plainly as a pass.
+- The calibrated RMSE is reported but doesn't change PASS/FAIL. The DFC2019 control showed that rule tests "beats the
+  frozen prior", not "signal exists".
+
+**Caveats, stated in advance, carried forward from Part D:**
+- **Imagery/LiDAR date gaps.** 3DEP STAC dates are year-level only. A tile is **flagged if the gap is ≥ 2 years**.
+  Terrain changes little over years, but canopy (which hides and shades the ground) and harvests do change.
+- **GRSM.** Part D found steep-terrain ground classification suspect there (HAG correlation about 0), and **every GRSM
+  tile is flagged**. A DTM with misclassified ground would make the truth itself noisy there.
+- **Leaf-on NAIP over closed forest.** The ground is mostly hidden, so relief must be read from canopy-top shape and
+  shading. That is the realistic case for Sentinel-2 too. A fail here could be specific to forest, and the tiles are
+  all forested by Part D's criteria.
+- **Oracle input resolution.** Frozen DAv2-L sees the whole tile at 518 px, about 14 m/px, i.e. near Sentinel-2
+  resolution. It is a weak within-crop reference by construction.
+- **Reference slot.** The reference slot holds the truth, so it is trivially near-perfect. The 0.631 comparison is to
+  Sentinel-2's FABDEM value.
+- **Scope.** One seed, 10–15 tiles from ≤ 5 US forest-mountain sites. The sites are selected by data availability
+  (Olympic lost to DTM coverage).
