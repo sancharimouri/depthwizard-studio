@@ -108,11 +108,11 @@ function activateLayer(layer) {
 
     currentTerrain.setLayer(layer);
 
-    // Scoped to #page-1 — Final Demo's box 8 reuses the same .layer-button
+    // Scoped to #page-explore — Final Demo's box 8 reuses the same .layer-button
     // class for visual parity with Explore, and has its own independent
     // activateFinalDemoLayer() below; an unscoped selector here would
     // cross-wire the two viewers' active states.
-    document.querySelectorAll("#page-1 .layer-button").forEach(button => {
+    document.querySelectorAll("#page-explore .layer-button").forEach(button => {
         button.classList.toggle("active", button.dataset.layer === layer);
     });
 
@@ -177,7 +177,7 @@ async function loadRegion(regionKey) {
 
     updateStatsAndLabels(regionKey, terrain, terrainData);
 
-    document.querySelectorAll("#page-1 .region-card").forEach(card => {
+    document.querySelectorAll("#page-explore .region-card").forEach(card => {
         card.classList.toggle("active", card.dataset.region === regionKey);
     });
 
@@ -192,7 +192,7 @@ async function loadRegion(regionKey) {
 // LAYER BUTTONS
 // ============================================================
 
-document.querySelectorAll("#page-1 .layer-button").forEach(button => {
+document.querySelectorAll("#page-explore .layer-button").forEach(button => {
     button.addEventListener("click", () => { selectLayer(button.dataset.layer); });
 });
 
@@ -203,7 +203,7 @@ document.querySelectorAll("#page-1 .layer-button").forEach(button => {
 
 // [data-region] excludes the "Build Your Own" card — it reuses
 // .region-card for consistent styling but isn't a region to load.
-document.querySelectorAll("#page-1 .region-card[data-region]").forEach(card => {
+document.querySelectorAll("#page-explore .region-card[data-region]").forEach(card => {
     card.addEventListener("click", async () => {
         const region = card.dataset.region;
 
@@ -1001,7 +1001,8 @@ const pageNavToggle = document.getElementById("page-nav-toggle");
 const pageNavTabs = document.querySelectorAll(".page-nav-tab");
 const pages = document.querySelectorAll(".page");
 
-let activePageId = "page-1";
+// Page order (2026-09-24): 1 Workbench (default), 2 Explore, 3 Docs.
+let activePageId = "page-workbench";
 
 function setActivePage(pageId) {
     activePageId = pageId;
@@ -1014,7 +1015,7 @@ function setActivePage(pageId) {
         tab.classList.toggle("active", tab.dataset.page === pageId);
     });
 
-    if (pageId === "page-2") {
+    if (pageId === "page-workbench") {
         requestAnimationFrame(initWorkbenchGrid);
     }
 }
@@ -1029,8 +1030,11 @@ pageNavToggle?.addEventListener("click", () => {
     pageNav?.classList.toggle("expanded");
 });
 
+// Workbench is the landing page, so run its first-show init (grid entrance) on load too.
+setActivePage(activePageId);
+
 document.getElementById("build-your-own-card")?.addEventListener("click", () => {
-    setActivePage("page-2");
+    setActivePage("page-workbench");
 });
 
 
@@ -1272,7 +1276,7 @@ function updateMiniPreviews() {
 // layer switching, RUN RECONSTRUCTION, FLYTHROUGH, DANGER ZONES. All
 // lookups below are scoped to #final-demo-box: the markup reuses
 // Explore's exact classes (.region-card, .layer-button, etc.) for
-// visual parity, and Explore's own equivalents are scoped to #page-1
+// visual parity, and Explore's own equivalents are scoped to #page-explore
 // (see activateLayer / the region-rail bindings above) so the two
 // viewers' independent state never cross-wires. Deferred until box 8's
 // turn in the START GENERATION sequence — initFinalDemoViewer() below
@@ -1460,7 +1464,7 @@ async function runFinalDemoReconstruction() {
 // WORKBENCH THEME TOGGLE (light/dark — Workbench only, Explore and the
 // shared page-nav rail are untouched since they never receive a
 // [data-theme] attribute). Every color in styles.css reads from the
-// custom properties #page-2[data-theme="light"] overrides, so flipping
+// custom properties #page-workbench[data-theme="light"] overrides, so flipping
 // this one attribute repaints the whole page; the only piece CSS can't
 // reach is the Final Demo viewer's THREE.js scene background (UI
 // chrome, not imagery), updated here via viewer.setBackground().
@@ -1476,7 +1480,7 @@ let workbenchTheme = "dark";
 function applyWorkbenchTheme(theme) {
     workbenchTheme = theme;
 
-    const page2 = document.getElementById("page-2");
+    const page2 = document.getElementById("page-workbench");
     if (page2) {
         page2.dataset.theme = theme;
     }
@@ -1804,9 +1808,9 @@ async function runGenerationSequence() {
     ]);
 
     await generateCaptionPreviewBox("elevation-preview-box", [
-        "Evaluating terrain DEM + correction head…",
-        "Checking sparse ICESat-2 anchors…",
-        "Correction head not yet trained — flat DEM elevation shown…",
+        "Loading terrain DEM (reference elevation)…",
+        "Learned Sentinel-2 corrections: tested, not adopted…",
+        "DEM elevation shown — no model correction applied…",
     ]);
 
     await generateMiniPreviewBox("dsm-3d-box", "dsm-3d-canvas", "dsm-3d", [
@@ -1879,13 +1883,13 @@ function initWorkbenchGrid() {
 function animate() {
     requestAnimationFrame(animate);
 
-    if (activePageId === "page-2") {
+    if (activePageId === "page-workbench") {
         updateMiniPreviews();
         updateFinalDemoViewer();
         return;
     }
 
-    if (activePageId !== "page-1") {
+    if (activePageId !== "page-explore") {
         return;
     }
 
