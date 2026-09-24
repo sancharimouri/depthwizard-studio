@@ -364,6 +364,9 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
 - **DFC2019 positive control** (`scripts/dfc2019_rank_positive_control.py`, native 0.3 m, dense AGL, 31 tiles): **PASS**. Raw within-crop ρ is 0.379 (rank model) and 0.441 (DAv2-L),
   vs. about 0.11–0.13 on S2/Landsat. The raw-Spearman nulls are genuine, not a test blind spot. Here the rank model still loses calibrated RMSE to frozen DAv2-L (5/31),
   so that pass rule tests "beats the frozen prior", not "signal exists". The crops are 18 m and the target is AGL, not terrain.
+- **Terrain-relief positive control** (2026-09-25, Kaggle; NAIP 1 m vs 3DEP DTM, 600 m crops, 8 US forest tiles): **STRONG PASS**.
+  Raw within-crop ρ is 0.730 [0.688, 0.768] (rank model) vs. 0.250 (DAv2-L); calibrated RMSE 31.0 vs. 44.1 m, 8/8.
+  So the ~0.13 Sentinel-2/Landsat terrain nulls are genuine absence of signal at 10–15 m, validated on terrain at the right scale.
 - **Kaggle GPU run:** `scripts/s2_token_grid_phase_c_kaggle.py`, bit-exact CPU parity with `scripts/s2_token_grid_phase_c.py`.
 
 ## SIH26175 brief — evaluation criteria (standing reference; full text `docs/SIH26175_problem_statement.md`)

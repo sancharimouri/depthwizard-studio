@@ -1,0 +1,106 @@
+{
+ "n_tiles": 8,
+ "checks": {
+  "icesat2": {
+   "model_mean_rmse": 30.957269538919668,
+   "oracle_mean_rmse": 44.12582776375544,
+   "model_minus_oracle": -13.168558224835774,
+   "ci95": [
+    -15.554306781390439,
+    -10.331376234905832
+   ],
+   "model_wins": 8,
+   "wilcoxon_p": 0.0078125,
+   "per_tile": {
+    "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4": {
+     "model": 34.34577100415265,
+     "oracle": 48.36717312347224
+    },
+    "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4": {
+     "model": 43.47846076229677,
+     "oracle": 57.42189069839405
+    },
+    "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5": {
+     "model": 52.33296143298919,
+     "oracle": 56.99302643697743
+    },
+    "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10": {
+     "model": 22.638435167525884,
+     "oracle": 38.014180214746986
+    },
+    "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11": {
+     "model": 17.160261462788885,
+     "oracle": 28.483334460544796
+    },
+    "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11": {
+     "model": 21.420218465477795,
+     "oracle": 33.27396417422589
+    },
+    "tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5": {
+     "model": 27.569615362165322,
+     "oracle": 43.21057274980851
+    },
+    "tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5": {
+     "model": 28.71243265396084,
+     "oracle": 47.242480251873616
+    }
+   },
+   "wilcoxon_p_holm": 0.015625,
+   "flat_mean_rmse": 45.72695323132336,
+   "fabdem_mean_rmse": 0.2723259582830898
+  },
+  "dem_heldout": {
+   "model_mean_rmse": 30.33955601764117,
+   "oracle_mean_rmse": 43.86229001740293,
+   "model_minus_oracle": -13.52273399976176,
+   "ci95": [
+    -15.922417443809701,
+    -10.683276601207625
+   ],
+   "model_wins": 8,
+   "wilcoxon_p": 0.0078125,
+   "per_tile": {
+    "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4": {
+     "model": 33.85204532037738,
+     "oracle": 48.215102234329485
+    },
+    "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4": {
+     "model": 42.93643945984667,
+     "oracle": 57.27492797873048
+    },
+    "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5": {
+     "model": 50.525841812497596,
+     "oracle": 55.526021322402514
+    },
+    "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10": {
+     "model": 22.194460887991713,
+     "oracle": 37.942094910673376
+    },
+    "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11": {
+     "model": 16.84991287668491,
+     "oracle": 28.43039095591038
+    },
+    "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11": {
+     "model": 21.007445705246806,
+     "oracle": 33.19647517401196
+    },
+    "tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5": {
+     "model": 27.13528948291329,
+     "oracle": 43.13865304866761
+    },
+    "tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5": {
+     "model": 28.21501259557098,
+     "oracle": 47.17465451449762
+    }
+   },
+   "wilcoxon_p_holm": 0.015625
+  }
+ },
+ "slopes": {
+  "model_median": 60.577548439608506,
+  "oracle_median": 397.8918544304622,
+  "model_frac_negative": 0.0,
+  "oracle_frac_negative": 0.125
+ },
+ "verdict_real_signal": true
+}

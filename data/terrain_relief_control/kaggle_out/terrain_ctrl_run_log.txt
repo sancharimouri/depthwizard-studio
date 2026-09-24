@@ -1,0 +1,244 @@
+=== launch 0 Thu Sep 24 21:36:50 2026 ===
+[21:36:56] GPU: Tesla T4, torch 2.10.0+cu128
+[21:36:56] tiles 8: ['grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4', 'grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4', 'grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5', 'mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10', 'mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11', 'mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11', 'tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5', 'tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5']
+
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]
+Loading weights:   5%|▍         | 14/287 [00:00<00:02, 114.13it/s]
+Loading weights:  18%|█▊        | 53/287 [00:00<00:00, 261.18it/s]
+Loading weights:  32%|███▏      | 92/287 [00:00<00:00, 280.58it/s]
+Loading weights:  42%|████▏     | 121/287 [00:00<00:00, 250.99it/s]
+Loading weights:  51%|█████     | 147/287 [00:00<00:00, 245.56it/s]
+Loading weights:  64%|██████▍   | 184/287 [00:00<00:00, 258.87it/s]
+Loading weights:  79%|███████▉  | 227/287 [00:00<00:00, 306.52it/s]
+Loading weights:  94%|█████████▍| 270/287 [00:00<00:00, 338.96it/s]
+Loading weights: 100%|██████████| 287/287 [00:00<00:00, 296.73it/s]
+[21:37:31] [rank_fold0] device=cuda:0 train crops 863 steps 600 x batch 4
+[21:37:40] [rank_fold0] step 1/600 loss 13.7600 8.12s/step ETA 81.1 min GPU peak 7.4 GiB
+[21:38:01] [rank_fold0] step 25/600 loss 5.0500 1.18s/step ETA 11.3 min GPU peak 7.4 GiB
+[21:38:24] [rank_fold0] step 50/600 loss 2.6628 1.05s/step ETA 9.6 min GPU peak 7.4 GiB
+[21:38:48] [rank_fold0] step 75/600 loss 1.8484 1.02s/step ETA 8.9 min GPU peak 7.4 GiB
+[21:39:14] [rank_fold0] step 100/600 loss 1.4334 1.02s/step ETA 8.5 min GPU peak 7.4 GiB
+[21:39:42] [rank_fold0] step 125/600 loss 0.2115 1.04s/step ETA 8.2 min GPU peak 7.4 GiB
+[21:40:10] [rank_fold0] step 150/600 loss 0.1794 1.05s/step ETA 7.9 min GPU peak 7.4 GiB
+[21:40:36] [rank_fold0] step 175/600 loss 0.1605 1.05s/step ETA 7.4 min GPU peak 7.4 GiB
+[21:41:03] [rank_fold0] step 200/600 loss 0.1472 1.05s/step ETA 7.0 min GPU peak 7.4 GiB
+[21:41:31] [rank_fold0] step 225/600 loss 0.1377 1.06s/step ETA 6.6 min GPU peak 7.4 GiB
+[21:41:57] [rank_fold0] step 250/600 loss 0.1348 1.06s/step ETA 6.2 min GPU peak 7.4 GiB
+[21:42:24] [rank_fold0] step 275/600 loss 0.1339 1.06s/step ETA 5.8 min GPU peak 7.4 GiB
+[21:42:51] [rank_fold0] step 300/600 loss 0.1310 1.06s/step ETA 5.3 min GPU peak 7.4 GiB
+[21:43:19] [rank_fold0] step 325/600 loss 0.1249 1.07s/step ETA 4.9 min GPU peak 7.4 GiB
+[21:43:46] [rank_fold0] step 350/600 loss 0.1208 1.07s/step ETA 4.5 min GPU peak 7.4 GiB
+[21:44:13] [rank_fold0] step 375/600 loss 0.1107 1.07s/step ETA 4.0 min GPU peak 7.4 GiB
+[21:44:40] [rank_fold0] step 400/600 loss 0.1071 1.07s/step ETA 3.6 min GPU peak 7.4 GiB
+[21:45:07] [rank_fold0] step 425/600 loss 0.1088 1.07s/step ETA 3.1 min GPU peak 7.4 GiB
+[21:45:34] [rank_fold0] step 450/600 loss 0.1017 1.07s/step ETA 2.7 min GPU peak 7.4 GiB
+[21:46:01] [rank_fold0] step 475/600 loss 0.1030 1.07s/step ETA 2.2 min GPU peak 7.4 GiB
+[21:46:28] [rank_fold0] step 500/600 loss 0.0989 1.07s/step ETA 1.8 min GPU peak 7.4 GiB
+[21:46:55] [rank_fold0] step 525/600 loss 0.0968 1.07s/step ETA 1.3 min GPU peak 7.4 GiB
+[21:47:22] [rank_fold0] step 550/600 loss 0.0961 1.07s/step ETA 0.9 min GPU peak 7.4 GiB
+[21:47:49] [rank_fold0] step 575/600 loss 0.0915 1.07s/step ETA 0.4 min GPU peak 7.4 GiB
+[21:48:16] [rank_fold0] step 600/600 loss 0.0899 1.07s/step ETA 0.0 min GPU peak 7.4 GiB
+[21:48:30] fold0: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4
+[21:48:41] fold0: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4
+[21:48:52] fold0: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5
+[21:49:03] fold0: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10
+[21:49:14] fold0: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11
+[21:49:26] fold0: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11
+[21:49:37] fold0: scored tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5
+[21:49:48] fold0: scored tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5
+[21:49:49] fold0: done 773s, 283 held-out crops with cells
+
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]
+Loading weights:  94%|█████████▍| 270/287 [00:00<00:00, 2697.31it/s]
+Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2755.41it/s]
+[21:49:50] [rank_fold1] device=cuda:0 train crops 859 steps 600 x batch 4
+[21:49:51] [rank_fold1] step 1/600 loss 16.2211 1.08s/step ETA 10.8 min GPU peak 7.4 GiB
+[21:50:17] [rank_fold1] step 25/600 loss 4.3999 1.09s/step ETA 10.4 min GPU peak 7.4 GiB
+[21:50:44] [rank_fold1] step 50/600 loss 2.3286 1.08s/step ETA 9.9 min GPU peak 7.4 GiB
+[21:51:11] [rank_fold1] step 75/600 loss 1.6234 1.08s/step ETA 9.4 min GPU peak 7.4 GiB
+[21:51:38] [rank_fold1] step 100/600 loss 1.2652 1.08s/step ETA 9.0 min GPU peak 7.4 GiB
+[21:52:05] [rank_fold1] step 125/600 loss 0.2092 1.08s/step ETA 8.6 min GPU peak 7.4 GiB
+[21:52:32] [rank_fold1] step 150/600 loss 0.1812 1.08s/step ETA 8.1 min GPU peak 7.4 GiB
+[21:52:59] [rank_fold1] step 175/600 loss 0.1729 1.08s/step ETA 7.7 min GPU peak 7.4 GiB
+[21:53:26] [rank_fold1] step 200/600 loss 0.1597 1.08s/step ETA 7.2 min GPU peak 7.4 GiB
+[21:53:54] [rank_fold1] step 225/600 loss 0.1508 1.08s/step ETA 6.8 min GPU peak 7.4 GiB
+[21:54:21] [rank_fold1] step 250/600 loss 0.1475 1.08s/step ETA 6.3 min GPU peak 7.4 GiB
+[21:54:48] [rank_fold1] step 275/600 loss 0.1362 1.08s/step ETA 5.9 min GPU peak 7.4 GiB
+[21:55:15] [rank_fold1] step 300/600 loss 0.1365 1.08s/step ETA 5.4 min GPU peak 7.4 GiB
+[21:55:42] [rank_fold1] step 325/600 loss 0.1311 1.08s/step ETA 5.0 min GPU peak 7.4 GiB
+[21:56:09] [rank_fold1] step 350/600 loss 0.1231 1.08s/step ETA 4.5 min GPU peak 7.4 GiB
+[21:56:36] [rank_fold1] step 375/600 loss 0.1163 1.08s/step ETA 4.1 min GPU peak 7.4 GiB
+[21:57:03] [rank_fold1] step 400/600 loss 0.1089 1.08s/step ETA 3.6 min GPU peak 7.4 GiB
+[21:57:30] [rank_fold1] step 425/600 loss 0.1041 1.08s/step ETA 3.2 min GPU peak 7.4 GiB
+[21:57:57] [rank_fold1] step 450/600 loss 0.1029 1.08s/step ETA 2.7 min GPU peak 7.4 GiB
+[21:58:24] [rank_fold1] step 475/600 loss 0.0997 1.08s/step ETA 2.3 min GPU peak 7.4 GiB
+[21:58:51] [rank_fold1] step 500/600 loss 0.0958 1.08s/step ETA 1.8 min GPU peak 7.4 GiB
+[21:59:19] [rank_fold1] step 525/600 loss 0.0946 1.08s/step ETA 1.4 min GPU peak 7.4 GiB
+[21:59:45] [rank_fold1] step 550/600 loss 0.0939 1.08s/step ETA 0.9 min GPU peak 7.4 GiB
+[22:00:12] [rank_fold1] step 575/600 loss 0.0896 1.08s/step ETA 0.5 min GPU peak 7.4 GiB
+[22:00:39] [rank_fold1] step 600/600 loss 0.0859 1.08s/step ETA 0.0 min GPU peak 7.4 GiB
+[22:00:51] fold1: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4
+[22:01:01] fold1: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4
+[22:01:12] fold1: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5
+[22:01:23] fold1: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10
+[22:01:34] fold1: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11
+[22:01:44] fold1: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11
+[22:01:55] fold1: scored tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5
+[22:02:06] fold1: scored tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5
+[22:02:07] fold1: done 738s, 287 held-out crops with cells
+
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]
+Loading weights:  94%|█████████▎| 269/287 [00:00<00:00, 2686.86it/s]
+Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2740.84it/s]
+[22:02:07] [rank_fold2] device=cuda:0 train crops 858 steps 600 x batch 4
+[22:02:09] [rank_fold2] step 1/600 loss 14.4764 1.06s/step ETA 10.6 min GPU peak 7.4 GiB
+[22:02:35] [rank_fold2] step 25/600 loss 4.6246 1.08s/step ETA 10.3 min GPU peak 7.4 GiB
+[22:03:02] [rank_fold2] step 50/600 loss 2.4591 1.08s/step ETA 9.9 min GPU peak 7.4 GiB
+[22:03:29] [rank_fold2] step 75/600 loss 1.7220 1.08s/step ETA 9.5 min GPU peak 7.4 GiB
+[22:03:56] [rank_fold2] step 100/600 loss 1.3397 1.08s/step ETA 9.0 min GPU peak 7.4 GiB
+[22:04:23] [rank_fold2] step 125/600 loss 0.2260 1.08s/step ETA 8.6 min GPU peak 7.4 GiB
+[22:04:50] [rank_fold2] step 150/600 loss 0.1942 1.08s/step ETA 8.1 min GPU peak 7.4 GiB
+[22:05:17] [rank_fold2] step 175/600 loss 0.1685 1.08s/step ETA 7.7 min GPU peak 7.4 GiB
+[22:05:44] [rank_fold2] step 200/600 loss 0.1542 1.08s/step ETA 7.2 min GPU peak 7.4 GiB
+[22:06:12] [rank_fold2] step 225/600 loss 0.1463 1.08s/step ETA 6.8 min GPU peak 7.4 GiB
+[22:06:38] [rank_fold2] step 250/600 loss 0.1367 1.08s/step ETA 6.3 min GPU peak 7.4 GiB
+[22:07:05] [rank_fold2] step 275/600 loss 0.1308 1.08s/step ETA 5.9 min GPU peak 7.4 GiB
+[22:07:32] [rank_fold2] step 300/600 loss 0.1281 1.08s/step ETA 5.4 min GPU peak 7.4 GiB
+[22:08:00] [rank_fold2] step 325/600 loss 0.1248 1.08s/step ETA 5.0 min GPU peak 7.4 GiB
+[22:08:27] [rank_fold2] step 350/600 loss 0.1231 1.08s/step ETA 4.5 min GPU peak 7.4 GiB
+[22:08:54] [rank_fold2] step 375/600 loss 0.1203 1.08s/step ETA 4.1 min GPU peak 7.4 GiB
+[22:09:20] [rank_fold2] step 400/600 loss 0.1154 1.08s/step ETA 3.6 min GPU peak 7.4 GiB
+[22:09:48] [rank_fold2] step 425/600 loss 0.1113 1.08s/step ETA 3.2 min GPU peak 7.4 GiB
+[22:10:15] [rank_fold2] step 450/600 loss 0.1044 1.08s/step ETA 2.7 min GPU peak 7.4 GiB
+[22:10:42] [rank_fold2] step 475/600 loss 0.1014 1.08s/step ETA 2.3 min GPU peak 7.4 GiB
+[22:11:09] [rank_fold2] step 500/600 loss 0.1009 1.08s/step ETA 1.8 min GPU peak 7.4 GiB
+[22:11:37] [rank_fold2] step 525/600 loss 0.0980 1.08s/step ETA 1.4 min GPU peak 7.4 GiB
+[22:12:04] [rank_fold2] step 550/600 loss 0.0978 1.08s/step ETA 0.9 min GPU peak 7.4 GiB
+[22:12:30] [rank_fold2] step 575/600 loss 0.0974 1.08s/step ETA 0.5 min GPU peak 7.4 GiB
+[22:12:57] [rank_fold2] step 600/600 loss 0.0924 1.08s/step ETA 0.0 min GPU peak 7.4 GiB
+[22:13:09] fold2: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4
+[22:13:19] fold2: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4
+[22:13:30] fold2: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5
+[22:13:41] fold2: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10
+[22:13:52] fold2: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11
+[22:14:02] fold2: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11
+[22:14:13] fold2: scored tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5
+[22:14:23] fold2: scored tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5
+[22:14:25] fold2: done 737s, 288 held-out crops with cells
+
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2878.38it/s]
+[22:14:25] [rank_fold3] device=cuda:0 train crops 858 steps 600 x batch 4
+[22:14:26] [rank_fold3] step 1/600 loss 6.5603 1.06s/step ETA 10.5 min GPU peak 7.4 GiB
+[22:14:52] [rank_fold3] step 25/600 loss 4.1356 1.07s/step ETA 10.3 min GPU peak 7.4 GiB
+[22:15:19] [rank_fold3] step 50/600 loss 2.1984 1.08s/step ETA 9.9 min GPU peak 7.4 GiB
+[22:15:46] [rank_fold3] step 75/600 loss 1.5379 1.08s/step ETA 9.4 min GPU peak 7.4 GiB
+[22:16:13] [rank_fold3] step 100/600 loss 1.2050 1.08s/step ETA 9.0 min GPU peak 7.4 GiB
+[22:16:40] [rank_fold3] step 125/600 loss 0.2133 1.08s/step ETA 8.6 min GPU peak 7.4 GiB
+[22:17:07] [rank_fold3] step 150/600 loss 0.1841 1.08s/step ETA 8.1 min GPU peak 7.4 GiB
+[22:17:34] [rank_fold3] step 175/600 loss 0.1642 1.08s/step ETA 7.7 min GPU peak 7.4 GiB
+[22:18:01] [rank_fold3] step 200/600 loss 0.1466 1.08s/step ETA 7.2 min GPU peak 7.4 GiB
+[22:18:29] [rank_fold3] step 225/600 loss 0.1348 1.08s/step ETA 6.8 min GPU peak 7.4 GiB
+[22:18:55] [rank_fold3] step 250/600 loss 0.1316 1.08s/step ETA 6.3 min GPU peak 7.4 GiB
+[22:19:22] [rank_fold3] step 275/600 loss 0.1270 1.08s/step ETA 5.9 min GPU peak 7.4 GiB
+[22:19:49] [rank_fold3] step 300/600 loss 0.1226 1.08s/step ETA 5.4 min GPU peak 7.4 GiB
+[22:20:17] [rank_fold3] step 325/600 loss 0.1181 1.08s/step ETA 5.0 min GPU peak 7.4 GiB
+[22:20:44] [rank_fold3] step 350/600 loss 0.1121 1.08s/step ETA 4.5 min GPU peak 7.4 GiB
+[22:21:10] [rank_fold3] step 375/600 loss 0.1105 1.08s/step ETA 4.1 min GPU peak 7.4 GiB
+[22:21:37] [rank_fold3] step 400/600 loss 0.1077 1.08s/step ETA 3.6 min GPU peak 7.4 GiB
+[22:22:05] [rank_fold3] step 425/600 loss 0.1072 1.08s/step ETA 3.2 min GPU peak 7.4 GiB
+[22:22:32] [rank_fold3] step 450/600 loss 0.1031 1.08s/step ETA 2.7 min GPU peak 7.4 GiB
+[22:22:59] [rank_fold3] step 475/600 loss 0.0975 1.08s/step ETA 2.3 min GPU peak 7.4 GiB
+[22:23:25] [rank_fold3] step 500/600 loss 0.0927 1.08s/step ETA 1.8 min GPU peak 7.4 GiB
+[22:23:53] [rank_fold3] step 525/600 loss 0.0919 1.08s/step ETA 1.4 min GPU peak 7.4 GiB
+[22:24:20] [rank_fold3] step 550/600 loss 0.0891 1.08s/step ETA 0.9 min GPU peak 7.4 GiB
+[22:24:47] [rank_fold3] step 575/600 loss 0.0857 1.08s/step ETA 0.5 min GPU peak 7.4 GiB
+[22:25:14] [rank_fold3] step 600/600 loss 0.0856 1.08s/step ETA 0.0 min GPU peak 7.4 GiB
+[22:25:25] fold3: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4
+[22:25:36] fold3: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4
+[22:25:47] fold3: scored grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5
+[22:25:58] fold3: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10
+[22:26:09] fold3: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11
+[22:26:19] fold3: scored mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11
+[22:26:30] fold3: scored tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5
+[22:26:41] fold3: scored tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5
+[22:26:42] fold3: done 737s, 288 held-out crops with cells
+[22:26:42] GPU peak memory 7.39 GiB
+{
+ "n_tiles": 8,
+ "slopes": {
+  "model_median": 60.577548439608506,
+  "oracle_median": 397.8918544304622,
+  "model_frac_negative": 0.0,
+  "oracle_frac_negative": 0.125
+ },
+ "verdict_real_signal": true
+}
+icesat2 {"model_mean_rmse": 30.957269538919668, "oracle_mean_rmse": 44.12582776375544, "model_minus_oracle": -13.168558224835774, "ci95": [-15.554306781390439, -10.331376234905832], "model_wins": 8, "wilcoxon_p": 0.0078125, "wilcoxon_p_holm": 0.015625, "flat_mean_rmse": 45.72695323132336, "fabdem_mean_rmse": 0.2723259582830898}
+dem_heldout {"model_mean_rmse": 30.33955601764117, "oracle_mean_rmse": 43.86229001740293, "model_minus_oracle": -13.52273399976176, "ci95": [-15.922417443809701, -10.683276601207625], "model_wins": 8, "wilcoxon_p": 0.0078125, "wilcoxon_p_holm": 0.015625}
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 8,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.729675555594228,
+   "ci95": [
+    0.6879094050993897,
+    0.7676222257493258
+   ],
+   "n": 8
+  },
+  "within_crop_oracle": {
+   "mean": 0.24992528085999866,
+   "ci95": [
+    0.07839788383511953,
+    0.4116337063489737
+   ],
+   "n": 8
+  },
+  "within_crop_fab": {
+   "mean": 0.9987363178776107,
+   "ci95": [
+    0.9963883240910641,
+    0.9999434521275203
+   ],
+   "n": 8
+  },
+  "calib_implied_r": {
+   "mean": 0.7388402409563176,
+   "ci95": [
+    0.6625141590385868,
+    0.8038402530766943
+   ],
+   "n": 8
+  },
+  "pooled_within_crop_model": 0.7299145095703751,
+  "pooled_within_crop_oracle": 0.24865453843162935,
+  "pooled_within_crop_fab": 0.9987301911765916
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.47975027473422943,
+   "ci95": [
+    0.3228462534189992,
+    0.6641215545784523
+   ],
+   "model_higher": 8,
+   "n": 8,
+   "wilcoxon_p": 0.0078125
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": -0.009164685362089503,
+   "ci95": [
+    -0.06629894105669644,
+    0.0744647925250748
+   ],
+   "spearman_higher": 1,
+   "n": 8,
+   "wilcoxon_p": 0.1953125
+  }
+ },
+ "pre_registered_verdict": "PASS (strong)"
+}
+[22:26:42] DONE

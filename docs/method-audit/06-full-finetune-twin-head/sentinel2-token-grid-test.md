@@ -1277,3 +1277,49 @@ re-examining.
   tile, so the rule fell through to 2012.
 - Within-crop terrain relief (DTM std) is 26–53 m, i.e. real relief at the 600 m scale.
 - Execution is on Kaggle (P100), since the local MPS estimate was about 9 h (scoring-bound).
+
+## 2026-09-25 — Terrain-relief positive control result: **STRONG PASS** (the pipeline does learn 600 m terrain relief from 1 m imagery)
+
+**Run.** Kaggle GPU, `scripts/terrain_relief_kaggle.py` (the script and bundle are unchanged from the pre-registration).
+- Private dataset `sancharimouri/terrain-relief-ctrl-bundle`; kernel `sancharimouri/terrain-relief-control` v1.
+- The upload finished on 2026-09-25 at about 600 kB/s (the earlier 30 kB/s blocker was the network).
+- 4 folds × 600 steps, about 12.3 min per fold, 50 min in total. One launch, no restarts, no stalls.
+- Held-out crops with cells: 283 / 287 / 288 / 288.
+- Output: `data/terrain_relief_control/kaggle_out/` (the checkpoints, 4 × 283 MB, are local only).
+
+**1. Raw within-crop Spearman vs the 3DEP DTM (primary; 8 tiles, tile-bootstrap 95% CI):**
+
+| | mean ρ | 95% CI |
+|---|---|---|
+| Rank model (fine-tuned DAv2-S) | **0.730** | [0.688, 0.768] |
+| Frozen DAv2-L oracle | 0.250 | [0.078, 0.412] |
+| Calibration-implied r (model) | 0.739 | [0.663, 0.804] |
+| Reference slot (the truth itself; trivial) | 0.999 | — |
+
+- Model vs oracle: +0.480 [0.323, 0.664]; the model is higher on 8/8 tiles (Wilcoxon p = 0.0078).
+- Raw ρ vs calibration-implied r: −0.009 (p = 0.20). The linear calibration already expresses the ranking, as on Sentinel-2.
+- Per tile, ρ is 0.63–0.80. The GRSM tiles (flagged) are 0.67 / 0.63 / 0.78; the MLBS tiles (gap-flagged) are 0.74 / 0.78 / 0.68;
+  the Tahoe tiles (no flags) are 0.76 / 0.80. There is no flag-dependent collapse.
+
+**2. Calibrated RMSE vs the identically calibrated per-tile oracle:**
+- At the truth cells: 30.96 vs 44.13 m. The difference is −13.17 m [−15.55, −10.33]. The model wins 8/8 (Holm p = 0.016).
+- Held-out DEM: 30.34 vs 43.86 m, also 8/8.
+- Flat per-tile baseline: 45.73 m.
+- Calibration slopes: the median is 60.6 for the model and 397.9 for the oracle; 0/8 of the model's slopes are negative, against 1/8 for the oracle.
+- `verdict_real_signal` = **true**.
+
+**Verdict (pre-registered rule):**
+- The mean is 0.730 ≥ 0.30 and the CI lower bound, 0.688, is above 0.134, so this is a **PASS**. The mean is also ≥ 0.50, so it is a **strong pass**.
+- The unchanged rank-loss pipeline, at Sentinel-2's measurement scale (600 m crops, 30 m target cells), learns terrain relief from VHR (1 m)
+  imagery with ρ ≈ 0.73. On 10 m Sentinel-2 it managed 0.13, and on 15 m Landsat pan 0.12.
+- **So the Sentinel-2 / Landsat / CBERS terrain nulls stand as a genuine absence of learnable signal at 10–15 m, now validated on the
+  right feature type (terrain, not object height) and the right scale.** This is not a blind spot of the test.
+- Unlike the DFC2019 control, the rank model here also beats the frozen prior on calibrated RMSE (8/8). The frozen DAv2-L oracle sees the whole
+  7.2 km tile at about 14 m/px, and it ranks within-crop relief barely better than on Sentinel-2 (0.25).
+
+**Caveats (carried forward and unchanged):**
+- One seed; 8 tiles from 3 US forest-mountain sites. 6/8 tiles carry the imagery–LiDAR date-gap flag, and 3/8 the GRSM flag.
+- Folds are quadrants of the same tiles, so this is spatial hold-out within tile, not across sites. What it validates is the measurement
+  machinery at this scale, not a transferable terrain model.
+- The target is the relative within-crop ranking of DTM relief. The absolute error (about 31 m calibrated) is still about 100× the DEM's error: this is a
+  test of whether a signal exists, not a product candidate. **The product stays DEM-only.**

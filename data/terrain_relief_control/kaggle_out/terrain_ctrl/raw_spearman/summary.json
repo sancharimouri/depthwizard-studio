@@ -1,0 +1,131 @@
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 8,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.729675555594228,
+   "ci95": [
+    0.6879094050993897,
+    0.7676222257493258
+   ],
+   "n": 8
+  },
+  "within_crop_oracle": {
+   "mean": 0.24992528085999866,
+   "ci95": [
+    0.07839788383511953,
+    0.4116337063489737
+   ],
+   "n": 8
+  },
+  "within_crop_fab": {
+   "mean": 0.9987363178776107,
+   "ci95": [
+    0.9963883240910641,
+    0.9999434521275203
+   ],
+   "n": 8
+  },
+  "calib_implied_r": {
+   "mean": 0.7388402409563176,
+   "ci95": [
+    0.6625141590385868,
+    0.8038402530766943
+   ],
+   "n": 8
+  },
+  "pooled_within_crop_model": 0.7299145095703751,
+  "pooled_within_crop_oracle": 0.24865453843162935,
+  "pooled_within_crop_fab": 0.9987301911765916
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.47975027473422943,
+   "ci95": [
+    0.3228462534189992,
+    0.6641215545784523
+   ],
+   "model_higher": 8,
+   "n": 8,
+   "wilcoxon_p": 0.0078125
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": -0.009164685362089503,
+   "ci95": [
+    -0.06629894105669644,
+    0.0744647925250748
+   ],
+   "spearman_higher": 1,
+   "n": 8,
+   "wilcoxon_p": 0.1953125
+  }
+ },
+ "per_tile": {
+  "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4": {
+   "within_crop_model": 0.6653803732098671,
+   "within_crop_oracle": 0.09953758351786467,
+   "within_crop_fab": 0.999973435570427,
+   "n_cells_scored": 57600,
+   "calib_relief_r2": 0.48974329945456485,
+   "calib_implied_r": 0.6998166184469792
+  },
+  "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4": {
+   "within_crop_model": 0.6311550783595371,
+   "within_crop_oracle": 0.1467255645666729,
+   "within_crop_fab": 0.9999734491960366,
+   "n_cells_scored": 57600,
+   "calib_relief_r2": 0.4242874188878114,
+   "calib_implied_r": 0.6513734864790026
+  },
+  "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5": {
+   "within_crop_model": 0.7748045210425333,
+   "within_crop_oracle": 0.6109516890297435,
+   "within_crop_fab": 0.9999719929049257,
+   "n_cells_scored": 57597,
+   "calib_relief_r2": 0.26353780240284863,
+   "calib_implied_r": 0.5133593306864584
+  },
+  "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10": {
+   "within_crop_model": 0.7441078501721098,
+   "within_crop_oracle": 0.1470485354310036,
+   "within_crop_fab": 0.9999427161213474,
+   "n_cells_scored": 57599,
+   "calib_relief_r2": 0.6509460212790636,
+   "calib_implied_r": 0.8068122590039541
+  },
+  "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11": {
+   "within_crop_model": 0.7802951127922632,
+   "within_crop_oracle": -0.20555133288253527,
+   "within_crop_fab": 0.9997966220254528,
+   "n_cells_scored": 57594,
+   "calib_relief_r2": 0.6897552610843894,
+   "calib_implied_r": 0.8305150577108096
+  },
+  "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11": {
+   "within_crop_model": 0.6842337388619165,
+   "within_crop_oracle": 0.49088168654090525,
+   "within_crop_fab": 0.9999012653836253,
+   "n_cells_scored": 55178,
+   "calib_relief_r2": 0.6466129457403669,
+   "calib_implied_r": 0.8041224693666797
+  },
+  "tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5": {
+   "within_crop_model": 0.7558103272379847,
+   "within_crop_oracle": 0.4566238887569401,
+   "within_crop_fab": 0.9905653861797548,
+   "n_cells_scored": 57597,
+   "calib_relief_r2": 0.6399871494974588,
+   "calib_implied_r": 0.799991968395595
+  },
+  "tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5": {
+   "within_crop_model": 0.8016174430776128,
+   "within_crop_oracle": 0.2531846319193943,
+   "within_crop_fab": 0.9997656756393165,
+   "n_cells_scored": 57600,
+   "calib_relief_r2": 0.6475915599755704,
+   "calib_implied_r": 0.8047307375610617
+  }
+ },
+ "pre_registered_verdict": "PASS (strong)"
+}

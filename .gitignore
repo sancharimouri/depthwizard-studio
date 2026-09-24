@@ -32,3 +32,4 @@ data/checkpoints/*
 models/hub/
 models/xet/
 .claude/settings.local.json
+data/terrain_relief_control/kaggle_out/terrain_ctrl/ckpt_fold*.pt

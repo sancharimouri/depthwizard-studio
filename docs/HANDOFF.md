@@ -99,9 +99,13 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
   **The raw-Spearman nulls on coarse sensors are real, not a blind spot.** But calibrated RMSE: the rank model loses to frozen DAv2-L even here (3.92 vs. 3.35 m, 5/31).
   So the calibrated "no real signal" rule means "rank training didn't beat DAv2-L", not "no signal". Caveat: 18 m crops and AGL, vs. 600 m and terrain.
 
-- **Terrain-relief positive control (2026-09-24): PAUSED by the user before training; no result.** Pre-registered + amended to 8 tiles (`sentinel2-token-grid-test.md`, commits d542074 / 91ffff4 / c550a40).
-  State: 8 tiles fetched (`data/terrain_relief_control/cache/`, local only); DAv2-L oracle depths done; Kaggle bundle built (`kaggle_bundle/terrain_relief_kaggle_bundle.zip`, 1.56 GB; parity 2.1e-7, resume exact); notebook in `kaggle_kernel/` (account `sancharimouri`, token `KAGGLE_TOKEN` in `.env`, use `uvx kaggle` with `KAGGLE_API_TOKEN`).
-  Blocker: upload at ~30 kB/s (about 15 h); it was killed at 4%, and no dataset exists on Kaggle. **Resume options:** (a) upload from a faster link; (b) have Kaggle fetch the 8 tiles itself from `selection.json` and checksum them against the local cache (planned, not written); (c) local MPS run, about 9 h (scoring-bound; a smaller inference batch should cut it, unmeasured).
+- **Terrain-relief positive control (run 2026-09-25 on Kaggle): STRONG PASS.** VHR NAIP at 1 m vs the 3DEP LiDAR DTM, in 600 m crops with 30 m cells;
+  8 tiles, as pre-registered (`sentinel2-token-grid-test.md`, final section).
+  - Raw within-crop ρ: rank model **0.730** [0.688, 0.768] vs frozen DAv2-L 0.250, 8/8 tiles.
+  - Calibrated RMSE: 30.96 vs 44.13 m, 8/8, Holm p = 0.016.
+  - **The Sentinel-2 / Landsat / CBERS terrain nulls (ρ ≈ 0.12–0.13) are a genuine absence of signal at 10–15 m, not a test blind spot.**
+  - Output is in `data/terrain_relief_control/kaggle_out/`; the checkpoints are local only.
+  - Caveats: one seed, 3 US forest sites, within-tile quadrant hold-out.
 
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
 - **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:
