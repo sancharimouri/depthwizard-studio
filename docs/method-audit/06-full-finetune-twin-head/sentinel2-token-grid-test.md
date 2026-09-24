@@ -1098,3 +1098,55 @@ term.
   - Both would be reported as such.
 - Measure 2 is **partly circular** (Sen2Cor estimates path radiance using a DEM). It can show *how much* elevation
   information correction removed; it can't show that DAv2 used it.
+
+## 2026-09-24 — Haze-mechanism check result: **the rule is formally met (3/4), but the guards show haze is at most a partial, tile-dependent explanation, and not at the within-crop scale where the L1C gain was measured**
+
+Script `scripts/haze_elevation_check.py`; results `l1c_test/haze_check.json`. 5,000 elevation-stratified pixels per
+tile, Spearman ρ vs FABDEM. There were no bright pixels (L1C blue > 0.30 was 0.000 on every tile), so the sensitivity
+run is identical in substance.
+
+| Tile (elevation range) | (1) L1C blue | (2) Haze component L1C − L2A | (3) L2A blue (surface) | Within-crop: L1C / haze / L2A |
+|---|---|---|---|---|
+| Almora (1,027–2,020 m) | **−0.431** | +0.003 | −0.321 | −0.053 / −0.010 / −0.024 |
+| Dehradun (1,012–2,594 m) | **−0.318** | −0.292 | −0.166 | +0.003 / −0.190 / +0.100 |
+| Dharamshala (737–2,898 m) | **−0.412** | −0.123 | −0.313 | −0.034 / −0.050 / −0.006 |
+| Kohima (855–2,355 m) | −0.074 | −0.389 | +0.206 | +0.063 / −0.137 / +0.132 |
+
+The haze offset (L1C − L2A blue), lowest → highest elevation decile:
+- Almora: flat, 0.065 → 0.070;
+- Dehradun: 0.068 → 0.061;
+- Dharamshala: flat until the top decile, 0.064 → 0.061;
+- Kohima: 0.062 → 0.051.
+
+**Pre-registered rule: met.** Primary ρ ≤ −0.30 on **3/4** tiles (sensitivity 3/4), so formally "haze mechanism
+supported".
+
+**Pre-registered guards, applied:**
+1. **The primary is largely a surface (land-cover) gradient on 2 of the 3 passing tiles.**
+   - On Almora the surface-only L2A blue is −0.32 and the haze component is **+0.003**: none of Almora's L1C
+     correlation is haze.
+   - On Dharamshala L2A is −0.31 against a haze component of −0.12.
+   - Only Dehradun's L1C correlation is mainly haze (−0.29 haze vs −0.17 surface).
+2. **A haze gradient exists on 3/4 tiles, but it is small.** The haze component is ρ −0.12 to −0.39 (Kohima's is masked
+   in L1C by an opposite surface trend, +0.21). The removed offset changes by only 0.004–0.011 reflectance across 1–2 km
+   of relief, about 6–18% of the offset.
+3. **Scale mismatch.** The L1C gain was measured **within 600 m crops**. There, L1C blue has **no** elevation relationship
+   on any hilly tile (|ρ| ≤ 0.06), and the within-crop haze component is −0.01 to −0.19. An elevation-dependent haze
+   gradient operates over the tile's 1–2 km relief, not within a 600 m crop, so it can't be the main within-crop cue.
+
+**Consistency with the per-tile L1C gains:**
+- Dehradun had the largest gain (−16 m) and the clearest haze component (whole-tile −0.29, within-crop −0.19): partial
+  support there.
+- **Almora** had a large gain (−7 to −11 m) with **zero** haze component: haze can't explain it.
+
+**Conclusion.** The data don't support aerial-perspective haze as *the* explanation of the hilly-tile L1C gain:
+- it is present, but small;
+- it acts at the wrong spatial scale;
+- it is absent on one strongly affected tile.
+
+**Untested alternative, noted and not run:** Sen2Cor's DEM-based **topographic (illumination) correction**. It rescales
+reflectance by the local sun-incidence angle, which would flatten exactly the slope-facing shading cues that differ
+*within* a crop, and do so only on hilly terrain. That matches the observed pattern.
+- The cheap, training-free test: correlate the L2A/L1C ratio with cos(incidence) from FABDEM slope/aspect and the
+  scene sun angles.
+- **Not started;** the user decides.

@@ -359,7 +359,8 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
   Landsat 8/9 pan (15 m, `scripts/landsat_rank_test.py`, same footprints and recipe) is equally weak: raw ρ 0.116 vs. S2 0.134, calibrated 16.36 vs. 16.25 m,
   no divergence. So it is not Sentinel-2-specific. Finer data, if pursued, must be ≤ ~5 m GSD regardless of sensor.
   L1C vs L2A (`scripts/s2_l1c_test.py`, 16 tiles): L1C ranks slightly better (+0.043, p = 0.004; the ≥ 0.10 bar is not met), **only on hilly tiles**
-  (+0.13 to +0.18, 4/4). The likely cause is altitude-dependent haze that L2A correction removes. Not product-relevant; a hilly-only follow-up is not started.
+  (+0.13 to +0.18, 4/4). Not product-relevant. The haze check (`scripts/haze_elevation_check.py`) finds haze only a small, tile-dependent part
+  (zero on Almora; no within-crop blue–elevation relation). The next candidate is Sen2Cor topographic correction (untested).
 - **DFC2019 positive control** (`scripts/dfc2019_rank_positive_control.py`, native 0.3 m, dense AGL, 31 tiles): **PASS**. Raw within-crop ρ is 0.379 (rank model) and 0.441 (DAv2-L),
   vs. about 0.11–0.13 on S2/Landsat. The raw-Spearman nulls are genuine, not a test blind spot. Here the rank model still loses calibrated RMSE to frozen DAv2-L (5/31),
   so that pass rule tests "beats the frozen prior", not "signal exists". The crops are 18 m and the target is AGL, not terrain.
