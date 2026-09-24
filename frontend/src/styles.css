@@ -2505,24 +2505,51 @@ kbd {
     border-color: rgba(var(--danger-text-rgb), 0.7);
 }
 
-.confirm-dont-ask {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 14px;
-
-    font-size: 12px;
-    color: rgba(var(--text-rgb), 0.62);
-    cursor: pointer;
-    user-select: none;
+.confirm-primary {
+    border-color: rgba(var(--accent-rgb), 0.6);
+    background: rgba(var(--accent-rgb), 0.16);
+    color: rgb(var(--text-rgb));
 }
 
-.confirm-dont-ask input {
-    width: 14px;
-    height: 14px;
-    margin: 0;
-    accent-color: var(--accent-solid);
+.confirm-button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.unsaved-panel {
+    width: min(520px, calc(100vw - 32px));
+}
+
+.unsaved-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    margin-bottom: 12px;
+    overflow-y: auto;
+}
+
+.unsaved-job {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: rgba(var(--text-rgb), 0.85);
     cursor: pointer;
+}
+
+.unsaved-job input {
+    margin: 2px 0 0;
+    accent-color: var(--accent-solid);
+}
+
+.unsaved-note {
+    margin: 0 0 16px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: rgba(var(--text-rgb), 0.55);
 }
 
 
@@ -4144,4 +4171,360 @@ kbd {
     .iv-field-row {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+
+/* ============================================================
+   JOBS (src/jobs.js) — side panel (newest at the top) between the page
+   nav and the Workbench content, and the expanded 3D view's tab strip.
+============================================================ */
+
+#page-workbench {
+    --jobs-w: 0px;
+}
+
+#page-workbench.has-jobs {
+    --jobs-w: 212px;
+}
+
+#page-workbench.has-jobs .input-view,
+#page-workbench.has-jobs .workbench-grid {
+    padding-left: calc(80px + var(--jobs-w));
+}
+
+/* the expanded 3D view fills everything right of the panel (fullWindowEdges() in main.js) */
+#page-workbench.has-jobs .final-demo-box.is-expanded {
+    left: 284px;
+}
+
+.jobs-panel {
+    position: absolute;
+    top: 24px;
+    bottom: 24px;
+    left: 80px;
+    z-index: 20;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    width: 196px;
+    padding: 14px 12px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.12);
+    border-radius: 12px;
+
+    background: rgba(var(--bg-alt-rgb), 0.85);
+    color: rgb(var(--text-rgb));
+}
+
+.jobs-panel[hidden] {
+    display: none;
+}
+
+.jobs-panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.jobs-panel-head .panel-title {
+    margin-bottom: 0;
+}
+
+.jobs-count {
+    font-size: 10.5px;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+.generate-new-button {
+    width: 100%;
+}
+
+.generate-new-button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+    overflow-y: auto;
+}
+
+.job-item {
+    border: 1px solid rgba(var(--text-rgb), 0.12);
+    border-radius: 9px;
+    overflow: hidden;
+}
+
+.job-item-pending {
+    padding: 10px;
+    border-style: dashed;
+    font-size: 11.5px;
+    color: rgba(var(--text-rgb), 0.6);
+}
+
+.job-select {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    width: 100%;
+    padding: 9px 10px 7px;
+
+    border: 0;
+    background: transparent;
+    color: rgb(var(--text-rgb));
+
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.job-select:hover:not(:disabled) {
+    background: rgba(var(--text-rgb), 0.05);
+}
+
+.job-select:disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.job-select[aria-current="true"] {
+    background: rgba(var(--accent-rgb), 0.12);
+    box-shadow: inset 3px 0 0 rgb(var(--accent-rgb));
+}
+
+.job-select:focus-visible,
+.job-save:focus-visible,
+.job-tab:focus-visible {
+    outline: 2px solid rgba(var(--accent-rgb), 0.7);
+    outline-offset: -2px;
+}
+
+.job-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 11px;
+}
+
+.job-num {
+    font-weight: 700;
+}
+
+.job-status {
+    color: rgba(var(--text-rgb), 0.55);
+}
+
+.job-status.is-running {
+    color: rgb(var(--accent-rgb));
+}
+
+.job-title {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.job-tier {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    color: rgba(var(--text-rgb), 0.6);
+}
+
+.job-tier::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(var(--text-rgb), 0.35);
+}
+
+.job-tier.tier-2::before,
+.job-tab.tier-2 .job-tab-dot {
+    background: rgb(var(--tier2-rgb));
+}
+
+.job-tier.tier-1::before,
+.job-tab.tier-1 .job-tab-dot {
+    background: rgb(var(--tier1-rgb));
+}
+
+.job-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 5px 10px 7px;
+    border-top: 1px solid rgba(var(--text-rgb), 0.08);
+}
+
+.job-saved {
+    font-size: 10.5px;
+    color: rgba(var(--text-rgb), 0.55);
+}
+
+.job-saved.is-saved {
+    color: var(--tier-text-2);
+}
+
+.job-save {
+    padding: 3px 9px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.18);
+    border-radius: 6px;
+
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.85);
+
+    font-family: inherit;
+    font-size: 10.5px;
+    cursor: pointer;
+}
+
+.job-save:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.jobs-note {
+    margin: 0;
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+/* boxes waiting for this job's stage: hide the previous job's rendered view */
+.mini-3d-box.is-pending canvas,
+.final-demo-box.is-pending canvas {
+    visibility: hidden;
+}
+
+/* ---- tab strip: expanded 3D view only, centred under the play button ---- */
+
+.job-tabs-wrap {
+    display: none;
+}
+
+.final-demo-box.is-expanded .job-tabs-wrap {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    z-index: 4;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+
+    max-width: calc(100% - 440px);
+    transform: translateX(-50%);
+
+    transition: opacity 0.18s ease;
+}
+
+.final-demo-box.is-animating .job-tabs-wrap {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.job-tabs {
+    display: flex;
+    gap: 4px;
+
+    max-width: 100%;
+    padding: 4px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.12);
+    border-radius: 12px;
+
+    background: rgba(var(--bg-rgb), 0.6);
+    backdrop-filter: blur(14px);
+
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.job-tab {
+    text-transform: none;
+    letter-spacing: normal;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    flex: none;
+    max-width: 220px;
+    padding: 7px 12px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.65);
+
+    font-family: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+}
+
+.job-tab:hover:not(:disabled) {
+    color: rgb(var(--text-rgb));
+    background: rgba(var(--text-rgb), 0.06);
+}
+
+.job-tab[aria-selected="true"] {
+    background: rgba(var(--accent-rgb), 0.16);
+    color: rgb(var(--text-rgb));
+}
+
+.job-tab:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.job-tab-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(var(--text-rgb), 0.35);
+}
+
+.job-tab-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.job-tab-unsaved {
+    font-size: 8px;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+.job-tab-info {
+    padding: 4px 10px;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+
+    border-radius: 8px;
+    background: rgba(var(--bg-rgb), 0.55);
+
+    font-size: 11px;
+    color: rgba(var(--text-rgb), 0.7);
+    text-align: center;
 }

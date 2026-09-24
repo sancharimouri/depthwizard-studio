@@ -357,6 +357,23 @@ terrain.** None of the research-track work is deployed into it.
   with HTTP 429, which is passed through with Retry-After.
 - **Placeholder:** the generation stages after START still show the Darjeeling reference outputs (labelled in the UI and log).
 
+**Multi-job sessions — Prompt 3 of prompts.pages (2026-09-25; `frontend/src/jobs.js`, `frontend/src/desktop-close.js`).**
+- **Jobs:** each START GENERATION is a job, held in memory only (no server storage). "Save" downloads it as JSON
+  (input, GSD, routing, DEM stats, calculation log), and that is what marks it saved.
+- **Generate New:** in the jobs panel. It reopens the input view and keeps every job. It is disabled while a job is generating,
+  because the staged boxes are shared, so one job generates at a time; switching jobs waits too.
+- **Panel order (user to confirm):** newest at the top. The expanded 3D view's tab strip runs oldest → newest, left to right,
+  like browser tabs, with a job info line that says the 3D terrain is the Darjeeling reference placeholder.
+- **Re-running for a new job:** every box resets to "Awaiting generation" and the stages animate again. Mini/final canvases
+  are hidden until their stage ends, and each canvas has one WebGL renderer (no re-creation).
+- **Unsaved-work warning:**
+  - An in-app modal (`#unsaved-modal`) on Generate New and ✕ Close: job count, a per-job save checkbox, and Save selected / continue-or-discard / Cancel.
+  - The old close confirm and its "don't show again" option were removed, as Prompt 3 requires.
+  - Web tab close: the native `beforeunload` prompt only. It is suppressed after an in-app confirm (`unloadAllowed`).
+  - Tauri v2: `onCloseRequested` → the same modal ("quit" wording). There is no `src-tauri/` in this repo, so it is verified
+    only against a simulated `window.__TAURI__` in headless Chrome, not in a real Tauri build.
+- **Not per-job:** measurements, notes and the session Library in the 3D view belong to the one shared viewer, not to a job.
+
 **Expanded-view chrome (2026-09-25; `frontend/src/expanded-chrome.js`):**
 - **Icon toolbar** (outline icons; names as tooltips only), in `reference.jpg` order: Screenshot, Record (disabled placeholder),
   Measure ▾, View ▾, Flythrough, Save + Library ▾, Mouse pointer, Notes, Trash (clears the current selection).

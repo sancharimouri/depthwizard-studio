@@ -4,6 +4,8 @@ import { createTerrainViewer } from "./viewer.js";
 import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
 import { createInputView } from "./input-view.js";
+import { STORAGE_NOTE, createJobStore, exportFilename, jobLabel, jobsExport, unsavedCopy } from "./jobs.js";
+import { installCloseGuard } from "./desktop-close.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -503,30 +505,490 @@ function markSceneSelected() {
 
 
 // ============================================================
-// PAGE 1 INPUT VIEW → GENERATION GRID. The input view (src/input-view.js)
-// owns selection; START GENERATION there hands the chosen input over to
-// the generation grid (preview box + calculation log) and runs the
-// pipeline sequence.
+// PAGE 1 INPUT VIEW → GENERATION GRID, AS JOBS. The input view
+// (src/input-view.js) owns selection; each START GENERATION creates a job
+// (src/jobs.js — in-memory, session only) and runs the staged pipeline for
+// it. "Generate New" reopens the input view without discarding anything;
+// the jobs panel (and, in the expanded 3D view, a tab strip) switches
+// between finished jobs.
 // ============================================================
 
 const inputViewEl = document.getElementById("input-view");
 const workbenchGridEl = document.querySelector("#page-workbench .workbench-grid");
+const workbenchPageEl = document.getElementById("page-workbench");
+const jobsPanelEl = document.getElementById("jobs-panel");
+const jobsListEl = document.getElementById("jobs-list");
+const jobsCountEl = document.getElementById("jobs-count");
+const generateNewButton = document.getElementById("generate-new-button");
+const jobTabsEl = document.getElementById("job-tabs");
+const jobTabInfoEl = document.getElementById("job-tab-info");
 
-function startFromInput(selection) {
-    pendingScenePreview = { src: selection.previewUrl, meta: selection.metaLine };
-    sceneSelectionSummary = { type: "input", ...selection };
-    markSceneSelected();
+const jobStore = createJobStore();
+let inputView = null;
+let unloadAllowed = false;
 
+const CAPTION_BOX_IDS = ["depth-preview-box", "elevation-preview-box"];
+const MINI_BOX_IDS = ["dsm-3d-box", "metric-elevation-3d-box"];
+
+function choosingNewInput() {
+    return Boolean(inputViewEl) && !inputViewEl.hidden;
+}
+
+// Both re-render the jobs panel: its "choosing input" row and the Generate
+// New button depend on which view is showing.
+function showInputView() {
+    inputViewEl.hidden = false;
+    workbenchGridEl?.classList.add("is-hidden");
+    renderJobs();
+}
+
+function showGrid() {
     inputViewEl.hidden = true;
     workbenchGridEl?.classList.remove("is-hidden");
+    renderJobs();
+}
+
+function applyJobInput(job) {
+    pendingScenePreview = { src: job.input.previewUrl, meta: `${jobLabel(job)} · ${job.input.metaLine}` };
+    sceneSelectionSummary = { type: "input", ...job.input };
+    markSceneSelected();
+}
+
+function resetCaption(captionEl) {
+    if (captionEl) {
+        captionEl.dataset.revealed = "false";
+        captionEl.replaceChildren();
+    }
+}
+
+// Pop the expanded view back into its cell with no animation (used when the
+// grid is about to be hidden or reset underneath it).
+function collapseFinalDemoInstantly() {
+    if (!finalDemoBoxEl?.classList.contains("is-expanded")) {
+        return;
+    }
+    finalDemoMeasureTool?.setMode("normal");
+    finalDemoChrome?.closeAll();
+    finalDemoBoxEl.getAnimations?.().forEach(animation => animation.cancel());
+    finalDemoBoxEl.classList.remove("is-expanded", "is-animating");
+    finalDemoPlaceholder?.remove();
+    finalDemoPlaceholder = null;
+    finalDemoAnimating = false;
+    if (finalDemoExpandedBar) {
+        finalDemoExpandedBar.hidden = true;
+    }
+    requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
+}
+
+// Every box back to "Awaiting generation" so the next job's stages animate
+// in one by one, exactly like the first run.
+function resetGridForGeneration() {
+    collapseFinalDemoInstantly();
+
+    CAPTION_BOX_IDS.forEach(id => {
+        const box = document.getElementById(id);
+        const emptyEl = box?.querySelector(".preview-empty");
+        if (emptyEl) {
+            emptyEl.hidden = false;
+            emptyEl.textContent = "Awaiting generation";
+        }
+        const contentEl = box?.querySelector(".preview-content");
+        if (contentEl) {
+            contentEl.hidden = true;
+        }
+        resetCaption(box?.querySelector(".staged-caption"));
+    });
+
+    MINI_BOX_IDS.forEach(id => {
+        const box = document.getElementById(id);
+        box?.classList.add("is-pending");
+        const overlay = box?.querySelector(".mini3d-generating");
+        if (overlay) {
+            overlay.hidden = true;
+        }
+        resetCaption(box?.querySelector(".staged-caption"));
+    });
+
+    finalDemoBoxEl?.classList.add("is-pending");
+    ["final-demo-generating", "final-demo-controls", "final-demo-fullscreen"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.hidden = true;
+        }
+    });
+
+    document.getElementById("calc-log-scroll")?.replaceChildren();
+}
+
+// A finished job, shown again: every box in its generated state, the
+// job's own input in the preview box and its own calculation log.
+function showCompletedJob(job) {
+    applyJobInput(job);
+
+    CAPTION_BOX_IDS.forEach(id => {
+        const box = document.getElementById(id);
+        const emptyEl = box?.querySelector(".preview-empty");
+        if (emptyEl) {
+            emptyEl.hidden = true;
+        }
+        const contentEl = box?.querySelector(".preview-content");
+        if (contentEl) {
+            contentEl.hidden = false;
+        }
+        const captionEl = box?.querySelector(".staged-caption");
+        resetCaption(captionEl);
+        revealStagedCaption(captionEl);
+    });
+
+    MINI_BOX_IDS.forEach(id => {
+        const box = document.getElementById(id);
+        box?.classList.remove("is-pending");
+        const captionEl = box?.querySelector(".staged-caption");
+        resetCaption(captionEl);
+        revealStagedCaption(captionEl);
+    });
+
+    finalDemoBoxEl?.classList.remove("is-pending");
+    const controlsEl = document.getElementById("final-demo-controls");
+    if (controlsEl) {
+        controlsEl.hidden = false;
+    }
+    const fullscreenToggle = document.getElementById("final-demo-fullscreen");
+    if (fullscreenToggle) {
+        fullscreenToggle.hidden = false;
+    }
+
+    const scrollEl = document.getElementById("calc-log-scroll");
+    if (scrollEl) {
+        scrollEl.replaceChildren();
+        job.log.forEach(line => renderCalcLogLine(scrollEl, line.t, line.text));
+    }
+
+    if (startGenerationButton) {
+        startGenerationButton.disabled = true;
+        startGenerationButton.textContent = "✓ GENERATION COMPLETE";
+    }
+
+    showGrid();
+    requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
+}
+
+function startFromInput(selection) {
+    if (jobStore.generating()) {
+        return;
+    }
+    const job = jobStore.add(selection);
+    applyJobInput(job);
+    resetGridForGeneration();
+    showGrid();
     staggerGridEntrance();
-    runGenerationSequence();
+    runGenerationSequence(job);
+}
+
+function selectJob(id) {
+    const job = jobStore.get(id);
+    if (!job || jobStore.generating()) {
+        return;
+    }
+    jobStore.setActive(id);
+    showCompletedJob(job);
+    renderJobs();
+}
+
+async function generateNew() {
+    if (jobStore.generating() || choosingNewInput()) {
+        return;
+    }
+    if (jobStore.unsaved().length) {
+        const choice = await confirmUnsaved("new");
+        if (choice === "cancel") {
+            return;
+        }
+    }
+    collapseFinalDemoInstantly();
+    inputView?.reset();
+    showInputView();
+    renderJobs();
+}
+
+// ---- Save = download the job(s) as JSON (there is no server storage) ----
+
+function saveJobs(ids) {
+    const jobs = ids.map(id => jobStore.get(id)).filter(Boolean);
+    if (!jobs.length) {
+        return;
+    }
+    const blob = new Blob([JSON.stringify(jobsExport(jobs), null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = exportFilename(jobs);
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    jobStore.markSaved(jobs.map(job => job.id));
+}
+
+// ---- Jobs panel (newest at the top) + expanded-view tab strip ----
+
+function tierDotClass(routing) {
+    if (!routing || routing.tier == null) {
+        return "tier-none";
+    }
+    return routing.tier === 2 ? "tier-2" : "tier-1";
+}
+
+function renderJobs() {
+    const hasJobs = jobStore.count() > 0;
+    workbenchPageEl?.classList.toggle("has-jobs", hasJobs);
+    if (jobsPanelEl) {
+        jobsPanelEl.hidden = !hasJobs;
+    }
+    if (!hasJobs || !jobsListEl) {
+        return;
+    }
+
+    const running = jobStore.generating();
+    const active = jobStore.active();
+    const choosing = choosingNewInput();
+    const unsavedCount = jobStore.unsaved().length;
+
+    if (jobsCountEl) {
+        jobsCountEl.textContent = `${jobStore.count()} · ${unsavedCount} unsaved`;
+    }
+    if (generateNewButton) {
+        generateNewButton.disabled = Boolean(running) || choosing;
+        generateNewButton.title = running
+            ? "Available when the current generation finishes"
+            : choosing ? "Already choosing a new input" : "Choose a new input; current jobs stay open";
+    }
+
+    const items = [];
+    if (choosing) {
+        const pending = document.createElement("li");
+        pending.className = "job-item job-item-pending";
+        pending.textContent = "New job — choosing input…";
+        items.push(pending);
+    }
+
+    jobStore.panelOrder().forEach(job => {
+        const li = document.createElement("li");
+        li.className = "job-item";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "job-select";
+        button.dataset.jobId = job.id;
+        if (job === active && !choosing) {
+            button.setAttribute("aria-current", "true");
+        }
+        button.disabled = Boolean(running) && job !== running;
+        if (button.disabled) {
+            button.title = "Available when the current generation finishes";
+        }
+        button.addEventListener("click", () => selectJob(job.id));
+
+        const head = document.createElement("div");
+        head.className = "job-head";
+        const num = document.createElement("span");
+        num.className = "job-num";
+        num.textContent = jobLabel(job);
+        const status = document.createElement("span");
+        status.className = `job-status${job.status === "generating" ? " is-running" : ""}`;
+        status.textContent = job.status === "generating" ? `Generating ${job.progress}%` : "Complete";
+        head.append(num, status);
+
+        const title = document.createElement("div");
+        title.className = "job-title";
+        title.textContent = job.input.title;
+
+        const tier = document.createElement("div");
+        tier.className = `job-tier ${tierDotClass(job.input.routing)}`;
+        tier.textContent = job.input.routing.label;
+
+        button.append(head, title, tier);
+
+        const foot = document.createElement("div");
+        foot.className = "job-foot";
+        const saved = document.createElement("span");
+        saved.className = `job-saved${job.saved ? " is-saved" : ""}`;
+        saved.textContent = job.saved ? "Saved (downloaded)" : "Unsaved";
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "job-save";
+        save.textContent = job.saved ? "Save again" : "Save";
+        save.setAttribute("aria-label", `Save ${jobLabel(job)} (downloads a JSON file)`);
+        save.disabled = job.status !== "complete";
+        save.addEventListener("click", () => saveJobs([job.id]));
+        foot.append(saved, save);
+
+        li.append(button, foot);
+        items.push(li);
+    });
+
+    jobsListEl.replaceChildren(...items);
+    renderJobTabs();
+}
+
+function renderJobTabs() {
+    if (!jobTabsEl) {
+        return;
+    }
+    const active = jobStore.active();
+    const running = jobStore.generating();
+
+    jobTabsEl.replaceChildren(...jobStore.creationOrder().map(job => {
+        const tab = document.createElement("button");
+        tab.type = "button";
+        tab.className = `job-tab ${tierDotClass(job.input.routing)}`;
+        tab.setAttribute("role", "tab");
+        tab.setAttribute("aria-selected", String(job === active));
+        tab.dataset.jobId = job.id;
+        tab.disabled = Boolean(running) && job !== running;
+        tab.title = `${jobLabel(job)} · ${job.input.title} · ${job.input.routing.label}${job.saved ? "" : " · unsaved"}`;
+
+        const dot = document.createElement("span");
+        dot.className = "job-tab-dot";
+        dot.setAttribute("aria-hidden", "true");
+        const label = document.createElement("span");
+        label.className = "job-tab-label";
+        label.textContent = `${jobLabel(job)} · ${job.input.title}`;
+        tab.append(dot, label);
+        if (!job.saved) {
+            const mark = document.createElement("span");
+            mark.className = "job-tab-unsaved";
+            mark.setAttribute("aria-label", "unsaved");
+            mark.textContent = "●";
+            tab.append(mark);
+        }
+        tab.addEventListener("click", () => selectJob(job.id));
+        return tab;
+    }));
+
+    if (jobTabInfoEl && active) {
+        const dem = active.input.dem;
+        jobTabInfoEl.textContent = [
+            `${jobLabel(active)}: ${active.input.title}`,
+            active.input.routing.label,
+            dem ? `DEM ${dem.min_m}–${dem.max_m} m` : null,
+            "3D terrain shown: Darjeeling reference (placeholder)",
+        ].filter(Boolean).join(" · ");
+    }
+}
+
+jobStore.onChange(renderJobs);
+generateNewButton?.addEventListener("click", generateNew);
+
+// ---- Unsaved-work modal (in-app navigation, Close, and the desktop app's
+// window close). Job count + per-job save choice; no "don't show again". ----
+
+const unsavedModal = document.getElementById("unsaved-modal");
+const unsavedTitle = document.getElementById("unsaved-title");
+const unsavedBody = document.getElementById("unsaved-body");
+const unsavedList = document.getElementById("unsaved-list");
+const unsavedNote = document.getElementById("unsaved-note");
+const unsavedCancel = document.getElementById("unsaved-cancel");
+const unsavedDiscard = document.getElementById("unsaved-discard");
+const unsavedSave = document.getElementById("unsaved-save");
+let unsavedResolve = null;
+let unsavedSaveLabel = "";
+let unsavedReturnFocus = null;
+
+function checkedUnsavedIds() {
+    return [...(unsavedList?.querySelectorAll("input[type=checkbox]:checked") ?? [])].map(box => box.value);
+}
+
+function updateUnsavedSaveButton() {
+    const count = checkedUnsavedIds().length;
+    if (unsavedSave) {
+        unsavedSave.disabled = count === 0;
+        unsavedSave.textContent = unsavedSaveLabel.replace("selected", `selected (${count})`);
+    }
+}
+
+function confirmUnsaved(action) {
+    if (!unsavedModal) {
+        return Promise.resolve(window.confirm("You have unsaved jobs. Continue?") ? "discard" : "cancel");
+    }
+    unsavedResolve?.("cancel");
+
+    const jobs = jobStore.unsaved();
+    const copy = unsavedCopy(action, jobs.length);
+    unsavedTitle.textContent = copy.title;
+    unsavedBody.textContent = copy.body;
+    unsavedNote.textContent = STORAGE_NOTE;
+    unsavedDiscard.textContent = copy.discard;
+    unsavedSaveLabel = copy.save;
+
+    unsavedList.replaceChildren(...jobs.map(job => {
+        const label = document.createElement("label");
+        label.className = "unsaved-job";
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.value = job.id;
+        box.checked = job.status === "complete";
+        box.disabled = job.status !== "complete";
+        box.addEventListener("change", updateUnsavedSaveButton);
+        const text = document.createElement("span");
+        text.textContent = `${jobLabel(job)} · ${job.input.title} · ${job.input.routing.label}`
+            + (job.status === "complete" ? "" : " · still generating (can't be saved yet)");
+        label.append(box, text);
+        return label;
+    }));
+    updateUnsavedSaveButton();
+
+    unsavedReturnFocus = document.activeElement;
+    unsavedModal.hidden = false;
+    unsavedCancel.focus();
+    return new Promise(resolve => {
+        unsavedResolve = resolve;
+    });
+}
+
+function settleUnsaved(choice) {
+    if (!unsavedResolve) {
+        return;
+    }
+    if (choice === "save") {
+        const ids = checkedUnsavedIds();
+        if (!ids.length) {
+            return;
+        }
+        saveJobs(ids);
+    }
+    unsavedModal.hidden = true;
+    const resolve = unsavedResolve;
+    unsavedResolve = null;
+    unsavedReturnFocus?.focus?.({ preventScroll: true });
+    resolve(choice);
+}
+
+unsavedCancel?.addEventListener("click", () => settleUnsaved("cancel"));
+document.getElementById("unsaved-backdrop")?.addEventListener("click", () => settleUnsaved("cancel"));
+unsavedDiscard?.addEventListener("click", () => settleUnsaved("discard"));
+unsavedSave?.addEventListener("click", () => settleUnsaved("save"));
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && unsavedModal && !unsavedModal.hidden) {
+        settleUnsaved("cancel");
+    }
+});
+
+// Tab/window close: Tauri desktop gets the same custom modal; the web build
+// can only use the browser's own generic beforeunload prompt.
+const closeGuardReady = installCloseGuard({
+    hasUnsaved: () => jobStore.unsaved().length > 0,
+    confirmUnsaved,
+    isUnloadAllowed: () => unloadAllowed,
+});
+
+if (import.meta.env.DEV) {
+    window.__dwJobs = { store: jobStore, closeGuardReady };
 }
 
 if (inputViewEl) {
-    createInputView(inputViewEl, { onStart: startFromInput });
+    inputView = createInputView(inputViewEl, { onStart: startFromInput });
 }
-
 
 
 // ============================================================
@@ -641,12 +1103,21 @@ const CALC_LOG_LINES = [
 
 let calcLogStartTime = 0;
 
-function appendCalcLogLine(scrollEl, text) {
+// Appends a line to the on-screen log and to the job's own record (so a
+// finished job's log can be shown again when the user switches back to it).
+function appendCalcLogLine(scrollEl, text, job) {
     const elapsedSeconds = (Date.now() - calcLogStartTime) / 1000;
     const minutes = Math.floor(elapsedSeconds / 60);
     const seconds = (elapsedSeconds % 60).toFixed(2).padStart(5, "0");
     const timestamp = `${String(minutes).padStart(2, "0")}:${seconds}`;
 
+    job?.log.push({ t: timestamp, text });
+    if (jobStore.active() === job) {
+        renderCalcLogLine(scrollEl, timestamp, text);
+    }
+}
+
+function renderCalcLogLine(scrollEl, timestamp, text) {
     const line = document.createElement("div");
     line.className = "calc-log-line";
 
@@ -676,13 +1147,12 @@ function buildCalcLogLines() {
 // totalDurationMs paces the log to span roughly the same window as the
 // box-by-box sequence driving it, so it reads as running alongside that
 // work rather than being dumped out ahead of or behind it.
-function runCalcLog(totalDurationMs) {
+function runCalcLog(totalDurationMs, job) {
     const scrollEl = document.getElementById("calc-log-scroll");
 
-    if (!scrollEl || scrollEl.dataset.started === "true") {
+    if (!scrollEl) {
         return;
     }
-    scrollEl.dataset.started = "true";
 
     calcLogStartTime = Date.now();
 
@@ -690,7 +1160,7 @@ function runCalcLog(totalDurationMs) {
     const interval = totalDurationMs / lines.length;
 
     lines.forEach((text, index) => {
-        setTimeout(() => appendCalcLogLine(scrollEl, text), 200 + index * interval);
+        setTimeout(() => appendCalcLogLine(scrollEl, text, job), 200 + index * interval);
     });
 }
 
@@ -1318,7 +1788,11 @@ async function generateMiniPreviewBox(boxId, canvasId, layer, steps) {
         overlay.hidden = false;
     }
 
-    createMiniPreview(canvas, layer);
+    // One renderer per canvas: later jobs re-run the stage over the same view.
+    if (!miniPreviewCanvases.has(canvas)) {
+        miniPreviewCanvases.add(canvas);
+        createMiniPreview(canvas, layer);
+    }
 
     await Promise.all([
         animateGenerating({
@@ -1333,10 +1807,13 @@ async function generateMiniPreviewBox(boxId, canvasId, layer, steps) {
     if (overlay) {
         overlay.hidden = true;
     }
+    box.classList.remove("is-pending");
     if (captionEl) {
         revealStagedCaption(captionEl);
     }
 }
+
+const miniPreviewCanvases = new Set();
 
 // ---- Box 8 (Final Demo): builds the full interactive viewer + controls
 // (only once — initFinalDemoViewer() is itself idempotent) alongside the
@@ -1368,6 +1845,7 @@ async function generateFinalDemoBox() {
     if (overlay) {
         overlay.hidden = true;
     }
+    document.getElementById("final-demo-box")?.classList.remove("is-pending");
     if (controlsEl) {
         controlsEl.hidden = false;
     }
@@ -1376,14 +1854,9 @@ async function generateFinalDemoBox() {
     }
 }
 
-let generationStarted = false;
-
-async function runGenerationSequence() {
-    if (generationStarted) {
-        return;
-    }
-    generationStarted = true;
-
+// One job's run through the staged boxes. Only one job generates at a time
+// (the boxes are shared); switching jobs and Generate New wait until it ends.
+async function runGenerationSequence(job) {
     if (startGenerationButton) {
         startGenerationButton.disabled = true;
         startGenerationButton.textContent = "▶ GENERATING…";
@@ -1391,33 +1864,39 @@ async function runGenerationSequence() {
 
     // Starts filling immediately and keeps appending in parallel with
     // whichever box below is currently generating.
-    runCalcLog(TOTAL_PIPELINE_MS);
+    runCalcLog(TOTAL_PIPELINE_MS, job);
+    const stageDone = progress => jobStore.update(job.id, { progress });
 
     await generateCaptionPreviewBox("depth-preview-box", [
         "Loading Sentinel-2 RGB tiles…",
         "Running Depth Anything V2 (ViT-Large)…",
         "Inference complete — 1.17s, frozen weights…",
     ]);
+    stageDone(20);
 
     await generateCaptionPreviewBox("elevation-preview-box", [
         "Loading terrain DEM (reference elevation)…",
         "Learned Sentinel-2 corrections: tested, not adopted…",
         "DEM elevation shown — no model correction applied…",
     ]);
+    stageDone(40);
 
     await generateMiniPreviewBox("dsm-3d-box", "dsm-3d-canvas", "dsm-3d", [
         "Reprojecting DSM → EPSG:32645…",
         "Extruding 361×325 vertex grid…",
         "Applying vertical exaggeration 1.07x…",
     ]);
+    stageDone(60);
 
     await generateMiniPreviewBox("metric-elevation-3d-box", "metric-elevation-3d-canvas", "elevation-3d", [
         "Running spatial-trend validation…",
         "Detrending elevation vs. position…",
         "Correlation +0.60 → −0.41 after detrending…",
     ]);
+    stageDone(80);
 
     await generateFinalDemoBox();
+    jobStore.update(job.id, { status: "complete", progress: 100 });
 
     if (startGenerationButton) {
         startGenerationButton.textContent = "✓ GENERATION COMPLETE";
@@ -1436,28 +1915,6 @@ const finalDemoBoxEl = document.getElementById("final-demo-box");
 const finalDemoExpandedBar = document.getElementById("final-demo-expanded-bar");
 const finalDemoBackButton = document.getElementById("final-demo-back");
 const finalDemoCloseButton = document.getElementById("final-demo-close");
-const closeConfirmModal = document.getElementById("close-confirm-modal");
-const closeConfirmDontAsk = document.getElementById("close-confirm-dont-ask");
-const SKIP_CLOSE_CONFIRM_KEY = "dw2.skipCloseConfirm";
-
-// Per-viewer convenience only: if storage is unavailable (private window,
-// blocked site data) the prompt simply keeps showing.
-function shouldSkipCloseConfirm() {
-    try {
-        return localStorage.getItem(SKIP_CLOSE_CONFIRM_KEY) === "1";
-    } catch {
-        return false;
-    }
-}
-
-function rememberSkipCloseConfirm() {
-    try {
-        localStorage.setItem(SKIP_CLOSE_CONFIRM_KEY, "1");
-    } catch {
-        // storage blocked: nothing to remember
-    }
-}
-
 const FINAL_DEMO_ANIM_MS = 1880; // 380 ms + 1.5 s (user request, 2026-09-25)
 const FINAL_DEMO_EASING = "cubic-bezier(0.2, 0.8, 0.2, 1)";
 let finalDemoPlaceholder = null;
@@ -1478,7 +1935,13 @@ function edgesOf(rect) {
     };
 }
 
-const FULL_WINDOW_EDGES = { top: "0px", right: "0px", bottom: "0px", left: "0px" };
+// "Full window" = everything right of the jobs panel once jobs exist
+// (matches the .has-jobs .is-expanded rule in styles.css).
+function fullWindowEdges() {
+    const panel = document.getElementById("jobs-panel");
+    const left = panel && !panel.hidden ? Math.round(panel.getBoundingClientRect().right + 8) : 0;
+    return { top: "0px", right: "0px", bottom: "0px", left: `${left}px` };
+}
 
 // The canvas resizes every frame via animate() → resizeToCanvas(), so the 3D
 // view stays undistorted while the box grows or shrinks.
@@ -1514,7 +1977,7 @@ async function expandFinalDemo() {
         finalDemoExpandedBar.hidden = false;
     }
 
-    await animateFinalDemoEdges(edgesOf(from), FULL_WINDOW_EDGES, "12px", "0px");
+    await animateFinalDemoEdges(edgesOf(from), fullWindowEdges(), "12px", "0px");
 
     finalDemoBoxEl.classList.remove("is-animating");
     finalDemoAnimating = false;
@@ -1535,7 +1998,7 @@ async function collapseFinalDemo() {
 
     const to = finalDemoPlaceholder?.getBoundingClientRect();
     if (to) {
-        await animateFinalDemoEdges(FULL_WINDOW_EDGES, edgesOf(to), "0px", "12px");
+        await animateFinalDemoEdges(fullWindowEdges(), edgesOf(to), "0px", "12px");
     }
 
     finalDemoBoxEl.classList.remove("is-expanded", "is-animating");
@@ -1554,10 +2017,8 @@ async function collapseFinalDemo() {
 // results, previews, generated boxes, logs, timers, 3D viewers); the form
 // fields are reset first so the browser doesn't restore them on reload.
 function discardWorkbenchAndReload() {
+    unloadAllowed = true; // the in-app modal already decided; no second (native) prompt
     document.querySelectorAll("#page-workbench input, #page-workbench select, #page-workbench textarea").forEach(el => {
-        if (el === closeConfirmDontAsk) {
-            return;
-        }
         if (el.type === "checkbox" || el.type === "radio") {
             el.checked = el.defaultChecked;
         } else if (el.type === "file") {
@@ -1569,50 +2030,16 @@ function discardWorkbenchAndReload() {
     window.location.reload();
 }
 
-function openCloseConfirm() {
-    if (!closeConfirmModal) {
-        discardWorkbenchAndReload();
-        return;
-    }
-    if (closeConfirmDontAsk) {
-        closeConfirmDontAsk.checked = false;
-    }
-    closeConfirmModal.hidden = false;
-    document.getElementById("close-confirm-cancel")?.focus();
-}
-
-function dismissCloseConfirm() {
-    if (closeConfirmModal) {
-        closeConfirmModal.hidden = true;
-    }
-    finalDemoCloseButton?.focus({ preventScroll: true });
-}
-
 finalDemoBackButton?.addEventListener("click", collapseFinalDemo);
 
-finalDemoCloseButton?.addEventListener("click", () => {
-    if (shouldSkipCloseConfirm()) {
-        discardWorkbenchAndReload();
-    } else {
-        openCloseConfirm();
-    }
-});
-
-document.getElementById("close-confirm-cancel")?.addEventListener("click", dismissCloseConfirm);
-document.getElementById("close-confirm-backdrop")?.addEventListener("click", dismissCloseConfirm);
-
-document.getElementById("close-confirm-ok")?.addEventListener("click", () => {
-    // "Don't show this again" takes effect only when the close is confirmed.
-    if (closeConfirmDontAsk?.checked) {
-        rememberSkipCloseConfirm();
+finalDemoCloseButton?.addEventListener("click", async () => {
+    if (jobStore.unsaved().length) {
+        const choice = await confirmUnsaved("close");
+        if (choice === "cancel") {
+            return;
+        }
     }
     discardWorkbenchAndReload();
-});
-
-document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && closeConfirmModal && !closeConfirmModal.hidden) {
-        dismissCloseConfirm();
-    }
 });
 
 
