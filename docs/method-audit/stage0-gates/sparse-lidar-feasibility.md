@@ -1,5 +1,14 @@
 # Sparse LiDAR-Guided Correction — Stage 0 feasibility gate
 
+**CORRECTION 2026-09-24: the "0.5 m GSD" figure in §6 is wrong for our tiles.** 512 m ÷ 1024 px assumed that a
+point cloud and one of our tiles share a footprint, and §7–§8 below disprove that correspondence. Measured directly from
+tile content, our DFC2019 tiles are **≈ 0.3 m/px (0.30–0.34)**. The measurements used interstate lane-line cycles, lane
+widths and tractor-trailer lengths (`06-full-finetune-twin-head/sentinel2-token-grid-test.md`, Housekeeping).
+
+§8's spatial join also rasterised the point clouds at 0.5 m/px, about 1.6× the wrong scale. Its 0/50 result is
+therefore **not a clean negative**: a scale mismatch alone could suppress the correlation. A re-run at 0.3 m is an
+open item.
+
 **Question:** can the Sparse LiDAR-Guided Correction method even be tested on
 this project's current DFC2019 data? Investigation only — no correction
 logic implemented.
