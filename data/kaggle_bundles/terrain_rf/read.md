@@ -1,3 +1,5 @@
+> **Repo layout note (2026-09-24):** this manual moved here from the deleted `kaggle/` / `kaggle_phase2.5_package/` folders. The script now lives in `scripts/`. To re-stage the upload bundle, see `data/REGENERATION.md`, "Repo folder consolidation". Paths below that start with `/kaggle/` are Kaggle runtime paths and are unchanged.
+
 # Part F on Kaggle: full manual (Sentinel-2 terrain RF residual)
 
 **What this runs.** This is only the random-forest stage of the pre-registered Part F (`scripts/terrain_rf_residual.py`, pre-registration commit `3a4cf84`).

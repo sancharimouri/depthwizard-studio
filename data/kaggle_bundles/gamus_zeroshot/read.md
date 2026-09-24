@@ -1,3 +1,5 @@
+> **Repo layout note (2026-09-24):** this manual moved here from the deleted `kaggle/` / `kaggle_phase2.5_package/` folders. The script now lives in `scripts/`. To re-stage the upload bundle, see `data/REGENERATION.md`, "Repo folder consolidation". Paths below that start with `/kaggle/` are Kaggle runtime paths and are unchanged.
+
 # Part B on Kaggle: full manual
 
 **What this runs:** Method 6 zero-shot on the GAMUS test split (2,861 tiles). It is the same computation as

@@ -7,7 +7,7 @@ mean/std + 3 normalized-difference indices; variant B adds ESA WorldCover v200 f
 entropy + ETH GCH 2020 and DINOv3-CHMv2 window means. RF 100 trees. Held-out ICESat-2 tracks: GroupKFold(5) on RGT.
 Baselines: raw FABDEM; per-tile linear residual r = a + b*FABDEM fitted on that tile's training-track samples.
 One run, no tuning.  PROJ_NETWORK=ON .venv/bin/python scripts/terrain_rf_residual.py [--from-kaggle=<dir>]
-(--from-kaggle: load the RF out-of-fold predictions produced by kaggle/terrain_rf_kaggle.py instead of fitting locally.)
+(--from-kaggle: load the RF out-of-fold predictions produced by scripts/terrain_rf_kaggle.py instead of fitting locally.)
 Output: data/sentinel2_benchmark/terrain_rf_residual/{samples.parquet,per_tile.csv,summary.json}"""
 from __future__ import annotations
 
@@ -143,7 +143,7 @@ def main():
     # pre-registered sklearn RF; its files are prefixed xgbrf_ and results are labelled as such.
     engine = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--kaggle-engine=")), "sklearn")
     pre = "rf" if engine == "sklearn" else "xgbrf"
-    if kag is not None:  # RF stage was run on Kaggle (kaggle/terrain_rf_kaggle.py): same filter, folds
+    if kag is not None:  # RF stage was run on Kaggle (scripts/terrain_rf_kaggle.py): same filter, folds
         assert np.array_equal(np.load(kag / "folds.npy"), D["fold"].values), "Kaggle fold assignment differs"
         S_meta = json.loads((kag / f"{pre}_run_meta.json").read_text())
         print("Kaggle RF run:", S_meta, flush=True)

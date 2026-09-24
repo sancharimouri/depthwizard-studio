@@ -63,7 +63,7 @@ these three are *imported*:
 | `external/dinov3/` | `scripts/lib_dinov3_sat493m_loader.py` (`dinov3.hub.*`, `dinov3.eval.depth.models`) | `github.com/facebookresearch/dinov3` (vendored unmodified). Not a git clone, so there's no commit pin; content hashes in `data/EXTERNAL_CODE_sha256.csv`. Weights via `HF_TOKEN` (gated SAT493M). |
 | `external/SynRS3D/` | `scripts/rs3dada_{mps,sentinel2}_smoketest.py` (`models.dpt`) | `git clone https://github.com/JTRNEO/SynRS3D.git && git -C external/SynRS3D checkout ab5a4857825448e4c5cd1fe3aa3045c7348814c5` |
 
-**3. Housekeeping flag.** `scripts 2/` is a Finder-style duplicate folder from 2026-09-20,
+**3. Housekeeping flag (resolved 2026-09-24: folder deleted; see "Repo folder consolidation" below).** `scripts 2/` was a Finder-style duplicate folder from 2026-09-20,
 swept into git by `fd9fd35`.
 - Its `evaluate_method4.py` is byte-identical to `scripts/evaluate_method4.py`.
 - `evaluate_method4_v2_kaggle.py` exists only there, and nothing imports it.
@@ -104,8 +104,8 @@ the saved `data/sentinel2_benchmark/dinov3_depth/*.npy`, which is already in `te
 | 1 | `external/SynRS3D/pretrain/RS3DAda_vitl_DPT_height.pth` (1.47 GB) | RS3DAda ViT-L DPT height checkpoint | **RS3DAda rejected:** 49/50 DFC2019 benchmark tiles are in its training split (contaminated), and it is degenerate on Sentinel-2 (HANDOFF §4) | https://huggingface.co/JTRNEO/RS3DAda/blob/main/RS3DAda_vitl_DPT_height.pth → back to `external/SynRS3D/pretrain/` |
 | 2 | `data/gamus_dc/test_tiles.npz` (1.37 GB) and `data/gamus_dc/train_quadrants.npz` (0.55 GB) | Leakage-safe GAMUS-DC arrays for the Method 6 + GAMUS-DC pilot retrain | **GAMUS-DC pilot, closed and not adopted.** The tall-tree criterion failed because the imagery is leaf-off. The 07 C.0 pre-check then found every GAMUS city leaf-off or mixed, so no GAMUS retrain is planned (`07-.../log.md`) | `uv run --no-project --with h5py --with numpy python scripts/prepare_gamus_dc.py` (streams HF `earthflow/GAMUS`; deterministic split, seed 0; `split.json` is kept) |
 | 3 | `models/hub/hf_dinov3_sat493m/model.safetensors` (1.21 GB) | DINOv3 ViT-L SAT-493M backbone weights | **DAv2-vs-DINOv3 comparison, superseded.** No backbone is carried forward, because no 10 m RGB detail source adds anything over the DEM (Phase 4) (`sentinel2/backbone-comparison.md`) | HF `facebook/dinov3-vitl16-pretrain-sat493m` (gated; `HF_TOKEN` has access). Conversion: `scripts/lib_dinov3_sat493m_loader.py` |
-| 4 | `kaggle/gamus_b_kaggle_bundle.zip` (1.19 GB) | Part B Kaggle upload bundle | Part B **complete** (results merged and committed, `6e820c7`) | Rebuild: `kaggle/bundle/` (script, `read.md`, hashes, done list) plus hard-linked checkpoints; `zip -r -0 gamus_b_kaggle_bundle.zip bundle` |
-| 5 | `kaggle_phase2.5_package.zip` (0.65 GB) | Kaggle export for the Method 4 v2 SID ordinal-constraint follow-up | **Method 4 superseded** by Method 6 | The unzipped `kaggle_phase2.5_package/` folder is still in the repo; re-zip it if needed |
+| 4 | `kaggle/gamus_b_kaggle_bundle.zip` (1.19 GB) | Part B Kaggle upload bundle | Part B **complete** (results merged and committed, `6e820c7`) | Rebuild: stage a `bundle/` folder (see "Repo folder consolidation" below), then `zip -r -0 gamus_b_kaggle_bundle.zip bundle` |
+| 5 | `kaggle_phase2.5_package.zip` (0.65 GB) | Kaggle export for the Method 4 v2 SID ordinal-constraint follow-up | **Method 4 superseded** by Method 6 | The unzipped folder was deleted on 2026-09-24. Its script and manual are kept (see "Repo folder consolidation" below); its data were byte-identical copies of repo files |
 | 6 | `models/semantic/hotosm_dinov3s_buildings/model.onnx` (0.22 GB) | HOT OSM DINOv3-S building-segmentation model | **Semantic prior closed** (Method 3; Sentinel-2 phase 2.3) | HF `hotosm/dinov3s-buildings` (`hf_hub_download` in `scripts/generate_dfc_building_prior.py`) |
 | 7 | **Duplicate group (SHA-256 `b12e22b4…`, 180,352,229 B each):** `data/sentinel2/semantic_sources/globalml_building_footprints/raw/kolkata/part-00108-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz` and `…/raw/bardhaman/part-00108-…` | MS Global ML Building Footprints, India partition | **Semantic prior / building-footprint route closed** (phase 2.3; Open-Buildings CNN failure) | https://bfppub.z5.web.core.windows.net/2026-08-13/global-buildings.geojsonl/RegionName=India/quadkey=123133321/part-00108-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz (index: `…/globalml_building_footprints/dataset-links.csv`, kept) |
 | 8 | `data/sentinel2/…/raw/kolkata/part-00047-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz` (169 MB) | Same dataset | Same | https://bfppub.z5.web.core.windows.net/2026-08-13/global-buildings.geojsonl/RegionName=India/quadkey=123133323/part-00047-110f5303-ff85-4c71-a2bf-c6070024fec8.c000.csv.gz |
@@ -157,11 +157,11 @@ Rows 2, 7, 10 and 12 each cover two paths, so the 16 rows cover the 20 inventori
 
 | Artifact | Committed? | Regenerate with | Notes |
 |---|---|---|---|
-| `data/gamus_eval/zeroshot_tiles.jsonl` (219 tiles, local MPS), `zeroshot_tiles_kaggle.jsonl` (2,759 tiles), `zeroshot_tiles_merged.jsonl` (2,861) | no (8–98 MB) | `scripts/gamus_zeroshot_eval.py` (local) and/or `kaggle/gamus_zeroshot_kaggle.py` (Kaggle, see `kaggle/bundle/read.md`). Merge: union by `tile`, local copy wins. | The summary is committed: `data/gamus_eval/zeroshot_merged_summary.json` (`scripts/gamus_zeroshot_aggregate.py`). The two runners agree within 7e-5 m. |
+| `data/gamus_eval/zeroshot_tiles.jsonl` (219 tiles, local MPS), `zeroshot_tiles_kaggle.jsonl` (2,759 tiles), `zeroshot_tiles_merged.jsonl` (2,861) | no (8–98 MB) | `scripts/gamus_zeroshot_eval.py` (local) and/or `scripts/gamus_zeroshot_kaggle.py` (Kaggle, see `data/kaggle_bundles/gamus_zeroshot/read.md`). Merge: union by `tile`, local copy wins. | The summary is committed: `data/gamus_eval/zeroshot_merged_summary.json` (`scripts/gamus_zeroshot_aggregate.py`). The two runners agree within 7e-5 m. |
 | `data/dfc2019/experiments/method6_height_balanced_seed42_ckpt/fold*.pt` | no (4 × 99 MB) | `python scripts/evaluate_method6_gsd_film_height_balanced.py --outdir … --tag m6_heightbal_seed42_ckpt --enable-height-balanced --epochs 12 --seed 42 --save-checkpoints` | Reproduces the adopted headline bit-for-bit (1.979971505587631). |
 | `data/forest_mountain_3dep/*_agl03.npy` | no (8 × 8 MB) | `PROJ_NETWORK=ON .venv/bin/python scripts/forest_mountain_3dep_eval.py run` | Needs Planetary Computer (anonymous) and Earth Engine. |
 | `data/sentinel2_benchmark/terrain_rf_residual/samples.parquet` | no (212 MB) | `PROJ_NETWORK=ON .venv/bin/python scripts/terrain_rf_residual.py` (feature stage; needs Earth Engine for WorldCover) | The fold assignment is deterministic (GroupKFold on RGT). |
-| `data/sentinel2_benchmark/terrain_rf_residual/kaggle/rf_oof_{A,B}_fold{0-4}.npy` | no (10 × 2 MB) | `kaggle/terrain_rf_kaggle.py --variant AB` (local or Kaggle) | sklearn 1.9.0, `random_state=0`. The summary and per-tile CSV are committed. |
+| `data/sentinel2_benchmark/terrain_rf_residual/kaggle/rf_oof_{A,B}_fold{0-4}.npy` | no (10 × 2 MB) | `scripts/terrain_rf_kaggle.py --variant AB` (local or Kaggle) | sklearn 1.9.0, `random_state=0`. The summary and per-tile CSV are committed. |
 
 ## Resolution-transfer checkpoints (2026-09-24)
 
@@ -171,13 +171,61 @@ Rows 2, 7, 10 and 12 each cover two paths, so the 16 rows cover the 20 inventori
 
 **Kaggle zip cleanup (2026-09-24).** Two stray Kaggle zips were deleted after their contents were checked:
 - **`kaggle/gamus_f_kaggle_bundle.zip` (212 MB).** Fully redundant:
-  - `terrain_rf_kaggle.py` and `read.md` are byte-identical to the tracked `kaggle/terrain_rf_kaggle.py` and
-    `kaggle/bundle_f/read.md`;
+  - `terrain_rf_kaggle.py` and `read.md` are byte-identical to the tracked copies, now `scripts/terrain_rf_kaggle.py` and
+    `data/kaggle_bundles/terrain_rf/read.md`;
   - `samples.parquet` has the same SHA-1 (`abcae078…`) as `data/sentinel2_benchmark/terrain_rf_residual/samples.parquet`.
 
-  To rebuild: `cd kaggle && zip -0 -r gamus_f_kaggle_bundle.zip bundle_f`.
+  To rebuild: stage `bundle_f/` as described in "Repo folder consolidation" below, then `zip -0 -r gamus_f_kaggle_bundle.zip bundle_f`.
 - **`kaggle_phase2.5_scripts_update.zip` (14 KB).**
   - Its `evaluate_method4.py` is identical to `scripts/evaluate_method4.py`.
   - Its `evaluate_method4_v2_kaggle.py` (the Phase 2.5 Kaggle build, 2026-09-20 00:07, without `--sid-bins`) is preserved
-    as **`scripts/evaluate_method4_v2_kaggle_phase2_5.py`**. It is byte-identical to `scripts 2/evaluate_method4_v2_kaggle.py`.
-  - The later SID-bins build stays at `kaggle_phase2.5_package/scripts/evaluate_method4_v2_kaggle.py`.
+    as **`scripts/evaluate_method4_v2_kaggle_phase2_5.py`**. It was byte-identical to `scripts 2/evaluate_method4_v2_kaggle.py`.
+  - The later SID-bins build is now `scripts/evaluate_method4_v2_kaggle_sid.py`.
+
+**Repo folder consolidation (2026-09-24).** `kaggle/`, `kaggle_phase2.5_package/` and `scripts 2/` were deleted from
+the repo root. Before deleting, every file was either moved or verified to be a duplicate. Disk freed: **1.86 GB**
+(1,893,613,832 bytes of single-link files; `df` confirms 1,856,176 KB).
+
+| Old path | New path |
+|---|---|
+| `kaggle/gamus_zeroshot_kaggle.py` (= `kaggle/bundle/…`, `kaggle/bundle 2/…`) | `scripts/gamus_zeroshot_kaggle.py` |
+| `kaggle/terrain_rf_kaggle.py` (= `kaggle/bundle_f/…`) | `scripts/terrain_rf_kaggle.py` |
+| `kaggle_phase2.5_package/scripts/evaluate_method4_v2_kaggle.py` (SID-bins build) | `scripts/evaluate_method4_v2_kaggle_sid.py` |
+| `scripts 2/evaluate_method4_v2_kaggle.py` (Phase 2.5 build) | `scripts/evaluate_method4_v2_kaggle_phase2_5.py` (already copied) |
+| `kaggle/bundle/{read.md, done_tiles.txt, dfc2019_block_hashes.npy}` | `data/kaggle_bundles/gamus_zeroshot/` |
+| `kaggle/bundle_f/read.md` | `data/kaggle_bundles/terrain_rf/read.md` |
+| `kaggle_phase2.5_package/{README.md, tile_list.txt, data/manifest.csv}` | `data/kaggle_bundles/method4_v2_sid/` |
+
+**Deleted as verified duplicates (nothing lost):**
+- **`evaluate_method4.py`, ×2:** identical to `scripts/evaluate_method4.py`.
+- **`kaggle/bundle/ckpt/m6_s4{2,3,4}/fold{0-3}.pt`:** hard links to
+  `data/dfc2019/experiments/method6_height_balanced_seed4{2,3,4}*/fold*.pt`.
+- **`kaggle/bundle 2/`:** an older snapshot of `bundle/`. Its 12 checkpoints are byte-identical to the canonical ones,
+  and its `read.md` lacks Cell 5b.
+- **`kaggle/bundle_f/samples.parquet`:** a hard link to `data/sentinel2_benchmark/terrain_rf_residual/samples.parquet`.
+- **`kaggle_phase2.5_package/data/{RGB,Truth,depth,building}` (200 files):** byte-identical to
+  `data/dfc2019/raw/RGB/Track1-RGB/`, `data/dfc2019/raw/Truth/Track1-Truth/`,
+  `data/dfc2019/experiments/dav2_baseline/depth/` and `data/dfc2019/experiments/semantic/building/`.
+
+**Re-staging a Kaggle bundle.** The manuals describe the bundle's inner layout (`bundle/`, `bundle_f/`), which is unchanged.
+Stage it in a scratch folder:
+
+```bash
+# GAMUS zero-shot (Part B)
+mkdir -p bundle/ckpt && cp scripts/gamus_zeroshot_kaggle.py data/kaggle_bundles/gamus_zeroshot/* bundle/
+for s in 42 43 44; do mkdir -p bundle/ckpt/m6_s$s; ln data/dfc2019/experiments/method6_height_balanced_seed$s*/fold*.pt bundle/ckpt/m6_s$s/; done
+zip -r -0 gamus_b_kaggle_bundle.zip bundle
+
+# Terrain RF (Part F)
+mkdir -p bundle_f && cp scripts/terrain_rf_kaggle.py data/kaggle_bundles/terrain_rf/read.md bundle_f/
+ln data/sentinel2_benchmark/terrain_rf_residual/samples.parquet bundle_f/
+zip -r -0 gamus_f_kaggle_bundle.zip bundle_f
+
+# Method 4 v2 SID package
+mkdir -p pkg/scripts pkg/data/{RGB,Truth,depth,building}
+cp scripts/evaluate_method4_v2_kaggle_sid.py pkg/scripts/evaluate_method4_v2_kaggle.py
+cp scripts/evaluate_method4.py pkg/scripts/
+cp data/kaggle_bundles/method4_v2_sid/{README.md,tile_list.txt} pkg/
+cp data/kaggle_bundles/method4_v2_sid/manifest.csv pkg/data/
+# then copy the 50 tiles in tile_list.txt from the four data folders listed above
+```

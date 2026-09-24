@@ -277,7 +277,7 @@ motion is either one orchestrated moment or a response to user action.
 ## Kaggle GPU offload — reference pattern (user-endorsed 2026-09-23; reuse for any future export)
 
 When a long GPU job should run on Kaggle instead of this Mac, **copy this pattern**. The reference
-implementation is `kaggle/gamus_zeroshot_kaggle.py` + `kaggle/bundle/read.md` (Part B, GAMUS zero-shot). It ran
+implementation is `scripts/gamus_zeroshot_kaggle.py` + `data/kaggle_bundles/gamus_zeroshot/read.md` (Part B, GAMUS zero-shot). It ran
 3× faster than local (4.3–5.4 s/tile on a P100 vs. 15 s on MPS), survived a session interruption, and resumed
 with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
 

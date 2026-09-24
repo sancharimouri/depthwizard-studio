@@ -1,3 +1,5 @@
+> **Repo layout note (2026-09-24):** this manual moved here from the deleted `kaggle/` / `kaggle_phase2.5_package/` folders. The script now lives in `scripts/`. To re-stage the upload bundle, see `data/REGENERATION.md`, "Repo folder consolidation". Paths below that start with `/kaggle/` are Kaggle runtime paths and are unchanged.
+
 # DepthWizard2 — Method 4 v2, SID ordinal-constraint follow-up (Kaggle package)
 
 **One experiment this round**, on top of the current best config

@@ -382,7 +382,7 @@ terrain.** None of the research-track work is deployed into it.
 - **Vertical datums on US LiDAR (NAVD88):** convert EGM → WGS84/ITRF2014 ellipsoid → Helmert to NAD83(2011) → GEOID
   explicitly. PROJ's default route uses a null NAD83↔WGS84 step, an error of up to 1.3 m.
   Guard with |N| > 1 m, **not** with the size of the final shift: that can legitimately be ≈ 0, e.g. 0.045 m at MLBS VA.
-- **Kaggle GPU offload:** follow the reference pattern in CLAUDE.md (`kaggle/gamus_zeroshot_kaggle.py`, `kaggle/bundle/read.md`).
+- **Kaggle GPU offload:** follow the reference pattern in CLAUDE.md (`scripts/gamus_zeroshot_kaggle.py`, `data/kaggle_bundles/gamus_zeroshot/read.md`).
 
 ## 8. Skills
 
