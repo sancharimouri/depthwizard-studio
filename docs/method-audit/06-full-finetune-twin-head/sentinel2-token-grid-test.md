@@ -442,3 +442,24 @@ terrain signal a DEM user could use:
 
 The **Sentinel-2 learned-terrain-correction line is closed**, and the product stays DEM-only (FABDEM terrain,
 GLO-30 surface). No follow-up is opened.
+
+## 2026-09-24 — Boundary sweep, 6 m and 7 m: pre-registration (committed before training)
+
+**Question.** Where between 5 m (passes) and 8 m (fails) does protocol R's rule-1 verdict flip? Synthetic only.
+**No real-data or Phase-C-equivalent step follows** until the user decides.
+
+**Runs.** `scripts/method6_resolution_transfer.py train --gsd {6,7} --proto R`, unchanged. Same recipe, 4 quadrant
+folds, seed 42.
+- n = round(153.6/g) = **26 px (6 m), 22 px (7 m)**, bilinear back to 512, pad 518, i.e. 37×37 tokens.
+- Then `eval --train-gsds 6 7` and `analyze`.
+- Chain: `data/dfc2019/experiments/resolution_transfer/run_chain_67.sh` → `chain67.log`.
+
+**Rule (identical to rule 1).** R at g passes if, evaluated at native 0.3 m, it beats the 0.3 m oracle on **≥ 3 of 4**
+metrics with **non-overlapping** 95% tile-bootstrap CIs.
+
+**Boundary definition (fixed now).** The flip is located between the finest failing and the coarsest passing GSD among
+{5, 6, 7, 8} m. If the sequence isn't monotone (e.g. 6 fails but 7 passes), that is reported as-is, with no
+interpolation or smoothing. One seed, so the location is ±1 grid step at best.
+
+**Wall time (R4).** R folds measured at about 13–14 min (8 / 10 / 12 m chains). So 2 GSDs × 4 folds ≈ 1.8 h, plus eval
+≈ 13 min ⇒ **≈ 2 h**.
