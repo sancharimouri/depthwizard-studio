@@ -1560,12 +1560,10 @@ function initFinalDemoViewer() {
     const fullscreenToggle = document.getElementById("final-demo-fullscreen");
     const finalDemoBox = document.getElementById("final-demo-box");
 
+    // ⛶ re-opens the same expanded view the pipeline pops up on completion
+    // (one consistent "big view"; see FINAL DEMO — EXPANDED VIEW below).
     fullscreenToggle?.addEventListener("click", () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => {});
-        } else {
-            finalDemoBox?.requestFullscreen().catch(() => {});
-        }
+        expandFinalDemo();
     });
 
     document.addEventListener("fullscreenchange", () => {
@@ -1830,7 +1828,134 @@ async function runGenerationSequence() {
     if (startGenerationButton) {
         startGenerationButton.textContent = "✓ GENERATION COMPLETE";
     }
+
+    // Whole pipeline done: pop the final 3D view out to fill the window.
+    expandFinalDemo();
 }
+
+
+// ============================================================
+// FINAL DEMO — EXPANDED VIEW (Back / Close) + CLOSE CONFIRMATION
+// ============================================================
+
+const finalDemoBoxEl = document.getElementById("final-demo-box");
+const finalDemoExpandedBar = document.getElementById("final-demo-expanded-bar");
+const finalDemoBackButton = document.getElementById("final-demo-back");
+const finalDemoCloseButton = document.getElementById("final-demo-close");
+const closeConfirmModal = document.getElementById("close-confirm-modal");
+const closeConfirmDontAsk = document.getElementById("close-confirm-dont-ask");
+const SKIP_CLOSE_CONFIRM_KEY = "dw2.skipCloseConfirm";
+
+// Per-viewer convenience only: if storage is unavailable (private window,
+// blocked site data) the prompt simply keeps showing.
+function shouldSkipCloseConfirm() {
+    try {
+        return localStorage.getItem(SKIP_CLOSE_CONFIRM_KEY) === "1";
+    } catch {
+        return false;
+    }
+}
+
+function rememberSkipCloseConfirm() {
+    try {
+        localStorage.setItem(SKIP_CLOSE_CONFIRM_KEY, "1");
+    } catch {
+        // storage blocked: nothing to remember
+    }
+}
+
+function expandFinalDemo() {
+    if (!finalDemoBoxEl || finalDemoBoxEl.classList.contains("is-expanded")) {
+        return;
+    }
+    finalDemoBoxEl.classList.add("is-expanded");
+    if (finalDemoExpandedBar) {
+        finalDemoExpandedBar.hidden = false;
+    }
+    finalDemoBackButton?.focus({ preventScroll: true });
+    // animate() calls resizeToCanvas() every frame; this just avoids a
+    // one-frame stretch at the new size.
+    requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
+}
+
+// Back: the box returns to its grid cell with its state intact.
+function collapseFinalDemo() {
+    if (!finalDemoBoxEl?.classList.contains("is-expanded")) {
+        return;
+    }
+    finalDemoBoxEl.classList.remove("is-expanded");
+    if (finalDemoExpandedBar) {
+        finalDemoExpandedBar.hidden = true;
+    }
+    requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
+    document.getElementById("final-demo-fullscreen")?.focus({ preventScroll: true });
+}
+
+// Close: discard everything and come back to a fresh, input-less Workbench.
+// A reload is the one reset that can't leave stale state behind (search
+// results, previews, generated boxes, logs, timers, 3D viewers); the form
+// fields are reset first so the browser doesn't restore them on reload.
+function discardWorkbenchAndReload() {
+    document.querySelectorAll("#page-workbench input, #page-workbench select, #page-workbench textarea").forEach(el => {
+        if (el === closeConfirmDontAsk) {
+            return;
+        }
+        if (el.type === "checkbox" || el.type === "radio") {
+            el.checked = el.defaultChecked;
+        } else if (el.type === "file") {
+            el.value = "";
+        } else {
+            el.value = el.defaultValue;
+        }
+    });
+    window.location.reload();
+}
+
+function openCloseConfirm() {
+    if (!closeConfirmModal) {
+        discardWorkbenchAndReload();
+        return;
+    }
+    if (closeConfirmDontAsk) {
+        closeConfirmDontAsk.checked = false;
+    }
+    closeConfirmModal.hidden = false;
+    document.getElementById("close-confirm-cancel")?.focus();
+}
+
+function dismissCloseConfirm() {
+    if (closeConfirmModal) {
+        closeConfirmModal.hidden = true;
+    }
+    finalDemoCloseButton?.focus({ preventScroll: true });
+}
+
+finalDemoBackButton?.addEventListener("click", collapseFinalDemo);
+
+finalDemoCloseButton?.addEventListener("click", () => {
+    if (shouldSkipCloseConfirm()) {
+        discardWorkbenchAndReload();
+    } else {
+        openCloseConfirm();
+    }
+});
+
+document.getElementById("close-confirm-cancel")?.addEventListener("click", dismissCloseConfirm);
+document.getElementById("close-confirm-backdrop")?.addEventListener("click", dismissCloseConfirm);
+
+document.getElementById("close-confirm-ok")?.addEventListener("click", () => {
+    // "Don't show this again" takes effect only when the close is confirmed.
+    if (closeConfirmDontAsk?.checked) {
+        rememberSkipCloseConfirm();
+    }
+    discardWorkbenchAndReload();
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && closeConfirmModal && !closeConfirmModal.hidden) {
+        dismissCloseConfirm();
+    }
+});
 
 
 // ---- Staged grid entrance: the 8 boxes fade/slide in left-to-right,
