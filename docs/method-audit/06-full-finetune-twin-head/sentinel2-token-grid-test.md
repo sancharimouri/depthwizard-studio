@@ -704,3 +704,33 @@ Within Landsat:
   5–6 m boundary.
 - Per the pre-registered reading, **any further dataset hunting should target genuinely finer GSD** (≤ ~5 m, below the
   synthetic boundary), regardless of sensor. No such step is started here.
+
+## 2026-09-24 — CBERS-4 PAN10M confirmatory test: **infeasible on the benchmark (0/32 usable tiles). Not run; awaiting a user decision.**
+
+The prompt required a real coverage check before anything else. It fails, so no pre-registration outcome applies:
+nothing was trained or scored.
+
+**Catalogs.**
+- CBERS on AWS (AWS Open Data Registry → STAC API `stac.scitekno.com.br/v100`, data `s3://brazil-eosats`): public,
+  HTTP 200, COGs readable.
+- INPE's own `data.inpe.br` resolves (150.163.218.3) but never answers (HTTP 000, also outside the sandbox), so it
+  couldn't be checked.
+- Query validity: a control bbox over Brasília returns PAN10M scenes normally. (The server's STAC API
+  1.0.0-beta rejects `intersects`, so `bbox` was used.)
+
+**Coverage** (collection `CBERS4-PAN10M`, bbox = each tile's 10 km footprint, all dates):
+- **3/32 tiles** have any scene: Nizamabad (`CBERS_4_PAN10M_20240713_036_079_L2`), Amalapuram
+  (`…20210610_030_081/082_L2`) and Kakinada (`…20210610_030_081_L2`). That is two distinct acquisitions.
+- **29/32 have none.** (CBERS-4A WPM: 0/32. CBERS-4 MUX, 20 m, not requested: 3/32.)
+
+**Usability.** BAND2 was read over each tile window straight from the COGs, at 10 m, uint8:
+- Amalapuram and Kakinada: **100% saturated** (every pixel = 255).
+- Nizamabad: 92% saturated (median 255, CV 0.01).
+- These are monsoon acquisitions (June/July), i.e. solid cloud. The Amalapuram thumbnail is uniformly white.
+
+**Effective usable coverage: 0/32.** This is expected: the CBERS archive on AWS/INPE comes from Brazilian ground-station
+acquisitions, with only incidental passes over India. Even 3 clear tiles couldn't meet the pre-registered bar: an exact
+paired Wilcoxon with n = 3 has a minimum two-sided p of 0.25.
+
+**Status.** The three-way comparison (Sentinel-2 0.134 / Landsat 0.116 / CBERS —) can't be completed at these
+locations. The next step is the user's decision.
