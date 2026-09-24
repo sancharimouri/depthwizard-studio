@@ -824,3 +824,15 @@ resamples on its default 1° grid, which gives a smooth ramp instead of the DEM.
 **Interim look after the fix** (descriptive only, not the pre-registered test: n = 4, hilly only, frozen oracle, no
 training). Mean within-crop ρ: CBERS-FC +0.060, S2-FC +0.082, S2-RGB +0.054, FABDEM +0.970. The pre-registered
 analysis runs unchanged on the full selected set.
+
+## 2026-09-24 18:42 IST — CBERS vs Sentinel-2 (Brazil) test: **STOPPED by the user; not completed. No pre-registered verdict.**
+
+Selection was stopped at 15/48 candidates screened, with 5 passing (all hilly: teresopolis, campos_jordao, caparao,
+diamantina, gramado). Nothing was built, trained or scored beyond the labelled interim look above.
+
+**The pre-registered decision rule was never applied.** The interim numbers (n = 4, frozen oracle only) must not be
+read as its outcome.
+
+**Left on disk, untracked:** `data/brazil_benchmark/{tiles/, status.json, fab_repair.json, select.log}`. `refab` has run
+on 4 of the 5 passed tiles; gramado is not yet repaired. The script `scripts/brazil_benchmark.py` is resumable
+(`select`, then `refab`, `build`, `run --arm …`, `compare`) if this is ever picked up again.
