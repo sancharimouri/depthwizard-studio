@@ -1,0 +1,442 @@
+{
+ "sites": {
+  "olympic_wa": {
+   "n_candidates": 11,
+   "eligible_mean_ge_8": 4,
+   "mean_threshold": 8.0,
+   "ranked": [
+    {
+     "dtm_item": "USGS_LPC_WA_Olympic_Peninsula_2013_LAS_2015-dtm-2m-5-1",
+     "dtm_stddev": 224.02487779059,
+     "lidar_end": "2014-01-25T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_WA_Olympic_Peninsula_2013_LAS_2015-dtm-2m-5-0",
+     "dtm_stddev": 217.35164866629,
+     "lidar_end": "2014-01-25T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_WA_Olympic_Peninsula_C3_2017-dtm-2m-6-4",
+     "dtm_stddev": 212.87114172663,
+     "lidar_end": "2017-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_WA_Olympic_Peninsula_C3_2017-dtm-2m-6-5",
+     "dtm_stddev": 155.90177235113,
+     "lidar_end": "2017-01-01T00:00:00Z"
+    }
+   ]
+  },
+  "tahoe_ca": {
+   "n_candidates": 26,
+   "eligible_mean_ge_8": 0,
+   "eligible_mean_ge_5": 3,
+   "mean_threshold": 5.0,
+   "ranked": [
+    {
+     "dtm_item": "USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5",
+     "dtm_stddev": 197.42246265957,
+     "lidar_end": "2018-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-6-5",
+     "dtm_stddev": 189.54461888437,
+     "lidar_end": "2018-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "CA_PlacerCo_2012-dtm-2m-12-5",
+     "dtm_stddev": 176.85686647924,
+     "lidar_end": "2012-06-29T00:00:00Z"
+    }
+   ]
+  },
+  "frontrange_co": {
+   "n_candidates": 16,
+   "eligible_mean_ge_8": 0,
+   "eligible_mean_ge_5": 0,
+   "ranked": []
+  },
+  "grsm_tn": {
+   "n_candidates": 23,
+   "eligible_mean_ge_8": 6,
+   "mean_threshold": 8.0,
+   "ranked": [
+    {
+     "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5",
+     "dtm_stddev": 245.27043498626,
+     "lidar_end": "2017-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-4",
+     "dtm_stddev": 225.32836771931,
+     "lidar_end": "2017-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4",
+     "dtm_stddev": 214.40869173861,
+     "lidar_end": "2017-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4",
+     "dtm_stddev": 205.54199432659,
+     "lidar_end": "2017-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-5",
+     "dtm_stddev": 193.06312783844,
+     "lidar_end": "2017-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-5",
+     "dtm_stddev": 175.58445662532,
+     "lidar_end": "2017-01-01T00:00:00Z"
+    }
+   ]
+  },
+  "mlbs_va": {
+   "n_candidates": 32,
+   "eligible_mean_ge_8": 0,
+   "eligible_mean_ge_5": 5,
+   "mean_threshold": 5.0,
+   "ranked": [
+    {
+     "dtm_item": "USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10",
+     "dtm_stddev": 227.67184039411,
+     "lidar_end": "2018-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11",
+     "dtm_stddev": 184.54598577509,
+     "lidar_end": "2018-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11",
+     "dtm_stddev": 128.06707885286,
+     "lidar_end": "2018-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-10",
+     "dtm_stddev": 121.08714591325,
+     "lidar_end": "2018-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-13-9",
+     "dtm_stddev": 73.038160465195,
+     "lidar_end": "2018-01-01T00:00:00Z"
+    }
+   ]
+  },
+  "whitemtns_nh": {
+   "n_candidates": 22,
+   "eligible_mean_ge_8": 2,
+   "mean_threshold": 8.0,
+   "ranked": [
+    {
+     "dtm_item": "USGS_LPC_NH_Umbagog_2016_LAS_2019-dtm-2m-1-18",
+     "dtm_stddev": 181.79035332403,
+     "lidar_end": "2019-01-01T00:00:00Z"
+    },
+    {
+     "dtm_item": "USGS_LPC_NH_Umbagog_2016_LAS_2019-dtm-2m-3-18",
+     "dtm_stddev": 142.05113376695,
+     "lidar_end": "2019-01-01T00:00:00Z"
+    }
+   ]
+  }
+ },
+ "tiles": [
+  {
+   "tile": "tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5",
+   "site": "tahoe_ca",
+   "dtm_item": "USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5",
+   "epsg": 26910,
+   "x0": 734211.0,
+   "y0": 4352308.0,
+   "lidar_end": "2018-01-01T00:00:00Z",
+   "dtm_valid": 0.9999987654320988,
+   "naip_year": 2018,
+   "naip_dates": [
+    "2018-09-16"
+   ],
+   "naip_items": [
+    "ca_m_3912046_se_10_060_20180916_20190209",
+    "ca_m_3912047_sw_10_060_20180916_20190209",
+    "ca_m_3912054_ne_10_060_20180916_20190209",
+    "ca_m_3912055_nw_10_060_20180916_20190210"
+   ],
+   "naip_gsd": [
+    0.6
+   ],
+   "rgb_valid": 1.0,
+   "lidar_naip_gap_years": 0,
+   "relief_within_crop_std_m": 42.4793815612793
+  },
+  {
+   "tile": "tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5",
+   "site": "tahoe_ca",
+   "dtm_item": "CA_PlacerCo_2012-dtm-2m-12-5",
+   "epsg": 26910,
+   "x0": 738801.0,
+   "y0": 4339513.0,
+   "lidar_end": "2012-06-29T00:00:00Z",
+   "dtm_valid": 0.9999469907407408,
+   "naip_year": 2012,
+   "naip_dates": [
+    "2012-07-06"
+   ],
+   "naip_items": [
+    "ca_m_3912055_se_10_1_20120706_20120904",
+    "ca_m_3912055_sw_10_1_20120706_20120904",
+    "ca_m_3912063_ne_10_1_20120706_20120904",
+    "ca_m_3912063_nw_10_1_20120706_20120904"
+   ],
+   "naip_gsd": [
+    1.0
+   ],
+   "rgb_valid": 1.0,
+   "lidar_naip_gap_years": 0,
+   "relief_within_crop_std_m": 39.26537322998047
+  },
+  {
+   "tile": "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5",
+   "site": "grsm_tn",
+   "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5",
+   "epsg": 26917,
+   "x0": 274116.0,
+   "y0": 3957726.0,
+   "lidar_end": "2017-01-01T00:00:00Z",
+   "dtm_valid": 0.9999613233024691,
+   "naip_year": 2012,
+   "naip_dates": [
+    "2012-06-27"
+   ],
+   "naip_items": [
+    "nc_m_3508321_se_17_1_20120627_20120919",
+    "tn_m_3508320_ne_17_1_20120627_20120911",
+    "tn_m_3508320_se_17_1_20120627_20120911",
+    "tn_m_3508321_ne_17_1_20120627_20120911",
+    "tn_m_3508321_nw_17_1_20120627_20120911",
+    "tn_m_3508321_se_17_1_20120627_20120911",
+    "tn_m_3508321_sw_17_1_20120627_20120911"
+   ],
+   "naip_gsd": [
+    1.0
+   ],
+   "rgb_valid": 0.9999999807098765,
+   "lidar_naip_gap_years": 5,
+   "relief_within_crop_std_m": 35.959930419921875
+  },
+  {
+   "tile": "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4",
+   "site": "grsm_tn",
+   "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4",
+   "epsg": 26917,
+   "x0": 257732.0,
+   "y0": 3949534.0,
+   "lidar_end": "2017-01-01T00:00:00Z",
+   "dtm_valid": 1.0,
+   "naip_year": 2012,
+   "naip_dates": [
+    "2012-06-27"
+   ],
+   "naip_items": [
+    "nc_m_3508327_ne_17_1_20120627_20120919",
+    "nc_m_3508328_nw_17_1_20120627_20120919",
+    "tn_m_3508319_se_17_1_20120627_20120911",
+    "tn_m_3508320_sw_17_1_20120627_20120911",
+    "tn_m_3508327_ne_17_1_20120627_20120911",
+    "tn_m_3508328_nw_17_1_20120627_20120911"
+   ],
+   "naip_gsd": [
+    1.0
+   ],
+   "rgb_valid": 1.0,
+   "lidar_naip_gap_years": 5,
+   "relief_within_crop_std_m": 45.221107482910156
+  },
+  {
+   "tile": "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4",
+   "site": "grsm_tn",
+   "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4",
+   "epsg": 26917,
+   "x0": 265924.0,
+   "y0": 3949534.0,
+   "lidar_end": "2017-01-01T00:00:00Z",
+   "dtm_valid": 1.0,
+   "naip_year": 2012,
+   "naip_dates": [
+    "2012-06-27"
+   ],
+   "naip_items": [
+    "nc_m_3508328_ne_17_1_20120627_20120919",
+    "nc_m_3508328_nw_17_1_20120627_20120919",
+    "nc_m_3508329_nw_17_1_20120627_20120919",
+    "tn_m_3508320_se_17_1_20120627_20120911",
+    "tn_m_3508320_sw_17_1_20120627_20120911",
+    "tn_m_3508321_sw_17_1_20120627_20120911",
+    "tn_m_3508328_ne_17_1_20120627_20120911",
+    "tn_m_3508328_nw_17_1_20120627_20120911",
+    "tn_m_3508329_nw_17_1_20120627_20120911"
+   ],
+   "naip_gsd": [
+    1.0
+   ],
+   "rgb_valid": 1.0,
+   "lidar_naip_gap_years": 5,
+   "relief_within_crop_std_m": 53.35560989379883
+  },
+  {
+   "tile": "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10",
+   "site": "mlbs_va",
+   "dtm_item": "USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10",
+   "epsg": 26917,
+   "x0": 536275.0,
+   "y0": 4135496.0,
+   "lidar_end": "2018-01-01T00:00:00Z",
+   "dtm_valid": 0.9999924382716049,
+   "naip_year": 2012,
+   "naip_dates": [
+    "2012-09-11"
+   ],
+   "naip_items": [
+    "va_m_3708044_ne_17_1_20120911_20121010",
+    "va_m_3708044_nw_17_1_20120911_20121010",
+    "va_m_3708044_se_17_1_20120911_20121010",
+    "va_m_3708044_sw_17_1_20120911_20121010"
+   ],
+   "naip_gsd": [
+    1.0
+   ],
+   "rgb_valid": 0.9999994020061729,
+   "lidar_naip_gap_years": 6,
+   "relief_within_crop_std_m": 28.31304931640625
+  },
+  {
+   "tile": "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11",
+   "site": "mlbs_va",
+   "dtm_item": "USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11",
+   "epsg": 26917,
+   "x0": 544467.0,
+   "y0": 4143688.0,
+   "lidar_end": "2018-01-01T00:00:00Z",
+   "dtm_valid": 0.9822714506172839,
+   "naip_year": 2012,
+   "naip_dates": [
+    "2012-09-11"
+   ],
+   "naip_items": [
+    "va_m_3708036_ne_17_1_20120911_20121010",
+    "va_m_3708036_se_17_1_20120911_20121010",
+    "va_m_3708037_ne_17_1_20120911_20121010",
+    "va_m_3708037_nw_17_1_20120911_20121010",
+    "va_m_3708037_se_17_1_20120911_20121010",
+    "va_m_3708037_sw_17_1_20120911_20121010",
+    "va_m_3708044_ne_17_1_20120911_20121010",
+    "va_m_3708045_ne_17_1_20120911_20121010",
+    "va_m_3708045_nw_17_1_20120911_20121010"
+   ],
+   "naip_gsd": [
+    1.0
+   ],
+   "rgb_valid": 0.9999998456790123,
+   "lidar_naip_gap_years": 6,
+   "relief_within_crop_std_m": 27.457931518554688
+  },
+  {
+   "tile": "mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11",
+   "site": "mlbs_va",
+   "dtm_item": "USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11",
+   "epsg": 26917,
+   "x0": 536275.0,
+   "y0": 4143688.0,
+   "lidar_end": "2018-01-01T00:00:00Z",
+   "dtm_valid": 0.9999081018518519,
+   "naip_year": 2012,
+   "naip_dates": [
+    "2012-09-11"
+   ],
+   "naip_items": [
+    "va_m_3708036_ne_17_1_20120911_20121010",
+    "va_m_3708036_nw_17_1_20120911_20121010",
+    "va_m_3708036_se_17_1_20120911_20121010",
+    "va_m_3708036_sw_17_1_20120911_20121010",
+    "va_m_3708044_ne_17_1_20120911_20121010",
+    "va_m_3708044_nw_17_1_20120911_20121010"
+   ],
+   "naip_gsd": [
+    1.0
+   ],
+   "rgb_valid": 0.9999998456790123,
+   "lidar_naip_gap_years": 6,
+   "relief_within_crop_std_m": 26.27855682373047
+  }
+ ],
+ "rejected": [
+  {
+   "tile": "olympic_wa__USGS_LPC_WA_Olympic_Peninsula_2013_LAS_2015-dtm-2m-5-1",
+   "site": "olympic_wa",
+   "dtm_item": "USGS_LPC_WA_Olympic_Peninsula_2013_LAS_2015-dtm-2m-5-1",
+   "epsg": 26910,
+   "x0": 421440.0,
+   "y0": 5278687.0,
+   "lidar_end": "2014-01-25T00:00:00Z",
+   "dtm_valid": 0.6400019290123456,
+   "reason": "dtm_valid"
+  },
+  {
+   "tile": "olympic_wa__USGS_LPC_WA_Olympic_Peninsula_2013_LAS_2015-dtm-2m-5-0",
+   "site": "olympic_wa",
+   "dtm_item": "USGS_LPC_WA_Olympic_Peninsula_2013_LAS_2015-dtm-2m-5-0",
+   "epsg": 26910,
+   "x0": 421440.0,
+   "y0": 5270495.0,
+   "lidar_end": "2014-01-25T00:00:00Z",
+   "dtm_valid": 0.9233357445987654,
+   "reason": "dtm_valid"
+  },
+  {
+   "tile": "olympic_wa__USGS_LPC_WA_Olympic_Peninsula_C3_2017-dtm-2m-6-4",
+   "site": "olympic_wa",
+   "dtm_item": "USGS_LPC_WA_Olympic_Peninsula_C3_2017-dtm-2m-6-4",
+   "epsg": 26910,
+   "x0": 420266.0,
+   "y0": 5327906.0,
+   "lidar_end": "2017-01-01T00:00:00Z",
+   "dtm_valid": 0.9600313657407408,
+   "reason": "dtm_valid"
+  },
+  {
+   "tile": "olympic_wa__USGS_LPC_WA_Olympic_Peninsula_C3_2017-dtm-2m-6-5",
+   "site": "olympic_wa",
+   "dtm_item": "USGS_LPC_WA_Olympic_Peninsula_C3_2017-dtm-2m-6-5",
+   "epsg": 26910,
+   "x0": 420266.0,
+   "y0": 5316490.0,
+   "lidar_end": "2017-01-01T00:00:00Z",
+   "dtm_valid": 0.8540555555555556,
+   "reason": "dtm_valid"
+  },
+  {
+   "tile": "tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-6-5",
+   "site": "tahoe_ca",
+   "dtm_item": "USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-6-5",
+   "epsg": 26910,
+   "x0": 742403.0,
+   "y0": 4352308.0,
+   "lidar_end": "2018-01-01T00:00:00Z",
+   "dtm_valid": 0.9755280671296296,
+   "reason": "dtm_valid"
+  },
+  {
+   "tile": "grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-4",
+   "site": "grsm_tn",
+   "dtm_item": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-4",
+   "epsg": 26917,
+   "x0": 274116.0,
+   "y0": 3949534.0,
+   "lidar_end": "2017-01-01T00:00:00Z",
+   "dtm_valid": 0.979490875771605,
+   "reason": "dtm_valid"
+  }
+ ]
+}

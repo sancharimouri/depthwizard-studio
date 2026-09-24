@@ -1,0 +1,18 @@
+{
+ "id": "sancharimouri/terrain-relief-control",
+ "title": "terrain-relief-control",
+ "code_file": "terrain-relief-control.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": "true",
+ "enable_gpu": "true",
+ "enable_tpu": "false",
+ "enable_internet": "true",
+ "machine_shape": "",
+ "dataset_sources": [
+  "sancharimouri/terrain-relief-ctrl-bundle"
+ ],
+ "competition_sources": [],
+ "kernel_sources": [],
+ "model_sources": []
+}

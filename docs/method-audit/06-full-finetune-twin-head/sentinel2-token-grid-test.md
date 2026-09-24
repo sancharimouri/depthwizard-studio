@@ -1250,3 +1250,30 @@ re-examining.
 - Tiles are no longer taken in rule order past that point; nothing is chosen by result.
 - The decision rule is unchanged. With n = 8 the tile-bootstrap CI is wider, so a PASS needs a clearer effect.
 - The site mix is whatever the rule order yields by tile 8 (Tahoe, GRSM, MLBS), listed in the selection log.
+
+**Selection log (rule output; written before any training result)** → `data/terrain_relief_control/selection.json`.
+- **Rejections:**
+  - all 4 Olympic items fail DTM validity in the centred 7.2 km square (64 / 92 / 96 / 85%);
+  - Tahoe's third item didn't yield a tile;
+  - Front Range has no eligible item.
+- **Fetch incidents:**
+  - one stall after a network change: killed and restarted unchanged (`fetch_stalled.log`);
+  - one crash when the Planetary Computer SAS token cached at start expired: restarted, with the done tiles kept
+    (`fetch_token_expired.log`).
+  - Neither affects the data.
+
+| # | tile (site / 3DEP item) | NAIP year (GSD) | LiDAR–NAIP gap | median within-crop DTM std | flags |
+|---|---|---|---|---|---|
+| 1 | Tahoe / CA_NoCAL_Wildfires_B1_2018 5-5 | 2018 (0.6 → 1.0 m) | 0 y | 42.5 m | — |
+| 2 | Tahoe / CA_PlacerCo_2012 12-5 | 2012 (1.0 m) | 0 y | 39.3 m | — |
+| 3 | GRSM / TN_Eastern_2017 6-5 | 2012 (1.0 m) | 5 y | 36.0 m | **GRSM, gap** (DTM has 166/57,597 cells < 300 m, min 125 m: isolated pits, kept as pre-registered) |
+| 4 | GRSM / TN_Eastern_2017 4-4 | 2012 (1.0 m) | 5 y | 45.2 m | **GRSM, gap** |
+| 5 | GRSM / TN_Eastern_2017 5-4 | 2012 (1.0 m) | 5 y | 53.4 m | **GRSM, gap** |
+| 6 | MLBS / VA_FEMA_R3_SW_B_2018 14-10 | 2012 (1.0 m) | 6 y | 28.3 m | **gap** |
+| 7 | MLBS / VA_FEMA_R3_SW_B_2018 15-11 | 2012 (1.0 m) | 6 y | 27.5 m | **gap** |
+| 8 | MLBS / VA_FEMA_R3_SW_B_2018 14-11 | 2012 (1.0 m) | 6 y | 26.3 m | **gap** |
+
+- **6 of 8 tiles carry the date-gap flag**, and 3 of 8 the GRSM flag. The newer leaf-on NAIP years covered < 99% of the
+  tile, so the rule fell through to 2012.
+- Within-crop terrain relief (DTM std) is 26–53 m, i.e. real relief at the 600 m scale.
+- Execution is on Kaggle (P100), since the local MPS estimate was about 9 h (scoring-bound).

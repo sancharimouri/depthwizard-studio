@@ -1,0 +1,55 @@
+tahoe_ca__USGS_LPC_CA_NoCAL_Wildfires_B1_2018-dtm-2m-5-5: ok, NAIP 2018 [0.6], gap 0 y, median crop relief std 42.5 m
+tahoe_ca__CA_PlacerCo_2012-dtm-2m-12-5: ok, NAIP 2012 [1.0], gap 0 y, median crop relief std 39.3 m
+/Users/anweshasaha/projects/DepthWizard2/scripts/terrain_relief_positive_control.py:148: NodataShadowWarning: The dataset's nodata attribute is shadowing the alpha band. All masks will be determined by the nodata attribute
+  return v.read(bands), v.dataset_mask()
+grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5: NAIP 2016 covers 0.082, next year
+grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-5: ok, NAIP 2012 [1.0], gap 5 y, median crop relief std 36.0 m
+grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4: NAIP 2016 covers 0.500, next year
+grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4: NAIP 2020 covers 0.212, next year
+grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-4-4: ok, NAIP 2012 [1.0], gap 5 y, median crop relief std 45.2 m
+grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4: NAIP 2016 covers 0.472, next year
+grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4: NAIP 2020 covers 0.159, next year
+grsm_tn__USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-5-4: ok, NAIP 2012 [1.0], gap 5 y, median crop relief std 53.4 m
+mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-10: ok, NAIP 2012 [1.0], gap 6 y, median crop relief std 28.3 m
+mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11: NAIP 2020 covers 0.800, next year
+mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11: NAIP 2016 covers 0.796, next year
+/Users/anweshasaha/projects/DepthWizard2/scripts/terrain_relief_positive_control.py:207: RuntimeWarning: Mean of empty slice
+  fab30 = np.nanmean(dtm.reshape(h3, K, h3, K), axis=(1, 3)).astype(np.float32)
+mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-15-11: ok, NAIP 2012 [1.0], gap 6 y, median crop relief std 27.5 m
+mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11: NAIP 2020 covers 0.427, next year
+mlbs_va__USGS_LPC_VA_FEMA_R3_Southwest_B_2016_LAS_2018-dtm-2m-14-11: NAIP 2016 covers 0.426, next year
+Traceback (most recent call last):
+  File "rasterio/_base.pyx", line 311, in rasterio._base.DatasetBase.__init__
+  File "rasterio/_base.pyx", line 222, in rasterio._base.open_dataset
+  File "rasterio/_err.pyx", line 359, in rasterio._err.exc_wrap_pointer
+rasterio._err.CPLE_OpenFailedError: '/vsicurl/https://naipeuwest.blob.core.windows.net/naip/v002/va/2012/va_100cm_2012/37080/m_3708036_ne_17_1_20120911.tif?st=2026-09-23T14%3A17%3A22Z&se=2026-09-24T15%3A02%3A22Z&sp=rl&sv=2025-07-05&sr=c&skoid=9c8ff44a-6a2c-4dfb-b298-1c9212f64d9a&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2026-09-24T14%3A15%3A48Z&ske=2026-10-01T14%3A15%3A48Z&sks=b&skv=2025-07-05&sig=bETTso3TBr6kQ9SRIBycADRwu9twheZa2%2B/sTOMyOvk%3D' not recognized as being in a supported file format.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/terrain_relief_positive_control.py", line 284, in <module>
+    from scipy.stats import spearmanr
+    ^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/terrain_relief_positive_control.py", line 280, in main
+    model, hs, run_ = R.fit(0, [tid], args.steps, 4, dev)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/terrain_relief_positive_control.py", line 192, in fetch
+    a, mk = warp(h, epsg, T, [1, 2, 3], rs, nodata=0)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/terrain_relief_positive_control.py", line 149, in warp
+    return retry(go)
+           ^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/terrain_relief_positive_control.py", line 82, in retry
+    return fn()
+           ^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/scripts/terrain_relief_positive_control.py", line 143, in go
+    with rasterio.open(href) as s:
+         ^^^^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/env.py", line 463, in wrapper
+    return f(*args, **kwds)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/anweshasaha/projects/DepthWizard2/.venv/lib/python3.11/site-packages/rasterio/__init__.py", line 356, in open
+    dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "rasterio/_base.pyx", line 313, in rasterio._base.DatasetBase.__init__
+rasterio.errors.RasterioIOError: '/vsicurl/https://naipeuwest.blob.core.windows.net/naip/v002/va/2012/va_100cm_2012/37080/m_3708036_ne_17_1_20120911.tif?st=2026-09-23T14%3A17%3A22Z&se=2026-09-24T15%3A02%3A22Z&sp=rl&sv=2025-07-05&sr=c&skoid=9c8ff44a-6a2c-4dfb-b298-1c9212f64d9a&sktid=72f988bf-86f1-41af-91ab-2d7cd011db47&skt=2026-09-24T14%3A15%3A48Z&ske=2026-10-01T14%3A15%3A48Z&sks=b&skv=2025-07-05&sig=bETTso3TBr6kQ9SRIBycADRwu9twheZa2%2B/sTOMyOvk%3D' not recognized as being in a supported file format.
