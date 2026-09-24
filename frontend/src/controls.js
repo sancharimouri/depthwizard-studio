@@ -102,6 +102,9 @@ export function createControls(camera, domElement, target, homePosition = new TH
     controls.touches.three = CameraControls.ACTION.NONE;
 
     let autoRotating = true;
+    // Held off regardless of the idle timer (e.g. while the measurement tool
+    // is active — placing points on a slowly turning scene is fiddly).
+    let autoRotateHeld = false;
     let speedMultiplier = 1;
     let idleTimer = null;
 
@@ -169,7 +172,7 @@ export function createControls(camera, domElement, target, homePosition = new TH
         const delta = Math.min((now - lastFrameTime) / 1000, 0.1);
         lastFrameTime = now;
 
-        if (autoRotating) {
+        if (autoRotating && !autoRotateHeld) {
             // Positive, matching a rightward drag under the
             // azimuthRotateSpeed=-1 fix above (both increase azimuthAngle)
             // — old code's auto-rotate and drag shared the same sign too.
@@ -184,6 +187,10 @@ export function createControls(camera, domElement, target, homePosition = new TH
         autoRotating = true;
         clearTimeout(idleTimer);
         return nativeReset(false);
+    };
+
+    controls.setAutoRotateHold = function setAutoRotateHold(held) {
+        autoRotateHeld = !!held;
     };
 
     controls.setSpeedMultiplier = function setSpeedMultiplier(multiplier) {

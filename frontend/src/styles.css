@@ -2513,3 +2513,428 @@ kbd {
     accent-color: var(--accent-solid);
     cursor: pointer;
 }
+
+
+/* ============================================================
+   MEASUREMENT TOOL (measure-tool.js) — expanded Final Demo view.
+   SVG overlay above the canvas; points/lines are interactive only while
+   a measure mode is on (the overlay is inert in pointer mode).
+============================================================ */
+
+.measure-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.m-fill {
+    fill: rgba(255, 64, 64, 0.14);
+    stroke: none;
+}
+
+.m-seg-glow,
+.m-seg-line,
+.m-seg-hit {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.m-seg-glow {
+    stroke: rgba(255, 64, 64, 0.35);
+    stroke-width: 7;
+    filter: blur(2px);
+}
+
+.m-seg-line {
+    stroke: #ff4545;
+    stroke-width: 1.75;
+}
+
+/* Wide invisible stroke = the line's hover/right-click target. */
+.m-seg-hit {
+    stroke: transparent;
+    stroke-width: 14;
+}
+
+.measure-overlay.is-editable .m-seg-hit {
+    pointer-events: stroke;
+    cursor: pointer;
+}
+
+/* Line hover: only the LINE turns yellow; its points stay red. */
+.measure-overlay.is-editable .m-seg:hover .m-seg-line {
+    stroke: #ffd23f;
+}
+
+.measure-overlay.is-editable .m-seg:hover .m-seg-glow {
+    stroke: rgba(255, 210, 63, 0.4);
+}
+
+.m-pt-hit {
+    fill: transparent;
+}
+
+.m-pt-dot {
+    fill: #ff3b3b;
+    stroke: rgba(255, 255, 255, 0.9);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 4px rgba(255, 59, 59, 0.9));
+    transition: fill 0.1s ease;
+}
+
+.measure-overlay.is-editable .m-pt {
+    pointer-events: all;
+    cursor: grab;
+}
+
+/* Point hover (or drag): the POINT turns yellow — a click here would
+   select it again. */
+.measure-overlay.is-editable .m-pt:hover .m-pt-dot,
+.m-pt.is-dragging .m-pt-dot {
+    fill: #ffd23f;
+    filter: drop-shadow(0 0 5px rgba(255, 210, 63, 0.95));
+}
+
+.m-pt.is-dragging {
+    cursor: grabbing;
+}
+
+.measure-overlay.is-editable .m-pt.can-close:hover .m-pt-dot {
+    stroke: #ffd23f;
+    stroke-width: 3;
+}
+
+/* Custom measuring cursor (crosshair in a ring), distinct from the default
+   pointer and the camera's grab cursor. */
+.final-demo-canvas.is-measuring,
+.final-demo-canvas.is-measuring:active {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='6' fill='none' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='6' fill='none' stroke='%23ff4545' stroke-width='1.5'/%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' stroke='%23000' stroke-width='3'/%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") 12 12, crosshair;
+}
+
+.measure-readout {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: rgba(8, 8, 8, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #fff;
+
+    font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: normal;
+    text-transform: none; /* "m" (metres) must not become "M" */
+    white-space: nowrap;
+}
+
+.measure-readout.is-off {
+    color: rgba(255, 190, 170, 0.95);
+}
+
+.measure-readout[hidden],
+.measure-toast[hidden],
+.measure-menu[hidden],
+.measure-status[hidden],
+.measure-drop[hidden] {
+    display: none;
+}
+
+.measure-toast {
+    position: absolute;
+    z-index: 6;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: min(560px, calc(100% - 32px));
+
+    padding: 9px 14px;
+    border-radius: 8px;
+    background: rgba(var(--danger-bg-rgb), 0.95);
+    border: 1px solid rgba(var(--danger-text-rgb), 0.45);
+    color: rgb(var(--danger-text-rgb));
+
+    font-size: 13px;
+    text-align: center;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+}
+
+.measure-toast[data-kind="info"] {
+    background: rgba(var(--bg-rgb), 0.92);
+    border-color: rgba(var(--accent-rgb), 0.45);
+    color: rgb(var(--text-rgb));
+}
+
+/* Toolbar: the reference's pill style, bottom centre, expanded view only. */
+.measure-toolbar {
+    display: none;
+    position: absolute;
+    z-index: 4;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.final-demo-box.is-expanded .measure-toolbar {
+    display: flex;
+}
+
+.final-demo-box.is-animating .measure-toolbar,
+.final-demo-box.is-animating .measure-status {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.measure-pill-wrap {
+    position: relative;
+}
+
+.measure-pill {
+    min-height: 40px;
+    padding: 0 20px;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: #55704f;
+    color: #fff;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.measure-pill:hover,
+.measure-pill:focus-visible {
+    background: #62805b;
+    outline: none;
+}
+
+.measure-pill.is-active {
+    background: #6f9366;
+    box-shadow: 0 0 0 2px rgba(152, 255, 180, 0.55);
+}
+
+.measure-drop {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 230px;
+
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    border-radius: 10px;
+    background: rgba(12, 12, 11, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.measure-drop button {
+    padding: 9px 12px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+}
+
+.measure-drop button:hover:not(:disabled),
+.measure-drop button:focus-visible {
+    background: rgba(98, 217, 139, 0.16);
+    outline: none;
+}
+
+.measure-drop button[aria-checked="true"]::before {
+    content: "● ";
+    color: #62d98b;
+}
+
+.measure-drop button:disabled {
+    color: rgba(255, 255, 255, 0.35);
+    cursor: not-allowed;
+}
+
+.measure-drop-note {
+    padding: 4px 12px 6px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+    text-align: left;
+}
+
+/* Live measurement chip above the toolbar. */
+.measure-status {
+    position: absolute;
+    z-index: 4;
+    bottom: 76px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 700px);
+    min-width: 320px;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(10, 10, 9, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.88);
+
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    text-align: left;
+}
+
+.measure-status b {
+    color: #fff;
+    font-weight: 600;
+}
+
+.measure-status .ms-mode {
+    font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #62d98b;
+}
+
+.measure-status .ms-hint {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.measure-status .ms-undo {
+    margin-left: auto;
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: transparent;
+    color: #fff;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.measure-status .ms-undo:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+/* Right-click menu. */
+.measure-menu {
+    position: absolute;
+    z-index: 7;
+    min-width: 220px;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(12, 12, 11, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    text-align: left;
+}
+
+.measure-menu .mm-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.measure-menu .mm-row {
+    display: flex;
+    gap: 8px;
+}
+
+.measure-menu label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Geist Mono", ui-monospace, monospace;
+}
+
+.measure-menu input {
+    width: 76px;
+    padding: 5px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.measure-menu .mm-help {
+    margin: 6px 0;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 11px;
+}
+
+.measure-menu .mm-error {
+    margin: 4px 0;
+    color: rgb(255, 170, 150);
+    font-size: 11px;
+}
+
+.measure-menu .mm-error[hidden] {
+    display: none;
+}
+
+.measure-menu .mm-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.measure-menu button {
+    flex: 1;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.measure-menu .mm-danger {
+    background: rgba(var(--danger-bg-rgb), 0.9);
+    border-color: rgba(var(--danger-text-rgb), 0.4);
+    color: rgb(var(--danger-text-rgb));
+}
+
+.measure-menu > .mm-danger {
+    width: 100%;
+}

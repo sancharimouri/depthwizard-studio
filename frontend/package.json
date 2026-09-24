@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test \"tests/**/*.test.mjs\""
   },
   "dependencies": {
     "camera-controls": "^3.1.2",
