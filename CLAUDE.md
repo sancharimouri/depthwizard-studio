@@ -126,6 +126,8 @@ result/commit gaps flagged.
    - **GAMUS fine-tune:** pre-registered stop, because no GAMUS city is leaf-on.
    - **Sentinel-2 terrain RF residual (Song et al. 2026 features):** not adopted. It doesn't beat raw FABDEM, and it loses to a per-tile linear residual, whose own gain is offset-only.
    - **No product model adopted; the product stays DEM-only.** Details: `final-comparison.md` §7 and `docs/deliverables-audit.md`.
+12. **Sentinel-2 token-grid test** (2026-09-24). **Closed negative.** A token-preserving (R) input doesn't help on real
+   Sentinel-2 (ICESat-2 16/32, Holm p = 0.82), and synthetic R fails at 10 m. See the section of that name below.
 
 **None of the above touches the live demo.** Every method here — including Method 6's
 DFC2019 win — is research-track work, evaluated offline against DFC2019/Sentinel-2
@@ -336,6 +338,17 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
   - it fails at 8 m (0.631).
 - It is strongly asymmetric: coarse→fine beats fine→coarse.
 - Synthetic degradation, one city, one seed. Not a Sentinel-2 result.
+
+## Sentinel-2 token-grid test (2026-09-24; `docs/method-audit/06-full-finetune-twin-head/sentinel2-token-grid-test.md`)
+
+- **DFC2019 GSD is ≈ 0.3 m.** It was measured from image content (lane-line cycles, lane widths, trucks), because the tiles have no
+  geotransform. The earlier "0.5 m, US3D-verified" figure is wrong. The US3D spatial join's 0/50 was run at the wrong scale; that is an open item.
+- **Resolution-transfer's R finding does NOT extend to real Sentinel-2:**
+  - **Synthetic (DFC2019):** R fails at 10 m and 12 m (Pearson 0.610 / 0.551 vs. oracle 0.582, 0/4 metrics).
+  - **Real Sentinel-2:** identical crops and target, 39×39 vs. 5×5 tokens. R = P against ICESat-2 (16/32 tiles, Holm p = 0.82),
+    and both are about 6× worse than raw FABDEM.
+  - The earlier Method 6-on-Sentinel-2 run was already R-like by token count (36×36) and failed.
+- **Kaggle GPU run:** `scripts/s2_token_grid_phase_c_kaggle.py`, bit-exact CPU parity with `scripts/s2_token_grid_phase_c.py`.
 
 ## SIH26175 brief — evaluation criteria (standing reference; full text `docs/SIH26175_problem_statement.md`)
 

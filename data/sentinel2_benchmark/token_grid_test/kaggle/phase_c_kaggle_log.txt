@@ -1,0 +1,98 @@
+GPU: Tesla T4, torch 2.10.0+cu128
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 74/287 [00:00<00:00, 728.77it/s]Loading weights:  51%|█████     | 147/287 [00:00<00:00, 711.66it/s]Loading weights:  77%|███████▋  | 221/287 [00:00<00:00, 720.14it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 674.98it/s]
+[P_fold0] device=cuda:0 train crops 6144 (32 tiles) relief std 34.47 m, steps 600 x batch 4
+[P_fold0] step 1/600 loss 17.3844 2.41s/step ETA 24.0 min
+[P_fold0] step 100/600 loss 13.8080 0.07s/step ETA 0.6 min
+[P_fold0] step 200/600 loss 12.7821 0.05s/step ETA 0.4 min
+[P_fold0] step 300/600 loss 12.7881 0.05s/step ETA 0.3 min
+[P_fold0] step 400/600 loss 11.7888 0.05s/step ETA 0.2 min
+[P_fold0] step 500/600 loss 12.3793 0.05s/step ETA 0.1 min
+[P_fold0] step 600/600 loss 12.2697 0.05s/step ETA 0.0 min
+[P_fold0] done 33s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2877.60it/s]
+[P_fold1] device=cuda:0 train crops 6144 (32 tiles) relief std 32.81 m, steps 600 x batch 4
+[P_fold1] step 1/600 loss 2.6205 0.05s/step ETA 0.5 min
+[P_fold1] step 100/600 loss 10.8157 0.04s/step ETA 0.4 min
+[P_fold1] step 200/600 loss 12.2100 0.04s/step ETA 0.3 min
+[P_fold1] step 300/600 loss 12.2166 0.04s/step ETA 0.2 min
+[P_fold1] step 400/600 loss 13.3324 0.04s/step ETA 0.1 min
+[P_fold1] step 500/600 loss 11.0670 0.04s/step ETA 0.1 min
+[P_fold1] step 600/600 loss 12.2887 0.04s/step ETA 0.0 min
+[P_fold1] done 30s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  93%|█████████▎| 266/287 [00:00<00:00, 2656.48it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2692.76it/s]
+[P_fold2] device=cuda:0 train crops 6144 (32 tiles) relief std 34.50 m, steps 600 x batch 4
+[P_fold2] step 1/600 loss 33.7134 0.05s/step ETA 0.5 min
+[P_fold2] step 100/600 loss 12.6227 0.04s/step ETA 0.4 min
+[P_fold2] step 200/600 loss 12.9940 0.04s/step ETA 0.3 min
+[P_fold2] step 300/600 loss 12.4874 0.04s/step ETA 0.2 min
+[P_fold2] step 400/600 loss 13.9340 0.04s/step ETA 0.1 min
+[P_fold2] step 500/600 loss 11.9985 0.04s/step ETA 0.1 min
+[P_fold2] step 600/600 loss 13.4697 0.04s/step ETA 0.0 min
+[P_fold2] done 30s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  92%|█████████▏| 263/287 [00:00<00:00, 2626.13it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2680.42it/s]
+[P_fold3] device=cuda:0 train crops 6144 (32 tiles) relief std 34.72 m, steps 600 x batch 4
+[P_fold3] step 1/600 loss 14.8066 0.05s/step ETA 0.5 min
+[P_fold3] step 100/600 loss 15.4685 0.04s/step ETA 0.4 min
+[P_fold3] step 200/600 loss 13.5565 0.04s/step ETA 0.3 min
+[P_fold3] step 300/600 loss 13.0197 0.04s/step ETA 0.2 min
+[P_fold3] step 400/600 loss 12.8497 0.04s/step ETA 0.1 min
+[P_fold3] step 500/600 loss 10.0584 0.04s/step ETA 0.1 min
+[P_fold3] step 600/600 loss 11.3061 0.04s/step ETA 0.0 min
+[P_fold3] done 30s
+GPU peak memory 2.57 GiB
+GPU: Tesla T4, torch 2.10.0+cu128
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  93%|█████████▎| 267/287 [00:00<00:00, 2664.16it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2703.69it/s]
+[R_fold0] device=cuda:0 train crops 6144 (32 tiles) relief std 34.47 m, steps 600 x batch 4
+[R_fold0] step 1/600 loss 27.5273 6.09s/step ETA 60.8 min
+[R_fold0] step 100/600 loss 14.5945 0.84s/step ETA 7.0 min
+[R_fold0] step 200/600 loss 12.7738 0.82s/step ETA 5.5 min
+[R_fold0] step 300/600 loss 12.7626 0.81s/step ETA 4.1 min
+[R_fold0] step 400/600 loss 12.0925 0.81s/step ETA 2.7 min
+[R_fold0] step 500/600 loss 11.9812 0.81s/step ETA 1.3 min
+[R_fold0] step 600/600 loss 11.4084 0.81s/step ETA 0.0 min
+[R_fold0] done 601s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  94%|█████████▎| 269/287 [00:00<00:00, 2673.04it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2758.71it/s]
+[R_fold1] device=cuda:0 train crops 6144 (32 tiles) relief std 32.81 m, steps 600 x batch 4
+[R_fold1] step 1/600 loss 14.1365 0.78s/step ETA 7.8 min
+[R_fold1] step 100/600 loss 11.6485 0.80s/step ETA 6.7 min
+[R_fold1] step 200/600 loss 12.2395 0.80s/step ETA 5.4 min
+[R_fold1] step 300/600 loss 12.1243 0.80s/step ETA 4.0 min
+[R_fold1] step 400/600 loss 13.1315 0.81s/step ETA 2.7 min
+[R_fold1] step 500/600 loss 10.5553 0.81s/step ETA 1.3 min
+[R_fold1] step 600/600 loss 11.0193 0.81s/step ETA 0.0 min
+[R_fold1] done 597s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  89%|████████▉ | 255/287 [00:00<00:00, 2549.30it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2645.04it/s]
+[R_fold2] device=cuda:0 train crops 6144 (32 tiles) relief std 34.50 m, steps 600 x batch 4
+[R_fold2] step 1/600 loss 42.4599 0.79s/step ETA 7.8 min
+[R_fold2] step 100/600 loss 13.5039 0.80s/step ETA 6.7 min
+[R_fold2] step 200/600 loss 13.0198 0.80s/step ETA 5.3 min
+[R_fold2] step 300/600 loss 12.6356 0.80s/step ETA 4.0 min
+[R_fold2] step 400/600 loss 14.4779 0.80s/step ETA 2.7 min
+[R_fold2] step 500/600 loss 12.5480 0.80s/step ETA 1.3 min
+[R_fold2] step 600/600 loss 14.3385 0.80s/step ETA 0.0 min
+[R_fold2] done 590s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights:  90%|████████▉ | 257/287 [00:00<00:00, 2546.00it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 2611.59it/s]
+[R_fold3] device=cuda:0 train crops 6144 (32 tiles) relief std 34.72 m, steps 600 x batch 4
+[R_fold3] step 1/600 loss 16.9396 0.80s/step ETA 7.9 min
+[R_fold3] step 100/600 loss 16.1381 0.80s/step ETA 6.7 min
+[R_fold3] step 200/600 loss 13.5542 0.80s/step ETA 5.3 min
+[R_fold3] step 300/600 loss 13.0269 0.80s/step ETA 4.0 min
+[R_fold3] step 400/600 loss 12.9143 0.80s/step ETA 2.7 min
+[R_fold3] step 500/600 loss 10.3356 0.80s/step ETA 1.3 min
+[R_fold3] step 600/600 loss 11.7127 0.80s/step ETA 0.0 min
+[R_fold3] done 594s
+GPU peak memory 6.93 GiB
+{
+ "n_tiles": 32,
+ "relief_pearson_mean": {
+  "P": 0.25562782487444863,
+  "R": 0.28030795399993125
+ },
+ "relief_var_ratio_mean": {
+  "P": 0.7312687398551816,
+  "R": 1.4840683770293595
+ },
+ "verdict_R_helps": false
+}
+icesat2 {"n_tiles_scored": 32, "P_mean_rmse": 16.60213118014128, "R_mean_rmse": 16.537492219724342, "R_minus_P_mean": -0.06463896041694295, "R_minus_P_ci95": [-0.4202656984846598, 0.21966340708239457], "R_wins": 16, "wilcoxon_p": 0.7052542311139405, "ice_se_flat_mean_rmse": 17.275451522056215, "ice_se_fab_mean_rmse": 2.8549946507866473, "wilcoxon_p_holm": 0.8209270983934402}
+dem_heldout {"n_tiles_scored": 32, "P_mean_rmse": 17.705530900079822, "R_mean_rmse": 17.640625173661128, "R_minus_P_mean": -0.06490572641869494, "R_minus_P_ci95": [-0.409394335712731, 0.21416250407591714], "R_wins": 13, "wilcoxon_p": 0.4104635491967201, "dem_se_flat_mean_rmse": 18.30099001696963, "wilcoxon_p_holm": 0.8209270983934402}

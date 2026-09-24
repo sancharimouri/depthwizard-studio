@@ -71,6 +71,16 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 - **Strongly asymmetric, coarse→fine better** everywhere. E.g. R at 5 m: 0.687 (5 m-trained at 0.3 m) vs. 0.321 (native model at 5 m).
 - Synthetic degradation of one WorldView-3 city. This is **not** evidence that real 10 m Sentinel-2 supports this.
 
+**Sentinel-2 token-grid test (2026-09-24, `06-full-finetune-twin-head/sentinel2-token-grid-test.md`; pre-registered). The R finding does NOT extend to real Sentinel-2.**
+- **DFC2019 GSD re-derived from tile content (lane cycles, lane widths, trucks): ≈ 0.3 m.** The "0.5 m verified" figure is retracted.
+  The US3D spatial join (0/50) was rasterised at the wrong scale, so it is not a clean negative; that is an open item.
+- **Phase A.** Method 4's three Sentinel-2 attempts had a frozen DAv2 (37×37 tokens, 270 m per token) and are uninformative about R.
+  Method 6 staged on Sentinel-2 had 36×36 tokens (R-like by count) and still failed ICESat-2 (2/25).
+- **Phase B (synthetic).** R fails at 10 m and 12 m (0/4 metrics). Pearson for 5 / 8 / 10 / 12 m is 0.687 / 0.631 / 0.610 / 0.551 vs. the oracle's 0.582.
+- **Phase C (real Sentinel-2, Kaggle T4).** Identical 600 m crops and FABDEM-30 m target; only the token geometry differs.
+  R and P tie: ICESat-2 RMSE 16.54 vs. 16.60 m, 16/32 tiles, Holm p = 0.82. Both are about 6× worse than raw FABDEM (2.86 m).
+- **Phase D:** not triggered.
+
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
 - **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:
   - MAE 3.130 vs. 3.474; RMSE **4.583 vs. 4.426**; Pearson 0.638 vs. 0.491; Spearman 0.583 vs. 0.425.
@@ -204,7 +214,7 @@ per-point geoid, R4 offset-guarded; `data/sentinel2_benchmark/dem_baselines_32/s
 ## 3. Long-term plan — open items, priority order
 
 **New, 2026-09-24 (resolution transfer):**
-- **0d.** If coarse-imagery training is pursued, test it on **real** coarse sensors, not synthetic degradation, with a token-preserving input protocol (R), several seeds, and the 5–10 m range. The synthetic R curve bends between 5 and 8 m.
+- ~~**0d.**~~ **CLOSED negative for Sentinel-2 (2026-09-24, `06-full-finetune-twin-head/sentinel2-token-grid-test.md`).** Synthetic R fails at 10 and 12 m. On real Sentinel-2, R (39×39 tokens) = P (5×5): ICESat-2 16/32 tiles, Holm p = 0.82. Don't reopen for 10 m imagery. A real 2–5 m sensor is still untested.
 
 **New, 2026-09-23 (07):**
 - **0a. Leaf-on, tall-forest supervision for the canopy ceiling.** GAMUS is leaf-off, so it can't supply it.
@@ -465,3 +475,16 @@ to match.
 - Coarse→fine beats fine→coarse at every GSD, in both protocols. Monotonic, no pre-registered cliff at or below 5 m.
 - The numbers here were verified against `data/dfc2019/experiments/resolution_transfer/matrix_summary.json`.
 
+
+**Session footer: 2026-09-24, "Sentinel-2 token-grid test"** (record: `docs/method-audit/06-full-finetune-twin-head/sentinel2-token-grid-test.md`)
+- **Housekeeping.** DFC2019 GSD ≈ 0.3 m, measured from image content. The 0.5 m figure is retracted, with a dated correction in `stage0-gates/sparse-lidar-feasibility.md`.
+- **Phase A.** Token-grid math for 4 prior Sentinel-2 attempts. A4 (Method 6) was R-like by count and failed.
+- **Phase B.** R10 / R12 fail rule 1; the stop condition fired.
+- **Phase C** (Kaggle T4; the output was validated locally before acceptance).
+  - The model-free fields match an independent recompute exactly, and the analysis re-run reproduces `summary.json` exactly.
+  - R does not help: 16/32 tiles, p_Holm = 0.82.
+- **Phase D:** not triggered. Open item 0d is closed.
+- **Repo housekeeping.**
+  - `kaggle/`, `kaggle_phase2.5_package/` and `scripts 2/` were consolidated: scripts went to `scripts/` and manuals to `data/kaggle_bundles/` (1.86 GB freed; `data/REGENERATION.md`).
+  - The Phase C Kaggle export was deleted after validation. Its script is kept as `scripts/s2_token_grid_phase_c_kaggle.py`.
+- The numbers here were checked against `data/dfc2019/experiments/resolution_transfer/matrix_summary.json` and `data/sentinel2_benchmark/token_grid_test/kaggle/summary.json`.

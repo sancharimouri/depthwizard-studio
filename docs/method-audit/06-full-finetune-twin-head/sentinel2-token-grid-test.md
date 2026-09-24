@@ -270,3 +270,89 @@ terrain relief against ICESat-2, not DFC2019 AGL. Real data can differ from the 
 would now be surprising.
 
 **Caveats:** one seed (42); one WorldView-3 city; synthetic area-average degradation, not a real sensor PSF.
+
+## 2026-09-24 — Phase C result (Kaggle T4, primary per the run-selection rule): **R does not help. Pre-registered bar not met.**
+
+**The run.** `s2_token_grid_phase_c_kaggle.py` on a Tesla T4 (torch 2.10.0+cu128, `cuda:0`), 8 trainings of 600 steps ×
+batch 4. P took about 30 s per fold and R about 10 min per fold; peak GPU memory was 2.6 GiB (P) and 6.9 GiB (R).
+Outputs are in `data/sentinel2_benchmark/token_grid_test/kaggle/`: `eval_{P,R}_fold{0-3}.json`, `summary.json` and
+`phase_c_kaggle_log.txt`.
+
+**Integrity checks, done locally before accepting the output:**
+- **Settings:** all 8 folds have steps 600 / batch 4 / 6,144 training crops / 32 tiles. Fold 0's `height_scale` of
+  34.47 m equals the local value.
+- **Values:** 0 non-finite values.
+- **Model-free fields** (the flat and FABDEM baselines' squared errors and the pixel and photon counts) were recomputed
+  independently from the local cache for all 256 tile-folds. The counts are exact, and the maximum relative
+  difference is **0.0**. The P and R files also agree with each other on these fields.
+- **Analysis:** the local `analyze` re-run on the Kaggle fold files reproduces Kaggle's `summary.json` with a maximum
+  absolute difference of **0**.
+
+**Result (32 tiles; each tile pooled over its 4 held-out quadrants; RMSE in m):**
+
+| Check | Arm P (5×5 tokens) | Arm R (39×39 tokens) | R − P [95% bootstrap CI] | R wins | Wilcoxon p (Holm) | Flat crop mean | FABDEM (context) |
+|---|---|---|---|---|---|---|---|
+| **ICESat-2 ground (primary)** | 16.602 | 16.538 | −0.065 [−0.420, +0.220] | **16/32** | 0.705 (**0.821**) | 17.276 | **2.855** |
+| DEM held-out, 30 m (secondary) | 17.706 | 17.641 | −0.065 [−0.409, +0.214] | 13/32 | 0.411 (0.821) | 18.301 | — |
+
+Within-crop relief (descriptive):
+- Pearson: P 0.256, R 0.280.
+- Variance ratio: P 0.73, R 1.48, i.e. R over-disperses.
+
+**The pre-registered verdict is `verdict_R_helps = false`.** All three parts of the rule fail:
+- R wins exactly half the tiles, not a majority;
+- the mean difference is 0.06 m, with a CI centred on zero;
+- the Holm-adjusted p is 0.82.
+
+With identical crops, target, tiles, folds, steps and device, preserving a large token grid by upsampling gives **no
+measurable benefit** over the true-pixel-count grid on real Sentinel-2.
+
+**Context (not tested; honest framing):**
+- Both arms learn only a little relief: they beat the flat crop mean by about 0.7 m of RMSE, and are **about 6× worse
+  than raw FABDEM** (2.86 m).
+- Learning 600 m-scale terrain relief from 10 m RGB is weak in either geometry. This agrees with every earlier
+  Sentinel-2 result: the product stays DEM-only.
+
+**Post-hoc (labelled; not part of the rule):**
+- By landscape, R − P on ICESat-2 is hilly −0.66 m (R wins 5/8), agricultural +0.17 (3/8), coastal +0.17 (4/8) and
+  urban +0.06 (4/8).
+- The only direction favouring R is hilly terrain, on 8 tiles. It is not significant, and it is not a finding.
+
+**Consistency with Phase B's prediction.** Phase B's stop condition predicted no R benefit at about 10 m, and Phase C
+agrees. Synthetic and real evidence point the same way.
+
+**Local run: not executed.** It was put on hold before starting, per the user, and then cancelled once the Kaggle
+output was validated. There is therefore no cross-device replication.
+
+## 2026-09-24 — Phase D: **not triggered**
+
+Phase C did not clear its bar, so per the pre-registration Phase D doesn't run. For the record, data starvation
+(32 tiles) was held constant in Phase C, not resolved. It remains a separate, untested variable, but there is now no
+positive geometry result that would make it the next question to test.
+
+## Conclusions (whole session)
+
+1. **Housekeeping.** DFC2019's native GSD is ≈ 0.3 m (0.30–0.34), measured from lane-line cycles, lane widths and
+   truck lengths. The 0.5 m figure is retracted (dated correction in `sparse-lidar-feasibility.md`). The US3D spatial
+   join's 0/50 negative is not clean, because it was rasterised at the wrong scale; that is an open item.
+   Resolution-transfer labels are not materially affected.
+2. **Phase A.** Of the four prior Sentinel-2 attempts:
+   - A1–A3 (Method 4) had a frozen 37×37-token DAv2 (270 m per token) and a trained 9 × 9 px CNN. They say nothing
+     about R.
+   - A4 (Method 6 staged on Sentinel-2) was R-like by token count (36×36) and **failed ICESat-2 2/25**. That is direct
+     evidence against "a large token grid fixes Sentinel-2". It was P-like in pixels per token (14).
+3. **Phase B.** Synthetic R fails rule 1 at 10 m and 12 m (0/4 metrics each). Native-eval Pearson for 5 / 8 / 10 / 12 m
+   is 0.687 / 0.631 / 0.610 / 0.551 against the oracle's 0.582. The stop condition fired.
+4. **Phase C.** On real Sentinel-2 with everything held constant except token geometry, R = P: ICESat-2 16/32 tiles,
+   Holm p = 0.82, Δ −0.06 m [−0.42, +0.22].
+5. **Bottom line.** Resolution-transfer's token-grid finding **does not extend to real Sentinel-2**. Both routes are
+   now closed: the count-only reading (A4) and the upsampling reading (Phase C). Open item 0d in HANDOFF is closed
+   negative for Sentinel-2.
+
+**Kaggle export cleanup.**
+- The bundle folder, zip and manual (`data/kaggle_bundles/s2_token_grid_c/`) were deleted after the output was
+  validated, freeing about 360 MB. The tile cache was hard-linked and remains in `token_grid_test/cache/`.
+- The script is kept as `scripts/s2_token_grid_phase_c_kaggle.py` (bit-exact CPU parity with
+  `scripts/s2_token_grid_phase_c.py`; see the "Phase C: Kaggle GPU build" entry above).
+- To re-stage it: `bundle_c/` = that script + `token_grid_test/cache/*.npz` + the DAv2-Small HF snapshot
+  (`config.json`, `model.safetensors`) in `dav2_small/`; then `zip -0 -r`.
