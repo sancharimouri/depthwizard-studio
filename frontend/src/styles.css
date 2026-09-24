@@ -2302,3 +2302,204 @@ kbd {
         white-space: normal;
     }
 }
+
+
+/* ============================================================
+   FINAL DEMO — EXPANDED VIEW. When generation finishes, box 8 pops out to
+   fill the whole window (in place: position fixed, so it keeps
+   #page-workbench's theme variables and scoped styles; no ancestor has a
+   transform/filter, so fixed is relative to the viewport). A native
+   Fullscreen API request can't be used here because the pop-up is not
+   triggered by a user gesture. Back returns it to its grid cell.
+============================================================ */
+
+.final-demo-box.is-expanded {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+
+    border: none;
+    border-radius: 0;
+    background: rgb(var(--bg-rgb));
+
+    opacity: 1;
+    transform: none;
+    animation: final-demo-pop 0.24s ease-out;
+}
+
+@keyframes final-demo-pop {
+    from { opacity: 0; transform: scale(0.985); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .final-demo-box.is-expanded {
+        animation: none;
+    }
+}
+
+/* Same full control menu the native-fullscreen view shows. */
+.final-demo-box.is-expanded .final-demo-left-rail,
+.final-demo-box.is-expanded .final-demo-right-rail {
+    display: flex;
+}
+
+.final-demo-box.is-expanded .final-demo-bottom-right {
+    display: block;
+    position: absolute;
+    right: 10px;
+    bottom: 44px;
+}
+
+/* The left rail sits below the Back/Close bar in the upper-left corner;
+   the ⛶ toggle is redundant while expanded. */
+.final-demo-box.is-expanded .final-demo-left-rail {
+    top: 64px;
+    max-height: calc(100% - 74px);
+}
+
+.final-demo-box.is-expanded .final-demo-fullscreen-toggle {
+    display: none;
+}
+
+.final-demo-expanded-bar {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 4;
+
+    display: flex;
+    gap: 8px;
+}
+
+.final-demo-expanded-bar[hidden] {
+    display: none;
+}
+
+.expanded-bar-button {
+    height: 36px;
+    padding: 0 14px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.18);
+    border-radius: 8px;
+
+    background: rgba(var(--bg-rgb), 0.78);
+    backdrop-filter: blur(10px);
+    color: rgba(var(--text-rgb), 0.85);
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.expanded-bar-button:hover,
+.expanded-bar-button:focus-visible {
+    background: rgba(var(--accent-rgb), 0.15);
+    border-color: rgba(var(--accent-rgb), 0.45);
+    color: rgb(var(--text-rgb));
+    outline: none;
+}
+
+.expanded-bar-close:hover,
+.expanded-bar-close:focus-visible {
+    background: rgba(var(--danger-bg-rgb), 0.85);
+    border-color: rgba(var(--danger-text-rgb), 0.45);
+    color: rgb(var(--danger-text-rgb));
+}
+
+
+/* ============================================================
+   CLOSE CONFIRMATION — reuses the upload modal's backdrop/panel;
+   sits above the expanded final-demo view (z 200).
+============================================================ */
+
+.confirm-modal {
+    z-index: 300;
+}
+
+.confirm-panel {
+    width: min(400px, calc(100vw - 32px));
+    text-align: left;
+}
+
+.confirm-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgb(var(--text-rgb));
+    margin-bottom: 8px;
+}
+
+.confirm-body {
+    margin: 0 0 18px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(var(--text-rgb), 0.72);
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.confirm-button {
+    flex: 1;
+    padding: 10px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.16);
+    border-radius: 8px;
+
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.8);
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.confirm-button:hover,
+.confirm-button:focus-visible {
+    border-color: rgba(var(--text-rgb), 0.35);
+    color: rgb(var(--text-rgb));
+    outline: none;
+}
+
+.confirm-danger {
+    background: rgba(var(--danger-bg-rgb), 0.9);
+    border-color: rgba(var(--danger-text-rgb), 0.35);
+    color: rgb(var(--danger-text-rgb));
+}
+
+.confirm-danger:hover,
+.confirm-danger:focus-visible {
+    border-color: rgba(var(--danger-text-rgb), 0.7);
+}
+
+.confirm-dont-ask {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+
+    font-size: 12px;
+    color: rgba(var(--text-rgb), 0.62);
+    cursor: pointer;
+    user-select: none;
+}
+
+.confirm-dont-ask input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--accent-solid);
+    cursor: pointer;
+}

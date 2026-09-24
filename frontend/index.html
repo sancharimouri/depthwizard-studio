@@ -897,6 +897,17 @@
                     >
                         ⛶
                     </button>
+
+                    <!-- Shown only while the box is expanded to fill the window
+                         (auto-expands when the generation pipeline finishes). -->
+                    <div id="final-demo-expanded-bar" class="final-demo-expanded-bar" hidden>
+                        <button id="final-demo-back" class="expanded-bar-button" type="button" title="Back to the grid">
+                            ← Back
+                        </button>
+                        <button id="final-demo-close" class="expanded-bar-button expanded-bar-close" type="button" title="Close and clear this scene">
+                            ✕ Close
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -1015,6 +1026,40 @@
 
             </div>
 
+        </div>
+
+
+        <!-- Close confirmation (final-demo expanded view → ✕ Close) -->
+
+        <div
+            id="close-confirm-modal"
+            class="upload-modal confirm-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="close-confirm-title"
+            aria-describedby="close-confirm-body"
+            hidden
+        >
+            <div id="close-confirm-backdrop" class="upload-backdrop"></div>
+
+            <div class="upload-panel confirm-panel">
+                <div id="close-confirm-title" class="confirm-title">Close without saving?</div>
+
+                <p id="close-confirm-body" class="confirm-body">
+                    This scene isn’t saved. Closing clears everything on this page — the location, the selected
+                    scene and all generated results — and all work will be lost.
+                </p>
+
+                <div class="confirm-actions">
+                    <button id="close-confirm-cancel" class="confirm-button" type="button">Cancel</button>
+                    <button id="close-confirm-ok" class="confirm-button confirm-danger" type="button">Close</button>
+                </div>
+
+                <label class="confirm-dont-ask">
+                    <input id="close-confirm-dont-ask" type="checkbox" />
+                    Don’t show this message again
+                </label>
+            </div>
         </div>
 
 

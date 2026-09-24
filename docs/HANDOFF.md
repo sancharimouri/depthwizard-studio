@@ -329,6 +329,16 @@ terrain.** None of the research-track work is deployed into it.
   They now say DEM elevation, no learned correction, and Sentinel-2 corrections tested and not adopted.
 - Verified in headless Chrome: all pages and flows work, with 0 JS exceptions (the only console error is the pre-existing favicon 404).
 
+**Workbench final-demo expanded view (2026-09-24, user-directed):**
+- When the generation pipeline finishes, box 8 (the final 3D demo) pops out to fill the window. It is an in-page
+  `position: fixed` overlay, not the native Fullscreen API, because the pop-up isn't triggered by a user gesture.
+- Upper-left bar:
+  - **← Back** returns it to its grid cell with the state intact. ⛶ re-opens it.
+  - **✕ Close** asks "Close without saving?" with Cancel / Close and a "Don't show this message again" checkbox. The checkbox
+    is saved only when you confirm (localStorage key `dw2.skipCloseConfirm`, try/catch-guarded).
+  - Confirming resets every Workbench field and reloads to a fresh, empty Workbench.
+- 28/28 headless checks pass, with 0 JS exceptions.
+
 - **Labels (2026-09-23, text only):** the header reads "Satellite → 3D Terrain Visualization"
   (was "… Metric Terrain Reconstruction"). The "METRIC ELEVATION" layer/panel labels now read
   "DEM ELEVATION", and the captions read "DEM elevation from <source>". Verified in the
