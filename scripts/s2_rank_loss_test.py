@@ -179,7 +179,8 @@ def analyze(args):
         for r in json.loads((C.OUT / "kaggle" / f"eval_P_fold{f}.json").read_text())["records"]:
             x = pc.setdefault(r["tile"], [0.0, 0])
             x[0] += r["ice_se"]; x[1] += r["ice_n"]
-    phaseC_P = np.array([np.sqrt(pc[t][0] / pc[t][1]) for t in tiles])
+    # only meaningful on the Indian benchmark tiles (e.g. absent for the Brazil benchmark)
+    phaseC_P = np.array([np.sqrt(pc[t][0] / pc[t][1]) for t in tiles]) if all(t in pc for t in tiles) else None
 
     S = {"n_tiles": len(tiles), "checks": {}, "slopes": {
         "model_median": float(D[D.who == "model"].slope.median()), "oracle_median": float(D[D.who == "oracle"].slope.median()),
@@ -201,10 +202,11 @@ def analyze(args):
     ic["flat_mean_rmse"] = float(rm("model", "ice_se_flat", "ice_n").mean())
     ic["fabdem_mean_rmse"] = float(rm("model", "ice_se_fab", "ice_n").mean())
     M = rm("model", "ice_se", "ice_n")
-    ic["context_phaseC_armP_mean_rmse"] = float(phaseC_P.mean())
-    ic["context_rank_minus_phaseC_P"] = {"mean": float((M - phaseC_P).mean()), "ci95": boot(M - phaseC_P),
-                                        "rank_wins": int((M < phaseC_P).sum()),
-                                        "wilcoxon_p": float(wilcoxon(M, phaseC_P).pvalue)}
+    if phaseC_P is not None:
+        ic["context_phaseC_armP_mean_rmse"] = float(phaseC_P.mean())
+        ic["context_rank_minus_phaseC_P"] = {"mean": float((M - phaseC_P).mean()), "ci95": boot(M - phaseC_P),
+                                            "rank_wins": int((M < phaseC_P).sum()),
+                                            "wilcoxon_p": float(wilcoxon(M, phaseC_P).pvalue)}
     S["verdict_real_signal"] = bool(ic["model_wins"] > len(tiles) / 2 and ic["model_minus_oracle"] < 0
                                     and ic["wilcoxon_p_holm"] < 0.05)
     (OUT / "summary.json").write_text(json.dumps(S, indent=1))

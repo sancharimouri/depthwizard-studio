@@ -888,3 +888,61 @@ empirically, whatever the mechanism.
   the hilly terrain where shading cues matter most.
 - Non-selected tiles' raw fetches are kept; they are removed from the arm caches.
 - Everything else, including the decision rule, is unchanged. n = 16 paired tiles.
+
+## 2026-09-24 — DFC2019 positive control for the rank-loss / raw-Spearman methodology: pre-registration (committed before training; only a 5-step smoke test run so far)
+
+**Question.** Can this exact pipeline detect strong signal where it's known to exist? If it can't, every near-zero
+result on coarse sensors (Sentinel-2 0.134, Landsat 0.116, and the pending L1C/CBERS runs) is a blind spot of the test,
+not an absence of signal.
+
+**GSD, confirmed.** DFC2019 is **≈ 0.3 m** (Housekeeping section above, measured from tile content). Tiles are
+1024 × 1024 px and are used at native resolution. There's no blurring, resampling or synthetic degradation; the RGB is
+the same uint8 tiles Method 6 trains on.
+
+**Design** (`scripts/dfc2019_rank_positive_control.py`). It follows the Landsat pattern: only the cache contents change.
+Everything else is imported unchanged:
+- `s2_rank_loss_test`: `fit`, `calibrated_eval`, `scores_all`, `oracle_scores`, `analyze`;
+- `s2_rank_raw_spearman`: `cells_for_fold`, `summarize`, scored on the same trained models with no re-fit.
+
+That keeps the arm-P geometry (60 px crop → 70 px pad → 5 × 5 tokens), Method 4 v2 `rank_pair_loss`, 600 × 4 steps,
+seed 42, 4 quadrant folds, per-tile post-hoc slope calibration and `MIN_CELLS` = 10.
+
+- **Truth = DFC2019 dense LiDAR AGL** (`*_AGL.tif`; invalid means non-finite or < 0) in every slot the pipeline reads:
+  - `fab30` (training and calibration target, the "30 m grid" slot) = the 3 × 3-block nanmean of AGL;
+  - `fab10` = AGL;
+  - the "ICESat-2 cells" = the centre pixel of every 3 × 3 block with valid AGL. That is a stride-3 subsample of the
+    dense truth, about 400 cells per crop, used for tractability.
+- **Oracle raw signal:** frozen DAv2-Large whole-tile depth (`data/dfc2019/experiments/dav2_baseline/depth`, the input
+  of every DFC2019 oracle), calibrated identically.
+- **Inclusion (data availability only, fixed before training):**
+  - a tile is used only if every quadrant keeps **≥ 4** crops under `load_crops`' fully-finite-target rule;
+  - that gives **31/50 tiles (26 JAX, 5 OMA)**, listed in `inclusion.csv`;
+  - several OMA tiles have large invalid AGL areas, and one keeps 0 crops, which the unchanged pipeline can't score.
+
+**Reported, in the existing table format:**
+1. Raw within-crop Spearman (primary), rank model vs AGL. DAv2-Large raw and the calibration-implied r are alongside.
+2. Calibrated RMSE vs AGL, against the identically calibrated per-tile oracle (`analyze`'s `icesat2` slot = dense-AGL
+   cells, and `dem_heldout` = the 3 × 3-block AGL), with wins, Holm p and `verdict_real_signal`.
+
+**Decision rule.**
+- **PASS (the methodology can detect signal):** the rank model's mean within-crop Spearman is **≥ 0.30** *and* its 95%
+  tile-bootstrap CI lower bound is **> 0.134** (the Sentinel-2 rank-model value).
+  - It is labelled a **strong pass** if the mean is ≥ 0.50, approaching FABDEM's 0.631 on Sentinel-2.
+  - On a pass, the coarse-sensor near-zero results stand as genuine absence of detectable signal *for this recipe*.
+- **FAIL:** anything else. The pipeline can't detect signal even where it's known to exist, and every prior
+  Landsat/CBERS/L1C "no signal" verdict is **inconclusive, not negative**, until that is resolved. This will be reported
+  as plainly as a pass.
+- The calibrated-RMSE result is reported but doesn't change PASS/FAIL. The pre-registered question is about the raw
+  ranking measure.
+
+**Caveats, stated in advance.**
+- **Crop size.** The token geometry is unchanged in *pixels*, so a crop here is 60 px = **18 m**, not 600 m. "Within-crop"
+  means ranking roof versus ground versus tree inside an 18 m window.
+- **Target.** The target is AGL (object height), not terrain. That is the quantity DFC2019 has dense truth for and the
+  one where signal is established (Methods 4 and 6).
+- **Reference slot.** The truth sits in the "FABDEM" reference slot, so that reference is trivially perfect
+  (ρ = 1, RMSE 0). The 0.631 comparison is to Sentinel-2's FABDEM value, not to a same-domain reference.
+- **Flat crops.** Crops where the truth has zero range (for example all ground) are excluded by the existing
+  `crop_rho` rule.
+- **Tiles.** The tiles are 1024 px, and the unchanged `crop_origins` (built for 1000 px) leave the last 43 px unused.
+- **Scope.** Two US cities (JAX, OMA) and one seed.
