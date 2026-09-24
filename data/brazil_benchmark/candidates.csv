@@ -1,0 +1,49 @@
+candidate_id,category,label,lat,lon
+petropolis,hilly,Petrópolis RJ (Serra dos Órgãos),-22.51,-43.18
+teresopolis,hilly,Teresópolis RJ,-22.41,-42.97
+nova_friburgo,hilly,Nova Friburgo RJ,-22.28,-42.53
+campos_jordao,hilly,Campos do Jordão SP (Mantiqueira),-22.74,-45.59
+ouro_preto,hilly,Ouro Preto MG,-20.39,-43.50
+caparao,hilly,Caparaó MG/ES,-20.43,-41.80
+pocos_caldas,hilly,Poços de Caldas MG,-21.79,-46.56
+serra_cipo,hilly,Serra do Cipó MG,-19.35,-43.60
+diamantina,hilly,Diamantina MG (Espinhaço),-18.25,-43.60
+lencois,hilly,Lençóis BA (Chapada Diamantina),-12.56,-41.39
+gramado,hilly,Gramado RS (Serra Gaúcha),-29.38,-50.87
+sao_joaquim,hilly,São Joaquim SC,-28.29,-49.93
+sorriso,agricultural,Sorriso MT,-12.55,-55.71
+lucas_rio_verde,agricultural,Lucas do Rio Verde MT,-13.05,-55.90
+rio_verde,agricultural,Rio Verde GO,-17.80,-50.93
+cascavel,agricultural,Cascavel PR,-24.95,-53.46
+luis_eduardo,agricultural,Luís Eduardo Magalhães BA,-12.09,-45.80
+uberaba,agricultural,Uberaba MG,-19.75,-47.93
+dourados,agricultural,Dourados MS,-22.22,-54.80
+chapadao_sul,agricultural,Chapadão do Sul MS,-18.79,-52.62
+campo_mourao,agricultural,Campo Mourão PR,-24.04,-52.38
+primavera_leste,agricultural,Primavera do Leste MT,-15.56,-54.30
+balsas,agricultural,Balsas MA,-7.53,-46.03
+barreiras,agricultural,Barreiras BA,-12.15,-45.00
+rio_grande,coastal,Rio Grande RS (Lagoa dos Patos),-32.03,-52.10
+cabo_frio,coastal,Cabo Frio RJ,-22.88,-42.02
+cananeia,coastal,Cananéia SP,-25.02,-47.93
+paranagua,coastal,Paranaguá PR,-25.52,-48.51
+paraiba_sul_delta,coastal,Paraíba do Sul delta RJ,-21.62,-41.05
+caravelas,coastal,Caravelas BA,-17.73,-39.26
+sao_francisco_mouth,coastal,São Francisco river mouth AL/SE,-10.50,-36.40
+maceio_lagoons,coastal,Maceió lagoons AL,-9.62,-35.80
+aracati,coastal,Aracati CE,-4.56,-37.77
+lencois_maranhenses,coastal,Lençóis Maranhenses MA,-2.50,-43.10
+braganca,coastal,Bragança PA (mangroves),-0.95,-46.70
+tramandai,coastal,Tramandaí RS,-29.98,-50.14
+sao_paulo,urban,São Paulo SP,-23.55,-46.63
+rio_de_janeiro,urban,Rio de Janeiro RJ,-22.91,-43.20
+brasilia,urban,Brasília DF,-15.79,-47.88
+belo_horizonte,urban,Belo Horizonte MG,-19.92,-43.94
+curitiba,urban,Curitiba PR,-25.43,-49.27
+porto_alegre,urban,Porto Alegre RS,-30.03,-51.22
+salvador,urban,Salvador BA,-12.97,-38.50
+recife,urban,Recife PE,-8.05,-34.90
+fortaleza,urban,Fortaleza CE,-3.73,-38.53
+goiania,urban,Goiânia GO,-16.68,-49.26
+campinas,urban,Campinas SP,-22.91,-47.06
+belem,urban,Belém PA,-1.45,-48.49

@@ -734,3 +734,61 @@ paired Wilcoxon with n = 3 has a minimum two-sided p of 0.25.
 
 **Status.** The three-way comparison (Sentinel-2 0.134 / Landsat 0.116 / CBERS —) can't be completed at these
 locations. The next step is the user's decision.
+
+## 2026-09-24 — CBERS-4 vs Sentinel-2 at 10 m, same locations (Brazil): pre-registration (committed before any tile is built)
+
+**User decision (option 2).** Run the CBERS test where CBERS has data. This is a new Brazilian benchmark built exactly
+like the Indian one, so two real 10 m sensors can be compared **at the same locations**.
+Script: `scripts/brazil_benchmark.py` (`select` / `build` / `run` / `compare`). Output: `data/brazil_benchmark/`.
+
+**Candidates and selection** (fixed now, ordered, in `data/brazil_benchmark/candidates.csv`):
+- 48 candidates, 12 per category (hilly / agricultural / coastal / urban, mirroring India's 8 per category).
+- **Per category, the first 8 candidates in the listed order that pass every gate are used.** If fewer pass, fewer are
+  used, and this is reported.
+
+**Tile.** 10 km × 10 km (1000 × 1000 px at 10 m) in the local UTM zone, centred on the candidate.
+
+**Gates:**
+1. **CBERS scene.** CBERS-4 PAN10M, **L4 (orthorectified) only**, dated 2019–2025, scanned newest first; at most 12 are
+   read per candidate. Accept the first scene with, on a 100 × 100 overview of B2 over the tile: valid ≥ 0.99,
+   saturated (≥ 250) < 0.5%, bright (≥ 200) < 2%.
+2. **Sentinel-2.** `COPERNICUS/S2_SR_HARMONIZED`, CLOUDY_PIXEL_PERCENTAGE < 10, **median** of scenes within ±90 days of
+   the CBERS date (widened to ±365 days if < 2 scenes). The tile must be fully finite.
+3. **ICESat-2.** ATL08-ground-classified ATL03 photons via SlideRule, the identical parameters to India
+   (`query_icesat2_photons.query_tile`, 2019–2025). At least 2,000 photons.
+4. **FABDEM.** `projects/sat-io/open-datasets/FABDEM` via Earth Engine, bilinear onto the tile's 30 m grid (target)
+   and 10 m grid (baseline). 100% finite.
+
+**Imagery and arms.** Every band gets a per-tile 2–98% stretch to uint8.
+- **Arm CBERS-FC (primary):** CBERS B4 / B3 / B2 (NIR / red / green) as R / G / B, warped bilinearly onto the tile grid.
+- **Arm S2-FC (primary reference):** Sentinel-2 B8 / B4 / B3 (NIR / red / green), the **identical** false-colour
+  composite. The only difference from CBERS-FC is the sensor (optics, MTF, 8-bit vs 12-bit, date/compositing).
+- **Arm S2-RGB (secondary, continuity):** Sentinel-2 B4 / B3 / B2 true colour, as in the Indian benchmark.
+
+**Co-registration.** CBERS NIR is cross-correlated against Sentinel-2 B8 (same band) over integer shifts of ±20 px.
+- The best integer shift is applied by re-warping with a translated transform, and the residual is re-checked.
+- A tile is dropped if the residual isn't at 0 ± 1 px or the peak correlation is < 0.3. Recorded per tile.
+
+**Recipe: unchanged per arm.**
+- `s2_rank_loss_test.fit` / `calibrated_eval` / `analyze`: arm-P geometry, Method 4 v2 `rank_pair_loss`, 600 × 4
+  steps, seed 42, 4 quadrant folds, per-tile post-hoc slope calibration.
+- Oracle: frozen DAv2-Large whole-tile at 518 on **that arm's** imagery.
+- Raw Spearman: `s2_rank_raw_spearman.cells_for_fold` / `summarize` on the same trained models (within-crop primary,
+  ≥ 10 cells per crop).
+
+**Decision rule (the user's, operationalised as for Landsat).** Paired by tile, CBERS-FC vs S2-FC, the rank model's raw
+within-crop Spearman:
+- **Surprise (investigate further before anything else).** CBERS exceeds S2-FC by a mean of **≥ 0.10**, on a
+  **majority** of tiles, with **Wilcoxon p < 0.05**.
+- **Otherwise: a third independent confirmation** of a resolution-general wall, and this line of inquiry closes for good.
+- **Divergence flag.** The raw-ρ and calibrated-RMSE paired tests are both significant in opposite directions.
+
+**Descriptive only** (different tiles, so not tested):
+- where CBERS and S2-RGB (Brazil) land relative to India's Sentinel-2 0.134 and Landsat 0.116;
+- S2-FC vs S2-RGB (band set).
+
+**Caveats, stated in advance:**
+- Brazil isn't India: the terrain, climate, FABDEM and ICESat-2 quality differ. That's why the primary comparison is
+  **within Brazil**.
+- CBERS is a single date and Sentinel-2 a median composite.
+- The CBERS L4 orthorectification uses its own DEM; co-registration corrects only integer shifts.
