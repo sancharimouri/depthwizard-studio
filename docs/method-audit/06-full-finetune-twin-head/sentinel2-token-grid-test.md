@@ -356,3 +356,48 @@ positive geometry result that would make it the next question to test.
   `scripts/s2_token_grid_phase_c.py`; see the "Phase C: Kaggle GPU build" entry above).
 - To re-stage it: `bundle_c/` = that script + `token_grid_test/cache/*.npz` + the DAv2-Small HF snapshot
   (`config.json`, `model.safetensors`) in `dav2_small/`; then `zip -0 -r`.
+
+## 2026-09-24 — Rank-loss test: pre-registration (committed before the real run; only a 5-step smoke test run so far)
+
+**Question.** Does a pure ranking objective find real terrain signal where Phase C's magnitude loss didn't? This is a
+**final, cheap check that closes this line**. If it fails, it doesn't open a new direction.
+
+**Script.** `scripts/s2_rank_loss_test.py`, output in `data/sentinel2_benchmark/token_grid_test/rank_loss/`.
+
+**Held fixed from Phase C** (imported from `s2_token_grid_phase_c.py`):
+- 32 tiles, 4 quadrant folds, identical 60 px crops;
+- the FABDEM-30 m target, with the loss on 3 × 3-pooled output;
+- `TwinHeadDav2` (DAv2-Small), 600 steps × batch 4, optimiser, schedule, seed and crop order;
+- the ICESat-2 scoring.
+- **Geometry: arm P** (5×5 tokens). Phase C found R = P, and P is about 20× cheaper. Chosen before running.
+
+**The only change: the loss.**
+- `rank_pair_loss`, imported **unchanged** from `scripts/evaluate_method4_v2.py`: `F.margin_ranking_loss`, 2,000
+  random pairs per crop, margin 0.25, exact ties dropped.
+- The pairs are ordered by FABDEM-30 m within the crop.
+- It is the rank term of Method 4 v2's `phase2_building_rank_v2` on DFC2019. *Correction to the prompt:* Method 6 has no
+  rank term; only Method 4's exists.
+
+**Metric scale is recovered post hoc**, with the project's per-tile linear calibration:
+- Per tile, a no-intercept OLS slope of FABDEM within-crop relief on score within-crop relief (30 m grid), fitted on
+  that tile's **3 training quadrants only**.
+- Held-out prediction = crop FABDEM mean + slope × (score − crop-mean score).
+
+**Oracle** (this project's standard definition, calibrated **identically**): frozen DAv2-Large whole-tile depth at 518
+(`data/sentinel2_benchmark/dav2_depth/*.npy`). It gets the same per-tile slope fit, on the same training quadrants, and
+the same crop-mean-plus-relief prediction. Smoke-test check: its model-free fields are identical to Phase C's (max diff 0).
+
+**Pass rule** (the same bar as every Sentinel-2 test this session). "Real signal" requires all three, on the ICESat-2
+check (primary):
+- calibrated rank model RMSE below the oracle's on a **majority of the 32 tiles**;
+- a lower mean;
+- **paired Wilcoxon p < 0.05, Holm-adjusted across the 2 checks** (ICESat-2, DEM held-out).
+
+**Also reported** (context, not part of the rule):
+- the 95% tile-bootstrap CI;
+- the flat crop-mean and raw-FABDEM baselines;
+- the calibration slopes (median, and the fraction negative);
+- the rank model against Phase C's arm P (magnitude loss, same geometry, primary Kaggle run). This comparison is
+  descriptive: it mixes MPS and CUDA.
+
+**Wall time (R4).** Measured in the smoke test; about 3 min per fold on MPS, ≈ 12 min in total. Run with nohup.
