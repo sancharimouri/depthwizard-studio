@@ -1864,7 +1864,7 @@ function rememberSkipCloseConfirm() {
     }
 }
 
-const FINAL_DEMO_ANIM_MS = 380;
+const FINAL_DEMO_ANIM_MS = 1880; // 380 ms + 1.5 s (user request, 2026-09-25)
 const FINAL_DEMO_EASING = "cubic-bezier(0.2, 0.8, 0.2, 1)";
 let finalDemoPlaceholder = null;
 let finalDemoAnimating = false;

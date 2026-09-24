@@ -339,7 +339,7 @@ terrain.** None of the research-track work is deployed into it.
   - Confirming resets every Workbench field and reloads to a fresh, empty Workbench.
 - 28/28 headless checks pass, with 0 JS exceptions.
 - **Grow/shrink animation (2026-09-24).** The box animates its fixed-position edges from the grid cell to the full window
-  (380 ms, ease-out; the reverse on Back) using the Web Animations API.
+  (1.88 s since 2026-09-25, was 380 ms; ease-out; the reverse on Back) using the Web Animations API.
   - A hidden placeholder holds its grid cell.
   - The rails and the Back/Close bar fade in after the box reaches full size.
   - Reduced-motion users get the instant switch.
