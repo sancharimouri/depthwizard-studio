@@ -946,3 +946,62 @@ seed 42, 4 quadrant folds, per-tile post-hoc slope calibration and `MIN_CELLS` =
   `crop_rho` rule.
 - **Tiles.** The tiles are 1024 px, and the unchanged `crop_origins` (built for 1000 px) leave the last 43 px unused.
 - **Scope.** Two US cities (JAX, OMA) and one seed.
+
+## 2026-09-24 — DFC2019 positive-control result: **PASS (not strong). The raw-Spearman measure detects signal where it exists; the coarse-sensor nulls stand for this recipe.**
+
+**The run.**
+- 31 tiles (26 JAX, 5 OMA), 4 folds, 76–127 s per fold on MPS (`rank_positive_control/run.log`).
+- 4,855 held-out crops with cells; 1.93 M AGL cells scored within-crop.
+- The final 100-step rank loss is 0.18–0.19. For comparison, fold 0 on Sentinel-2 was 0.205 and on Landsat 0.211, so the
+  loss alone doesn't separate the domains.
+- Results: `data/dfc2019/experiments/rank_positive_control/rank_loss/{summary.json, raw_spearman/summary.json}`.
+
+**Results.** 31 tiles; mean over tiles [95% tile-bootstrap CI]; within-crop = the 18 m crops with ≥ 10 cells and
+non-zero AGL range. Sentinel-2 and Landsat values are copied from the sections above for comparison.
+
+| Raw signal vs truth | DFC2019 0.3 m, dense AGL (within-crop, primary) | Pooled within-crop | Whole-tile | Sentinel-2 10 m (within-crop) | Landsat 15 m (within-crop) |
+|---|---|---|---|---|---|
+| **Rank model, raw output** | **0.379** [0.345, 0.413] | 0.389 | 0.496 [0.429, 0.556] | 0.134 [0.078, 0.194] | 0.116 [0.062, 0.171] |
+| **Frozen DAv2-Large (oracle raw)** | **0.441** [0.412, 0.468] | 0.439 | 0.533 [0.469, 0.595] | 0.109 [0.052, 0.171] | 0.115 [0.054, 0.181] |
+| Reference slot | 1.000 (truth itself; trivial) | 1.000 | 1.000 | FABDEM 0.631 | FABDEM 0.631 |
+| Linear calibration's implied r (rank model) | 0.463 [0.417, 0.509] | — | — | 0.109 | 0.081 |
+
+- **Per tile:** all 31 tiles are above 0.134; the minimum is 0.243. The JAX mean is 0.389 and the OMA mean is 0.327.
+- **Rank model vs DAv2-L, raw within-crop:** Δ −0.062 [−0.090, −0.037], model higher on 7/31, p = 0.0003. **The frozen
+  DAv2-L prior ranks better than the rank-trained model.**
+- **Raw ρ − calibration-implied r:** −0.084, 4/31. The calibration-implied r is higher because it is a Pearson-type
+  measure on AGL's skewed distribution. `summarize`'s case label is "3" (no isotonic gap), the same as Sentinel-2.
+
+**Calibrated RMSE** (the rank-loss pass rule vs the identically calibrated per-tile oracle; dense-AGL cells):
+
+| | Rank model | Oracle (frozen DAv2-L) | Flat crop mean | Model − oracle [95% CI] | Model wins | Holm p |
+|---|---|---|---|---|---|---|
+| AGL cells (the `icesat2` slot) | 3.924 m | **3.354 m** | 4.441 m | +0.570 [+0.350, +0.821] | 5/31 | 8e-7 |
+| AGL 3 × 3 blocks (the `dem_heldout` slot) | 3.796 m | **3.209 m** | — | +0.588 [+0.360, +0.848] | 5/31 | 8e-7 |
+
+- Both beat the flat crop mean.
+- Calibration slopes: 0/124 negative for either the model or the oracle. On Sentinel-2 it was about 1/8.
+- `verdict_real_signal = false`: the rank model **loses** to the oracle here too, and significantly.
+- These oracle numbers aren't the canonical DFC2019 per-tile-OLS oracle (3.392 / 4.579 / 0.582 / 0.509). That one is
+  whole-tile OLS with an intercept on 50 tiles; this is a per-tile slope with the crop mean taken from truth, on 18 m
+  crops, 31 tiles.
+
+**Verdict per the pre-registered rule: PASS, not strong.** The rank model's within-crop ρ is 0.379 ≥ 0.30, and its CI
+lower bound, 0.345, is above 0.134. It is below the 0.50 strong-pass mark and below FABDEM's 0.631.
+
+**What this establishes and what it doesn't:**
+- **The raw-Spearman measure and the training recipe detect signal where it exists.** On sharp VHR imagery the same
+  pipeline gives about 2.8× the coarse-sensor ρ (0.38 vs 0.13) for the rank model and about 4× (0.44 vs 0.11) for
+  frozen DAv2-L. Every tile clears the Sentinel-2 value. The Sentinel-2 and Landsat near-zero within-crop results are
+  therefore **not** a blind spot of the measurement. They stand as a genuine absence of *detectable* within-crop signal
+  for this recipe. CBERS and L1C results, once they exist, can be read the same way.
+- **The calibrated-RMSE pass rule is not a signal detector.** Even here, with clear signal, the rank-trained model loses
+  to frozen DAv2-L (5/31). That rule asks "does rank training beat the frozen prior?", not "is there signal?". Of the
+  prior coarse-sensor tests, **the raw-Spearman results are the validated evidence of no signal. The calibrated
+  "no real signal" verdicts only say that rank training didn't beat DAv2-L,** which this control shows can fail even
+  when signal exists.
+  - This does not reopen anything: on Sentinel-2 and Landsat, DAv2-L's own raw ρ was also only about 0.11.
+- **Scale caveat, stated in advance:** the pixel geometry is unchanged, so the control's crops are 18 m and its target
+  is object height (AGL), while the coarse-sensor crops are 600 m and their target is terrain. It validates the
+  measurement and training machinery, not a claim that 600 m terrain relief would be detectable at 0.3 m.
+- One seed and two US cities. The 5 OMA tiles are selected by data availability.

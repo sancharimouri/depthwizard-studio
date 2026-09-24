@@ -1,0 +1,432 @@
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 31,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.37888682547525426,
+   "ci95": [
+    0.3449805864931744,
+    0.4131858232009069
+   ],
+   "n": 31
+  },
+  "within_crop_oracle": {
+   "mean": 0.44071104203165123,
+   "ci95": [
+    0.4122061950537642,
+    0.46815960838906057
+   ],
+   "n": 31
+  },
+  "within_crop_fab": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 31
+  },
+  "calib_implied_r": {
+   "mean": 0.4633861196916851,
+   "ci95": [
+    0.4167942848641,
+    0.5094661472927857
+   ],
+   "n": 31
+  },
+  "whole_tile_model": {
+   "mean": 0.4959962882856107,
+   "ci95": [
+    0.4290212571334411,
+    0.5556579633780612
+   ],
+   "n": 31
+  },
+  "whole_tile_oracle": {
+   "mean": 0.5325323698723677,
+   "ci95": [
+    0.46918640792440724,
+    0.5947639818557323
+   ],
+   "n": 31
+  },
+  "whole_tile_fab": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 31
+  },
+  "pooled_within_crop_model": 0.3890000578700811,
+  "pooled_within_crop_oracle": 0.43882059321698286,
+  "pooled_within_crop_fab": 1.0
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": -0.06182421655639698,
+   "ci95": [
+    -0.08951884250651508,
+    -0.036535559460376385
+   ],
+   "model_higher": 7,
+   "n": 31,
+   "wilcoxon_p": 0.00026073306798934937
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": -0.0844992942164308,
+   "ci95": [
+    -0.1158418769906361,
+    -0.053254161457255256
+   ],
+   "spearman_higher": 4,
+   "n": 31,
+   "wilcoxon_p": 1.7393380403518677e-05
+  }
+ },
+ "per_tile": {
+  "JAX_004_006": {
+   "within_crop_model": 0.5331070515168964,
+   "within_crop_oracle": 0.5440788070446186,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 71712,
+   "calib_relief_r2": 0.40761936620314154,
+   "calib_implied_r": 0.638450754720473,
+   "whole_tile_model": 0.6576541730282823,
+   "whole_tile_oracle": 0.6539333465078035,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_004_014": {
+   "within_crop_model": 0.5682767726681632,
+   "within_crop_oracle": 0.5487094609327129,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 73299,
+   "calib_relief_r2": 0.45231267530168695,
+   "calib_implied_r": 0.6725419505887249,
+   "whole_tile_model": 0.7577736760733133,
+   "whole_tile_oracle": 0.768591493692668,
+   "whole_tile_fab": 0.9999999999999998
+  },
+  "JAX_004_016": {
+   "within_crop_model": 0.5403064041665346,
+   "within_crop_oracle": 0.5552430989571884,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 76461,
+   "calib_relief_r2": 0.4455401626213069,
+   "calib_implied_r": 0.6674879494202924,
+   "whole_tile_model": 0.7396565558561207,
+   "whole_tile_oracle": 0.5789792467009014,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_018_012": {
+   "within_crop_model": 0.46726399359301896,
+   "within_crop_oracle": 0.4403270702523614,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 65681,
+   "calib_relief_r2": 0.27051036623510816,
+   "calib_implied_r": 0.5201061105535179,
+   "whole_tile_model": 0.6603252793299111,
+   "whole_tile_oracle": 0.5968802140389264,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_022_009": {
+   "within_crop_model": 0.5551779363273778,
+   "within_crop_oracle": 0.529270827653598,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 79687,
+   "calib_relief_r2": 0.3806261060486259,
+   "calib_implied_r": 0.6169490303490442,
+   "whole_tile_model": 0.6760645501290367,
+   "whole_tile_oracle": 0.11829966532429065,
+   "whole_tile_fab": 0.9999999999999999
+  },
+  "JAX_031_006": {
+   "within_crop_model": 0.4482397915608883,
+   "within_crop_oracle": 0.46279474701537265,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 78504,
+   "calib_relief_r2": 0.35818511521287466,
+   "calib_implied_r": 0.5984856850525956,
+   "whole_tile_model": 0.5387495318258377,
+   "whole_tile_oracle": 0.5234994454622598,
+   "whole_tile_fab": 0.9999999999999999
+  },
+  "JAX_072_015": {
+   "within_crop_model": 0.47978145928641586,
+   "within_crop_oracle": 0.49421287022700067,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 73973,
+   "calib_relief_r2": 0.35861736148642887,
+   "calib_implied_r": 0.5988466928074571,
+   "whole_tile_model": 0.6327710204243723,
+   "whole_tile_oracle": 0.28521993841264215,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_118_012": {
+   "within_crop_model": 0.45389610880993203,
+   "within_crop_oracle": 0.42724366081751686,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 60423,
+   "calib_relief_r2": 0.2889932477981779,
+   "calib_implied_r": 0.5375809220928305,
+   "whole_tile_model": 0.5731361024344792,
+   "whole_tile_oracle": 0.46991529294255646,
+   "whole_tile_fab": 0.9999999999999998
+  },
+  "JAX_118_015": {
+   "within_crop_model": 0.46128061962627875,
+   "within_crop_oracle": 0.5058742315432255,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 68765,
+   "calib_relief_r2": 0.3348897224070323,
+   "calib_implied_r": 0.5786965719675833,
+   "whole_tile_model": 0.5849479390815825,
+   "whole_tile_oracle": 0.5747883654647888,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_149_006": {
+   "within_crop_model": 0.2938382503815033,
+   "within_crop_oracle": 0.31249509902112094,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 73833,
+   "calib_relief_r2": 0.16129192329077102,
+   "calib_implied_r": 0.4016116573143402,
+   "whole_tile_model": 0.45696857976162875,
+   "whole_tile_oracle": 0.48282763635765147,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_149_025": {
+   "within_crop_model": 0.3101185908426491,
+   "within_crop_oracle": 0.28732255998934486,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 82503,
+   "calib_relief_r2": 0.1495320671030841,
+   "calib_implied_r": 0.38669376398266897,
+   "whole_tile_model": 0.5578613033619183,
+   "whole_tile_oracle": 0.3413524806580066,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_161_001": {
+   "within_crop_model": 0.3004984978706983,
+   "within_crop_oracle": 0.4084687496917219,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 60823,
+   "calib_relief_r2": 0.21982427048211295,
+   "calib_implied_r": 0.4688542102638228,
+   "whole_tile_model": 0.4930804276341046,
+   "whole_tile_oracle": 0.7227595342199258,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_164_008": {
+   "within_crop_model": 0.2435607240048859,
+   "within_crop_oracle": 0.36738104406958244,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 65294,
+   "calib_relief_r2": 0.05957932795275134,
+   "calib_implied_r": 0.24408877064041953,
+   "whole_tile_model": 0.36968528495204217,
+   "whole_tile_oracle": 0.6735931833995444,
+   "whole_tile_fab": 0.9999999999999998
+  },
+  "JAX_165_015": {
+   "within_crop_model": 0.4255908772876642,
+   "within_crop_oracle": 0.5380465619907068,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 79321,
+   "calib_relief_r2": 0.28767192010060005,
+   "calib_implied_r": 0.5363505570991793,
+   "whole_tile_model": 0.5976184510517,
+   "whole_tile_oracle": 0.7616052161354635,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_166_006": {
+   "within_crop_model": 0.383262717074462,
+   "within_crop_oracle": 0.4202895213022817,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 78902,
+   "calib_relief_r2": 0.061023314983910004,
+   "calib_implied_r": 0.2470289760006101,
+   "whole_tile_model": 0.43312272031519466,
+   "whole_tile_oracle": 0.8312015248686055,
+   "whole_tile_fab": 0.9999999999999999
+  },
+  "JAX_175_002": {
+   "within_crop_model": 0.27162873931139664,
+   "within_crop_oracle": 0.35346528372022973,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 60914,
+   "calib_relief_r2": 0.06573903202186049,
+   "calib_implied_r": 0.2563962402646741,
+   "whole_tile_model": 0.5358409467737371,
+   "whole_tile_oracle": 0.7340368252633078,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_204_005": {
+   "within_crop_model": 0.2960534012869093,
+   "within_crop_oracle": 0.4072372336688633,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 62400,
+   "calib_relief_r2": 0.2530807417632771,
+   "calib_implied_r": 0.5030713088253763,
+   "whole_tile_model": 0.48405845994689073,
+   "whole_tile_oracle": 0.44528295821870706,
+   "whole_tile_fab": 0.9999999999999998
+  },
+  "JAX_214_015": {
+   "within_crop_model": 0.3579478282586721,
+   "within_crop_oracle": 0.4742405159307043,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 73000,
+   "calib_relief_r2": 0.12699555200590318,
+   "calib_implied_r": 0.3563643528832579,
+   "whole_tile_model": 0.5745654398059133,
+   "whole_tile_oracle": 0.7357148508033572,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_214_023": {
+   "within_crop_model": 0.3420663418894565,
+   "within_crop_oracle": 0.4776366405378735,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 73069,
+   "calib_relief_r2": 0.20095727214054837,
+   "calib_implied_r": 0.4482825806793616,
+   "whole_tile_model": 0.45857039095955276,
+   "whole_tile_oracle": 0.763920121146937,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_224_025": {
+   "within_crop_model": 0.29430582794544297,
+   "within_crop_oracle": 0.2920211268841717,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 63509,
+   "calib_relief_r2": 0.08682673914052264,
+   "calib_implied_r": 0.294663773037207,
+   "whole_tile_model": 0.39120365519902467,
+   "whole_tile_oracle": 0.495918128147634,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_264_013": {
+   "within_crop_model": 0.33978892646396536,
+   "within_crop_oracle": 0.35024670545532305,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 58528,
+   "calib_relief_r2": 0.06654441354434659,
+   "calib_implied_r": 0.2579620389598954,
+   "whole_tile_model": 0.5394474877473477,
+   "whole_tile_oracle": 0.4335114435305182,
+   "whole_tile_fab": 0.9999999999999998
+  },
+  "JAX_269_009": {
+   "within_crop_model": 0.3910429180093188,
+   "within_crop_oracle": 0.3917763301006858,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 71781,
+   "calib_relief_r2": 0.3790365631739695,
+   "calib_implied_r": 0.6156594538979886,
+   "whole_tile_model": 0.6131658104581348,
+   "whole_tile_oracle": 0.4795328263983159,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_416_009": {
+   "within_crop_model": 0.2660534221607133,
+   "within_crop_oracle": 0.3404511991990613,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 74444,
+   "calib_relief_r2": 0.2518045927237189,
+   "calib_implied_r": 0.5018013478695718,
+   "whole_tile_model": 0.3280919111778378,
+   "whole_tile_oracle": 0.543345528773428,
+   "whole_tile_fab": 0.9999999999999998
+  },
+  "JAX_416_022": {
+   "within_crop_model": 0.2426912004706441,
+   "within_crop_oracle": 0.3646635110805541,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 72475,
+   "calib_relief_r2": 0.28956539543959936,
+   "calib_implied_r": 0.5381128092134579,
+   "whole_tile_model": 0.34728694672378385,
+   "whole_tile_oracle": 0.6459011324289862,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_505_016": {
+   "within_crop_model": 0.43931269735745554,
+   "within_crop_oracle": 0.4953125364525415,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 77690,
+   "calib_relief_r2": 0.2756125366110803,
+   "calib_implied_r": 0.5249881299716026,
+   "whole_tile_model": 0.6365077508962603,
+   "whole_tile_oracle": 0.35497161799037064,
+   "whole_tile_fab": 1.0
+  },
+  "JAX_505_018": {
+   "within_crop_model": 0.40386954927482743,
+   "within_crop_oracle": 0.5189155225538356,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 69789,
+   "calib_relief_r2": 0.2336135180044423,
+   "calib_implied_r": 0.483335823216573,
+   "whole_tile_model": 0.5797418008976911,
+   "whole_tile_oracle": 0.24268112881985457,
+   "whole_tile_fab": 0.9999999999999998
+  },
+  "OMA_084_038": {
+   "within_crop_model": 0.3247845111540753,
+   "within_crop_oracle": 0.4171259952834114,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 25156,
+   "calib_relief_r2": 0.11798494635530021,
+   "calib_implied_r": 0.3434893686204861,
+   "whole_tile_model": 0.40334379680150073,
+   "whole_tile_oracle": 0.3765157750787552,
+   "whole_tile_fab": 1.0
+  },
+  "OMA_198_002": {
+   "within_crop_model": 0.45092269434237553,
+   "within_crop_oracle": 0.41433925249489684,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 13895,
+   "calib_relief_r2": 0.2599512380111616,
+   "calib_implied_r": 0.5098541340532227,
+   "whole_tile_model": 0.583106944952608,
+   "whole_tile_oracle": 0.604686386891028,
+   "whole_tile_fab": 1.0
+  },
+  "OMA_248_029": {
+   "within_crop_model": 0.29077579817139426,
+   "within_crop_oracle": 0.48950775196859947,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 18380,
+   "calib_relief_r2": 0.08765330347808398,
+   "calib_implied_r": 0.29606300592624535,
+   "whole_tile_model": 0.14016193235991414,
+   "whole_tile_oracle": 0.42783119093308125,
+   "whole_tile_fab": 1.0
+  },
+  "OMA_248_030": {
+   "within_crop_model": 0.3141959136584842,
+   "within_crop_oracle": 0.5739283901752114,
+   "within_crop_fab": 0.9999999999999998,
+   "n_cells_scored": 16786,
+   "calib_relief_r2": 0.11465582079470482,
+   "calib_implied_r": 0.3386086543411211,
+   "whole_tile_model": 0.13523066952982887,
+   "whole_tile_oracle": 0.6348491799339685,
+   "whole_tile_fab": 1.0
+  },
+  "OMA_364_043": {
+   "within_crop_model": 0.25585202496038223,
+   "within_crop_oracle": 0.4594159969668719,
+   "within_crop_fab": 1.0,
+   "n_cells_scored": 12780,
+   "calib_relief_r2": 0.1463392125152957,
+   "calib_implied_r": 0.38254308582863666,
+   "whole_tile_model": -0.10385460263561756,
+   "whole_tile_oracle": 0.20635778749911673,
+   "whole_tile_fab": 1.0
+  }
+ },
+ "case": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+}

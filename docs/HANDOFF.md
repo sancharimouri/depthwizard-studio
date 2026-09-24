@@ -87,6 +87,10 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 - **Landsat 8/9 pan (15 m) sensor-identity test: Case B.** Same footprints, grid, recipe and ICESat-2 cells.
   Raw within-crop ρ: rank model 0.116 vs. S2 0.134 (p = 0.09); DAv2-L 0.115 vs. 0.109. Calibrated 16.36 vs. 16.25 m (p = 0.80). No raw/calibrated divergence.
   **Not Sentinel-2-specific.** Any further data should target GSD ≤ ~5 m, regardless of sensor. Nothing started.
+- **DFC2019 positive control (2026-09-24): PASS (not strong).** The same unchanged recipe and measure on native 0.3 m DFC2019 against dense LiDAR AGL (31 tiles, `scripts/dfc2019_rank_positive_control.py`).
+  Raw within-crop ρ: rank model **0.379** [0.345, 0.413] and DAv2-L 0.441, against 0.13/0.11 on Sentinel-2. Every tile is > 0.134.
+  **The raw-Spearman nulls on coarse sensors are real, not a blind spot.** But calibrated RMSE: the rank model loses to frozen DAv2-L even here (3.92 vs. 3.35 m, 5/31).
+  So the calibrated "no real signal" rule means "rank training didn't beat DAv2-L", not "no signal". Caveat: 18 m crops and AGL, vs. 600 m and terrain.
 
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
 - **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:
