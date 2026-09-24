@@ -329,6 +329,14 @@ terrain.** None of the research-track work is deployed into it.
   They now say DEM elevation, no learned correction, and Sentinel-2 corrections tested and not adopted.
 - Verified in headless Chrome: all pages and flows work, with 0 JS exceptions (the only console error is the pre-existing favicon 404).
 
+**Curated library catalog — Prompt 1 of prompts.pages (2026-09-25).**
+- **Generator:** `scripts/library_catalog.py` (`curate` then `build`) turns the curated folders into `data/library/manifest.json`,
+  with real thumbnails and previews. The folders hold 50 DFC2019 + 32 Sentinel-2 + 6 Maxar VHR crops; Landsat, CBERS and L1C are
+  excluded by construction and by a build guard.
+- **API:** `/api/library` (list with collection/tier filters), `/{id}`, `/{id}/thumbnail`, `/{id}/preview`, and `POST /{id}/select`,
+  which enforces routing: Sentinel-2 is always Tier 1 (DEM only); DFC2019 and VHR are Tier 2.
+- **Caveat:** DFC2019 has no georeference, so Tier 2 there means above-ground height only, with no DEM.
+
 **Expanded-view chrome (2026-09-25; `frontend/src/expanded-chrome.js`):**
 - **Icon toolbar** (outline icons; names as tooltips only), in `reference.jpg` order: Screenshot, Record (disabled placeholder),
   Measure ▾, View ▾, Flythrough, Save + Library ▾, Mouse pointer, Notes, Trash (clears the current selection).

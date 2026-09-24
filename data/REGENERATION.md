@@ -229,3 +229,11 @@ cp data/kaggle_bundles/method4_v2_sid/{README.md,tile_list.txt} pkg/
 cp data/kaggle_bundles/method4_v2_sid/manifest.csv pkg/data/
 # then copy the 50 tiles in tile_list.txt from the four data folders listed above
 ```
+
+**Curated library catalog ("Choose from Library", 2026-09-25).** `data/library/{curated,thumbnails,previews,manifest.json}`
+are generated, not committed:
+```bash
+.venv/bin/python scripts/library_catalog.py curate   # symlinks: 50 DFC2019 + 32 Sentinel-2; extracts the 6 Maxar VHR crops
+.venv/bin/python scripts/library_catalog.py build    # thumbnails, previews, manifest.json (88 items)
+```
+Served by `backend/api/library_routes.py` (`/api/library`). Tests: `PYTHONPATH=. uv run --with pytest --with httpx pytest backend/tests/test_library.py`.
