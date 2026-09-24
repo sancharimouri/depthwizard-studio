@@ -460,6 +460,23 @@
              grid below replaces it once generation starts. -->
         <div id="input-view" class="input-view"></div>
 
+        <!-- Jobs (src/jobs.js): every START GENERATION is a job, newest at the
+             top. Session only — nothing is stored on a server. -->
+        <aside id="jobs-panel" class="jobs-panel" aria-labelledby="jobs-panel-title" hidden>
+            <div class="jobs-panel-head">
+                <div id="jobs-panel-title" class="panel-title">JOBS</div>
+                <div id="jobs-count" class="jobs-count numeric-mono"></div>
+            </div>
+            <button id="generate-new-button" class="secondary-button generate-new-button" type="button">
+                + Generate New
+            </button>
+            <ol id="jobs-list" class="jobs-list"></ol>
+            <p class="jobs-note">
+                Session only: jobs live in this tab’s memory. There’s no server-side storage yet, so reloading or
+                closing the tab loses any job you haven’t saved. Save downloads the job as a JSON file.
+            </p>
+        </aside>
+
         <div class="workbench-grid is-hidden">
 
             <div class="workbench-left">
@@ -848,6 +865,11 @@
 
                     <!-- Shown only while the box is expanded to fill the window
                          (auto-expands when the generation pipeline finishes). -->
+                    <div class="job-tabs-wrap">
+                        <div id="job-tabs" class="job-tabs" role="tablist" aria-label="Open jobs"></div>
+                        <div id="job-tab-info" class="job-tab-info"></div>
+                    </div>
+
                     <div id="final-demo-expanded-bar" class="final-demo-expanded-bar" hidden>
                         <button id="final-demo-back" class="expanded-bar-button" type="button" title="Back to the grid">
                             ← Back
@@ -863,36 +885,32 @@
         </div>
 
 
-        <!-- Close confirmation (final-demo expanded view → ✕ Close) -->
+        <!-- Unsaved-work warning: Generate New, ✕ Close, and (desktop app) window
+             close. Job count + save choice per job; deliberately no "don't show
+             again". A browser tab close can only get the browser's own prompt. -->
 
         <div
-            id="close-confirm-modal"
+            id="unsaved-modal"
             class="upload-modal confirm-modal"
             role="alertdialog"
             aria-modal="true"
-            aria-labelledby="close-confirm-title"
-            aria-describedby="close-confirm-body"
+            aria-labelledby="unsaved-title"
+            aria-describedby="unsaved-body"
             hidden
         >
-            <div id="close-confirm-backdrop" class="upload-backdrop"></div>
+            <div id="unsaved-backdrop" class="upload-backdrop"></div>
 
-            <div class="upload-panel confirm-panel">
-                <div id="close-confirm-title" class="confirm-title">Close without saving?</div>
-
-                <p id="close-confirm-body" class="confirm-body">
-                    This scene isn’t saved. Closing clears everything on this page — the location, the selected
-                    scene and all generated results — and all work will be lost.
-                </p>
+            <div class="upload-panel confirm-panel unsaved-panel">
+                <div id="unsaved-title" class="confirm-title"></div>
+                <p id="unsaved-body" class="confirm-body"></p>
+                <div id="unsaved-list" class="unsaved-list"></div>
+                <p id="unsaved-note" class="unsaved-note"></p>
 
                 <div class="confirm-actions">
-                    <button id="close-confirm-cancel" class="confirm-button" type="button">Cancel</button>
-                    <button id="close-confirm-ok" class="confirm-button confirm-danger" type="button">Close</button>
+                    <button id="unsaved-cancel" class="confirm-button" type="button">Cancel</button>
+                    <button id="unsaved-discard" class="confirm-button confirm-danger" type="button"></button>
+                    <button id="unsaved-save" class="confirm-button confirm-primary" type="button"></button>
                 </div>
-
-                <label class="confirm-dont-ask">
-                    <input id="close-confirm-dont-ask" type="checkbox" />
-                    Don’t show this message again
-                </label>
             </div>
         </div>
 
@@ -943,6 +961,10 @@
                                 Sentinel-2 L2A scenes (always Tier 1, FABDEM fetched automatically). It shows the account’s
                                 documented quota and this app’s own usage, and you can use your own Copernicus key.</li>
                             <li>The <strong>Start generation</strong> button is green for Tier 2, orange for Tier 1.</li>
+                            <li>Each start is a <strong>job</strong>. <strong>Generate New</strong> starts another without
+                                closing the current one. The jobs panel lists them newest first, and the 3D view has a tab
+                                per job. Jobs are kept in this tab only: <strong>Save</strong> downloads a job as JSON.
+                                Leaving with unsaved jobs asks first.</li>
                             <li><strong>Start generation</strong> plays the pipeline’s steps. It is a
                                 <strong>prototype</strong>: the relative-depth, elevation, DSM and 3D panels show the
                                 Darjeeling reference results whatever scene you picked or uploaded. It is not a live

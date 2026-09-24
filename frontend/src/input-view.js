@@ -338,6 +338,7 @@ export function createInputView(root, { onStart }) {
             title: sel.title,
             previewUrl: sel.previewUrl,
             metaLine: `${sel.title} · ${sel.sourceLabel} · ${sel.routing.label}`,
+            meta: sel.meta,
             routing: sel.routing,
             dem: sel.dem ?? null,
             logLines: log,
