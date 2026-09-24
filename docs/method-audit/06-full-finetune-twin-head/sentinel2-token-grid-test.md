@@ -1058,3 +1058,43 @@ it is ~4.5× worse than FABDEM.
 **Scientific relevance.** This is the first input change in this line that moves raw ranking in a statistically
 reliable way: preprocessing matters on mountain tiles. If pursued, the natural check is a pre-registered hilly-only test
 with more tiles, including a per-pixel blue-band / altitude correlation on L1C. **Not started.**
+
+## 2026-09-24 — Haze-mechanism check: pre-registration (committed before computing; no training, no ICESat-2)
+
+**Question.** Does uncorrected (L1C) blue brightness track elevation on the 4 hilly tiles (almora, dehradun,
+dharamshala, kohima), as the aerial-perspective hypothesis requires?
+
+**Physics / expected sign.** Path radiance adds brightness, and there is less atmosphere above high terrain. So
+haze-driven L1C blue should **decrease with elevation**: the haze signature is a **negative** correlation.
+
+**Data** (already fetched):
+- `l1c_test/raw/<tile>.npz` FLOAT32 reflectance, band order B04/B03/B02, so **blue = index 2**;
+- elevation = FABDEM 10 m (`fab10` in `token_grid_test/cache`, the same grid).
+
+Script: `scripts/haze_elevation_check.py`. Output: `l1c_test/haze_check.json`.
+
+**Sampling.** Per tile, **5,000 pixels stratified over the tile's FABDEM elevation range**: 10 equal-count elevation
+deciles × 500 random pixels each (seed 0). Spearman ρ.
+
+**Measures, per tile:**
+1. **Primary (the prompt's test): ρ(L1C blue, elevation).**
+2. Haze component: ρ(L1C blue − L2A blue, elevation). This is what atmospheric correction removed.
+3. Control: ρ(L2A blue, elevation), i.e. surface reflectance only (land-cover and snow gradients).
+4. Within-crop: the same three, as the cell-weighted mean of per-crop Spearman over the 60 × 60 px (600 m) crops. That
+   is the scale at which the L1C gain was measured.
+
+Also reported: the elevation range and the L1C − L2A blue offset per elevation decile.
+
+**Sensitivity.** Repeat after excluding bright pixels (L1C blue > 0.30: cloud or snow) that could invert the surface
+term.
+
+**Decision rule:**
+- **Haze mechanism supported:** primary ρ ≤ **−0.30** on **≥ 3 of 4** hilly tiles.
+- **Not supported** (the L1C gain needs another explanation): otherwise.
+- Interpretive guard, stated now:
+  - If the primary fails but measure 2 is strongly negative, the haze gradient exists but is masked by surface
+    brightness in L1C.
+  - If the primary passes but measure 3 is equally negative, the correlation is a land-cover gradient, not haze.
+  - Both would be reported as such.
+- Measure 2 is **partly circular** (Sen2Cor estimates path radiance using a DEM). It can show *how much* elevation
+  information correction removed; it can't show that DAv2 used it.
