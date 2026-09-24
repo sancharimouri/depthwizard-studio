@@ -105,6 +105,8 @@ export function createControls(camera, domElement, target, homePosition = new TH
     // Held off regardless of the idle timer (e.g. while the measurement tool
     // is active — placing points on a slowly turning scene is fiddly).
     let autoRotateHeld = false;
+    // The user's Play/Pause choice (expanded view's playback button).
+    let autoRotateUserPaused = false;
     let speedMultiplier = 1;
     let idleTimer = null;
 
@@ -172,7 +174,7 @@ export function createControls(camera, domElement, target, homePosition = new TH
         const delta = Math.min((now - lastFrameTime) / 1000, 0.1);
         lastFrameTime = now;
 
-        if (autoRotating && !autoRotateHeld) {
+        if (autoRotating && !autoRotateHeld && !autoRotateUserPaused) {
             // Positive, matching a rightward drag under the
             // azimuthRotateSpeed=-1 fix above (both increase azimuthAngle)
             // — old code's auto-rotate and drag shared the same sign too.
@@ -188,6 +190,12 @@ export function createControls(camera, domElement, target, homePosition = new TH
         clearTimeout(idleTimer);
         return nativeReset(false);
     };
+
+    controls.setAutoRotatePaused = function setAutoRotatePaused(paused) {
+        autoRotateUserPaused = !!paused;
+    };
+
+    controls.isAutoRotatePaused = () => autoRotateUserPaused;
 
     controls.setAutoRotateHold = function setAutoRotateHold(held) {
         autoRotateHeld = !!held;

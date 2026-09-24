@@ -648,6 +648,61 @@ export function createTerrain(
     }
 
 
+    // EARTHQUAKE — ILLUSTRATIVE PLACEHOLDER, NOT A SEISMIC MODEL.
+    // There is no earthquake/seismic hazard model anywhere in this project.
+    // This paints a red gradient on the steepest ground (slope from the raw
+    // DEM, in degrees) purely so the scenario UI has something to show —
+    // steep slopes are a common *input* to landslide/shaking susceptibility,
+    // but this is a mocked visual, not a hazard result. The UI labels it so.
+
+    let placeholderSlopeDanger = null;
+
+    function computePlaceholderSlopeDanger() {
+        const cellX = footprintWidthMeters / (width - 1);
+        const cellY = footprintHeightMeters / (height - 1);
+        const slopeDeg = new Float32Array(width * height);
+        const at = (x, y) => elevationMin + heights[
+            Math.min(height - 1, Math.max(0, y)) * width + Math.min(width - 1, Math.max(0, x))
+        ] * elevationRange;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const gx = (at(x + 1, y) - at(x - 1, y)) / (2 * cellX);
+                const gy = (at(x, y + 1) - at(x, y - 1)) / (2 * cellY);
+                slopeDeg[y * width + x] = Math.atan(Math.hypot(gx, gy)) * 180 / Math.PI;
+            }
+        }
+        // Relative within the tile: gentle below the median slope, full red
+        // from the 95th percentile up.
+        const lo = computePercentile(slopeDeg, 0.5);
+        const hi = Math.max(computePercentile(slopeDeg, 0.95), lo + 1e-3);
+        const danger = new Float32Array(slopeDeg.length);
+        for (let i = 0; i < danger.length; i++) {
+            danger[i] = smoothstep(slopeDeg[i], lo, hi);
+        }
+        return danger;
+    }
+
+    function setEarthquakeOverlay(active) {
+
+        const colorAttribute = geometry.attributes.color;
+
+        if (active && !placeholderSlopeDanger) {
+            placeholderSlopeDanger = computePlaceholderSlopeDanger();
+        }
+
+        for (let index = 0; index < positions.count; index++) {
+            if (!active) {
+                colorAttribute.setXYZ(index, 1, 1, 1);
+                continue;
+            }
+            const d = placeholderSlopeDanger[index];
+            colorAttribute.setXYZ(index, 1, 1 - d * 0.85, 1 - d * 0.85);
+        }
+
+        colorAttribute.needsUpdate = true;
+    }
+
+
     return {
 
         mesh: terrain,
@@ -657,6 +712,8 @@ export function createTerrain(
         setLayer,
 
         setFloodOverlay,
+
+        setEarthquakeOverlay,
 
         elevationMin,
 

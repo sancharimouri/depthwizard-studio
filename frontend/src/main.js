@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { createTerrain } from "./terrain.js";
 import { createTerrainViewer } from "./viewer.js";
 import { createMeasureTool } from "./measure-tool.js";
+import { createExpandedChrome } from "./expanded-chrome.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -1285,6 +1286,9 @@ function updateMiniPreviews() {
 
 let finalDemoViewer = null;
 let finalDemoMeasureTool = null;
+let finalDemoChrome = null;
+let finalDemoCurrentLayer = "satellite-3d";
+let finalDemoEarthquakeActive = false;
 let finalDemoCurrentTerrain = null;
 let finalDemoCurrentRegionKey = null;
 let finalDemoRunning = false;
@@ -1338,6 +1342,7 @@ function activateFinalDemoLayer(layer) {
     }
 
     finalDemoCurrentTerrain.setLayer(layer);
+    finalDemoCurrentLayer = layer;
 
     document.querySelectorAll("#final-demo-box .layer-button").forEach(button => {
         button.classList.toggle("active", button.dataset.layer === layer);
@@ -1354,11 +1359,40 @@ function setFinalDemoFloodActive(active) {
 
     document.getElementById("final-demo-flood-button")?.classList.toggle("active", finalDemoFloodActive);
     finalDemoCurrentTerrain?.setFloodOverlay(finalDemoFloodActive);
+    syncScenarioNote();
+}
+
+// Scenario overlays share the terrain's vertex colours, so at most one is on.
+const SCENARIO_NOTES = {
+    flood: "Flood (illustrative): shades the lowest 30% of elevations in this tile. It is not a hydrological flood model.",
+    earthquake: "Earthquake — PLACEHOLDER, not a seismic hazard model. The red gradient only marks the steepest slopes " +
+        "(a slope-based heuristic on the DEM); there is no earthquake model anywhere in this project.",
+};
+
+function syncScenarioNote() {
+    const note = document.getElementById("final-demo-scenario-note");
+    if (!note) {
+        return;
+    }
+    const key = finalDemoEarthquakeActive ? "earthquake" : finalDemoFloodActive ? "flood" : null;
+    note.hidden = !key;
+    note.textContent = key ? SCENARIO_NOTES[key] : "";
+    note.classList.toggle("is-placeholder", key === "earthquake");
+}
+
+function setFinalDemoEarthquakeActive(active) {
+    finalDemoEarthquakeActive = active;
+    document.getElementById("final-demo-earthquake-button")?.classList.toggle("active", active);
+    finalDemoCurrentTerrain?.setEarthquakeOverlay(active);
+    syncScenarioNote();
 }
 
 function selectFinalDemoLayer(layer) {
     if (finalDemoFloodActive) {
         setFinalDemoFloodActive(false);
+    }
+    if (finalDemoEarthquakeActive) {
+        setFinalDemoEarthquakeActive(false);
     }
     activateFinalDemoLayer(layer);
 }
@@ -1496,6 +1530,7 @@ function applyWorkbenchTheme(theme) {
     }
 
     finalDemoViewer?.setBackground(WORKBENCH_THEME_BG_HEX[theme]);
+    finalDemoChrome?.syncTheme();
 }
 
 document.getElementById("workbench-theme-toggle")?.addEventListener("click", () => {
@@ -1528,8 +1563,22 @@ function initFinalDemoViewer() {
         box: document.getElementById("final-demo-box"),
         canvas,
     });
+    // Toolbar, library, terrain context menu, notes, screenshots, play/pause, theme.
+    finalDemoChrome = createExpandedChrome({
+        box: document.getElementById("final-demo-box"),
+        canvas,
+        viewer: finalDemoViewer,
+        tool: finalDemoMeasureTool,
+        getRegionKey: () => finalDemoCurrentRegionKey,
+        setLayer: selectFinalDemoLayer,
+        getLayer: () => finalDemoCurrentLayer,
+        startFlythrough: () => finalDemoFlythrough?.start(),
+        getTheme: () => workbenchTheme,
+        setTheme: applyWorkbenchTheme,
+    });
     if (import.meta.env?.DEV) {
-        window.__dwMeasureTool = finalDemoMeasureTool; // dev-only hook for the headless tests
+        window.__dwMeasureTool = finalDemoMeasureTool; // dev-only hooks for the headless tests
+        window.__dwChrome = finalDemoChrome;
     }
 
     finalDemoFlythrough = createFlythroughController({
@@ -1564,9 +1613,22 @@ function initFinalDemoViewer() {
 
     document.getElementById("final-demo-flood-button")?.addEventListener("click", () => {
         if (!finalDemoFloodActive) {
+            if (finalDemoEarthquakeActive) {
+                setFinalDemoEarthquakeActive(false);
+            }
             activateFinalDemoLayer("dsm-3d");
         }
         setFinalDemoFloodActive(!finalDemoFloodActive);
+    });
+
+    document.getElementById("final-demo-earthquake-button")?.addEventListener("click", () => {
+        if (!finalDemoEarthquakeActive) {
+            if (finalDemoFloodActive) {
+                setFinalDemoFloodActive(false);
+            }
+            activateFinalDemoLayer("dsm-3d");
+        }
+        setFinalDemoEarthquakeActive(!finalDemoEarthquakeActive);
     });
 
     const fullscreenToggle = document.getElementById("final-demo-fullscreen");
@@ -1949,6 +2011,7 @@ async function collapseFinalDemo() {
     // Measuring is an expanded-view tool: back in the small grid cell the
     // selection stays visible but inert.
     finalDemoMeasureTool?.setMode("normal");
+    finalDemoChrome?.closeAll();
     finalDemoBoxEl.classList.add("is-animating");
 
     const to = finalDemoPlaceholder?.getBoundingClientRect();
