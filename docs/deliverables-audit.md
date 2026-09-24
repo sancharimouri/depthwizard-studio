@@ -47,7 +47,16 @@ counted as app features.**
 - "FLYTHROUGH" is a scripted 9.5 s dolly to half the distance with faster auto-rotate (`main.js:353–400`).
 - No first-person or WASD mode: the only keydown handlers are Escape, at `main.js:517` and `:986`.
 
-**6. Slope assessment and structural height analysis: no.**
+**6. Slope assessment and structural height analysis: no → partial (updated 2026-09-25).**
+- **Update:** a 3D measurement tool now exists in Workbench's expanded final-demo view
+  (`frontend/src/measure-tool.js`, with `heightfield.js`, `measure-metrics.js` and `measure-model.js`).
+  - Two-point (A→B) and continuous (polyline / closed polygon) measurement.
+  - It reports horizontal and along-surface distance, rise, gradient (% and °), ascent/descent, and polygon area and perimeter.
+  - Everything comes from the raw DEM grid, not the exaggerated display mesh.
+- **Still missing:** a slope *map*, elevation profiles as charts, and structure (building/tree) height. The DEMs shown
+  are GLO-30/OpenTopography surface models, so a measured "rise" is a DEM elevation difference, not an object height.
+  Saving is session-only (no persistence).
+- The original finding follows.
 - No slope, profile, measurement or picking UI. `grep` finds no raycast, measure or profile code.
 - `slope` in `terrain.js:125–204` is a mesh **spike-smoothing cap**, not an analysis tool.
 

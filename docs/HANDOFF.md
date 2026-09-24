@@ -329,6 +329,17 @@ terrain.** None of the research-track work is deployed into it.
   They now say DEM elevation, no learned correction, and Sentinel-2 corrections tested and not adopted.
 - Verified in headless Chrome: all pages and flows work, with 0 JS exceptions (the only console error is the pre-existing favicon 404).
 
+**3D measurement tool (2026-09-25; deliverables-audit item 6 → partial):** it lives in the expanded final-demo view.
+- **Toolbar:** "Measure A to B ▾" (two points / continuous), "Save ▾" and "Mouse pointer" pills, following `reference.jpg`.
+  The other pills and the side panels are the next step.
+- **Modules:**
+  - `heightfield.js`: an exact ray→terrain hit (DDA over the grid plus Möller–Trumbore). It agrees with `THREE.Raycaster`
+    on 3,000/3,000 rays and is ~300–5,000× faster.
+  - `measure-metrics.js`: metrics from the raw DEM.
+  - `measure-model.js`: modes, click rules, multi-level undo, and a session-only save (a placeholder: no persistence).
+  - `measure-tool.js`: the SVG overlay, input handling and menus.
+- `controls.setAutoRotateHold()` keeps the idle auto-rotate off while measuring.
+- **Tests:** `cd frontend && npm test` (20 unit tests); 55/55 real-input headless checks were run.
 **Workbench final-demo expanded view (2026-09-24, user-directed):**
 - When the generation pipeline finishes, box 8 (the final 3D demo) pops out to fill the window. It is an in-page
   `position: fixed` overlay, not the native Fullscreen API, because the pop-up isn't triggered by a user gesture.

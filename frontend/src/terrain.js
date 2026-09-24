@@ -410,6 +410,10 @@ export function createTerrain(
 
     const fullIndexArray = geometry.index.array.slice();
     let erodedIndexArray = null;
+    // Kept (not block-scoped) so the measurement tool can tell which cells
+    // the eroded 3D mesh actually has triangles for.
+    let erodedVertexMask = null;
+    let isExtrudedNow = true;
 
     const edgeErosionParams = EDGE_EROSION_PARAMS[regionKey];
 
@@ -447,6 +451,7 @@ export function createTerrain(
         }
 
         erodedIndexArray = new fullIndexArray.constructor(keptIndices);
+        erodedVertexMask = erodedVertex;
     }
 
 
@@ -543,6 +548,8 @@ export function createTerrain(
 
 
     function setExtruded(extruded) {
+
+        isExtrudedNow = extruded;
 
         for (
             let index = 0;
@@ -665,6 +672,18 @@ export function createTerrain(
 
         terrainWidth,
 
-        terrainHeight
+        terrainHeight,
+
+        // Read-only access for the measurement tool (measure-tool.js): the
+        // raw DEM grid (unsmoothed, un-exaggerated) and the mesh's current
+        // state (flat vs. extruded, which vertices the eroded mesh dropped).
+        grid: { width, height, heights, bounds, elevationMin, elevationMax },
+
+        isExtruded: () => isExtrudedNow,
+
+        // Mask only while the eroded index buffer is the one actually drawn
+        // (it's swapped in by setExtruded(true), not at construction).
+        erodedVertexMask: () =>
+            (erodedIndexArray && geometry.index?.array === erodedIndexArray ? erodedVertexMask : null)
     };
 }

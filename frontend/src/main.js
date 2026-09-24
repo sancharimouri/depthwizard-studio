@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createTerrain } from "./terrain.js";
 import { createTerrainViewer } from "./viewer.js";
+import { createMeasureTool } from "./measure-tool.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -1283,6 +1284,7 @@ function updateMiniPreviews() {
 // only runs once, the first time that happens. ----
 
 let finalDemoViewer = null;
+let finalDemoMeasureTool = null;
 let finalDemoCurrentTerrain = null;
 let finalDemoCurrentRegionKey = null;
 let finalDemoRunning = false;
@@ -1520,6 +1522,16 @@ function initFinalDemoViewer() {
         backgroundColor: WORKBENCH_THEME_BG_HEX[workbenchTheme],
     });
 
+    // Measurement tool (expanded view only; deliverables-audit item 6).
+    finalDemoMeasureTool = createMeasureTool({
+        viewer: finalDemoViewer,
+        box: document.getElementById("final-demo-box"),
+        canvas,
+    });
+    if (import.meta.env?.DEV) {
+        window.__dwMeasureTool = finalDemoMeasureTool; // dev-only hook for the headless tests
+    }
+
     finalDemoFlythrough = createFlythroughController({
         controls: finalDemoViewer.controls,
         button: document.getElementById("final-demo-flythrough-button"),
@@ -1593,6 +1605,7 @@ function updateFinalDemoViewer() {
     finalDemoFlythrough?.update();
     finalDemoViewer.update();
     finalDemoViewer.render();
+    finalDemoMeasureTool?.update();
 }
 
 // ============================================================
@@ -1933,6 +1946,9 @@ async function collapseFinalDemo() {
         return;
     }
     finalDemoAnimating = true;
+    // Measuring is an expanded-view tool: back in the small grid cell the
+    // selection stays visible but inert.
+    finalDemoMeasureTool?.setMode("normal");
     finalDemoBoxEl.classList.add("is-animating");
 
     const to = finalDemoPlaceholder?.getBoundingClientRect();
