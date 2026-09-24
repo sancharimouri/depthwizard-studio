@@ -1,0 +1,41 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 24418.63it/s]
+[rank_fold0] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold0] step 1/600 loss 0.6947 ETA 3.7 min
+[rank_fold0] step 100/600 loss 0.3826 ETA 0.8 min
+[rank_fold0] step 200/600 loss 0.2481 ETA 0.6 min
+[rank_fold0] step 300/600 loss 0.2263 ETA 0.5 min
+[rank_fold0] step 400/600 loss 0.2188 ETA 0.3 min
+[rank_fold0] step 500/600 loss 0.2137 ETA 0.2 min
+[rank_fold0] step 600/600 loss 0.2048 ETA 0.0 min
+[rank_fold0] done 69s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 28870.73it/s]
+[rank_fold1] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold1] step 1/600 loss 0.4594 ETA 2.7 min
+[rank_fold1] step 100/600 loss 0.3487 ETA 0.8 min
+[rank_fold1] step 200/600 loss 0.2394 ETA 0.7 min
+[rank_fold1] step 300/600 loss 0.2307 ETA 0.5 min
+[rank_fold1] step 400/600 loss 0.2183 ETA 0.3 min
+[rank_fold1] step 500/600 loss 0.2137 ETA 0.2 min
+[rank_fold1] step 600/600 loss 0.2070 ETA 0.0 min
+[rank_fold1] done 70s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 28840.99it/s]
+[rank_fold2] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold2] step 1/600 loss 0.4518 ETA 3.0 min
+[rank_fold2] step 100/600 loss 0.4353 ETA 0.8 min
+[rank_fold2] step 200/600 loss 0.2352 ETA 0.6 min
+[rank_fold2] step 300/600 loss 0.2249 ETA 0.5 min
+[rank_fold2] step 400/600 loss 0.2148 ETA 0.3 min
+[rank_fold2] step 500/600 loss 0.2032 ETA 0.2 min
+[rank_fold2] step 600/600 loss 0.2010 ETA 0.0 min
+[rank_fold2] done 72s
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 28783.06it/s]
+[rank_fold3] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold3] step 1/600 loss 0.7135 ETA 2.5 min
+[rank_fold3] step 100/600 loss 0.3584 ETA 0.8 min
+[rank_fold3] step 200/600 loss 0.2373 ETA 0.7 min
+[rank_fold3] step 300/600 loss 0.2180 ETA 0.5 min
+[rank_fold3] step 400/600 loss 0.2100 ETA 0.3 min
+[rank_fold3] step 500/600 loss 0.2024 ETA 0.2 min
+[rank_fold3] step 600/600 loss 0.1908 ETA 0.0 min
+[rank_fold3] done 76s

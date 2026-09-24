@@ -401,3 +401,44 @@ check (primary):
   descriptive: it mixes MPS and CUDA.
 
 **Wall time (R4).** Measured in the smoke test; about 3 min per fold on MPS, ≈ 12 min in total. Run with nohup.
+
+## 2026-09-24 — Rank-loss test result: **no real signal. The pre-registered bar is not met, and this line is closed.**
+
+**The run.** Local MPS, 4 folds of 600 steps (about 70 s each) plus `analyze`. Logs: `rank_loss/{train,analyze}.log`;
+results: `rank_loss/summary.json`. Final rank loss per fold 0.19–0.21, down from about 0.66 at initialisation, so the
+network did learn within-crop order on its training crops.
+
+**Result (32 tiles, each pooled over its 4 held-out quadrants; RMSE in m):**
+
+| Check | Rank model, calibrated | Oracle (frozen DAv2-L + the same calibration) | Model − oracle [95% CI] | Model wins | Wilcoxon p (Holm) |
+|---|---|---|---|---|---|
+| **ICESat-2 ground (primary)** | 16.251 | 16.745 | −0.494 [−1.325, +0.280] | 18/32 | 0.270 (**0.540**) |
+| DEM held-out (secondary) | 17.275 | 17.420 | −0.145 [−1.168, +1.168] | 18/32 | 0.270 (0.540) |
+
+The two checks have identical p-values by coincidence: the per-tile differences are different arrays (r = 0.90) with
+the same signed-rank statistic (204). Checked, not a bug.
+
+**Verdict: `verdict_real_signal = false`.**
+- The first two parts hold: 18/32 is a majority, and the mean is lower.
+- The significance part fails: Holm p = 0.54, and the CI includes 0.
+
+**Context (not part of the rule):**
+- Raw FABDEM is at **2.855 m**, i.e. the calibrated rank model is about 5.7× worse than the terrain product. The flat
+  crop mean is at 17.28 m.
+- Median calibration slope: model 2.13, oracle 18.3; about 13% negative for both. Per-tile scale recovery is noisy for
+  both.
+- **Rank loss vs Phase C's magnitude loss** (arm P, same geometry): 16.25 vs 16.60 m, 28/32 tiles, Wilcoxon p = 6e-4,
+  Δ −0.35 m [−0.69, −0.04]. This is **descriptive only**: it compares MPS with CUDA runs and was not a pre-registered
+  test. Taken at face value, ranking beats magnitude regression as a *loss*, but the difference is a third of a metre on
+  a 16 m error. That is far from useful, and it still doesn't beat the oracle.
+- **Post-hoc, by landscape** (model − oracle on ICESat-2): hilly −1.94 m (6/8 wins); agricultural, coastal and urban
+  about 0.0 (5/8, 3/8, 4/8). As in Phase C, any movement is confined to the 8 hilly tiles. Not a finding.
+
+**Closing the line (as pre-agreed).** Three routes have now been tried on real Sentinel-2 at 10 m, and none adds
+terrain signal a DEM user could use:
+- token geometry (Phase C: R = P);
+- loss design (rank loss: no significant gain over the frozen-prior oracle);
+- the earlier CNN and target variants (Phase A).
+
+The **Sentinel-2 learned-terrain-correction line is closed**, and the product stays DEM-only (FABDEM terrain,
+GLO-30 surface). No follow-up is opened.

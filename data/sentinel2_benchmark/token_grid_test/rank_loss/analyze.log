@@ -1,0 +1,12 @@
+{
+ "n_tiles": 32,
+ "slopes": {
+  "model_median": 2.130334834402999,
+  "oracle_median": 18.293470061985566,
+  "model_frac_negative": 0.125,
+  "oracle_frac_negative": 0.1328125
+ },
+ "verdict_real_signal": false
+}
+icesat2 {"model_mean_rmse": 16.250783778471124, "oracle_mean_rmse": 16.744743168308858, "model_minus_oracle": -0.49395938983773785, "ci95": [-1.3251459921435853, 0.2804603652136895], "model_wins": 18, "wilcoxon_p": 0.269905602093786, "wilcoxon_p_holm": 0.539811204187572, "flat_mean_rmse": 17.275451522056215, "fabdem_mean_rmse": 2.8549946507866473, "context_phaseC_armP_mean_rmse": 16.60213118014128, "context_rank_minus_phaseC_P": {"mean": -0.3513474016701583, "ci95": [-0.6891024268282979, -0.03537060501318344], "rank_wins": 28, "wilcoxon_p": 0.0006058444269001484}}
+dem_heldout {"model_mean_rmse": 17.2746129318408, "oracle_mean_rmse": 17.41991254809703, "model_minus_oracle": -0.1452996162562316, "ci95": [-1.167888606360994, 1.168196499835273], "model_wins": 18, "wilcoxon_p": 0.269905602093786, "wilcoxon_p_holm": 0.539811204187572}

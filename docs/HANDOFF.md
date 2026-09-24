@@ -80,6 +80,9 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 - **Phase C (real Sentinel-2, Kaggle T4).** Identical 600 m crops and FABDEM-30 m target; only the token geometry differs.
   R and P tie: ICESat-2 RMSE 16.54 vs. 16.60 m, 16/32 tiles, Holm p = 0.82. Both are about 6× worse than raw FABDEM (2.85 m).
 - **Phase D:** not triggered.
+- **Rank-loss test (final check; the line is now closed).** Same setup, loss → Method 4 v2 `rank_pair_loss`, per-tile post-hoc slope calibration.
+  Against the identically calibrated frozen-DAv2 oracle: ICESat-2 16.25 vs. 16.75 m, 18/32 tiles, **Holm p = 0.54** (no real signal); still about 5.7× worse than FABDEM.
+  Descriptive, not pre-registered: it beats Phase C's magnitude loss by 0.35 m (28/32). **The Sentinel-2 learned-terrain-correction line is CLOSED; don't reopen.**
 
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
 - **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:
@@ -484,6 +487,7 @@ to match.
   - The model-free fields match an independent recompute exactly, and the analysis re-run reproduces `summary.json` exactly.
   - R does not help: 16/32 tiles, p_Holm = 0.82.
 - **Phase D:** not triggered. Open item 0d is closed.
+- **Rank-loss test:** no signal vs. the oracle (18/32, Holm p = 0.54). The Sentinel-2 learned-terrain-correction line is closed, as pre-agreed.
 - **Repo housekeeping.**
   - `kaggle/`, `kaggle_phase2.5_package/` and `scripts 2/` were consolidated: scripts went to `scripts/` and manuals to `data/kaggle_bundles/` (1.86 GB freed; `data/REGENERATION.md`).
   - The Phase C Kaggle export was deleted after validation. Its script is kept as `scripts/s2_token_grid_phase_c_kaggle.py`.
