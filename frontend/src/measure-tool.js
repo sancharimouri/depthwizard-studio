@@ -6,10 +6,10 @@
 //   measure-metrics.js distances / rise / gradient / area from the RAW DEM
 //   measure-model.js   modes, click rules, undo stack, session-only save
 // This file draws the selection (an SVG overlay above the WebGL canvas:
-// crisp glowing lines, native hover/right-click/cursors), handles pointer and
-// keyboard input, and renders the minimal toolbar (Measure ▾ / Save ▾ / mouse
-// pointer — the reference toolbar's pills this tool needs; the rest of that
-// toolbar and the side panels are a later step).
+// crisp glowing lines, native hover/right-click/cursors) and handles pointer
+// and keyboard input. The toolbar, library, terrain context menu and notes
+// around it live in expanded-chrome.js, which drives this tool through the
+// API returned below.
 
 import * as THREE from "three";
 import { raycastHeightfield, surfaceAt, gridToLocalXY } from "./heightfield.js";
@@ -145,19 +145,6 @@ export function createMeasureTool({ viewer, box, canvas }) {
     const toast = el("div", { class: "measure-toast", role: "alert", hidden: "" }, box);
     const menu = el("div", { class: "measure-menu", role: "menu", hidden: "" }, box);
     const status = el("div", { class: "measure-status", hidden: "" }, box);
-
-    const toolbar = el("div", { class: "measure-toolbar", role: "toolbar", "aria-label": "Measurement tools" }, box);
-    const measureWrap = el("div", { class: "measure-pill-wrap" }, toolbar);
-    const measureBtn = el("button", { class: "measure-pill", type: "button", "aria-haspopup": "menu", "aria-expanded": "false" }, measureWrap);
-    const measureDrop = el("div", { class: "measure-drop", role: "menu", hidden: "" }, measureWrap);
-    const optTwo = el("button", { type: "button", role: "menuitemradio", "data-mode": MODES.TWO_POINT, text: "Two points (A → B)" }, measureDrop);
-    const optCont = el("button", { type: "button", role: "menuitemradio", "data-mode": MODES.CONTINUOUS, text: "Continuous (chain / shape)" }, measureDrop);
-    const saveWrap = el("div", { class: "measure-pill-wrap" }, toolbar);
-    const saveBtn = el("button", { class: "measure-pill", type: "button", "aria-haspopup": "menu", "aria-expanded": "false" }, saveWrap);
-    const saveDrop = el("div", { class: "measure-drop", role: "menu", hidden: "" }, saveWrap);
-    const saveNow = el("button", { type: "button", role: "menuitem", text: "Save current measurement" }, saveDrop);
-    const saveInfo = el("div", { class: "measure-drop-note" }, saveDrop);
-    const pointerBtn = el("button", { class: "measure-pill", type: "button", "aria-pressed": "true", text: "Mouse pointer" }, toolbar);
 
     // ---------------------------------------------------------------- feedback
     let toastTimer = null;
@@ -355,48 +342,13 @@ export function createMeasureTool({ viewer, box, canvas }) {
         status.querySelector(".ms-undo").addEventListener("click", () => { handleOutcome(model.undo()); dirty = true; });
     }
 
+    const renderListeners = [];
     function renderToolbar() {
-        const m = model.mode;
-        measureBtn.textContent = m === MODES.TWO_POINT ? "Measure · 2 points ▾" : m === MODES.CONTINUOUS ? "Measure · continuous ▾" : "Measure A to B ▾";
-        measureBtn.classList.toggle("is-active", m !== MODES.NORMAL);
-        optTwo.setAttribute("aria-checked", String(m === MODES.TWO_POINT));
-        optCont.setAttribute("aria-checked", String(m === MODES.CONTINUOUS));
-        pointerBtn.classList.toggle("is-active", m === MODES.NORMAL);
-        pointerBtn.setAttribute("aria-pressed", String(m === MODES.NORMAL));
-        saveBtn.textContent = `Save${model.saved.length ? ` (${model.saved.length})` : ""} ▾`;
-        saveNow.disabled = !model.chains.some(c => c.points.length >= 2);
-        saveInfo.textContent = "Session only — kept until you reload or close. Permanent storage isn't built yet.";
-        canvas.classList.toggle("is-measuring", m !== MODES.NORMAL);
-    }
-
-    // ---------------------------------------------------------------- toolbar
-    function closeDrops(except = null) {
-        for (const [btn, drop] of [[measureBtn, measureDrop], [saveBtn, saveDrop]]) {
-            if (drop !== except) {
-                drop.hidden = true;
-                btn.setAttribute("aria-expanded", "false");
-            }
+        canvas.classList.toggle("is-measuring", model.mode !== MODES.NORMAL);
+        for (const fn of renderListeners) {
+            fn();
         }
     }
-    function toggleDrop(btn, drop) {
-        const open = drop.hidden;
-        closeDrops(open ? drop : null);
-        drop.hidden = !open;
-        btn.setAttribute("aria-expanded", String(open));
-    }
-    measureBtn.addEventListener("click", () => toggleDrop(measureBtn, measureDrop));
-    saveBtn.addEventListener("click", () => toggleDrop(saveBtn, saveDrop));
-    for (const opt of [optTwo, optCont]) {
-        opt.addEventListener("click", () => {
-            closeDrops();
-            setMode(opt.dataset.mode);
-        });
-    }
-    pointerBtn.addEventListener("click", () => { closeDrops(); setMode(MODES.NORMAL); });
-    saveNow.addEventListener("click", () => {
-        closeDrops();
-        handleOutcome(model.save((pts, closed) => measureChain(geo, pts, closed)));
-    });
 
     function setMode(mode) {
         closeMenu();
@@ -423,7 +375,6 @@ export function createMeasureTool({ viewer, box, canvas }) {
 
     function openMenu(kind, ref, clientX, clientY) {
         closeMenu();
-        closeDrops();
         menuRef = { kind, ...ref };
         const boxRect = box.getBoundingClientRect();
         const chain = model.chains[ref.chain];
@@ -492,11 +443,8 @@ export function createMeasureTool({ viewer, box, canvas }) {
         if (!menu.hidden && !menu.contains(e.target)) {
             closeMenu();
         }
-        if (toolbar.contains(e.target) || menu.contains(e.target) || status.contains(e.target)) {
-            return;
-        }
-        if (!e.target.closest?.(".measure-toolbar")) {
-            closeDrops();
+        if (e.target.closest?.("[data-xv-ui]") || menu.contains(e.target) || status.contains(e.target)) {
+            return; // the surrounding chrome (toolbar, library, notes…) owns these
         }
         const ref = refOf(e.target);
         if (ref && ref.kind === "point") {
@@ -601,9 +549,6 @@ export function createMeasureTool({ viewer, box, canvas }) {
     });
 
     document.addEventListener("pointerdown", e => {
-        if (!toolbar.contains(e.target)) {
-            closeDrops();
-        }
         if (!menu.hidden && !menu.contains(e.target) && !box.contains(e.target)) {
             closeMenu();
         }
@@ -619,10 +564,11 @@ export function createMeasureTool({ viewer, box, canvas }) {
         }
         const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
         if (e.key === "Escape") {
+            if (document.querySelector("[data-xv-popover]:not([hidden])")) {
+                return; // an open chrome popover/dialog closes first (handled there)
+            }
             if (!menu.hidden) {
                 closeMenu();
-            } else if (!measureDrop.hidden || !saveDrop.hidden) {
-                closeDrops();
             } else if (model.mode !== MODES.NORMAL && !typing) {
                 if (dragRef) {
                     return;
@@ -666,11 +612,73 @@ export function createMeasureTool({ viewer, box, canvas }) {
 
     renderToolbar();
 
+    // Chrome hooks (expanded-view toolbar, library, context menu, notes).
+    function screenPath(p0, p1, lift = LINE_LIFT) {
+        // Draped screen polyline between two grid points; null entries = gaps.
+        const n = Math.max(1, Math.ceil(Math.hypot(p1.x - p0.x, p1.y - p0.y) * 2));
+        const out = [];
+        for (let i = 0; i <= n; i++) {
+            const t = i / n;
+            out.push(syncTerrain() ? project(p0.x + (p1.x - p0.x) * t, p0.y + (p1.y - p0.y) * t, lift) : null);
+        }
+        return out;
+    }
+
+    function saveSelection() {
+        return model.save((pts, closed) => measureChain(geo, pts, closed));
+    }
+
+    function clearSelection() {
+        const r = model.clear();
+        if (r.type === "cleared") {
+            showToast("Selection cleared (Undo brings it back).", "info");
+        }
+        return r;
+    }
+
+    // Removes the selection point nearest to a grid position (undoable).
+    function deleteNearestPoint(x, y) {
+        let best = null;
+        model.chains.forEach((c, ci) => c.points.forEach((p, pi) => {
+            const d = Math.hypot(p.x - x, p.y - y);
+            if (!best || d < best.d) {
+                best = { chain: ci, index: pi, d };
+            }
+        }));
+        if (!best) {
+            return null;
+        }
+        const r = model.deletePoint({ chain: best.chain, index: best.index });
+        showToast(`Removed point ${best.index + 1} from the selection (Undo brings it back).`, "info");
+        return r;
+    }
+
+    // "Start selection" from the terrain context menu: enter a measure mode
+    // and place the first point where the user right-clicked.
+    function startSelectionAt(mode, hit) {
+        setMode(mode);
+        handleOutcome(model.click(hit, null));
+    }
+
     return {
         model,
         update,
         setMode,
         pick,
+        showToast,
+        screenPath,
+        saveSelection,
+        clearSelection,
+        deleteNearestPoint,
+        startSelectionAt,
+        invalidate: () => { dirty = true; },
+        onRender: fn => renderListeners.push(fn),
+        get geo() {
+            return geo;
+        },
+        get lineLift() {
+            return LINE_LIFT;
+        },
         // Test/diagnostic hooks (read-only views).
         get saved() {
             return model.saved;

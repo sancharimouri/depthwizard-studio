@@ -329,6 +329,22 @@ terrain.** None of the research-track work is deployed into it.
   They now say DEM elevation, no learned correction, and Sentinel-2 corrections tested and not adopted.
 - Verified in headless Chrome: all pages and flows work, with 0 JS exceptions (the only console error is the pre-existing favicon 404).
 
+**Expanded-view chrome (2026-09-25; `frontend/src/expanded-chrome.js`):**
+- **Icon toolbar** (outline icons; names as tooltips only), in `reference.jpg` order: Screenshot, Record (disabled placeholder),
+  Measure ▾, View ▾, Flythrough, Save + Library ▾, Mouse pointer, Notes, Trash (clears the current selection).
+- **Library:** Points / Lines / Areas / Screenshots / Recordings. Per-item show/hide and delete; per-category and all-items delete,
+  both with confirmation. **Session-only (in memory).**
+- **Screenshots** are real (canvas capture with the measurement/pins composited, a preview, and a PNG download). **Recording is a placeholder.**
+- **Terrain right-click in pointer mode:**
+  - Save point (name + tag), Add / Show / Delete note (pins open a square popup).
+  - "Delete from selection" or "Start selection here", depending on whether a selection exists.
+- **Play/Pause:** a user pause of the idle auto-rotation, via `controls.setAutoRotatePaused`.
+- **Theme toggle:** sun while dark, moon while bright. It reuses `applyWorkbenchTheme` (the Workbench bright palette).
+- **Scenario analysis:** Flood (existing lowest-30%-elevation shading, now labelled illustrative) plus **Earthquake: an explicit
+  placeholder** (a red gradient on the steepest slopes, `terrain.setEarthquakeOverlay`, not a seismic model).
+  - **There is no Landslide scenario anywhere in the code** (it's only in `reference.jpg`), so none was built.
+- 62/62 real-input headless checks; the measurement suite re-run after the refactor gives 54/54.
+
 **3D measurement tool (2026-09-25; deliverables-audit item 6 → partial):** it lives in the expanded final-demo view.
 - **Toolbar:** "Measure A to B ▾" (two points / continuous), "Save ▾" and "Mouse pointer" pills, following `reference.jpg`.
   The other pills and the side panels are the next step.
