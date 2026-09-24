@@ -83,9 +83,16 @@ def main():
         if device.type == "mps":
             torch.mps.empty_cache()
 
-    rp = np.array([[x["rmse_new"], x["rmse_saved"], x["slope_new"], x["slope_saved"]] for x in repro])
-    rmse_rel = np.abs(rp[:, 0] - rp[:, 1]) / rp[:, 1]
-    slope_sign_agree = float(np.mean(np.sign(rp[:, 2]) == np.sign(rp[:, 3])))
+    summarize(allrows, tids, repro, OUT)
+
+
+def summarize(allrows, tids, repro, out_dir):
+    """Per-tile / pooled raw Spearman, calibration-implied r, tests and case; writes out_dir/summary.json.
+    repro=None when the scores come from the run itself (no re-fit)."""
+    if repro:
+        rp = np.array([[x["rmse_new"], x["rmse_saved"], x["slope_new"], x["slope_saved"]] for x in repro])
+        rmse_rel = np.abs(rp[:, 0] - rp[:, 1]) / rp[:, 1]
+        slope_sign_agree = float(np.mean(np.sign(rp[:, 2]) == np.sign(rp[:, 3])))
 
     def crop_rho(x, h):
         if len(h) < MIN_CELLS or np.ptp(h) == 0 or np.ptp(x) == 0:
@@ -124,9 +131,9 @@ def main():
         m = v[rng.integers(0, len(v), (B, len(v)))].mean(1)
         return [float(np.percentile(m, 2.5)), float(np.percentile(m, 97.5))]
 
-    S = {"reproduction": {"tile_folds": len(repro), "max_rel_diff_icesat_rmse": float(rmse_rel.max()),
-                          "median_rel_diff_icesat_rmse": float(np.median(rmse_rel)),
-                          "slope_sign_agreement": slope_sign_agree},
+    S = {"reproduction": ({"tile_folds": len(repro), "max_rel_diff_icesat_rmse": float(rmse_rel.max()),
+                           "median_rel_diff_icesat_rmse": float(np.median(rmse_rel)),
+                           "slope_sign_agreement": slope_sign_agree} if repro else "not a re-fit: scores from the run itself"),
          "min_cells_per_crop": MIN_CELLS, "n_tiles": len(tids), "means": {}, "tests": {}, "per_tile": per_tile}
     for k in ("within_crop_model", "within_crop_oracle", "within_crop_fab", "calib_implied_r",
               "whole_tile_model", "whole_tile_oracle", "whole_tile_fab"):
@@ -156,9 +163,9 @@ def main():
     else:
         case = "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
     S["case"] = case
-    np.savez_compressed(OUT / "cells.npz", **{f"{i}_{k}": np.asarray(r[k]) for i, r in enumerate(allrows)
+    np.savez_compressed(out_dir / "cells.npz", **{f"{i}_{k}": np.asarray(r[k]) for i, r in enumerate(allrows)
                                               for k in ("h", "model", "oracle", "fab", "calib")})
-    (OUT / "summary.json").write_text(json.dumps(S, indent=1))
+    (out_dir / "summary.json").write_text(json.dumps(S, indent=1))
     print(json.dumps({k: v for k, v in S.items() if k != "per_tile"}, indent=1))
 
 

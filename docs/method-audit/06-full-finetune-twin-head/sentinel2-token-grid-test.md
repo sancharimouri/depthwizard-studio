@@ -592,3 +592,54 @@ They were scored on 6,358 held-out crops with ICESat-2 cells in total. Log: `ran
 
 **Verdict.** As pre-agreed, the Sentinel-2 learned terrain-correction line **stays closed**, and no isotonic follow-up
 is warranted.
+
+## 2026-09-24 — Landsat sensor-identity test: pre-registration (committed before any Landsat data is fetched)
+
+**Question.** Is Sentinel-2's weak raw ranking specific to the sensor or its processing, or is it a general resolution
+wall? Real coarse imagery from a different sensor: Landsat 8/9 OLI band 8 (panchromatic, 15 m).
+
+**Script.** `scripts/landsat_rank_test.py` (`fetch` / `run` / `compare`). Output: `data/landsat_benchmark/`.
+
+**Data** (the same 32 benchmark footprints; exact overlap is available, since Landsat covers all of India):
+- Earth Engine `LANDSAT/LC08` + `LC09` `C02/T1_TOA`, band B8, **median** of 2025 scenes with CLOUD_COVER < 20 (the
+  Sentinel-2 acquisition year). Widened to 2024–2025 with < 40 only for tiles that have < 3 scenes; recorded per tile
+  in `landsat_fetch_meta.csv`.
+- Fetched at native 15 m on a grid aligned to each Sentinel-2 tile, then **bilinearly warped onto that tile's exact
+  10 m grid**. This adds no information. It makes the crops, token geometry (5×5), FABDEM target cells and ICESat-2
+  cells **identical** to the Sentinel-2 rank-loss run; only the image content differs.
+- 8-bit per-tile 2–98% stretch, replicated to 3 channels (DAv2 expects RGB).
+
+**Recipe: unchanged.**
+- `s2_rank_loss_test.fit` / `calibrated_eval` / `scores_all` / `analyze`: arm-P geometry, Method 4 v2 `rank_pair_loss`,
+  600 × 4 steps, seed 42, 4 quadrant folds, per-tile post-hoc slope calibration.
+- Oracle: frozen DAv2-Large run on the Landsat tile exactly as the Sentinel-2 oracle was made (`run_inference`, whole
+  tile at 518), with the identical calibration.
+- Raw Spearman: `s2_rank_raw_spearman.cells_for_fold` / `summarize` on the **same trained models**, with no re-fit.
+
+**Reported for Landsat (all required):**
+- (a) raw within-crop Spearman of the rank model's output vs ICESat-2, per tile and pooled; whole-tile secondary;
+- (b) the same for frozen DAv2-Large;
+- (c) calibrated ICESat-2 RMSE, with the rank-loss pass rule vs the oracle, for continuity;
+- FABDEM's within-crop ρ as a reference.
+
+**Comparison with Sentinel-2** (paired by tile; `compare` writes `comparison_vs_s2.json`):
+- **Sentinel-2 values used:** raw ρ from `rank_loss/raw_spearman/summary.json` (the equivalent re-fits); calibrated RMSE
+  from `rank_loss/summary.json` (model 16.25 m).
+
+**Decision rule:**
+- **Case A (sensor-specific; next step = investigate the Sentinel-2 pipeline).** Landsat's raw within-crop Spearman (rank
+  model) exceeds Sentinel-2's by a mean of **≥ 0.10**, higher on a **majority of tiles**, with **paired Wilcoxon
+  p < 0.05**.
+- **Case B (no sensor-specific evidence; the wall looks general).** Otherwise.
+- **Divergence flag.** If the paired raw-ρ test and the paired calibrated-RMSE test are **both significant (p < 0.05) in
+  opposite directions** (e.g. Landsat ranks better but calibrates worse), it is flagged, and the calibration step must
+  be revisited before A or B is trusted. The same flag is reported within Landsat, as raw-ρ vs calibration-implied r
+  (the Case-3 test).
+
+**Caveats, stated in advance:**
+1. Landsat pan is **coarser** (15 m) than Sentinel-2 (10 m). A Landsat *win* would therefore be strong evidence of a
+   Sentinel-2-specific problem. A tie can't separate "general wall" from "Landsat is simply coarser".
+2. **Both sensors sit above the synthetic 5–6 m boundary**, so this test can't locate a real-sensor boundary. It only
+   says whether sensor identity matters at 10–15 m.
+3. "Sensor identity" here also includes: panchromatic vs RGB bands, a median composite vs a single scene, and a
+   different stretch. The test separates *sensor* from *GSD*, not these sub-factors.
