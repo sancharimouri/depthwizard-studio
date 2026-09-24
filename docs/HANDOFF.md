@@ -99,6 +99,10 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
   **The raw-Spearman nulls on coarse sensors are real, not a blind spot.** But calibrated RMSE: the rank model loses to frozen DAv2-L even here (3.92 vs. 3.35 m, 5/31).
   So the calibrated "no real signal" rule means "rank training didn't beat DAv2-L", not "no signal". Caveat: 18 m crops and AGL, vs. 600 m and terrain.
 
+- **Terrain-relief positive control (2026-09-24): PAUSED by the user before training; no result.** Pre-registered + amended to 8 tiles (`sentinel2-token-grid-test.md`, commits d542074 / 91ffff4 / c550a40).
+  State: 8 tiles fetched (`data/terrain_relief_control/cache/`, local only); DAv2-L oracle depths done; Kaggle bundle built (`kaggle_bundle/terrain_relief_kaggle_bundle.zip`, 1.56 GB; parity 2.1e-7, resume exact); notebook in `kaggle_kernel/` (account `sancharimouri`, token `KAGGLE_TOKEN` in `.env`, use `uvx kaggle` with `KAGGLE_API_TOKEN`).
+  Blocker: upload at ~30 kB/s (about 15 h); it was killed at 4%, and no dataset exists on Kaggle. **Resume options:** (a) upload from a faster link; (b) have Kaggle fetch the 8 tiles itself from `selection.json` and checksum them against the local cache (planned, not written); (c) local MPS run, about 9 h (scoring-bound; a smaller inference batch should cut it, unmeasured).
+
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
 - **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:
   - MAE 3.130 vs. 3.474; RMSE **4.583 vs. 4.426**; Pearson 0.638 vs. 0.491; Spearman 0.583 vs. 0.425.
