@@ -643,3 +643,64 @@ wall? Real coarse imagery from a different sensor: Landsat 8/9 OLI band 8 (panch
    says whether sensor identity matters at 10–15 m.
 3. "Sensor identity" here also includes: panchromatic vs RGB bands, a median composite vs a single scene, and a
    different stretch. The test separates *sensor* from *GSD*, not these sub-factors.
+
+## 2026-09-24 — Landsat sensor-identity test result: **Case B. No sensor-specific evidence; no divergence between raw and calibrated.**
+
+**Data.**
+- All 32 tiles came from the 2025 window: 12–81 low-cloud scenes per tile, 100% finite. No fallback window was needed
+  (`landsat_fetch_meta.csv`).
+- **Co-registration with the Sentinel-2 grid, checked before training:** the best cross-correlation offset is within
+  **±1 px at 10 m** for all 32 tiles (12 at exactly 0,0). That is under one native Landsat pixel.
+- Median correlation between Landsat pan and Sentinel-2 grayscale is 0.78. Kurnool is lowest at 0.27; it is
+  agricultural, and a year-median composite differs from a single date.
+- Two tiles checked visually.
+- One fix before any computation: a `sys.path` bug meant `backend` couldn't be imported.
+
+**The run.** 4 folds × 84 s on MPS, plus 32 DAv2-Large oracle depths (`run.log`). Raw Spearman comes from the same
+trained models, with no re-fit.
+
+**Checked, not a bug:** the counts of negative calibration slopes (16 and 17 of 128) equal Sentinel-2's by coincidence.
+The tile sets differ, and 0 of 128 slopes are identical.
+
+**Landsat results** (32 tiles; mean [95% tile-bootstrap CI]):
+
+| Raw signal vs ICESat-2 height | Within-crop Spearman (primary) | Pooled within-crop | Whole-tile (secondary, caveated) |
+|---|---|---|---|
+| (a) Rank model, raw output | **0.116** [0.062, 0.171] | 0.079 | 0.166 [0.063, 0.267] |
+| (b) Frozen DAv2-Large (oracle raw) | **0.115** [0.054, 0.181] | 0.069 | 0.275 [0.126, 0.410] |
+| FABDEM 10 m (reference) | 0.631 [0.533, 0.728] | 0.582 | 0.888 [0.826, 0.941] |
+| Linear calibration's implied r (rank model) | 0.081 [0.035, 0.132] | — | — |
+
+(c) **Calibrated ICESat-2 RMSE** (the rank-loss pass rule vs the identically calibrated oracle):
+- model **16.356 m** vs oracle 15.948 m, Δ +0.407 [−0.777, +1.815];
+- model better on 16/32 tiles, p = 0.80 (Holm 1.0), so `verdict_real_signal = false`;
+- the flat crop mean is 17.275 m and FABDEM 2.855 m. DEM held-out: 17.254 vs 16.750, 16/32.
+
+Within Landsat:
+- rank model vs oracle, raw within-crop: Δ +0.001, 19/32, p = 0.75;
+- raw ρ − calibration-implied r: Δ +0.035 [−0.014, +0.084], 22/32, p = 0.080. That is Case 3 on the same rule as
+  Sentinel-2, with no significant within-Landsat divergence.
+
+**Comparison with Sentinel-2** (paired by tile, `comparison_vs_s2.json`):
+
+| Measure | Landsat pan 15 m | Sentinel-2 RGB 10 m | Landsat − S2 [95% CI] | Landsat better | Wilcoxon p |
+|---|---|---|---|---|---|
+| Raw within-crop ρ, rank model | 0.116 | 0.134 | −0.018 [−0.043, +0.007] | 12/32 | 0.091 |
+| Raw within-crop ρ, DAv2-Large | 0.115 | 0.109 | +0.006 [−0.048, +0.071] | 11/32 | 0.262 |
+| Calibrated ICESat-2 RMSE, rank model (m) | 16.356 | 16.251 | +0.105 [−0.176, +0.418] | 15/32 | 0.803 |
+
+**Verdict per the pre-registered rule:**
+- **Case B.** Landsat's raw ranking is *not* higher than Sentinel-2's. Its point estimate is slightly lower, as expected
+  for a coarser sensor, and not significantly so.
+- **No divergence.** Neither paired test is significant, and the raw and calibrated point estimates agree in direction
+  (Landsat marginally worse on both).
+- There's no evidence that Sentinel-2's processing degrades the input. At 10–15 m both sensors give equally weak
+  within-crop ranking (about 0.11–0.13 vs FABDEM's 0.63).
+
+**What this does and doesn't establish** (the caveats pre-registered above):
+- A different sensor with different bands (pan vs RGB), a composite instead of a single date, and a different stretch
+  gives the same weak result. That argues against a Sentinel-2-specific explanation.
+- It can't separate "general resolution wall" from "Landsat is simply coarser", and both sensors are above the synthetic
+  5–6 m boundary.
+- Per the pre-registered reading, **any further dataset hunting should target genuinely finer GSD** (≤ ~5 m, below the
+  synthetic boundary), regardless of sensor. No such step is started here.

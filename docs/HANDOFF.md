@@ -84,6 +84,9 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
   Against the identically calibrated frozen-DAv2 oracle: ICESat-2 16.25 vs. 16.74 m, 18/32 tiles, **Holm p = 0.54** (no real signal); still about 5.7× worse than FABDEM.
   Descriptive, not pre-registered: it beats Phase C's magnitude loss by 0.35 m (28/32). **The Sentinel-2 learned-terrain-correction line is CLOSED; don't reopen.**
 - **Raw-Spearman check (Case 3):** within-crop Spearman vs. ICESat-2 is rank model 0.134, DAv2-L 0.109, FABDEM 0.631. It is fully expressed by the linear calibration (gap +0.025, 16/32, p = 0.41), so **isotonic is not indicated**.
+- **Landsat 8/9 pan (15 m) sensor-identity test: Case B.** Same footprints, grid, recipe and ICESat-2 cells.
+  Raw within-crop ρ: rank model 0.116 vs. S2 0.134 (p = 0.09); DAv2-L 0.115 vs. 0.109. Calibrated 16.36 vs. 16.25 m (p = 0.80). No raw/calibrated divergence.
+  **Not Sentinel-2-specific.** Any further data should target GSD ≤ ~5 m, regardless of sensor. Nothing started.
 
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
 - **GAMUS** (2,861 aerial test tiles, DC/NYC/PHL, 0 leakage). Method 6 vs. the oracle, mean of tiles:

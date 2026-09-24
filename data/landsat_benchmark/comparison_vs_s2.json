@@ -1,0 +1,40 @@
+{
+ "raw_within_crop_model": {
+  "landsat_mean": 0.1159479761327794,
+  "s2_mean": 0.13435287105568716,
+  "diff_mean": -0.01840489492290775,
+  "ci95": [
+   -0.043016658376083705,
+   0.00703732596123826
+  ],
+  "landsat_better": 12,
+  "n": 32,
+  "wilcoxon_p": 0.09081820072606206
+ },
+ "raw_within_crop_oracle": {
+  "landsat_mean": 0.11528462643900633,
+  "s2_mean": 0.10926796367905915,
+  "diff_mean": 0.006016662759947174,
+  "ci95": [
+   -0.047808069592408235,
+   0.07106619106379866
+  ],
+  "landsat_better": 11,
+  "n": 32,
+  "wilcoxon_p": 0.2618452035821974
+ },
+ "calibrated_icesat_rmse_model": {
+  "landsat_mean": 16.355609407109366,
+  "s2_mean": 16.250783778471124,
+  "diff_mean": 0.10482562863824245,
+  "ci95": [
+   -0.17605021033852136,
+   0.41819106640100984
+  ],
+  "landsat_better": 15,
+  "n": 32,
+  "wilcoxon_p": 0.8033682219684124
+ },
+ "divergence_raw_vs_calibrated": false,
+ "case": "B: Landsat raw ranking not meaningfully higher -> no sensor-specific evidence; resolution wall looks general"
+}

@@ -36,6 +36,7 @@ from rasterio.warp import Resampling, reproject
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT))  # for backend.depth.depth_engine (oracle depth)
 import s2_rank_loss_test as R  # noqa: E402
 import s2_rank_raw_spearman as RS  # noqa: E402
 import s2_token_grid_phase_c as C  # noqa: E402

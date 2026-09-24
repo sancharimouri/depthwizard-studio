@@ -1,0 +1,175 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/503 [00:00<?, ?it/s]Loading weights: 100%|██████████| 503/503 [00:00<00:00, 22833.37it/s]
+dav2-L almora
+dav2-L amalapuram
+dav2-L bathinda
+dav2-L bengaluru
+dav2-L bhitarkanika
+dav2-L chennai
+dav2-L dehradun
+dav2-L delhi
+dav2-L dharamshala
+dav2-L digha
+dav2-L fatehpur
+dav2-L goa_estuary
+dav2-L hisar
+dav2-L hyderabad
+dav2-L jaipur
+dav2-L kakinada
+dav2-L karnal
+dav2-L kochi_city
+dav2-L kohima
+dav2-L kota
+dav2-L kurnool
+dav2-L kutch
+dav2-L manali
+dav2-L mumbai
+dav2-L nagapattinam
+dav2-L nainital
+dav2-L nizamabad
+dav2-L ooty
+dav2-L pune
+dav2-L shimla
+dav2-L vembanad
+dav2-L vidisha
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 9149.72it/s]
+[rank_fold0] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold0] step 1/600 loss 0.9824 ETA 3.4 min
+[rank_fold0] step 100/600 loss 0.3640 ETA 0.8 min
+[rank_fold0] step 200/600 loss 0.2312 ETA 0.6 min
+[rank_fold0] step 300/600 loss 0.2221 ETA 0.5 min
+[rank_fold0] step 400/600 loss 0.2221 ETA 0.3 min
+[rank_fold0] step 500/600 loss 0.2114 ETA 0.2 min
+[rank_fold0] step 600/600 loss 0.2108 ETA 0.0 min
+fold0: done 84s, 1547 held-out crops with ICESat-2 cells
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 20079.82it/s]
+[rank_fold1] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold1] step 1/600 loss 0.2406 ETA 2.6 min
+[rank_fold1] step 100/600 loss 0.3585 ETA 0.8 min
+[rank_fold1] step 200/600 loss 0.2344 ETA 0.6 min
+[rank_fold1] step 300/600 loss 0.2297 ETA 0.5 min
+[rank_fold1] step 400/600 loss 0.2161 ETA 0.3 min
+[rank_fold1] step 500/600 loss 0.2183 ETA 0.2 min
+[rank_fold1] step 600/600 loss 0.2074 ETA 0.0 min
+fold1: done 84s, 1591 held-out crops with ICESat-2 cells
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 21027.57it/s]
+[rank_fold2] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold2] step 1/600 loss 0.8748 ETA 2.5 min
+[rank_fold2] step 100/600 loss 0.3998 ETA 0.8 min
+[rank_fold2] step 200/600 loss 0.2375 ETA 0.6 min
+[rank_fold2] step 300/600 loss 0.2200 ETA 0.5 min
+[rank_fold2] step 400/600 loss 0.2240 ETA 0.3 min
+[rank_fold2] step 500/600 loss 0.2136 ETA 0.2 min
+[rank_fold2] step 600/600 loss 0.2112 ETA 0.0 min
+fold2: done 84s, 1600 held-out crops with ICESat-2 cells
+Loading weights:   0%|          | 0/287 [00:00<?, ?it/s]Loading weights: 100%|██████████| 287/287 [00:00<00:00, 26301.46it/s]
+[rank_fold3] device=mps train crops 6144 steps 600 x batch 4
+[rank_fold3] step 1/600 loss 0.4040 ETA 2.6 min
+[rank_fold3] step 100/600 loss 0.3281 ETA 0.8 min
+[rank_fold3] step 200/600 loss 0.2350 ETA 0.6 min
+[rank_fold3] step 300/600 loss 0.2307 ETA 0.5 min
+[rank_fold3] step 400/600 loss 0.2167 ETA 0.3 min
+[rank_fold3] step 500/600 loss 0.2135 ETA 0.2 min
+[rank_fold3] step 600/600 loss 0.2053 ETA 0.0 min
+fold3: done 84s, 1620 held-out crops with ICESat-2 cells
+{
+ "n_tiles": 32,
+ "slopes": {
+  "model_median": 2.1132750793513964,
+  "oracle_median": 18.788235231061098,
+  "model_frac_negative": 0.125,
+  "oracle_frac_negative": 0.1328125
+ },
+ "verdict_real_signal": false
+}
+icesat2 {"model_mean_rmse": 16.355609407109366, "oracle_mean_rmse": 15.948137661806069, "model_minus_oracle": 0.40747174530329666, "ci95": [-0.77732874931916, 1.814800421381867], "model_wins": 16, "wilcoxon_p": 0.8033682219684124, "wilcoxon_p_holm": 1.0, "flat_mean_rmse": 17.275451522056215, "fabdem_mean_rmse": 2.8549946507866473, "context_phaseC_armP_mean_rmse": 16.60213118014128, "context_rank_minus_phaseC_P": {"mean": -0.2465217730319158, "ci95": [-0.6658864357726658, 0.10293115703188713], "rank_wins": 24, "wilcoxon_p": 0.019448095466941595}}
+dem_heldout {"model_mean_rmse": 17.254007931719464, "oracle_mean_rmse": 16.750074818603586, "model_minus_oracle": 0.503933113115876, "ci95": [-0.7980768426027055, 2.1529377382228496], "model_wins": 16, "wilcoxon_p": 0.5987727888859808, "wilcoxon_p_holm": 1.0}
+{
+ "reproduction": "not a re-fit: scores from the run itself",
+ "min_cells_per_crop": 10,
+ "n_tiles": 32,
+ "means": {
+  "within_crop_model": {
+   "mean": 0.1159479761327794,
+   "ci95": [
+    0.062271180916756076,
+    0.17085523135516073
+   ],
+   "n": 32
+  },
+  "within_crop_oracle": {
+   "mean": 0.11528462643900633,
+   "ci95": [
+    0.054453251320177025,
+    0.18089102510669422
+   ],
+   "n": 32
+  },
+  "within_crop_fab": {
+   "mean": 0.6311978037482313,
+   "ci95": [
+    0.5329990006574293,
+    0.7282063308415325
+   ],
+   "n": 32
+  },
+  "calib_implied_r": {
+   "mean": 0.08072968954595935,
+   "ci95": [
+    0.03548308829442748,
+    0.13240977258549508
+   ],
+   "n": 32
+  },
+  "whole_tile_model": {
+   "mean": 0.16569378801674878,
+   "ci95": [
+    0.06324673938490365,
+    0.26673568563051564
+   ],
+   "n": 32
+  },
+  "whole_tile_oracle": {
+   "mean": 0.2754743640502399,
+   "ci95": [
+    0.12595031644460902,
+    0.4099456698049333
+   ],
+   "n": 32
+  },
+  "whole_tile_fab": {
+   "mean": 0.8880792423146393,
+   "ci95": [
+    0.825852290245521,
+    0.9408792573357642
+   ],
+   "n": 32
+  },
+  "pooled_within_crop_model": 0.07872880981026939,
+  "pooled_within_crop_oracle": 0.06935193262159768,
+  "pooled_within_crop_fab": 0.5817113278422587
+ },
+ "tests": {
+  "model_vs_oracle": {
+   "diff_mean": 0.0006633496937730951,
+   "ci95": [
+    -0.060234227580062326,
+    0.05957377422605179
+   ],
+   "model_higher": 19,
+   "n": 32,
+   "wilcoxon_p": 0.7468255525454879
+  },
+  "model_spearman_minus_calib_implied": {
+   "diff_mean": 0.035218286586820066,
+   "ci95": [
+    -0.014469100549435867,
+    0.08392045278916135
+   ],
+   "spearman_higher": 22,
+   "n": 32,
+   "wilcoxon_p": 0.08032503305003047
+  }
+ },
+ "case": "3: non-trivial raw ranking, but linear calibration already expresses it -> isotonic not indicated; line stays closed"
+}
