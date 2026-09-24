@@ -240,7 +240,7 @@ def run(args):
     C.CACHE, R.OUT, R.DAV2 = OUT / "cache", OUT / "rank_loss", OUT / "dav2_depth"
     R.OUT.mkdir(parents=True, exist_ok=True)
     tids = sorted(t["tile"] for t in json.loads((OUT / "selection.json").read_text())["tiles"])
-    assert 10 <= len(tids) <= 15, len(tids)
+    assert len(tids) == 8, len(tids)  # user-directed scope amendment (was 10-15), see the doc
     oracle_depth(tids)
     device = get_device()
     allrows = []

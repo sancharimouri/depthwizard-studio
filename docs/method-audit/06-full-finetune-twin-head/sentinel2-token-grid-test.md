@@ -1242,3 +1242,11 @@ re-examining.
   Sentinel-2's FABDEM value.
 - **Scope.** One seed, 10–15 tiles from ≤ 5 US forest-mountain sites. The sites are selected by data availability
   (Olympic lost to DTM coverage).
+
+**Scope amendment (2026-09-24 20:3x IST; user-directed; made during the fetch, before any training or result):
+10–15 → 8 tiles.**
+- The fetch is stopped once 8 tiles pass the rule, in the pre-registered order: sites in Part D order, items ranked by
+  DTM relief.
+- Tiles are no longer taken in rule order past that point; nothing is chosen by result.
+- The decision rule is unchanged. With n = 8 the tile-bootstrap CI is wider, so a PASS needs a clearer effect.
+- The site mix is whatever the rule order yields by tile 8 (Tahoe, GRSM, MLBS), listed in the selection log.
