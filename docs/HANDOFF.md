@@ -81,7 +81,7 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
   R and P tie: ICESat-2 RMSE 16.54 vs. 16.60 m, 16/32 tiles, Holm p = 0.82. Both are about 6× worse than raw FABDEM (2.85 m).
 - **Phase D:** not triggered.
 - **Rank-loss test (final check; the line is now closed).** Same setup, loss → Method 4 v2 `rank_pair_loss`, per-tile post-hoc slope calibration.
-  Against the identically calibrated frozen-DAv2 oracle: ICESat-2 16.25 vs. 16.75 m, 18/32 tiles, **Holm p = 0.54** (no real signal); still about 5.7× worse than FABDEM.
+  Against the identically calibrated frozen-DAv2 oracle: ICESat-2 16.25 vs. 16.74 m, 18/32 tiles, **Holm p = 0.54** (no real signal); still about 5.7× worse than FABDEM.
   Descriptive, not pre-registered: it beats Phase C's magnitude loss by 0.35 m (28/32). **The Sentinel-2 learned-terrain-correction line is CLOSED; don't reopen.**
 
 **Generalization test (2026-09-23, `docs/method-audit/07-gamus-generalization/`): Method 6 does NOT generalize.**
