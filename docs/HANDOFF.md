@@ -317,6 +317,14 @@ Method 6's DFC2019 win. **A real DSM is the terrain source; DAv2 output is shown
 as a labeled relative-depth *visualization* layer, never as the thing that produced the
 terrain.** None of the research-track work is deployed into it.
 
+**Page order (2026-09-24, user-directed; navigation only, no DSM/DEM behaviour changed):**
+- **1 Workbench** (the default landing page: scene search, upload, prototype generation), **2 Explore** (the 4-region demo) and
+  **3 Docs** (new: what the tool does, how the pages work, the real capabilities and limits).
+- Page containers were renamed from `#page-1` / `#page-2` to semantic IDs `#page-workbench` / `#page-explore` / `#page-docs`.
+- The Workbench elevation captions were reworded: the stale "RDAH / Prior2DSM correction head … not yet trained" text is gone.
+  They now say DEM elevation, no learned correction, and Sentinel-2 corrections tested and not adopted.
+- Verified in headless Chrome: all pages and flows work, with 0 JS exceptions (the only console error is the pre-existing favicon 404).
+
 - **Labels (2026-09-23, text only):** the header reads "Satellite → 3D Terrain Visualization"
   (was "… Metric Terrain Reconstruction"). The "METRIC ELEVATION" layer/panel labels now read
   "DEM ELEVATION", and the captions read "DEM elevation from <source>". Verified in the

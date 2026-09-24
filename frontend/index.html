@@ -43,18 +43,26 @@
 
             <button
                 class="page-nav-tab active"
-                data-page="page-1"
+                data-page="page-workbench"
             >
                 <span class="page-nav-icon">1</span>
+                <span class="page-nav-label">Workbench</span>
+            </button>
+
+            <button
+                class="page-nav-tab"
+                data-page="page-explore"
+            >
+                <span class="page-nav-icon">2</span>
                 <span class="page-nav-label">Explore</span>
             </button>
 
             <button
                 class="page-nav-tab"
-                data-page="page-2"
+                data-page="page-docs"
             >
-                <span class="page-nav-icon">2</span>
-                <span class="page-nav-label">Workbench</span>
+                <span class="page-nav-icon">3</span>
+                <span class="page-nav-label">Docs</span>
             </button>
 
         </div>
@@ -63,10 +71,10 @@
 
 
     <!-- =====================================================
-         PAGE 1
+         PAGE 2 — EXPLORE (4-region demo)
     ====================================================== -->
 
-    <div id="page-1" class="page active">
+    <div id="page-explore" class="page">
 
     <!-- =====================================================
          TOP BAR
@@ -425,10 +433,10 @@
 
 
     <!-- =====================================================
-         PAGE 2 — WORKBENCH (layout skeleton, placeholder content)
+         PAGE 1 — WORKBENCH (scene search / upload; default page)
     ====================================================== -->
 
-    <div id="page-2" class="page">
+    <div id="page-workbench" class="page active">
 
         <button
             id="workbench-theme-toggle"
@@ -598,7 +606,7 @@
 
                         <div
                             class="staged-caption"
-                            data-lines='["Proposed: terrain DEM + RDAH / Prior2DSM-style correction head","+ sparse ICESat-2 anchors — not yet trained, see Explore’s pipeline log"]'
+                            data-lines='["DEM elevation — the terrain source; no learned correction applied","Sentinel-2 height corrections were tested and not adopted — see Docs"]'
                         ></div>
 
                     </div>
@@ -703,7 +711,7 @@
                         </div>
                     </div>
 
-                    <!-- Full-parity controls with Explore's page-1 viewer:
+                    <!-- Full-parity controls with Explore's page-explore viewer:
                          region rail, stats, layer switching, RUN
                          RECONSTRUCTION, FLYTHROUGH, DANGER ZONES. Reuses
                          the exact same CSS classes as Explore so the two
@@ -1061,6 +1069,173 @@
             </div>
 
         </div>
+
+    </div>
+
+    <!-- =====================================================
+         PAGE 3 — DOCS (what the tool does, how the pages work, real capabilities and limits)
+    ====================================================== -->
+
+    <div id="page-docs" class="page">
+
+        <article class="docs">
+
+            <header class="docs-hero">
+                <div class="docs-eyebrow">DOCUMENTATION</div>
+                <h1>What Depth Wizard does — and what it doesn’t</h1>
+                <p class="docs-lede">
+                    Depth Wizard turns satellite imagery into an interactive 3D terrain view. The terrain you see is
+                    always a real digital elevation model (DEM). Satellite imagery is draped on it as texture, and the
+                    output of a depth model (Depth Anything V2) is shown only as a labelled <em>relative-depth</em>
+                    visualisation — never as measured height.
+                </p>
+            </header>
+
+            <nav class="docs-toc" aria-label="On this page">
+                <a href="#docs-pages">The three pages</a>
+                <a href="#docs-heights">Where the heights come from</a>
+                <a href="#docs-research">What the research found</a>
+                <a href="#docs-limits">Coverage and limits</a>
+            </nav>
+
+            <section id="docs-pages" class="docs-section">
+                <h2>The three pages</h2>
+
+                <div class="docs-cards">
+                    <div class="docs-card">
+                        <div class="docs-card-num">1</div>
+                        <h3>Workbench</h3>
+                        <ul>
+                            <li>Search any place by name (OpenStreetMap geocoding).</li>
+                            <li><strong>Search for scene</strong> queries the Copernicus Data Space Ecosystem live for
+                                real Sentinel-2 L2A scenes at that location, filtered by date range and cloud cover,
+                                and previews the true-colour scene you pick.</li>
+                            <li><strong>Upload image</strong> previews a PNG/JPG of your own.</li>
+                            <li><strong>Start generation</strong> plays the pipeline’s steps. It is a
+                                <strong>prototype</strong>: the relative-depth, elevation, DSM and 3D panels show the
+                                Darjeeling reference results whatever scene you picked or uploaded. It is not a live
+                                reconstruction of your scene.</li>
+                        </ul>
+                    </div>
+                    <div class="docs-card">
+                        <div class="docs-card-num">2</div>
+                        <h3>Explore</h3>
+                        <ul>
+                            <li>Four real 10 × 10 km regions in West Bengal — Darjeeling, Kolkata, Bardhaman and
+                                Sundarbans — each with Sentinel-2 imagery, DAv2 relative depth and a DEM.</li>
+                            <li>Layers: satellite, relative depth and elevation (flat); DSM, DEM elevation and true
+                                colour (3D). The stats strip shows each region’s real numbers.</li>
+                            <li><strong>Run reconstruction</strong> replays the pipeline log, including real research
+                                findings. <strong>Flythrough</strong> is a scripted camera move; drag, scroll and pinch
+                                to orbit and zoom.</li>
+                        </ul>
+                    </div>
+                    <div class="docs-card">
+                        <div class="docs-card-num">3</div>
+                        <h3>Docs</h3>
+                        <ul>
+                            <li>This page: what the tool does, how the other two pages work, and what it can and
+                                can’t do today.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="docs-heights" class="docs-section">
+                <h2>Where the heights come from</h2>
+                <p>
+                    Every 3D surface in the app is a DEM. The three plains regions use Copernicus GLO-30 at 30 m, so
+                    they read less detailed than Darjeeling — that is the data, not a bug.
+                </p>
+                <div class="docs-table-wrap">
+                    <table class="docs-table">
+                        <thead>
+                            <tr><th>Region</th><th>Terrain source</th><th>Elevation range</th><th>Landscape</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Darjeeling</td><td>OpenTopography DSM (Copernicus GLO-30)</td><td>557–2478 m</td><td>hilly, forested</td></tr>
+                            <tr><td>Kolkata</td><td>Copernicus GLO-30</td><td>−8–35 m</td><td>urban</td></tr>
+                            <tr><td>Bardhaman</td><td>Copernicus GLO-30</td><td>18–50 m</td><td>agricultural</td></tr>
+                            <tr><td>Sundarbans</td><td>Copernicus GLO-30</td><td>0–10 m</td><td>coastal, mangrove</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    <strong>Relative depth</strong> is frozen Depth Anything V2 (ViT-Large). It orders pixels
+                    near-to-far; it has no metres. On nadir satellite imagery it does not reliably track elevation:
+                    on Darjeeling its correlation with the DEM flipped from +0.60 to −0.41 once the broad spatial trend
+                    was removed.
+                </p>
+            </section>
+
+            <section id="docs-research" class="docs-section">
+                <h2>What the research found</h2>
+                <p>
+                    Alongside the app, a research track tested whether real metric height can be predicted from
+                    imagery. The short answer depends on resolution.
+                </p>
+                <div class="docs-tiers">
+                    <div class="docs-tier">
+                        <div class="docs-tier-tag">SENTINEL-2 · 10 m · IN THE APP</div>
+                        <h3>DEM only</h3>
+                        <p>
+                            Across 32 Indian test tiles, nothing tested on top of the imagery (frequency fusion,
+                            random-forest and linear residuals, CNN corrections, a fine-tuned depth model, a ranking
+                            loss) beat simply using the DEM. The best terrain DEM
+                            is <strong>FABDEM</strong> — median error 1.78 m against ICESat-2 ground photons — and the
+                            best surface DEM is <strong>Copernicus GLO-30</strong> (4.48 m median against canopy-top
+                            segments). A second coarse sensor (Landsat, 15 m) behaved the same way.
+                        </p>
+                    </div>
+                    <div class="docs-tier">
+                        <div class="docs-tier-tag">VERY HIGH RESOLUTION · ~0.3 m · RESEARCH ONLY</div>
+                        <h3>Predicted height, gated on imagery</h3>
+                        <p>
+                            On 0.3 m imagery (the DFC2019 benchmark) a fine-tuned Depth Anything V2 does beat a strong
+                            per-tile baseline (MAE 1.98 m, RMSE 3.49 m). An offline pipeline builds
+                            DSM = FABDEM + predicted height above ground and was run on 6 Maxar crops in Sikkim and
+                            Darjeeling. It is <strong>not in the app</strong>. It under-states tall canopy (a ceiling
+                            around 18–23 m), it did not generalise to US aerial imagery, and it has only been tested on
+                            mountain terrain.
+                        </p>
+                    </div>
+                </div>
+                <p class="docs-note">
+                    In synthetic tests, a model trained on imagery coarsened to 5 m still clearly beat the baseline;
+                    from 6 m on it no longer did. That is why learned height is tied to very-high-resolution imagery
+                    and not to Sentinel-2.
+                </p>
+            </section>
+
+            <section id="docs-limits" class="docs-section">
+                <h2>Coverage and limits</h2>
+                <div class="docs-table-wrap">
+                    <table class="docs-table docs-status">
+                        <thead>
+                            <tr><th>Capability</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Live Sentinel-2 scene search and preview (anywhere CDSE has scenes)</td><td><span class="docs-pill yes">in the app</span></td></tr>
+                            <tr><td>3D terrain with draped imagery, 4 West Bengal regions</td><td><span class="docs-pill yes">in the app</span></td></tr>
+                            <tr><td>Reconstruction of an uploaded or searched scene</td><td><span class="docs-pill partial">prototype — shows reference results</span></td></tr>
+                            <tr><td>DSM from very-high-resolution imagery</td><td><span class="docs-pill partial">research only, offline</span></td></tr>
+                            <tr><td>GeoTIFF export of the DSM</td><td><span class="docs-pill no">not in the app</span></td></tr>
+                            <tr><td>Slope and structure-height analysis tools</td><td><span class="docs-pill no">not built</span></td></tr>
+                            <tr><td>In-app validation against ICESat-2 or LiDAR</td><td><span class="docs-pill no">not built</span></td></tr>
+                            <tr><td>First-person flythrough</td><td><span class="docs-pill partial">orbit plus a scripted move</span></td></tr>
+                            <tr><td>Standalone (packaged) deployment</td><td><span class="docs-pill no">not built</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    <strong>India coverage.</strong> Sentinel-2 imagery is available everywhere, so the DEM-based view
+                    works for any location. Free very-high-resolution imagery for India (Maxar Open Data) is tied to
+                    disaster events; only mountain crops in Sikkim and Darjeeling have been tested, and no plains,
+                    coastal or urban very-high-resolution areas have been tested yet.
+                </p>
+            </section>
+
+        </article>
 
     </div>
 
