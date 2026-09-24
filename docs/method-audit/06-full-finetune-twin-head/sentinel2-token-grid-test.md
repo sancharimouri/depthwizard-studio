@@ -792,3 +792,35 @@ within-crop Spearman:
   **within Brazil**.
 - CBERS is a single date and Sentinel-2 a median composite.
 - The CBERS L4 orthorectification uses its own DEM; co-registration corrects only integer shifts.
+
+## 2026-09-24 — Brazil benchmark, interim (during selection): FABDEM fetch bug found and fixed; an interim look, labelled
+
+**The interim look.** Asked for by the user while selection was still running (4 hilly tiles had passed). No trained
+results existed, so the look was restricted to **frozen DAv2-Large raw within-crop Spearman** per arm, plus FABDEM as
+the reference. It was computed in memory: nothing was written to the arm caches, and the running selection wasn't
+touched.
+
+**Bug caught by the reference check.** FABDEM's within-crop ρ vs ICESat-2 came out **−0.11**; India's was +0.63.
+Diagnosis on Teresópolis:
+- FABDEM **point-sampled by Earth Engine at the photon locations** vs ICESat-2: r = **0.995**. So the photon
+  geolocation and gridding are correct.
+- The *gridded* `fab10`: r = −0.10, with a range of 186–244 m against real terrain of 748–1,841 m.
+
+**Root cause.** `ImageCollection.mosaic().resample("bilinear")`. A bare mosaic has no native projection, so EE
+resamples on its default 1° grid, which gives a smooth ramp instead of the DEM.
+
+**Fix.** `fabdem_image()` = `mosaic().setDefaultProjection(first().projection()).resample("bilinear")`, used by
+`select` from now on.
+- A new `refab` command re-fetches FABDEM for every passed tile. It verifies each one against the point-sampled truth
+  (median |grid − point| < 5 m is required) and logs to `fab_repair.json`.
+- First 4 tiles after repair: grid-vs-point r = 0.999–1.000 (median |d| 0.7–4.4 m); the 30 m target matches the 10 m
+  block mean (p95 1 m).
+- **The other gates are unaffected.** The FABDEM gate only checks finiteness; CBERS, Sentinel-2, ICESat-2 and
+  co-registration don't use FABDEM. Tile selection stands. `refab` runs again after selection finishes, for the
+  remaining tiles.
+- The Indian benchmark is **not** affected: its FABDEM came from raw GeoTIFFs and was checked (ρ 0.63, and 2.855 m vs
+  ICESat-2).
+
+**Interim look after the fix** (descriptive only, not the pre-registered test: n = 4, hilly only, frozen oracle, no
+training). Mean within-crop ρ: CBERS-FC +0.060, S2-FC +0.082, S2-RGB +0.054, FABDEM +0.970. The pre-registered
+analysis runs unchanged on the full selected set.
