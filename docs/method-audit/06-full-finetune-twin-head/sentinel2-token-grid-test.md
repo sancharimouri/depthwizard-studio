@@ -201,3 +201,23 @@ The 95% tile-bootstrap CI of R − P is reported as well.
 
 **Phase D gate.** Only if that rule passes: note that data starvation (32 tiles) remains a separate, untested variable.
 Do not test it this session.
+
+## 2026-09-24 — Phase C: Kaggle GPU build and run-selection rule (decided before any Phase C result exists)
+
+**The build.** `scripts/s2_token_grid_phase_c_kaggle.py` follows the CLAUDE.md Kaggle pattern.
+- It is self-contained, and the model and Phase C code are verbatim copies.
+- The bundle ships the 32-tile cache and the DAv2-Small weights, and runs offline.
+- `transformers==5.17.0` is pinned, and CUDA is asserted on `cuda:0`.
+- Manual: `data/kaggle_bundles/s2_token_grid_c/read.md`. The zip (278 MB) is gitignored; rebuild it from `bundle_c/`.
+
+**Parity check (CPU):**
+- Arm P, 3 steps plus the full fold-0 evaluation: all 288 numeric fields identical (max diff 0.0), same final loss.
+- Arm R, forward pass plus loss: max abs diff 0.0.
+- The extracted zip runs with `HF_HUB_OFFLINE=1`.
+
+**Run-selection rule** (fixed now, before any Phase C number exists):
+1. Both arms of a comparison must come from **one device**. Kaggle and local fold files are never mixed. Kaggle
+   output goes to `token_grid_test/kaggle/`.
+2. **Primary result:** the Kaggle run, if all 8 folds complete there.
+3. **Fallback:** the local MPS run (`run_phase_c.sh`, which starts after Phase B).
+4. If both complete, the second one is reported as a **cross-device replication**, and the verdict is the primary's.
