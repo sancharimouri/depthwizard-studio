@@ -1864,29 +1864,89 @@ function rememberSkipCloseConfirm() {
     }
 }
 
-function expandFinalDemo() {
-    if (!finalDemoBoxEl || finalDemoBoxEl.classList.contains("is-expanded")) {
+const FINAL_DEMO_ANIM_MS = 380;
+const FINAL_DEMO_EASING = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+let finalDemoPlaceholder = null;
+let finalDemoAnimating = false;
+
+function prefersReducedMotion() {
+    return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+}
+
+// Edge offsets (top/right/bottom/left, px) of a viewport rect, for animating
+// the fixed box between its grid cell and the full window.
+function edgesOf(rect) {
+    return {
+        top: `${rect.top}px`,
+        right: `${window.innerWidth - rect.right}px`,
+        bottom: `${window.innerHeight - rect.bottom}px`,
+        left: `${rect.left}px`,
+    };
+}
+
+const FULL_WINDOW_EDGES = { top: "0px", right: "0px", bottom: "0px", left: "0px" };
+
+// The canvas resizes every frame via animate() → resizeToCanvas(), so the 3D
+// view stays undistorted while the box grows or shrinks.
+function animateFinalDemoEdges(fromEdges, toEdges, fromRadius, toRadius) {
+    if (prefersReducedMotion() || !finalDemoBoxEl.animate) {
+        return Promise.resolve();
+    }
+    const animation = finalDemoBoxEl.animate(
+        [
+            { ...fromEdges, borderRadius: fromRadius },
+            { ...toEdges, borderRadius: toRadius },
+        ],
+        { duration: FINAL_DEMO_ANIM_MS, easing: FINAL_DEMO_EASING },
+    );
+    return animation.finished.catch(() => {});
+}
+
+// Pop out: the box grows from its grid cell to fill the window.
+async function expandFinalDemo() {
+    if (!finalDemoBoxEl || finalDemoAnimating || finalDemoBoxEl.classList.contains("is-expanded")) {
         return;
     }
-    finalDemoBoxEl.classList.add("is-expanded");
+    finalDemoAnimating = true;
+
+    const from = finalDemoBoxEl.getBoundingClientRect();
+    finalDemoPlaceholder = document.createElement("div");
+    finalDemoPlaceholder.className = "workbench-box final-demo-placeholder";
+    finalDemoPlaceholder.setAttribute("aria-hidden", "true");
+    finalDemoBoxEl.before(finalDemoPlaceholder);
+
+    finalDemoBoxEl.classList.add("is-expanded", "is-animating");
     if (finalDemoExpandedBar) {
         finalDemoExpandedBar.hidden = false;
     }
+
+    await animateFinalDemoEdges(edgesOf(from), FULL_WINDOW_EDGES, "12px", "0px");
+
+    finalDemoBoxEl.classList.remove("is-animating");
+    finalDemoAnimating = false;
     finalDemoBackButton?.focus({ preventScroll: true });
-    // animate() calls resizeToCanvas() every frame; this just avoids a
-    // one-frame stretch at the new size.
-    requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
 }
 
-// Back: the box returns to its grid cell with its state intact.
-function collapseFinalDemo() {
-    if (!finalDemoBoxEl?.classList.contains("is-expanded")) {
+// Back: the box shrinks back into its grid cell with its state intact.
+async function collapseFinalDemo() {
+    if (!finalDemoBoxEl?.classList.contains("is-expanded") || finalDemoAnimating) {
         return;
     }
-    finalDemoBoxEl.classList.remove("is-expanded");
+    finalDemoAnimating = true;
+    finalDemoBoxEl.classList.add("is-animating");
+
+    const to = finalDemoPlaceholder?.getBoundingClientRect();
+    if (to) {
+        await animateFinalDemoEdges(FULL_WINDOW_EDGES, edgesOf(to), "0px", "12px");
+    }
+
+    finalDemoBoxEl.classList.remove("is-expanded", "is-animating");
+    finalDemoPlaceholder?.remove();
+    finalDemoPlaceholder = null;
     if (finalDemoExpandedBar) {
         finalDemoExpandedBar.hidden = true;
     }
+    finalDemoAnimating = false;
     requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
     document.getElementById("final-demo-fullscreen")?.focus({ preventScroll: true });
 }

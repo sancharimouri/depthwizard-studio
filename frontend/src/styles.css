@@ -2324,18 +2324,28 @@ kbd {
 
     opacity: 1;
     transform: none;
-    animation: final-demo-pop 0.24s ease-out;
 }
 
-@keyframes final-demo-pop {
-    from { opacity: 0; transform: scale(0.985); }
-    to   { opacity: 1; transform: none; }
+/* Grow/shrink animation (JS, Web Animations API on the fixed box's edges:
+   from its grid cell to the viewport and back). While it runs, the control
+   rails and the Back/Close bar are hidden so they fade in only once the box
+   has reached full size. */
+.final-demo-box.is-expanded .final-demo-controls,
+.final-demo-box.is-expanded .final-demo-expanded-bar {
+    transition: opacity 0.18s ease;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .final-demo-box.is-expanded {
-        animation: none;
-    }
+.final-demo-box.is-animating .final-demo-controls,
+.final-demo-box.is-animating .final-demo-expanded-bar {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Holds box 8's grid cell while the box is out, so the logs box above
+   doesn't reflow into the gap (and Back has a target to shrink into). */
+.workbench-col-logs .final-demo-placeholder {
+    flex: 1;
+    visibility: hidden;
 }
 
 /* Same full control menu the native-fullscreen view shows. */
