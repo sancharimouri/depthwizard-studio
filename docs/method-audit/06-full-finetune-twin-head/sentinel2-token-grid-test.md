@@ -836,3 +836,44 @@ read as its outcome.
 **Left on disk, untracked:** `data/brazil_benchmark/{tiles/, status.json, fab_repair.json, select.log}`. `refab` has run
 on 4 of the 5 passed tiles; gramado is not yet repaired. The script `scripts/brazil_benchmark.py` is resumable
 (`select`, then `refab`, `build`, `run --arm …`, `compare`) if this is ever picked up again.
+
+## 2026-09-24 — L1C vs L2A test: pre-registration (committed before the 32-tile fetch; only a 1-tile fetch-path check run)
+
+**Question.** Does atmospheric correction itself suppress height-relevant shading cues?
+
+**Premise, checked.** The benchmark's Sentinel-2 RGB is **L2A**: CDSE Process API collection `sentinel-2-l2a`, one
+scene per tile (`manifest.date_acquired`), `backend.cdse.TRUE_COLOR_EVALSCRIPT` = 2.5 × B04/B03/B02, uint8 (AUTO,
+clipped at 1.0).
+
+**Design.** Same tiles, same acquisition, same bbox, same API call; **only the collection changes**
+(`sentinel-2-l1c`). Script: `scripts/s2_l1c_test.py`. Output: `data/sentinel2_benchmark/l1c_test/`.
+
+**Fetch-path check (Bathinda).** The L2A re-fetch is identical to the existing benchmark GeoTIFF on 100% of pixels
+(max |d| 0). L1C for the same acquisition is brighter (mean 77.1 vs 48.1), i.e. path radiance.
+- Reproduction is checked and recorded for all 32 tiles (`fetch_report.csv`).
+- The re-fetched L2A is used as the L2A arm, so both arms go through one pipeline and one run.
+
+**Arms** (FABDEM target and ICESat-2 cells copied unchanged from `token_grid_test/cache`):
+- **Primary:** `l1c_gain` vs `l2a_gain`. The identical ×2.5 uint8 rendering, i.e. the products exactly as the pipeline
+  would ingest them.
+- **Secondary:** `l1c_stretch` vs `l2a_stretch`. FLOAT32 reflectance with a per-tile, per-band 2–98% stretch to uint8.
+  It asks whether any difference survives after removing brightness and offset (haze-level) differences.
+
+**Recipe: unchanged per arm.**
+- `s2_rank_loss_test.fit` / `calibrated_eval` / `analyze`: arm-P geometry, Method 4 v2 `rank_pair_loss`, 600 × 4
+  steps, seed 42, 4 quadrant folds, per-tile post-hoc slope calibration.
+- Oracle: frozen DAv2-Large on that arm's imagery.
+- Raw Spearman: `s2_rank_raw_spearman` on the same trained models (within-crop primary).
+
+**Decision rule** (the same bar as Landsat and CBERS). Paired by tile, primary pair, the rank model's raw within-crop
+Spearman:
+- **L1C meaningfully higher** (atmospheric correction implicated): mean(L1C − L2A) **≥ 0.10**, L1C higher on a
+  **majority**, **Wilcoxon p < 0.05**.
+- **Otherwise: ruled out.**
+- **Divergence flag** (the raw-ρ and calibrated-RMSE tests significant in opposite directions): revisit calibration
+  before trusting either.
+- The secondary pair is reported, along with whether it agrees with the primary. It can't overturn the primary.
+
+**Caveat, stated in advance.** CDSE L2A is Sen2Cor output. Whether the operational chain applies a DEM-based
+topographic illumination correction (which *would* flatten shading) isn't verified here; the test settles the effect
+empirically, whatever the mechanism.
