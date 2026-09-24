@@ -454,68 +454,15 @@
             <span class="theme-toggle-icon theme-toggle-icon-light" aria-hidden="true">☀️</span>
         </button>
 
-        <div class="workbench-grid">
+        <!-- Page 1 input view (src/input-view.js builds its contents):
+             Library / Upload / Search Online on the left, live preview +
+             tier routing + START GENERATION on the right. The generation
+             grid below replaces it once generation starts. -->
+        <div id="input-view" class="input-view"></div>
+
+        <div class="workbench-grid is-hidden">
 
             <div class="workbench-left">
-
-                <div
-                    id="scene-input-box"
-                    class="workbench-box scene-input-box"
-                >
-
-                    <div class="panel-title">SCENE INPUT</div>
-
-                    <div class="scene-input-hint">
-                        Search a location, then a Sentinel-2 scene to
-                        reconstruct — or upload an image directly.
-                    </div>
-
-                    <div class="geocode-field">
-
-                        <span class="scene-field-label">Location</span>
-
-                        <input
-                            id="geocode-location-input"
-                            type="text"
-                            class="scene-input"
-                            placeholder="Search a place name…"
-                            autocomplete="off"
-                        />
-
-                        <div
-                            id="geocode-dropdown"
-                            class="geocode-dropdown"
-                            hidden
-                        ></div>
-
-                    </div>
-
-                    <div
-                        id="geocode-details"
-                        class="geocode-details"
-                        hidden
-                    ></div>
-
-                    <div class="scene-input-actions">
-
-                        <button
-                            id="scene-search-trigger"
-                            class="secondary-button scene-search-trigger"
-                            disabled
-                        >
-                            + SEARCH FOR SCENE
-                        </button>
-
-                        <button
-                            id="scene-upload-trigger"
-                            class="secondary-button scene-upload-trigger"
-                        >
-                            + UPLOAD IMAGE
-                        </button>
-
-                    </div>
-
-                </div>
 
                 <div
                     id="preview-box"
@@ -916,120 +863,6 @@
         </div>
 
 
-        <!-- Scene search modal (live CDSE catalog + preview) -->
-
-        <div
-            id="scene-search-modal"
-            class="upload-modal"
-            hidden
-        >
-
-            <div
-                id="scene-search-backdrop"
-                class="upload-backdrop"
-            ></div>
-
-            <div class="upload-panel scene-search-panel">
-
-                <div class="panel-title">SEARCH FOR SCENE</div>
-
-                <div class="scene-search-form">
-
-                    <div
-                        id="scene-search-location-readout"
-                        class="scene-search-location-readout"
-                    ></div>
-
-                    <label class="scene-field">
-                        <span class="scene-field-label">Area of Interest</span>
-                        <select
-                            id="scene-aoi"
-                            class="scene-input"
-                        >
-                            <option value="5">5 × 5 km</option>
-                            <option value="10" selected>10 × 10 km</option>
-                            <option value="20">20 × 20 km</option>
-                        </select>
-                    </label>
-
-                    <div class="scene-field-row">
-
-                        <label class="scene-field">
-                            <span class="scene-field-label">From</span>
-                            <input
-                                id="scene-date-from"
-                                type="date"
-                                class="scene-input"
-                                value="2025-11-01"
-                            />
-                        </label>
-
-                        <label class="scene-field">
-                            <span class="scene-field-label">To</span>
-                            <input
-                                id="scene-date-to"
-                                type="date"
-                                class="scene-input"
-                                value="2025-12-01"
-                            />
-                        </label>
-
-                    </div>
-
-                    <label class="scene-field">
-                        <span class="scene-field-label">Max Cloud Cover</span>
-                        <div class="scene-input-suffix-wrap">
-                            <input
-                                id="scene-cloud"
-                                type="number"
-                                min="0"
-                                max="100"
-                                value="20"
-                                class="scene-input"
-                            />
-                            <span class="scene-input-suffix">%</span>
-                        </div>
-                    </label>
-
-                </div>
-
-                <div class="upload-note">
-                    Live Copernicus Data Space Ecosystem search — queries the
-                    Sentinel Hub Catalog (STAC) for real Sentinel-2 L2A scenes
-                    matching this location, AOI, date range, and cloud cover.
-                </div>
-
-                <button
-                    id="scene-search-button"
-                    class="run-reconstruction-button scene-search-submit"
-                >
-                    SEARCH
-                </button>
-
-                <div
-                    id="scene-search-status"
-                    class="scene-search-status"
-                    hidden
-                ></div>
-
-                <div
-                    id="scene-search-results"
-                    class="scene-search-results"
-                    hidden
-                ></div>
-
-                <button
-                    id="scene-search-cancel"
-                    class="upload-cancel"
-                >
-                    CANCEL
-                </button>
-
-            </div>
-
-        </div>
-
-
         <!-- Close confirmation (final-demo expanded view → ✕ Close) -->
 
         <div
@@ -1063,58 +896,6 @@
             </div>
         </div>
 
-
-        <!-- Direct upload modal (Workbench "Scene Input" mock flow) -->
-
-        <div
-            id="scene-upload-modal"
-            class="upload-modal"
-            hidden
-        >
-
-            <div
-                id="scene-upload-backdrop"
-                class="upload-backdrop"
-            ></div>
-
-            <div class="upload-panel">
-
-                <div class="panel-title">
-                    UPLOAD SATELLITE IMAGE
-                </div>
-
-                <label
-                    id="scene-upload-dropzone"
-                    class="upload-dropzone"
-                    for="scene-upload-input"
-                >
-                    <div class="upload-dropzone-glyph">⇧</div>
-                    <div class="upload-dropzone-text">
-                        Drop an image, or click to browse
-                    </div>
-                    <input
-                        id="scene-upload-input"
-                        type="file"
-                        accept="image/*"
-                        hidden
-                    />
-                </label>
-
-                <div class="upload-note">
-                    Prototype flow — any image becomes the scene preview
-                    below, standing in for a live upload pipeline.
-                </div>
-
-                <button
-                    id="scene-upload-cancel"
-                    class="upload-cancel"
-                >
-                    CANCEL
-                </button>
-
-            </div>
-
-        </div>
 
     </div>
 
@@ -1152,11 +933,16 @@
                         <div class="docs-card-num">1</div>
                         <h3>Workbench</h3>
                         <ul>
-                            <li>Search any place by name (OpenStreetMap geocoding).</li>
-                            <li><strong>Search for scene</strong> queries the Copernicus Data Space Ecosystem live for
-                                real Sentinel-2 L2A scenes at that location, filtered by date range and cloud cover,
-                                and previews the true-colour scene you pick.</li>
-                            <li><strong>Upload image</strong> previews a PNG/JPG of your own.</li>
+                            <li><strong>Choose from Library</strong>: 88 curated real scenes (6 Maxar VHR, 50 DFC2019,
+                                32 Sentinel-2) with their source, ground resolution and location.</li>
+                            <li><strong>Upload</strong> a GeoTIFF, PNG or JPG. A GeoTIFF’s ground resolution is read from its
+                                geotransform: at 2.4 m/pixel or finer it is routed to Tier 2 (height prediction) and you
+                                upload a DEM or have FABDEM fetched; coarser goes to Tier 1 (FABDEM terrain only, fetched
+                                automatically). PNG/JPG has no location, so only the relative preview applies.</li>
+                            <li><strong>Search Online</strong> queries the Copernicus Data Space Ecosystem live for
+                                Sentinel-2 L2A scenes (always Tier 1, FABDEM fetched automatically). It shows the account’s
+                                documented quota and this app’s own usage, and you can use your own Copernicus key.</li>
+                            <li>The <strong>Start generation</strong> button is green for Tier 2, orange for Tier 1.</li>
                             <li><strong>Start generation</strong> plays the pipeline’s steps. It is a
                                 <strong>prototype</strong>: the relative-depth, elevation, DSM and 3D panels show the
                                 Darjeeling reference results whatever scene you picked or uploaded. It is not a live

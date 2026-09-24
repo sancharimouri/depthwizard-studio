@@ -5,6 +5,7 @@ description = "SIH 2026 single-view height estimation and 3D terrain reconstruct
 requires-python = ">=3.11"
 dependencies = [
     "pyproj>=3.7.2",
+    "python-multipart>=0.0.32",
     "rasterio>=1.4.4",
     "sliderule>=5.6.1",
 ]
