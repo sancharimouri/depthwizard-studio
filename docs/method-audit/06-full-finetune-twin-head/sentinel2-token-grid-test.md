@@ -877,3 +877,14 @@ Spearman:
 **Caveat, stated in advance.** CDSE L2A is Sen2Cor output. Whether the operational chain applies a DEM-based
 topographic illumination correction (which *would* flatten shading) isn't verified here; the test settles the effect
 empirically, whatever the mechanism.
+
+**Scope amendment (2026-09-24 19:0x IST; user-directed; before any rank or Spearman result existed): 32 → 16 tiles.**
+- The fetch was stopped at 11 tiles and re-scoped to a **balanced 16: the first 4 per category** in manifest order.
+  - agricultural: bathinda, fatehpur, hisar, karnal
+  - coastal: amalapuram, bhitarkanika, digha, goa_estuary
+  - hilly: almora, dehradun, dharamshala, kohima
+  - urban: bengaluru, chennai, delhi, hyderabad
+- Why balanced and not the "first 16": the first 16 are all agricultural and coastal, i.e. flat. That would leave out
+  the hilly terrain where shading cues matter most.
+- Non-selected tiles' raw fetches are kept; they are removed from the arm caches.
+- Everything else, including the decision rule, is unchanged. n = 16 paired tiles.

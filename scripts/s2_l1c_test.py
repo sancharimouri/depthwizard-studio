@@ -40,6 +40,8 @@ BENCH = ROOT / "data/sentinel2_benchmark"
 OUT = BENCH / "l1c_test"
 S2_CACHE = BENCH / "token_grid_test/cache"
 ARMS = ("l2a_gain", "l1c_gain", "l2a_stretch", "l1c_stretch")
+# user-directed scope cut (2026-09-24): balanced 16 tiles = first 4 per category in manifest order
+TILES = (OUT / "tiles16.txt").read_text().split()
 FLOAT_EVALSCRIPT = """
 //VERSION=3
 function setup() {
@@ -79,6 +81,7 @@ def stretch(b):
 
 def fetch(args):
     man = pd.read_csv(BENCH / "manifest.csv")
+    man = man[man.tile_id.isin(TILES)]
     for a in ARMS:
         (OUT / a / "cache").mkdir(parents=True, exist_ok=True)
     (OUT / "raw").mkdir(parents=True, exist_ok=True)
@@ -125,7 +128,7 @@ def run(args):
     C.CACHE, R.OUT, R.DAV2 = A / "cache", A / "rank_loss", A / "dav2_depth"
     R.OUT.mkdir(parents=True, exist_ok=True); R.DAV2.mkdir(parents=True, exist_ok=True)
     tids = sorted(p.stem for p in C.CACHE.glob("*.npz"))
-    assert len(tids) == 32
+    assert tids == sorted(TILES), (len(tids), "arm cache must hold exactly the 16 selected tiles")
     for t in tids:
         o = R.DAV2 / f"{t}_depth.npy"
         if not o.exists():

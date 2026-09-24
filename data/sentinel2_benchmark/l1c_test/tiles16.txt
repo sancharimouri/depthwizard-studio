@@ -1,0 +1,16 @@
+bathinda
+fatehpur
+hisar
+karnal
+amalapuram
+bhitarkanika
+digha
+goa_estuary
+almora
+dehradun
+dharamshala
+kohima
+bengaluru
+chennai
+delhi
+hyderabad
