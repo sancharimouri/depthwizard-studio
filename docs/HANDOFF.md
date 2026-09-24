@@ -67,7 +67,7 @@ height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 5
 - Native DFC2019 GSD is **0.3 m** (a 512 px quadrant is 153.6 m). Two protocols: P = true pixel count (the prompt's), R = resample-back (37×37 tokens kept).
 - DAv2's ViT interpolates position embeddings natively (Phase 0), so no fix was needed. The new training script reproduces the adopted fold 0 bit-for-bit.
 - **P: coarse→fine transfer fails at 2/3/5 (and 8) m** (0/4 metrics beat the 0.3 m oracle). Too few tokens: 6×6 → 2×2.
-- **R: coarse→fine transfer works at 2/3/5 m** (3/4 metrics; native-eval Pearson 0.721 / 0.708 / 0.687 vs. oracle 0.582). It fails at 8 m (0.631, CI-overlapping); the curve bends between 5 and 8 m.
+- **R: coarse→fine transfer works at 2/3/5 m** (3/4 metrics; native-eval Pearson 0.721 / 0.708 / 0.687 vs. oracle 0.582). It fails at 8 m (0.631, CI-overlapping); the curve bends between 5 and 8 m. **Boundary sweep (2026-09-24):** the flip is between 5 m (pass, 3/4) and 6 m (fail, 2/4); 7 m is 1/4 (Pearson 0.670 / 0.660). One seed; ±1 step. Stopped for a user decision on next steps.
 - **Strongly asymmetric, coarse→fine better** everywhere. E.g. R at 5 m: 0.687 (5 m-trained at 0.3 m) vs. 0.321 (native model at 5 m).
 - Synthetic degradation of one WorldView-3 city. This is **not** evidence that real 10 m Sentinel-2 supports this.
 

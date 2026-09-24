@@ -463,3 +463,52 @@ interpolation or smoothing. One seed, so the location is ±1 grid step at best.
 
 **Wall time (R4).** R folds measured at about 13–14 min (8 / 10 / 12 m chains). So 2 GSDs × 4 folds ≈ 1.8 h, plus eval
 ≈ 13 min ⇒ **≈ 2 h**.
+
+## 2026-09-24 — Boundary sweep result: **the rule-1 flip is between 5 m (pass) and 6 m (fail)**
+
+**The run.** Chain 11:38–14:02 IST (`chain67.log`), no failures. R 6 m and R 7 m, 4 folds each, 765–1,296 s per fold
+(slower than usual, probably macOS `fseventsd` load), then eval and `analyze`. The ≤ 5 m dose-response curve and all
+earlier R cells reproduce unchanged. The Holm p-values shift slightly because the family grew from 4 to 6 models; the
+verdicts don't change, since rule 1 is CI-based.
+
+**One continuous curve.** Protocol R, each model evaluated at native 0.3 m against the 0.3 m oracle. Oracle: MAE 3.392
+[2.963, 3.865], RMSE 4.579 [3.985, 5.229], Pearson 0.582 [0.521, 0.639], Spearman 0.509 [0.456, 0.559]. Each cell:
+mean [95% tile-bootstrap CI] and wins out of 50; ✓ marks "better with a non-overlapping CI".
+
+| Train GSD (R) | MAE | RMSE | Pearson | Spearman | ✓ count | Rule 1 |
+|---|---|---|---|---|---|---|
+| 5 m | 2.437 [2.112, 2.801] 44/50 ✓ | 4.101 [3.482, 4.821] 38/50 | 0.687 [0.646, 0.724] 38/50 ✓ | 0.624 [0.583, 0.660] 42/50 ✓ | **3/4** | **pass** |
+| **6 m** | 2.582 [2.251, 2.952] 44/50 ✓ | 4.225 [3.582, 4.979] 35/50 | 0.670 [0.629, 0.707] 36/50 | 0.614 [0.574, 0.651] 42/50 ✓ | **2/4** | **fail** |
+| **7 m** | 2.706 [2.330, 3.130] 43/50 | 4.343 [3.625, 5.190] 34/50 | 0.660 [0.621, 0.695] 35/50 | 0.609 [0.570, 0.644] 41/50 ✓ | **1/4** | **fail** |
+| 8 m | 3.062 [2.741, 3.421] 33/50 | 4.647 [4.024, 5.373] 24/50 | 0.631 [0.590, 0.668] 26/50 | 0.585 [0.546, 0.621] 37/50 | 0/4 | fail |
+| 10 m | 3.261 [2.934, 3.626] 29/50 | 4.819 [4.174, 5.583] 21/50 | 0.610 [0.572, 0.645] 26/50 | 0.576 [0.537, 0.610] 37/50 | 0/4 | fail |
+| 12 m | 3.500 [3.161, 3.879] 21/50 | 5.028 [4.363, 5.809] 18/50 | 0.551 [0.511, 0.590] 18/50 | 0.523 [0.482, 0.561] 27/50 | 0/4 | fail |
+
+Native-eval Pearson (R), full curve:
+
+| Training GSD | 0.3 m | 2 m | 3 m | 5 m | 6 m | 7 m | 8 m | 10 m | 12 m |
+|---|---|---|---|---|---|---|---|---|---|
+| Pearson | 0.745 | 0.721 | 0.708 | 0.687 | 0.670 | 0.660 | 0.631 | 0.610 | 0.551 |
+
+MAE: 1.98 → 2.19 → 2.26 → 2.44 → 2.58 → 2.71 → 3.06 → 3.26 → 3.50. Coarse→fine is still better than fine→coarse at
+6 m (0.670 vs 0.240) and at 7 m (0.660 vs 0.185).
+
+**Boundary, per the pre-registered definition:**
+- The flip lies **between 5 m and 6 m**, and the sequence is monotone.
+- With one seed, it is located to within one grid step.
+- A different seed could plausibly move it by one step: the 6 m Pearson lower bound (0.629) misses the oracle's upper
+  bound (0.639) by only 0.010.
+
+**The boundary comes from the strict rule; the underlying decline is gradual.**
+- The ✓ count falls one step at a time: 3 → 2 → 1 → 0 at 5 / 6 / 7 / 8 m.
+- At 6 m and 7 m, R still beats the oracle by paired Wilcoxon on every metric (Holm p ≤ 0.027) except 7 m RMSE
+  (p = 0.057). What it loses first is the *non-overlapping-CI* margin: RMSE never had it, and Pearson loses it at 6 m.
+- The point estimates stop beating the oracle on all 4 metrics only at 8 m.
+
+So the answer depends on the bar:
+- "clearly beats the oracle" (rule 1) ends between 5 and 6 m;
+- "statistically better on most metrics" holds through 7 m;
+- "no better than the oracle" starts at 8 m.
+
+**Stopping here, as instructed.** No real-data sourcing and no Phase-C-equivalent step. The next step is the user's
+decision.

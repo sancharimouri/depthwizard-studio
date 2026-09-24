@@ -337,6 +337,8 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
   - it fails when the coarse input has its true pixel count (P: 6×6 to 2×2 tokens);
   - it works at 2 / 3 / 5 m when the token grid is kept (R: Pearson at 0.3 m 0.721 / 0.708 / 0.687 vs. oracle 0.582);
   - it fails at 8 m (0.631).
+  - Boundary sweep (2026-09-24, `sentinel2-token-grid-test.md`): the rule-1 flip is **between 5 m (3/4) and 6 m (2/4)**; 7 m is 1/4.
+    Pearson for 5 / 6 / 7 / 8 m is 0.687 / 0.670 / 0.660 / 0.631. The decline is gradual: 6–7 m still beat the oracle by Wilcoxon on most metrics.
 - It is strongly asymmetric: coarse→fine beats fine→coarse.
 - Synthetic degradation, one city, one seed. Not a Sentinel-2 result.
 
