@@ -512,3 +512,41 @@ So the answer depends on the bar:
 
 **Stopping here, as instructed.** No real-data sourcing and no Phase-C-equivalent step. The next step is the user's
 decision.
+
+## 2026-09-24 — Raw-Spearman check on the rank-loss run: pre-registration (committed before computing anything)
+
+**Question.** Did the rank model learn real ordering that the linear calibration then lost? Or was there little
+ordering to begin with? No new training design.
+
+**Deviation, stated.** The rank-loss run saved only per-tile aggregates (squared-error sums, slopes), with no per-pixel
+scores and no checkpoints. Each fold is therefore **re-fitted with the identical seeded procedure**:
+- `s2_rank_loss_test.fit`, a behaviour-preserving refactor of its training loop;
+- reproduction is checked against the committed `eval_rank_fold*.json`: per-tile calibrated ICESat-2 RMSE (relative
+  difference) and slope-sign agreement. MPS can be non-deterministic, so a small non-zero difference is reported, not
+  hidden.
+
+Script: `scripts/s2_rank_raw_spearman.py`. Output: `rank_loss/raw_spearman/`.
+
+**Two measurement choices (stated before computing):**
+1. **Primary: within-crop Spearman.** The rank model scores each 600 m crop independently, with an arbitrary offset. So
+   the primary measure is Spearman(raw score, ICESat-2 height) **within each held-out crop** that has ≥ 10 ICESat-2
+   cells. Per tile it is the cell-weighted mean over its held-out crops from all 4 folds; the pooled value is the
+   cell-weighted mean over all crops.
+   - It is computed identically for frozen DAv2-Large (the oracle's raw signal) and for FABDEM 10 m (a reference
+     ceiling, not part of any rule).
+   - The whole-tile raw Spearman the prompt asks for is reported too, as secondary. It is not meaningful for the rank
+     model, because of those per-crop offsets.
+2. **A monotone calibration can't change within-crop order.** Linear with a positive slope and isotonic both preserve
+   it. So "signal lost in the linear step" is tested as: the raw within-crop Spearman **exceeds the correlation the
+   linear calibration actually expresses**. That is the implied r = √max(0, R²_relief), where R²_relief = 1 −
+   SSE(calibrated − h, crop-demeaned) / SS(h, crop-demeaned), per tile.
+
+**Decision rule (the prompt's cases, made operational):**
+- **Case 1 (line stays closed):** the tile-mean within-crop Spearman is near zero for **both**, i.e. |ρ| < 0.10 for the
+  rank model and for DAv2-Large. Calibration was never the bottleneck.
+- **Case 2 (isotonic worth testing):** the rank model's within-crop Spearman exceeds its calibration-implied r by a mean
+  of **≥ 0.10**, on a **majority of tiles**, with **paired Wilcoxon p < 0.05**.
+- **Case 3 (line stays closed):** otherwise. The raw ranking is non-trivial but the linear step already expresses it,
+  so an isotonic step isn't indicated.
+
+Also reported: rank model vs oracle within-crop Spearman (paired Wilcoxon, wins, bootstrap CI).

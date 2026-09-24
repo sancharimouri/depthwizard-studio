@@ -98,6 +98,37 @@ def oracle_scores(tid):
     return out
 
 
+def fit(fold, tids, steps, batch, device):
+    """Train one fold exactly as the pre-registered run did; returns (model, height_scale, loss_trace)."""
+    seed_everything(42)
+    tr = C.load_crops(tids, [q for q in range(4) if q != fold])
+    rel = np.concatenate([(t - t.mean()).ravel() for *_, t in tr])
+    hs = max(float(rel.std()), 1.0)
+    model = TwinHeadDav2(height_scale=hs, init_sigma_m=hs * 0.3).to(device)
+    opt = torch.optim.AdamW(model.param_groups(5e-6, 2.5e-4, 1e-4))
+    warm = max(10, int(steps * 0.05))
+    sched = torch.optim.lr_scheduler.LambdaLR(
+        opt, lambda s: s / warm if s < warm else max(0.05, (steps - s) / max(1, steps - warm)))
+    order = np.random.default_rng(42 + fold).permutation(np.resize(np.arange(len(tr)), steps * batch))
+    print(f"[rank_fold{fold}] device={device} train crops {len(tr)} steps {steps} x batch {batch}", flush=True)
+    model.train(); t0 = time.time(); run = []
+    for s in range(steps):
+        idx = order[s * batch:(s + 1) * batch]
+        x = torch.stack([C.to_input(tr[i][4]) for i in idx]).to(device)
+        y = torch.from_numpy(np.stack([tr[i][5] for i in idx])).to(device)
+        loss = rank_loss(C.forward60(model, x, ARM), y)
+        assert torch.isfinite(loss), f"non-finite loss at step {s}"
+        opt.zero_grad(set_to_none=True); loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0); opt.step(); sched.step()
+        run.append(float(loss.detach().cpu()))
+        if (s + 1) % 100 == 0 or s == 0:
+            el = time.time() - t0
+            print(f"[rank_fold{fold}] step {s+1}/{steps} loss {np.mean(run[-100:]):.4f} "
+                  f"ETA {el/(s+1)*(steps-s-1)/60:.1f} min", flush=True)
+    model.eval()
+    return model, hs, run
+
+
 def train(args):
     device = get_device()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -106,32 +137,8 @@ def train(args):
         res_path = OUT / f"eval_rank_fold{fold}.json"
         if res_path.exists():
             print(f"fold{fold}: exists, skip"); continue
-        seed_everything(42)
-        tr = C.load_crops(tids, [q for q in range(4) if q != fold])
-        rel = np.concatenate([(t - t.mean()).ravel() for *_, t in tr])
-        hs = max(float(rel.std()), 1.0)
-        model = TwinHeadDav2(height_scale=hs, init_sigma_m=hs * 0.3).to(device)
-        opt = torch.optim.AdamW(model.param_groups(5e-6, 2.5e-4, 1e-4))
-        warm = max(10, int(args.steps * 0.05))
-        sched = torch.optim.lr_scheduler.LambdaLR(
-            opt, lambda s: s / warm if s < warm else max(0.05, (args.steps - s) / max(1, args.steps - warm)))
-        order = np.random.default_rng(42 + fold).permutation(np.resize(np.arange(len(tr)), args.steps * args.batch))
-        print(f"[rank_fold{fold}] device={device} train crops {len(tr)} steps {args.steps} x batch {args.batch}", flush=True)
-        model.train(); t0 = time.time(); run = []
-        for s in range(args.steps):
-            idx = order[s * args.batch:(s + 1) * args.batch]
-            x = torch.stack([C.to_input(tr[i][4]) for i in idx]).to(device)
-            y = torch.from_numpy(np.stack([tr[i][5] for i in idx])).to(device)
-            loss = rank_loss(C.forward60(model, x, ARM), y)
-            assert torch.isfinite(loss), f"non-finite loss at step {s}"
-            opt.zero_grad(set_to_none=True); loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0); opt.step(); sched.step()
-            run.append(float(loss.detach().cpu()))
-            if (s + 1) % 100 == 0 or s == 0:
-                el = time.time() - t0
-                print(f"[rank_fold{fold}] step {s+1}/{args.steps} loss {np.mean(run[-100:]):.4f} "
-                      f"ETA {el/(s+1)*(args.steps-s-1)/60:.1f} min", flush=True)
-        model.eval()
+        t0 = time.time()
+        model, hs, run = fit(fold, tids, args.steps, args.batch, device)
         recs = []
         for tid in tids:
             m = calibrated_eval(scores_all(model, tid, device), tid, fold)
