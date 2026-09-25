@@ -211,8 +211,8 @@ export function createInputView(root, { onStart }) {
     });
     const startNote = el("div", {
         class: "iv-placeholder-note",
-        text: "Placeholder: the generation stages that follow still show the Darjeeling reference outputs. "
-            + "The input, its GSD, tier routing and DEM above are real.",
+        text: "Relative depth is computed for this input. The later generation stages are still a placeholder "
+            + "showing the Darjeeling reference outputs. The input, its GSD, tier routing and DEM above are real.",
     });
 
     const previewPane = el("section", { class: "iv-pane iv-preview-pane" },
@@ -347,6 +347,8 @@ export function createInputView(root, { onStart }) {
             routing: sel.routing,
             dem: sel.dem ?? null,
             geo: sel.geo ?? null,
+            // what the backend needs to run relative depth on this exact input (src/depth-result.js)
+            inputRef: sel.id ? { source: sel.source, id: sel.id } : null,
             logLines: log,
         };
     }

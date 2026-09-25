@@ -43,3 +43,22 @@ def test_unreachable_host_is_502(monkeypatch):
     monkeypatch.setenv("DAV2_INFERENCE_URL", "https://gone.trycloudflare.com")
     r = client.post("/api/depth/relative", files={"file": ("a.png", PNG, "image/png")})
     assert r.status_code == 502 and "Colab bridge" in r.json()["detail"]
+
+
+def test_by_id_forwards_the_input_preview(monkeypatch, tmp_path):
+    from backend.input import store
+    jpg = tmp_path / "preview.jpg"
+    jpg.write_bytes(b"JPEGBYTES")
+    monkeypatch.setattr(store, "preview_path", lambda i, kind="image": jpg)
+    seen = {}
+
+    def handler(request):
+        seen["body"] = request.content
+        return httpx.Response(200, json={"encoding": "u16-zlib", "shape": [1, 1]})
+
+    real = httpx.AsyncClient
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(handler), **kw))
+    monkeypatch.setenv("DAV2_INFERENCE_URL", "https://x.trycloudflare.com")
+    r = client.post("/api/depth/relative/input/abc123")
+    assert r.status_code == 200 and b"JPEGBYTES" in seen["body"]
+    assert client.post("/api/depth/relative/nope/abc").status_code == 404

@@ -5,12 +5,13 @@ user-facing UI. The model loading and preprocessing lines are copied verbatim fr
 scripts/bench/cpu_inference_bench.py (the benchmarked path), because a Space cannot
 import from the main repo.
 
-Output (JSON): the raw DAv2 `predicted_depth` for the 518x518 model input, as
-little-endian float32 bytes in base64, plus its shape and range. Relative depth
+Output (JSON): the raw DAv2 `predicted_depth` for the 518x518 model input in the
+compact "u16-zlib" encoding (see encode_depth), plus its shape and range. Relative depth
 (larger = nearer), NOT elevation; resize/normalise on the caller side.
 """
 import base64
 import time
+import zlib
 
 import gradio as gr
 import numpy as np
@@ -23,6 +24,17 @@ torch.set_num_threads(2)  # CPU Basic = 2 vCPU
 # --- verbatim from scripts/bench/cpu_inference_bench.py -------------------------
 proc = DPTImageProcessorPil.from_pretrained(mid); model = AutoModelForDepthEstimation.from_pretrained(mid, use_safetensors=True).eval()
 # ---------------------------------------------------------------------------------
+
+
+def encode_depth(depth) -> dict:
+    """Compact wire format "u16-zlib" (docs/DEPLOY.md): min-max quantised to uint16
+    (max error (max-min)/131070, ~3e-5 on real outputs), little-endian, zlib, base64.
+    ~0.68 MB instead of 1.43 MB for raw float32 at 518x518. Decode:
+    q = frombuffer(zlib.decompress(b64decode(data_b64)), "<u2"); depth = min + q/65535*(max-min)."""
+    lo, hi = float(depth.min()), float(depth.max())
+    q = np.zeros(depth.shape, "<u2") if hi <= lo else np.round((depth - lo) / (hi - lo) * 65535).astype("<u2")
+    return {"encoding": "u16-zlib", "shape": list(depth.shape), "min": lo, "max": hi,
+            "data_b64": base64.b64encode(zlib.compress(q.tobytes(), 6)).decode("ascii")}
 
 
 def predict(img):
@@ -38,13 +50,9 @@ def predict(img):
     return {
         "model": mid,
         "kind": "relative_depth",
-        "shape": list(depth.shape),
-        "dtype": "float32",
         "source_size": list(img.size),  # (width, height) of the input image
-        "min": float(depth.min()),
-        "max": float(depth.max()),
         "infer_s": round(time.perf_counter() - t, 3),
-        "data_b64": base64.b64encode(depth.tobytes()).decode("ascii"),
+        **encode_depth(depth),
     }
 
 

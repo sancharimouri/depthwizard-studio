@@ -93,3 +93,25 @@ Model load time is 3–4.5 s, once per process.
   - The same Mac downloads at 4.6 MB/s directly from Cloudflare, so a Render backend would see the same tunnel limit.
   - Measured options: gzip 1.0 MB; float16 0.72 MB (error 1e-3); uint16 + zlib 0.68 MB (about 6 s, error 3e-5).
   - At most about 2×, so this is not changed mid-demo (it would need a notebook restart). Permanent hosting removes the limit.
+
+## Compact depth format + real depth in the UI (2026-09-26)
+
+**Wire format "u16-zlib"** (`encode_depth` in `bridge/dav2_server.py` and `space/app.py`):
+- Depth is min-max quantised to uint16, then zlib, then base64, with `min`/`max`/`shape` alongside.
+- Payload is 0.68 MB, down from 1.43 MB for raw float32. That is about 6 s instead of about 13 s through the quick tunnel.
+- Precision against an independent float32 CPU reference, on 3 real images (Almora, DFC2019 JAX_004_006, Maxar forest):
+  - max |err| 2.64e-5 / 1.96e-5 / 1.92e-5, all within the half-step + float32-rounding bound;
+  - Pearson 1.00000000.
+- The frontend also still decodes the older raw float32, so a notebook started before this change keeps working.
+
+**UI:**
+- The Workbench **Relative Depth** box now shows DAv2-Small run on the job's own input: library item, upload or CDSE scene.
+- Path: `POST /api/depth/relative/{library|input}/{id}` → the backend sends that input's 1024 px preview to `$DAV2_INFERENCE_URL` → decoded in `frontend/src/depth-result.js`.
+- It is shown in grayscale (brighter = nearer) with a real caption and log line. It is not elevation, and the later stages are still the Darjeeling reference.
+- If the host is down, the box shows the Darjeeling reference, labelled "Inference host unavailable" with the reason.
+
+**Verified locally (headless Chrome → `localhost:5173` → dev backend with `.env` `DAV2_INFERENCE_URL` = the live Colab tunnel → Colab `cuda`):**
+- Library `sentinel2-almora`: a real 518×518 map in 17 s (0.10 s GPU; the old float32 format, since that notebook predates the change).
+- An upload of a JPG: the same, 15.8 s.
+- Host down (simulated 502): the labelled fallback.
+- 0 page errors.
