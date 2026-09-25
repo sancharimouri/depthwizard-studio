@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DepthWizard",
+  "version": "0.1.0",
+  "identifier": "in.sih26175.depthwizard",
+  "build": {
+    "frontendDist": "../../../frontend/dist",
+    "beforeBuildCommand": {
+      "script": "VITE_API_BASE=http://127.0.0.1:8765 npx vite build",
+      "cwd": "../../../frontend"
+    }
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "resources": { "sidecar/dw2-backend/": "dw2-backend/" }
+  }
+}
