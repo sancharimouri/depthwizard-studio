@@ -4768,7 +4768,7 @@ kbd {
     user-select: none;
 }
 
-.xp-inspect-lens {
+.mag-lens {
     position: absolute;
     width: 96px;
     height: 96px;
@@ -4781,7 +4781,7 @@ kbd {
     pointer-events: none;
 }
 
-.xp-inspect-lens[hidden] {
+.mag-lens[hidden] {
     display: none;
 }
 
@@ -5493,4 +5493,31 @@ kbd {
 .job-tab-edit:hover {
     background: rgba(var(--text-rgb), 0.1);
     color: rgb(var(--text-rgb));
+}
+
+
+/* ---- Shared magnifier (src/magnifier.js): selected-pixel marker */
+.mag-marker {
+    position: absolute;
+    z-index: 2;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+
+    border: 2px solid #f5d042;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 10px rgba(245, 208, 66, 0.7);
+    pointer-events: none;
+}
+
+.mag-marker[hidden] {
+    display: none;
+}
+
+.mag-lens {
+    z-index: 3;
+}
+
+.iv-preview-stage {
+    cursor: crosshair;
 }

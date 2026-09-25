@@ -39,7 +39,12 @@ function el(tag, attrs = {}, parent = null, ns = null) {
     return node;
 }
 
-export function createMeasureTool({ viewer, box, canvas }) {
+// snapTarget (optional): { get: () => ({ x, y }) | null, onUsed: () => void }.
+// A measure-mode click within SNAP_PX of that grid point's on-screen position
+// places the point exactly there (the Image Inspection "selected point").
+const SNAP_PX = 14;
+
+export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
     const model = createMeasureModel({ onChange: () => { dirty = true; } });
     let dirty = true;
 
@@ -531,6 +536,16 @@ export function createMeasureTool({ viewer, box, canvas }) {
         }
         if (d.moved || e.button !== 0 || !editable()) {
             return; // an orbit, not a click
+        }
+        const snap = snapTarget?.get?.();
+        if (snap && syncTerrain()) {
+            const sp = project(snap.x, snap.y, 0);
+            const rect = canvas.getBoundingClientRect();
+            if (sp && Math.hypot(sp.sx - (e.clientX - rect.left), sp.sy - (e.clientY - rect.top)) <= SNAP_PX) {
+                handleOutcome(model.click({ x: snap.x, y: snap.y }, null));
+                snapTarget.onUsed?.();
+                return;
+            }
         }
         handleOutcome(model.click(pick(e.clientX, e.clientY), null));
     });
