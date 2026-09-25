@@ -581,13 +581,7 @@ export function createMeasureTool({ viewer, box, canvas }) {
             e.preventDefault();
             return;
         }
-        if ((e.key === "z" || e.key === "Z") && (e.metaKey || e.ctrlKey) && !e.shiftKey && !typing) {
-            e.preventDefault();
-            if (!dragRef) {
-                closeMenu();
-                handleOutcome(model.undo());
-            }
-        }
+        // Cmd/Ctrl+Z is the viewer-wide undo now (src/viewer-history.js, wired in main.js).
     });
 
     // ---------------------------------------------------------------- per frame

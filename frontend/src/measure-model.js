@@ -270,6 +270,19 @@ export function createMeasureModel({ onChange } = {}) {
             return { type: "deleted-segment" };
         },
 
+        // Viewer-wide undo/redo (src/viewer-history.js): a plain-data copy of
+        // the selection, and restoring one. The tool mode is not part of it.
+        snapshot() {
+            return clone();
+        },
+        restore(snap) {
+            chains = snap.chains.map(c => ({ closed: c.closed, points: c.points.map(p => ({ ...p })) }));
+            active = snap.active;
+            owner = snap.owner === undefined ? owner : snap.owner;
+            nextId = Math.max(nextId, ...chains.flatMap(c => c.points.map(p => p.id + 1)), 1);
+            changed();
+        },
+
         clear() {
             if (pointCount() === 0) {
                 return { type: "unchanged" };

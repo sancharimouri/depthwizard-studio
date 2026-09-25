@@ -176,6 +176,7 @@ const TOUR_STEPS = [
     { sel: "#job-tabs", title: "Job tabs", text: "Every generation is a separate job. Switch between open jobs here." },
     { sel: "#final-demo-back", title: "Back", text: "Shrinks this view back into its Workbench grid cell. Nothing is lost." },
     { sel: "#final-demo-close", title: "Close", text: "Closes the view and clears the jobs on this page (you are warned about unsaved work first)." },
+    { sel: "#final-demo-undo", title: "Undo / Redo", text: "Steps back and forward through your rotations, measurements, notes and view changes (also Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z)." },
     { sel: ".xv-play", title: "Auto-rotation", text: "Pauses or resumes the slow idle rotation of the terrain." },
     { sel: ".xv-theme", title: "Theme", text: "Switches between dark and bright mode." },
     { sel: '.xv-toolbar [aria-label="Screenshot"]', title: "Screenshot", text: "Captures the current view, including measurements and pins, as a PNG." },

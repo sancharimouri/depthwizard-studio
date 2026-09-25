@@ -5,6 +5,7 @@ import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
 import { createFloodSim } from "./flood-sim.js";
 import { createSidebar } from "./sidebar.js";
+import { createViewerHistory } from "./viewer-history.js";
 import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderSource, renderTerrainStats } from "./side-panels.js";
 import { createInputView } from "./input-view.js";
 import {
@@ -799,6 +800,7 @@ function tierDotClass(routing) {
 
 const ICONS = {
     pin: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>',
+    save: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>',
     pencil: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
     trash: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
 };
@@ -893,15 +895,12 @@ function jobItem(job, { running, active, choosing }) {
     status.textContent = job.status === "generating" ? `Generating ${job.progress}%` : "Complete";
     head.append(num, status);
 
-    const title = document.createElement("div");
-    title.className = "job-title";
-    title.textContent = job.input.title;
-
+    // only the (editable) job name identifies the job — no tile id line
     const tier = document.createElement("div");
     tier.className = `job-tier ${tierDotClass(job.input.routing)}`;
     tier.textContent = job.input.routing.label;
 
-    button.append(head, title, tier);
+    button.append(head, tier);
 
     const foot = document.createElement("div");
     foot.className = "job-foot";
@@ -912,11 +911,7 @@ function jobItem(job, { running, active, choosing }) {
     const actions = document.createElement("div");
     actions.className = "job-actions";
 
-    const save = document.createElement("button");
-    save.type = "button";
-    save.className = "job-save";
-    save.textContent = "Save";
-    save.setAttribute("aria-label", `Save ${jobLabel(job)} (downloads a JSON file and adds it to Saved)`);
+    const save = iconAction("job-save-icon", `Save ${jobLabel(job)} (downloads a JSON file and adds it to Saved)`, ICONS.save);
     save.disabled = job.status !== "complete";
     save.addEventListener("click", () => saveJobs([job.id]));
 
@@ -1034,7 +1029,8 @@ function endRename(commit) {
     }
     const { id } = renaming;
     renaming = null;
-    if (commit) {
+    // Enter/blur save; Esc cancels; an empty input keeps the previous name
+    if (commit && renameInput.value.trim()) {
         jobStore.rename(id, renameInput.value); // emits → renderJobs
     }
     renderJobs();
@@ -1132,14 +1128,14 @@ function renderJobTabs() {
         tab.setAttribute("aria-selected", String(job === active));
         tab.dataset.jobId = job.id;
         tab.disabled = Boolean(running) && job !== running;
-        tab.title = `${jobLabel(job)} · ${job.input.title} · ${job.input.routing.label}${job.saved ? "" : " · unsaved"}`;
+        tab.title = `${jobLabel(job)} · ${job.input.routing.label}${job.saved ? "" : " · unsaved"}`;
 
         const dot = document.createElement("span");
         dot.className = "job-tab-dot";
         dot.setAttribute("aria-hidden", "true");
         const label = document.createElement("span");
         label.className = "job-tab-label";
-        label.textContent = `${jobLabel(job)} · ${job.input.title}`;
+        label.textContent = jobLabel(job);
         tab.append(dot, label);
         if (job.pinned) {
             const pinMark = document.createElement("span");
@@ -1164,7 +1160,18 @@ function renderJobTabs() {
         if (renaming?.id === job.id && renaming.where === "tab") {
             return renameField(job, "job-tab job-tab-editing");
         }
-        return tab;
+        const wrap = document.createElement("div");
+        wrap.className = "job-tab-wrap";
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "job-tab-edit";
+        edit.setAttribute("aria-label", `Rename ${jobLabel(job)}`);
+        edit.title = "Rename";
+        edit.innerHTML = ICONS.pencil;
+        edit.disabled = tab.disabled;
+        edit.addEventListener("click", () => startRename(job.id, "tab"));
+        wrap.append(tab, edit);
+        return wrap;
     }));
 
     renderSource(active);
@@ -1173,7 +1180,7 @@ function renderJobTabs() {
     if (jobTabInfoEl && active) {
         const dem = active.input.dem;
         jobTabInfoEl.textContent = [
-            `${jobLabel(active)}: ${active.input.title}`,
+            jobLabel(active),
             active.input.routing.label,
             dem ? `DEM ${dem.min_m}–${dem.max_m} m` : null,
             "3D terrain shown: Darjeeling reference (placeholder)",
@@ -1765,6 +1772,7 @@ let finalDemoFloodActive = false;
 let finalDemoFlythrough = null;
 let finalDemoInitialized = false;
 let finalDemoFloodSim = null;
+let finalDemoHistory = null;
 
 // Workbench's Final Demo box stays locked to whatever scene the box 1-7
 // sequence generated — no region switcher, unlike Explore's own viewer.
@@ -2111,7 +2119,9 @@ function initFinalDemoViewer() {
             areaEl: document.getElementById("xp-flood-area"),
         },
     });
+    initViewerHistory(canvas);
     if (import.meta.env?.DEV) {
+        window.__dwHistory = finalDemoHistory;
         window.__dwFloodSim = finalDemoFloodSim; // dev-only, headless checks
         window.__dwTerrain = () => finalDemoCurrentTerrain;
         window.__dwCamera = () => finalDemoViewer.camera;
@@ -2195,7 +2205,155 @@ function initFinalDemoViewer() {
         finalDemoViewer?.resizeToCanvas();
     });
 
-    return loadFinalDemoRegion("darjeeling");
+    return loadFinalDemoRegion("darjeeling").then(terrain => {
+        finalDemoHistory?.reset();
+        return terrain;
+    });
+}
+
+// ---- Viewer-wide undo / redo (src/viewer-history.js) ----
+// State entries cover measurements/selections, notes, the view layer,
+// vertical exaggeration and the scenario overlay; camera entries cover one
+// user rotate/zoom gesture each. Committed after each user action in the box.
+function initViewerHistory(canvas) {
+    const box = document.getElementById("final-demo-box");
+    const undoBtn = document.getElementById("final-demo-undo");
+    const redoBtn = document.getElementById("final-demo-redo");
+    const controlsRef = finalDemoViewer.controls;
+    const v1 = new THREE.Vector3();
+    const v2 = new THREE.Vector3();
+    // end values (where damping is heading), not the mid-glide camera
+    const cam = () => {
+        controlsRef.getPosition(v1, true);
+        controlsRef.getTarget(v2, true);
+        return { p: v1.toArray(), t: v2.toArray() };
+    };
+
+    finalDemoHistory = createViewerHistory({
+        capture: () => ({
+            // selection only: the model's internal "which sub-mode made it" (owner)
+            // changes on a plain mode switch and must not become an undo step
+            measure: (({ chains, active }) => ({ chains, active }))(finalDemoMeasureTool.model.snapshot()),
+            notes: finalDemoChrome.notes.map(n => ({
+                id: n.id, x: n.x, y: n.y, text: n.text, visible: n.visible, createdAt: +n.createdAt,
+            })),
+            layer: finalDemoCurrentLayer,
+            vex: Number((finalDemoCurrentTerrain?.displayExaggeration?.() ?? 1).toFixed(4)),
+            scenario: finalDemoEarthquakeActive ? "earthquake" : finalDemoFloodActive ? "flood" : null,
+        }),
+        apply: st => {
+            finalDemoMeasureTool.model.restore(st.measure);
+            const notes = finalDemoChrome.notes;
+            notes.length = 0;
+            st.notes.forEach(n => notes.push({ ...n, createdAt: new Date(n.createdAt) }));
+            if (st.layer !== finalDemoCurrentLayer) {
+                activateFinalDemoLayer(st.layer);
+            }
+            if (finalDemoFloodActive !== (st.scenario === "flood")) {
+                setFinalDemoFloodActive(st.scenario === "flood");
+            }
+            if (finalDemoEarthquakeActive !== (st.scenario === "earthquake")) {
+                setFinalDemoEarthquakeActive(st.scenario === "earthquake");
+            }
+            if (finalDemoCurrentTerrain?.setDisplayExaggeration) {
+                finalDemoCurrentTerrain.setDisplayExaggeration(st.vex);
+                syncExaggerationSlider(finalDemoCurrentTerrain);
+            }
+            finalDemoMeasureTool.invalidate();
+        },
+        applyCamera: c => {
+            controlsRef.setLookAt(...c.p, ...c.t, true);
+        },
+        sameCamera: (a, b) => a.p.every((x, i) => Math.abs(x - b.p[i]) < 1e-3) && a.t.every((x, i) => Math.abs(x - b.t[i]) < 1e-3),
+        onChange: () => {
+            undoBtn.disabled = !finalDemoHistory.canUndo;
+            redoBtn.disabled = !finalDemoHistory.canRedo;
+        },
+    });
+
+    // State: commit once after each user action inside the viewer (after its
+    // handlers ran), so a whole drag / menu action becomes one entry.
+    let commitTimer = 0;
+    const scheduleCommit = () => {
+        clearTimeout(commitTimer);
+        commitTimer = setTimeout(() => finalDemoHistory.commit(), 0);
+    };
+    ["pointerup", "click", "keyup", "change"].forEach(type => box.addEventListener(type, event => {
+        if (event.target.closest?.("#final-demo-undo, #final-demo-redo")) {
+            return;
+        }
+        scheduleCommit();
+    }, true));
+
+    // Camera: one entry per drag / touch gesture…
+    let dragBefore = null;
+    let wheelBefore = null;
+    let wheelTimer = 0;
+    controlsRef.addEventListener("controlstart", () => {
+        dragBefore = cam();
+    });
+    controlsRef.addEventListener("controlend", () => {
+        const before = dragBefore;
+        dragBefore = null;
+        // a wheel gesture is recorded by the wheel handler below instead
+        setTimeout(() => {
+            if (before && !wheelBefore) {
+                finalDemoHistory.commitCamera(before, cam());
+            }
+        }, 0);
+    });
+    // …and one per scroll / pinch burst (settles 350 ms after the last event).
+    canvas.addEventListener("wheel", () => {
+        if (!wheelBefore) {
+            wheelBefore = dragBefore ?? cam();
+        }
+        clearTimeout(wheelTimer);
+        wheelTimer = setTimeout(() => {
+            finalDemoHistory.commitCamera(wheelBefore, cam());
+            wheelBefore = null;
+        }, 350);
+    }, { passive: true });
+
+    // The change itself is the feedback; only an empty stack gets a toast
+    // (the buttons are disabled then, so that's keyboard-only).
+    const undo = () => {
+        if (!finalDemoHistory.undo()) {
+            finalDemoMeasureTool.showToast?.("Nothing to undo.", "info");
+        }
+    };
+    const redo = () => {
+        if (!finalDemoHistory.redo()) {
+            finalDemoMeasureTool.showToast?.("Nothing to redo.", "info");
+        }
+    };
+    undoBtn.addEventListener("click", undo);
+    redoBtn.addEventListener("click", redo);
+
+    document.addEventListener("keydown", event => {
+        if (!box.classList.contains("is-expanded") || !(event.metaKey || event.ctrlKey)) {
+            return;
+        }
+        const key = event.key.toLowerCase();
+        const isUndo = key === "z" && !event.shiftKey;
+        const isRedo = (key === "z" && event.shiftKey) || (key === "y" && event.ctrlKey && !event.metaKey);
+        if (!isUndo && !isRedo) {
+            return;
+        }
+        const t = event.target;
+        if (t instanceof HTMLInputElement && t.type === "text" || t instanceof HTMLTextAreaElement || t?.isContentEditable) {
+            return; // text fields keep their own undo
+        }
+        if (document.querySelector(".confirm-modal:not([hidden])")) {
+            return;
+        }
+        event.preventDefault();
+        finalDemoHistory.commit(); // fold any unrecorded change in first
+        if (isUndo) {
+            undo();
+        } else {
+            redo();
+        }
+    });
 }
 
 function updateFinalDemoViewer() {
