@@ -37,14 +37,19 @@ cells = [
          "    raise RuntimeError(open('server.log').read())"),
     code("# cloudflared: the official static Linux binary (no account, no login for a quick tunnel)\n"
          "!wget -q -O cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 && chmod +x cloudflared\n"
+         "# Logs go to a file, not an undrained pipe (a full pipe could block cloudflared on a log write).\n"
+         "# Re-running this cell replaces the tunnel (NEW URL). Stopping the notebook kills it (Cloudflare error 1033).\n"
          "import re\n"
+         "!pkill -f 'cloudflared tunnel' || true\n"
          "tun = subprocess.Popen(['./cloudflared', 'tunnel', '--no-autoupdate', '--url', 'http://127.0.0.1:8000'],\n"
-         "                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)\n"
+         "                       stdout=open('cloudflared.log', 'w'), stderr=subprocess.STDOUT)\n"
          "URL = None\n"
-         "for line in tun.stdout:\n"
-         "    m = re.search(r'https://[a-z0-9-]+\\.trycloudflare\\.com', line)\n"
+         "for _ in range(60):\n"
+         "    m = re.search(r'https://[a-z0-9-]+\\.trycloudflare\\.com', open('cloudflared.log').read())\n"
          "    if m:\n"
          "        URL = m.group(0); break\n"
+         "    assert tun.poll() is None, open('cloudflared.log').read()\n"
+         "    time.sleep(1)\n"
          "print('\\nDAV2_INFERENCE_URL =', URL)"),
     code("# Real end-to-end check through the public tunnel: a real Sentinel-2 preview -> 518x518 depth\n"
          "import base64, io, numpy as np, requests\n"
@@ -62,10 +67,11 @@ cells = [
     code("# Keep-alive monitor: leave this running. It only reports; it cannot keep Colab alive if the tab closes.\n"
          "while True:\n"
          "    try:\n"
-         "        print(time.strftime('%H:%M:%S'), URL, requests.get(URL + '/health', timeout=30).json())\n"
+         "        print(time.strftime('%H:%M:%S'), URL, 'cloudflared', 'running' if tun.poll() is None else f'EXITED {tun.returncode}',\n"
+         "              requests.get(URL + '/health', timeout=30).json())\n"
          "    except Exception as e:\n"
          "        print(time.strftime('%H:%M:%S'), 'tunnel check failed:', e)\n"
-         "    time.sleep(300)"),
+         "    time.sleep(60)"),
 ]
 for c in cells:  # notebook format stores source as a list of lines
     c["source"] = c["source"].splitlines(keepends=True)

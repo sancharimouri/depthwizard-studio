@@ -78,4 +78,9 @@ Model load time is 3–4.5 s, once per process.
 - **Setup:** `bridge/dav2_server.py` on CPU, a real quick tunnel (`cloudflared` 2026.9.3), and the backend as an isolated copy with no `.env`, with `DAV2_INFERENCE_URL` = the tunnel URL.
 - **Route:** a real image (the `sentinel2-almora` preview, 1024²) was POSTed to `/api/depth/relative` → HTTP 200 in 1.5 s. The bridge logged the request arriving from a public address via Cloudflare.
 - **Output:** 518×518 float32, finite, 265,942 distinct values. It is **bit-identical** (max |diff| 0.0) to an independent in-process DAv2-Small run.
-- **Not yet run:** the Colab GPU run itself and a real Render deployment. See the report for the status of both.
+- **Colab GPU run (2026-09-26, the user's notebook, URL `pregnant-visited-til-tested.trycloudflare.com`, now dead):**
+  - The notebook self-test passed on `cuda`.
+  - The backend (isolated production-mode copy, run on this Mac) with `DAV2_INFERENCE_URL` = that URL → `POST /api/depth/relative` with the Almora preview → HTTP 200 in 13.2 s round trip, 0.12 s GPU inference.
+  - Output: 518×518, matching the CPU reference to 1e-5 (Pearson 1.0).
+  - The next calls got Cloudflare **error 1033**, because the notebook had been stopped and restarted. That is the failure mode described above: a restart kills the tunnel, and the new run has a new URL.
+- **Not yet run:** a real Render deployment (no Render account or API key yet).
