@@ -2071,21 +2071,6 @@ kbd {
     width: clamp(260px, 24vw, 340px);
 }
 
-/* The controls-hint has nowhere to go without overlapping the right
-   rail's run/danger-zone panels at the compact grid-cell size — it's the
-   one piece of parity deprioritized there, and shown once fullscreen
-   actually has the room Explore's own version relies on. */
-.final-demo-bottom-right {
-    display: none;
-}
-
-.final-demo-box:fullscreen .final-demo-bottom-right {
-    display: block;
-    position: absolute;
-    right: 10px;
-    bottom: 44px;
-}
-
 /* ============================================================
    DOCS (page 3) — long-form reading page. Scrolls inside the page
    (body is overflow: hidden); left padding clears the 56px nav rail.
@@ -2363,13 +2348,6 @@ kbd {
 .final-demo-box.is-expanded .final-demo-left-rail,
 .final-demo-box.is-expanded .final-demo-right-rail {
     display: flex;
-}
-
-.final-demo-box.is-expanded .final-demo-bottom-right {
-    display: block;
-    position: absolute;
-    right: 10px;
-    bottom: 44px;
 }
 
 /* The left rail sits below the Back/Close bar in the upper-left corner;
@@ -4878,4 +4856,328 @@ kbd {
 .saved-actions .confirm-button {
     padding: 7px 6px;
     font-size: 10.5px;
+}
+
+
+/* ============================================================
+   EXPANDED-VIEW SIDE BOXES (src/side-panels.js)
+   Each box collapses to a thin heading-only tab via its chevron.
+============================================================ */
+
+.final-demo-left-rail {
+    width: 272px;
+}
+
+.xp-box {
+    flex-shrink: 0;
+
+    border: 1px solid rgba(var(--text-rgb), 0.10);
+    border-radius: 12px;
+
+    background: rgba(var(--bg-rgb), 0.68);
+    backdrop-filter: blur(14px);
+
+    pointer-events: auto;
+}
+
+.xp-box-danger {
+    border-color: rgba(230, 120, 90, 0.25);
+    background: rgba(var(--danger-bg-rgb), 0.35);
+}
+
+.xp-head {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    padding: 11px 14px;
+
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    color: rgba(var(--text-rgb), 0.55);
+
+    font: inherit;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.xp-head:hover {
+    color: rgb(var(--text-rgb));
+}
+
+.xp-head:focus-visible {
+    outline: 2px solid var(--accent-solid);
+    outline-offset: -2px;
+}
+
+.xp-chevron {
+    width: 7px;
+    height: 7px;
+    margin-right: 2px;
+
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.xp-box.is-collapsed .xp-chevron {
+    transform: rotate(-45deg);
+}
+
+.xp-body {
+    padding: 0 14px 14px;
+
+    /* the controls layer inherits uppercase/centred button text; boxes read as prose */
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+}
+
+.xp-body .stat-label,
+.xp-body .metric-label,
+.xp-body .xp-section-label {
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.xp-box.is-collapsed .xp-body {
+    display: none;
+}
+
+.xp-section-label {
+    margin: 4px 0 6px;
+
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: rgba(var(--text-rgb), 0.4);
+}
+
+.xp-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 10px;
+    margin: 0 0 12px;
+
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.xp-meta dt {
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+.xp-meta dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: rgba(var(--text-rgb), 0.88);
+}
+
+.stats-strip.xp-inline-strip {
+    padding: 0;
+    border: 0;
+    background: none;
+    backdrop-filter: none;
+    row-gap: 10px;
+}
+
+.xp-inline-strip .stat-value {
+    font-size: 14px;
+}
+
+.xp-terrain-source {
+    margin-top: 12px;
+    font-size: 11px;
+}
+
+.xp-note {
+    margin: 8px 0 0;
+
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+.xp-note:empty {
+    display: none;
+}
+
+.xp-note-lead {
+    margin: 0 0 10px;
+}
+
+/* ---- Image inspection */
+.xp-inspect-stage {
+    position: relative;
+    overflow: hidden;
+
+    border-radius: 8px;
+    background: rgba(var(--text-rgb), 0.05);
+
+    cursor: crosshair;
+}
+
+.xp-inspect-stage img {
+    display: block;
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    user-select: none;
+}
+
+.xp-inspect-lens {
+    position: absolute;
+    width: 96px;
+    height: 96px;
+
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+
+    background-repeat: no-repeat;
+    pointer-events: none;
+}
+
+.xp-inspect-lens[hidden] {
+    display: none;
+}
+
+.xp-inspect-readout {
+    margin-top: 6px;
+    font-size: 10px;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+/* ---- Learn gestures */
+.xp-gestures {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    color: rgba(var(--text-rgb), 0.75);
+}
+
+.xp-gestures td {
+    padding: 5px 0;
+    vertical-align: middle;
+    border-top: 1px solid rgba(var(--text-rgb), 0.06);
+}
+
+.xp-gestures tr:first-child td {
+    border-top: 0;
+}
+
+.xp-gestures td:first-child {
+    width: 1%;
+    padding-right: 10px;
+    white-space: nowrap;
+}
+
+/* ---- Explore options: product tour */
+.xp-tour-start,
+.xp-tour-next,
+.xp-tour-close {
+    height: 30px;
+    padding: 0 14px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.18);
+    border-radius: 7px;
+
+    background: rgba(var(--text-rgb), 0.06);
+    color: rgb(var(--text-rgb));
+
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.xp-tour-start,
+.xp-tour-next {
+    border-color: var(--accent-solid);
+    color: var(--accent-solid);
+}
+
+.xp-tour-start:hover,
+.xp-tour-next:hover,
+.xp-tour-close:hover {
+    background: rgba(var(--text-rgb), 0.12);
+}
+
+.xp-tour-ring {
+    position: absolute;
+    z-index: 30;
+
+    border: 2px solid var(--accent-solid);
+    border-radius: 10px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+
+    pointer-events: none;
+    transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+.xp-tour-card {
+    position: absolute;
+    z-index: 31;
+    width: 260px;
+    padding: 14px 16px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.16);
+    border-radius: 12px;
+
+    background: rgba(var(--bg-strong-rgb), 0.97);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    color: rgb(var(--text-rgb));
+
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+    pointer-events: auto;
+}
+
+.xp-tour-ring[hidden],
+.xp-tour-card[hidden] {
+    display: none;
+}
+
+.xp-tour-count {
+    font-size: 10px;
+    color: rgba(var(--text-rgb), 0.45);
+}
+
+.xp-tour-title {
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.xp-tour-text {
+    margin: 6px 0 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgba(var(--text-rgb), 0.75);
+}
+
+.xp-tour-actions {
+    display: flex;
+    gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .xp-chevron,
+    .xp-tour-ring {
+        transition: none;
+    }
 }

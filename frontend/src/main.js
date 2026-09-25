@@ -3,6 +3,7 @@ import { createTerrain } from "./terrain.js";
 import { createTerrainViewer } from "./viewer.js";
 import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
+import { initCollapsibleBoxes, initTour, renderSource, renderTerrainStats } from "./side-panels.js";
 import { createInputView } from "./input-view.js";
 import {
     STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobLabel, jobsExport, savedRecord, unsavedCopy,
@@ -999,6 +1000,8 @@ function renderJobTabs() {
         return tab;
     }));
 
+    renderSource(active);
+
     if (jobTabInfoEl && active) {
         const dem = active.input.dem;
         jobTabInfoEl.textContent = [
@@ -1632,6 +1635,8 @@ const FINAL_DEMO_REGION_SWITCHER_ENABLED = false;
 function updateFinalDemoStats(regionKey, terrain, terrainData) {
     const region = REGIONS[regionKey];
 
+    renderTerrainStats(terrainData);
+
     const elevationElement = document.getElementById("final-demo-elevation-value");
     if (elevationElement) {
         elevationElement.textContent = `${Math.round(terrain.elevationMin)}–${Math.round(terrain.elevationMax)} m`;
@@ -1907,6 +1912,10 @@ function initFinalDemoViewer() {
         window.__dwMeasureTool = finalDemoMeasureTool; // dev-only hooks for the headless tests
         window.__dwChrome = finalDemoChrome;
     }
+    // Side-panel boxes (collapsible) + the Explore Options product tour.
+    initCollapsibleBoxes(document.getElementById("final-demo-box"));
+    initTour(document.getElementById("final-demo-box"));
+    renderSource(jobStore.active());
 
     finalDemoFlythrough = createFlythroughController({
         controls: finalDemoViewer.controls,
