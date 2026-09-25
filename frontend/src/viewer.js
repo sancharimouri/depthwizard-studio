@@ -63,8 +63,8 @@ export function createTerrainViewer(canvas, options = {}) {
         depthWrite: false,
         side: THREE.DoubleSide,
         uniforms: {
-            uMinor: { value: 100 / 30 }, // cell size in world units (≈ the old 40-division grid's 3.3)
-            uMajor: { value: 100 / 3 },
+            // uniform small squares: 2.5 world units (the terrain is 100 units N-S), no major lines
+            uMinor: { value: 2.5 },
             uMinorColor: { value: new THREE.Color(GRID_COLORS.dark[1]) },
             uMajorColor: { value: new THREE.Color(GRID_COLORS.dark[0]) },
             uFadeStart: { value: 120 },
@@ -80,7 +80,6 @@ export function createTerrainViewer(canvas, options = {}) {
         `,
         fragmentShader: /* glsl */ `
             uniform float uMinor;
-            uniform float uMajor;
             uniform vec3 uMinorColor;
             uniform vec3 uMajorColor;
             uniform float uFadeStart;
@@ -89,17 +88,20 @@ export function createTerrainViewer(canvas, options = {}) {
 
             float gridLine(vec2 p, float size) {
                 vec2 c = p / size;
-                vec2 d = abs(fract(c - 0.5) - 0.5) / fwidth(c);
-                return 1.0 - min(min(d.x, d.y), 1.0);
+                vec2 w = fwidth(c);
+                vec2 d = abs(fract(c - 0.5) - 0.5) / w;
+                float line = 1.0 - min(min(d.x, d.y), 1.0);
+                // squares smaller than ~3 px would shimmer: fade those lines out
+                float cellPx = 1.0 / max(w.x, w.y);
+                return line * smoothstep(2.0, 5.0, cellPx);
             }
 
             void main() {
                 float minor = gridLine(vWorld.xz, uMinor);
-                float major = gridLine(vWorld.xz, uMajor);
                 float dist = distance(vWorld.xz, cameraPosition.xz);
                 float fade = 1.0 - smoothstep(uFadeStart, uFadeEnd, dist);
-                vec3 color = mix(uMinorColor, uMajorColor, major);
-                float alpha = max(minor * 0.9, major) * fade;
+                vec3 color = uMajorColor;
+                float alpha = minor * fade;
                 if (alpha < 0.01) discard;
                 gl_FragColor = vec4(color, alpha);
             }
