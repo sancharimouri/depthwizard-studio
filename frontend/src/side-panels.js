@@ -188,6 +188,7 @@ const TOUR_STEPS = [
     { sel: '[data-box="details"]', title: "Details", text: "Image-source metadata for this job and statistics for the terrain shown." },
     { sel: '[data-box="inspect"]', title: "Image inspection", text: "The job's source image. Hover it to magnify and read pixel coordinates." },
     { sel: '[data-box="scenario"]', title: "Scenario analysis", text: "Illustrative flood and (placeholder) slope overlays. Not hazard models." },
+    { sel: '[data-box="facts"]', title: "Facts", text: "Place, elevation, and earthquake and flood-alert history for this job's location, from live public sources." },
     { sel: '[data-box="gestures"]', title: "Learn gestures", text: "How to rotate, zoom and use the terrain menu with mouse, trackpad or touch." },
 ];
 
@@ -303,4 +304,163 @@ export function initTour(box) {
         }
     });
     return { stop };
+}
+
+// ------------------------------------------------------------------ facts
+// Location facts + hazard history from live, named sources (backend
+// /api/facts). Coordinates come only from the job's own geo-metadata
+// (job.input.geo) or from the user typing them in (job.userGeo); without
+// either, the box stays empty and says why. Fetched only while the box is
+// open, once per job and location.
+
+let factsJob = null;
+
+function factsGeo(job) {
+    if (job?.input?.geo) {
+        return { ...job.input.geo, user: false };
+    }
+    if (job?.userGeo) {
+        return { ...job.userGeo, origin: "coordinates you entered", user: true };
+    }
+    return null;
+}
+
+const link = (href, text) => (href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
+
+function sourceLine(section) {
+    return `<div class="xp-fact-src">Source: ${link(section.url, section.source)}</div>`;
+}
+
+function factSection(title, section, render) {
+    let inner;
+    let tag;
+    if (!section || section.status === "unavailable") {
+        tag = `<span class="xp-fact-tag is-na">Not available</span>`;
+        inner = `<p class="xp-fact-text">${esc(section?.reason ?? "No source.")}</p>`;
+    } else if (section.status === "error") {
+        tag = `<span class="xp-fact-tag is-error">Source unreachable</span>`;
+        inner = `<p class="xp-fact-text">${esc(section.source)} could not be reached just now (${esc(section.message)}). `
+            + "Nothing is shown in its place.</p>";
+    } else {
+        tag = `<span class="xp-fact-tag is-ok">Live</span>`;
+        inner = render(section) + sourceLine(section);
+    }
+    return `<div class="xp-fact"><div class="xp-fact-head"><span>${esc(title)}</span>${tag}</div>${inner}</div>`;
+}
+
+function renderFactsData(data) {
+    const place = factSection("PLACE", data.place, s => (s.name
+        ? `<p class="xp-fact-text">${esc(s.name)}</p>`
+        : `<p class="xp-fact-text">${esc(s.note)}</p>`)
+        + (s.licence ? `<div class="xp-fact-src">${esc(s.licence)}</div>` : ""));
+    const elev = factSection("POINT ELEVATION", data.elevation, s =>
+        `<p class="xp-fact-text"><span class="xp-fact-big numeric-mono">${Math.round(s.elevation_m).toLocaleString()} m</span> at these coordinates (90 m DEM cell)</p>`);
+    const quake = factSection("SEISMIC HISTORY", data.seismic, s => {
+        const rows = s.largest.map(e =>
+            `<li><span class="numeric-mono">M${e.mag.toFixed(1)}</span> ${link(e.url, e.place ?? "event")} · ${esc(e.date)} · ${e.distance_km} km</li>`).join("");
+        return `<p class="xp-fact-text"><span class="xp-fact-big numeric-mono">${s.count.toLocaleString()}</span> earthquakes of M${s.min_magnitude}+ within ${s.radius_km} km since 1900.</p>`
+            + (rows ? `<div class="xp-fact-sub">Largest</div><ul class="xp-fact-list">${rows}</ul>` : "")
+            + (s.latest ? `<div class="xp-fact-sub">Most recent</div><ul class="xp-fact-list"><li><span class="numeric-mono">M${s.latest.mag.toFixed(1)}</span> ${link(s.latest.url, s.latest.place ?? "event")} · ${esc(s.latest.date)}</li></ul>` : "")
+            + `<p class="xp-note">${esc(s.caveat)}</p>`;
+    });
+    const flood = factSection("FLOOD ALERTS", data.floods, s => {
+        const alerts = Object.entries(s.by_alert).map(([k, v]) => `${v} ${esc(k)}`).join(", ");
+        const rows = s.recent.map(e =>
+            `<li>${link(e.url, e.name ?? "Flood")} · ${esc(e.from)} · ${esc(e.alert)} · ${e.distance_km} km</li>`).join("");
+        return `<p class="xp-fact-text"><span class="xp-fact-big numeric-mono">${s.count}</span> GDACS flood alert${s.count === 1 ? "" : "s"} within ${s.radius_km} km since 2000${alerts ? ` (${alerts})` : ""}.</p>`
+            + (rows ? `<div class="xp-fact-sub">Most recent</div><ul class="xp-fact-list">${rows}</ul>` : "")
+            + `<p class="xp-note">${esc(s.caveat)}</p>`;
+    });
+    const slide = factSection("LANDSLIDES", data.landslides);
+    const volc = factSection("VOLCANOES", data.volcanoes);
+    return place + elev + quake + flood + slide + volc
+        + `<p class="xp-note">Queried ${esc(data.queried_at)}. The 3D terrain shown is the Darjeeling reference (placeholder); these facts are for this job's location.</p>`;
+}
+
+async function loadFacts(job, geo) {
+    const body = document.getElementById("xp-facts-body");
+    const key = `${geo.lat},${geo.lon}`;
+    if (job.facts?.key === key && job.facts.data) {
+        body.innerHTML = renderFactsData(job.facts.data);
+        return;
+    }
+    if (job.facts?.key === key && job.facts.pending) {
+        return;
+    }
+    job.facts = { key, pending: true };
+    body.innerHTML = `<p class="xp-note">Querying Nominatim, Open-Meteo, USGS and GDACS…</p>`;
+    try {
+        const response = await fetch(`/api/facts?lat=${encodeURIComponent(geo.lat)}&lon=${encodeURIComponent(geo.lon)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        job.facts = { key, data: await response.json() };
+    } catch (error) {
+        job.facts = null;
+        if (factsJob === job) {
+            body.innerHTML = `<p class="xp-note">Facts service unreachable (${esc(error.message)}). Nothing is shown in its place.</p>`
+                + `<button class="xp-tour-close" type="button" id="xp-facts-retry">Retry</button>`;
+            document.getElementById("xp-facts-retry")?.addEventListener("click", () => renderFacts(job));
+        }
+        return;
+    }
+    if (factsJob === job && factsGeo(job) && `${factsGeo(job).lat},${factsGeo(job).lon}` === key) {
+        body.innerHTML = renderFactsData(job.facts.data);
+    }
+}
+
+export function renderFacts(job) {
+    factsJob = job ?? null;
+    const box = document.querySelector('[data-box="facts"]');
+    const where = document.getElementById("xp-facts-where");
+    const form = document.getElementById("xp-facts-form");
+    const body = document.getElementById("xp-facts-body");
+    if (!box || !where) {
+        return;
+    }
+    if (!job) {
+        where.textContent = "";
+        form.hidden = true;
+        body.innerHTML = `<p class="xp-note">No job is open, so there is no location to describe.</p>`;
+        return;
+    }
+    const geo = factsGeo(job);
+    form.hidden = Boolean(job.input?.geo);
+    if (!geo) {
+        where.textContent = "";
+        body.innerHTML = `<p class="xp-fact-empty">Location not available: no coordinates in this image's metadata, and none entered.</p>`;
+        return;
+    }
+    where.innerHTML = `<span class="numeric-mono">${Number(geo.lat).toFixed(4)}, ${Number(geo.lon).toFixed(4)}</span>`
+        + `<span> · from ${esc(geo.origin)}</span>`;
+    if (geo.user) {
+        document.getElementById("xp-facts-lat").value = geo.lat;
+        document.getElementById("xp-facts-lon").value = geo.lon;
+    }
+    // only hit the external sources while the box is actually open
+    if (!box.classList.contains("is-collapsed")) {
+        loadFacts(job, geo);
+    } else if (!(job.facts?.data)) {
+        body.innerHTML = "";
+    }
+}
+
+export function initFacts(getActiveJob) {
+    const box = document.querySelector('[data-box="facts"]');
+    const form = document.getElementById("xp-facts-form");
+    if (!box || !form) {
+        return;
+    }
+    box.querySelector(".xp-head").addEventListener("click", () => renderFacts(getActiveJob()));
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+        const job = getActiveJob();
+        const lat = Number(document.getElementById("xp-facts-lat").value);
+        const lon = Number(document.getElementById("xp-facts-lon").value);
+        if (!job || !Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+            return;
+        }
+        job.userGeo = { lat, lon };
+        renderFacts(job);
+    });
 }

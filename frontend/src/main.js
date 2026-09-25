@@ -3,7 +3,7 @@ import { createTerrain } from "./terrain.js";
 import { createTerrainViewer } from "./viewer.js";
 import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
-import { initCollapsibleBoxes, initTour, renderSource, renderTerrainStats } from "./side-panels.js";
+import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderSource, renderTerrainStats } from "./side-panels.js";
 import { createInputView } from "./input-view.js";
 import {
     STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobLabel, jobsExport, savedRecord, unsavedCopy,
@@ -1001,6 +1001,7 @@ function renderJobTabs() {
     }));
 
     renderSource(active);
+    renderFacts(active);
 
     if (jobTabInfoEl && active) {
         const dem = active.input.dem;
@@ -1915,7 +1916,9 @@ function initFinalDemoViewer() {
     // Side-panel boxes (collapsible) + the Explore Options product tour.
     initCollapsibleBoxes(document.getElementById("final-demo-box"));
     initTour(document.getElementById("final-demo-box"));
+    initFacts(() => jobStore.active());
     renderSource(jobStore.active());
+    renderFacts(jobStore.active());
 
     finalDemoFlythrough = createFlythroughController({
         controls: finalDemoViewer.controls,
