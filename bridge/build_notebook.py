@@ -60,7 +60,10 @@ cells = [
          "    except requests.ConnectionError:\n"
          "        time.sleep(2)\n"
          "r.raise_for_status(); d = r.json()\n"
-         "depth = np.frombuffer(base64.b64decode(d['data_b64']), '<f4').reshape(d['shape'])\n"
+         "import zlib\n"
+         "q = np.frombuffer(zlib.decompress(base64.b64decode(d['data_b64'])), '<u2').reshape(d['shape'])  # u16-zlib\n"
+         "depth = d['min'] + q / 65535 * (d['max'] - d['min'])\n"
+         "print('payload', round(len(r.content) / 1e6, 2), 'MB (u16-zlib)')\n"
          "print(d['device'], d['shape'], 'infer', d['infer_s'], 's  range', round(float(depth.min()), 3), '..', round(float(depth.max()), 3),\n"
          "      ' std', round(float(depth.std()), 3))\n"
          "assert depth.shape == (518, 518) and np.isfinite(depth).all() and depth.std() > 0"),

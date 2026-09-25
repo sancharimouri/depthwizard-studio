@@ -14,6 +14,7 @@ import {
     STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobLabel, jobsExport, savedRecord, unsavedCopy,
 } from "./jobs.js";
 import { installCloseGuard } from "./desktop-close.js";
+import { depthToRgba, requestRelativeDepth } from "./depth-result.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -583,6 +584,74 @@ let inputView = null;
 let unloadAllowed = false;
 
 const CAPTION_BOX_IDS = ["depth-preview-box", "elevation-preview-box"];
+
+// ---- Box 3 (Relative Depth): REAL output for the job's own input — DAv2-Small on
+// the inference host the backend points at (DAV2_INFERENCE_URL; src/depth-result.js).
+// If the host is down, the Darjeeling reference image comes back, labelled as such. ----
+
+const DEPTH_REFERENCE = {
+    src: "/data/darjeeling/relative_depth.png",
+    alt: "Darjeeling relative depth map (reference)",
+    lines: ["Depth Anything V2 (ViT-Large)", "Frozen weights · 1.17s inference"],
+};
+
+function applyDepthBox(job) {
+    const box = document.getElementById("depth-preview-box");
+    const img = box?.querySelector(".preview-image");
+    const captionEl = box?.querySelector(".staged-caption");
+    const depth = job?.depth;
+    let view = DEPTH_REFERENCE;
+    if (depth?.status === "ok") {
+        view = { src: depth.url, alt: `Relative depth of ${job.input.title}`, lines: depth.lines };
+    } else if (depth?.status === "failed") {
+        view = { ...DEPTH_REFERENCE, lines: ["Inference host unavailable: Darjeeling reference shown", depth.error] };
+    }
+    if (img && img.getAttribute("src") !== view.src) {
+        img.src = view.src;
+    }
+    if (img) {
+        img.alt = view.alt;
+    }
+    if (captionEl) {
+        captionEl.dataset.lines = JSON.stringify(view.lines);
+    }
+}
+
+async function depthImageUrl(depth) {
+    const canvas = document.createElement("canvas");
+    canvas.width = depth.width;
+    canvas.height = depth.height;
+    canvas.getContext("2d").putImageData(new ImageData(depthToRgba(depth), depth.width, depth.height), 0, 0);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    return URL.createObjectURL(blob);
+}
+
+// Never throws: the outcome (real result or failure) is recorded on the job.
+async function computeJobDepth(job) {
+    const scrollEl = document.getElementById("calc-log-scroll");
+    const ref = job.input.inputRef;
+    try {
+        if (!ref?.id) {
+            throw new Error("this input has no id to send");
+        }
+        const { resp, depth, roundTripS } = await requestRelativeDepth(ref);
+        const where = String(resp.device ?? "?").toUpperCase();
+        job.depth = {
+            status: "ok",
+            url: await depthImageUrl(depth),
+            lines: [
+                "Depth Anything V2 (ViT-Small) · this input",
+                `${where} ${resp.infer_s}s inference · ${roundTripS.toFixed(1)}s round trip`,
+                "Relative depth (brighter = nearer), not elevation",
+            ],
+        };
+        appendCalcLogLine(scrollEl, `Relative depth: DAv2-Small on ${where}, ${depth.width}×${depth.height}, `
+            + `${resp.infer_s}s inference, ${roundTripS.toFixed(1)}s round trip (${resp.encoding ?? "float32"})`, job);
+    } catch (error) {
+        job.depth = { status: "failed", error: String(error.message ?? error).slice(0, 140) };
+        appendCalcLogLine(scrollEl, `Relative depth unavailable (${job.depth.error}); showing the Darjeeling reference`, job);
+    }
+}
 const MINI_BOX_IDS = ["dsm-3d-box", "metric-elevation-3d-box"];
 
 function choosingNewInput() {
@@ -640,6 +709,7 @@ function collapseFinalDemoInstantly() {
 // in one by one, exactly like the first run.
 function resetGridForGeneration() {
     collapseFinalDemoInstantly();
+    applyDepthBox(null);
 
     CAPTION_BOX_IDS.forEach(id => {
         const box = document.getElementById(id);
@@ -680,6 +750,7 @@ function resetGridForGeneration() {
 // job's own input in the preview box and its own calculation log.
 function showCompletedJob(job) {
     applyJobInput(job);
+    applyDepthBox(job);
 
     CAPTION_BOX_IDS.forEach(id => {
         const box = document.getElementById(id);
@@ -1622,7 +1693,7 @@ function buildCalcLogLines() {
 
     if (sceneSelectionSummary?.type === "input") {
         opening.push(...sceneSelectionSummary.logLines);
-        opening.push("Generation stages below are a placeholder: they show the Darjeeling reference outputs");
+        opening.push("Relative depth below is computed for this input; the later stages are a placeholder showing the Darjeeling reference outputs");
     }
 
     opening.push("Handing off to reconstruction pipeline…");
@@ -2657,7 +2728,7 @@ async function animateGenerating({ percentEl, statusEl, steps, durationMs }) {
 // were already in the DOM, just held behind .preview-empty — swap that
 // for a real-feeling generating readout, then reveal both. ----
 
-async function generateCaptionPreviewBox(boxId, steps) {
+async function generateCaptionPreviewBox(boxId, steps, work = null, onDone = null) {
     const box = document.getElementById(boxId);
 
     if (!box) {
@@ -2672,12 +2743,17 @@ async function generateCaptionPreviewBox(boxId, steps) {
         emptyEl.innerHTML = generatingOverlayMarkup();
     }
 
-    await animateGenerating({
-        percentEl: emptyEl?.querySelector(".generating-percent"),
-        statusEl: emptyEl?.querySelector(".generating-status"),
-        steps,
-        durationMs: BOX_GENERATE_MS,
-    });
+    // Runs at least BOX_GENERATE_MS and until the real work (if any) resolves.
+    await Promise.all([
+        animateGenerating({
+            percentEl: emptyEl?.querySelector(".generating-percent"),
+            statusEl: emptyEl?.querySelector(".generating-status"),
+            steps,
+            durationMs: BOX_GENERATE_MS,
+        }),
+        work,
+    ]);
+    onDone?.();
 
     if (emptyEl) {
         emptyEl.hidden = true;
@@ -2788,12 +2864,13 @@ async function runGenerationSequence(job) {
     // whichever box below is currently generating.
     runCalcLog(TOTAL_PIPELINE_MS, job);
     const stageDone = progress => jobStore.update(job.id, { progress });
+    const depthWork = computeJobDepth(job);
 
     await generateCaptionPreviewBox("depth-preview-box", [
-        "Loading Sentinel-2 RGB tiles…",
-        "Running Depth Anything V2 (ViT-Large)…",
-        "Inference complete — 1.17s, frozen weights…",
-    ]);
+        "Sending this input's preview to the inference host…",
+        "Running Depth Anything V2 (ViT-Small)…",
+        "Decoding 518×518 relative depth…",
+    ], depthWork, () => applyDepthBox(job));
     stageDone(20);
 
     await generateCaptionPreviewBox("elevation-preview-box", [
