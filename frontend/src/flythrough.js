@@ -1,9 +1,9 @@
 // Fly-through for the expanded 3D viewer (the Fly-through box).
 //
 // One run: a short eased lead-in from wherever the camera is to the start
-// pose, then a 300° orbit while zooming in. Start and end are 1.5× closer
-// than the fitted distances (start 1.1× the worst-case box fit, end the
-// final azimuth's fit, both ÷ 1.5), and the run may leave the screen edges:
+// pose, then a 300° orbit while zooming in (start: 1.1× the worst-case box
+// fit ÷ 2.25; end: the final azimuth's fit ÷ 3). The run may leave the
+// screen edges:
 // there is no per-frame fit clamp, so the motion is one smooth ease with no
 // kinks. Every phase starts and ends at rest, and pause/resume ramp the
 // playback rate instead of snapping, so nothing is jarring.
@@ -22,7 +22,13 @@ const ORBIT_MS = 5000; // the 270° orbit + zoom-in
 const ORBIT = THREE.MathUtils.degToRad(300);
 const START_FACTOR = 1.1; // × worst-case fit (was 2.2: the structure now starts twice as big)
 const MARGIN = 0.04;
-const ZOOM = 1.5; // start and end 1.5× closer than the fitted distances
+// Zoom relative to the fitted distances. The previous 1.5× on both still
+// ended farther out than the default view, so it didn't read as a zoom-in:
+// the start is now 1.5× closer again (2.25× total) and the end 2× closer
+// again (3× total), so the flight really zooms in and finishes closer than
+// the default view.
+const START_ZOOM = 2.25;
+const END_ZOOM = 3;
 const RATE_TAU_MS = 150; // pause/resume ease
 
 const easeInOutCubic = t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
@@ -161,12 +167,12 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
         const az0 = controls.azimuthAngle;
         const worst = Math.max(...profile);
         // ends on the tight fit for the final azimuth (270° after the start)
-        const endDist = profileAt(profile, az0 + ORBIT) * (1 + MARGIN) / ZOOM;
+        const endDist = profileAt(profile, az0 + ORBIT) * (1 + MARGIN) / END_ZOOM;
         const from = controls.getTarget(new THREE.Vector3(), true);
         return {
             center: sphere.center.clone(),
             endDist,
-            startDist: worst * (1 + MARGIN) * START_FACTOR / ZOOM,
+            startDist: worst * (1 + MARGIN) * START_FACTOR / START_ZOOM,
             az0,
             polar,
             // where the camera is now: the lead-in starts here
