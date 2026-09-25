@@ -84,3 +84,12 @@ Model load time is 3–4.5 s, once per process.
   - Output: 518×518, matching the CPU reference to 1e-5 (Pearson 1.0).
   - The next calls got Cloudflare **error 1033**, because the notebook had been stopped and restarted. That is the failure mode described above: a restart kills the tunnel, and the new run has a new URL.
 - **Not yet run:** a real Render deployment (no Render account or API key yet).
+- **Second Colab run (`awesome-hoping-selling-unsigned.trycloudflare.com`, 2026-09-26):**
+  - Setup: backend (isolated production-mode copy on this Mac) → tunnel → Colab `cuda`.
+  - Result: **10/10 requests HTTP 200** across 3 real images (Sentinel-2 Almora, DFC2019 JAX_004_006, Maxar forest).
+- **Latency: about 13 s per call, and it's the tunnel, not the GPU.**
+  - GPU inference is 0.11 s, and the first byte arrives at 0.9 s.
+  - The 1.43 MB JSON response comes down the quick tunnel at about 108 KB/s.
+  - The same Mac downloads at 4.6 MB/s directly from Cloudflare, so a Render backend would see the same tunnel limit.
+  - Measured options: gzip 1.0 MB; float16 0.72 MB (error 1e-3); uint16 + zlib 0.68 MB (about 6 s, error 3e-5).
+  - At most about 2×, so this is not changed mid-demo (it would need a notebook restart). Permanent hosting removes the limit.
