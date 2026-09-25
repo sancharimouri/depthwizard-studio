@@ -26,56 +26,78 @@
 
 
     <!-- =====================================================
-         PAGE NAVIGATION (collapsible icon rail)
+         GLOBAL SIDEBAR — the one navigation surface on every page
+         (Workbench / processing, Explore, Docs, the 3D viewer window).
+         PAGES + JOBS tabs. It pushes #app-main (flex), never overlays it.
+         Wiring: src/sidebar.js.
     ====================================================== -->
 
-    <nav id="page-nav" class="page-nav">
-
-        <button
-            id="page-nav-toggle"
-            class="page-nav-toggle"
-            aria-label="Toggle navigation"
-        >
-            ☰
-        </button>
-
-        <div class="page-nav-tabs">
-
-            <button
-                class="page-nav-tab active"
-                data-page="page-workbench"
-            >
-                <span class="page-nav-icon">1</span>
-                <span class="page-nav-label">Workbench</span>
+    <aside id="app-sidebar" class="app-sidebar" aria-label="Depth Wizard">
+        <div class="sb-head">
+            <button id="sb-toggle" class="sb-toggle" type="button" aria-expanded="true" aria-controls="sb-body"
+                    aria-label="Collapse sidebar" title="Collapse sidebar">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M9 3v18" />
+                </svg>
             </button>
-
-            <button
-                class="page-nav-tab"
-                data-page="page-explore"
-            >
-                <span class="page-nav-icon">2</span>
-                <span class="page-nav-label">Explore</span>
-            </button>
-
-            <button
-                class="page-nav-tab"
-                data-page="page-docs"
-            >
-                <span class="page-nav-icon">3</span>
-                <span class="page-nav-label">Docs</span>
-            </button>
-
-            <!-- Jobs: one more entry in this same panel (not a separate panel).
-                 The list shows while the panel is expanded; click the entry to expand it. -->
-            <button id="page-nav-jobs" class="page-nav-tab page-nav-jobs-tab" type="button" aria-controls="page-nav-jobs-list">
-                <span id="page-nav-jobs-count" class="page-nav-icon">0</span>
-                <span class="page-nav-label">Jobs</span>
-            </button>
-            <div id="page-nav-jobs-list" class="page-nav-jobs-list" aria-label="Jobs"></div>
-
+            <span class="sb-brand">DEPTH WIZARD</span>
         </div>
 
-    </nav>
+        <div id="sb-body" class="sb-body">
+            <div class="sb-tabs" role="tablist" aria-label="Sidebar">
+                <button id="sb-tab-pages" class="sb-tab" type="button" role="tab" data-tab="pages"
+                        aria-selected="true" aria-controls="sb-panel-pages">PAGES</button>
+                <button id="sb-tab-jobs" class="sb-tab" type="button" role="tab" data-tab="jobs"
+                        aria-selected="false" aria-controls="sb-panel-jobs" tabindex="-1">JOBS</button>
+            </div>
+
+            <div id="sb-panel-pages" class="sb-panel" role="tabpanel" aria-labelledby="sb-tab-pages">
+                <nav class="sb-pages" aria-label="Pages">
+                    <button class="sb-page-link active" type="button" data-page="page-workbench" aria-current="page">Workbench</button>
+                    <button class="sb-page-link" type="button" data-page="page-explore">Explore</button>
+                    <button class="sb-page-link" type="button" data-page="page-docs">Docs</button>
+                </nav>
+                <p id="sb-jobs-running" class="sb-muted">No jobs running</p>
+            </div>
+
+            <div id="sb-panel-jobs" class="sb-panel sb-panel-jobs" role="tabpanel" aria-labelledby="sb-tab-jobs" hidden>
+                <div class="sb-jobs-head">
+                    <div class="panel-title">JOBS</div>
+                    <div id="jobs-count" class="jobs-count numeric-mono"></div>
+                </div>
+                <div class="jobs-panel-body">
+                    <button id="generate-new-button" class="secondary-button generate-new-button" type="button">
+                        + Generate New
+                    </button>
+                    <button id="saved-open-button" class="jobs-nav-item" type="button" aria-haspopup="dialog">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                        </svg>
+                        <span>Saved</span>
+                        <span id="saved-count" class="jobs-nav-count numeric-mono"></span>
+                    </button>
+                    <div class="jobs-section-title">PINNED</div>
+                    <ol id="jobs-pinned" class="jobs-list"></ol>
+                    <div id="jobs-pinned-empty" class="jobs-empty">No pinned tabs currently</div>
+                    <div class="jobs-section-title">RECENT</div>
+                    <ol id="jobs-list" class="jobs-list"></ol>
+                    <p class="jobs-note">
+                        Jobs live in this tab’s memory; there’s no server-side storage yet, so reloading or closing the tab
+                        loses unsaved jobs. Save downloads a job as JSON and keeps a copy under Saved in this browser.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main content: every page. contain: layout makes it the containing
+         block for the pages' position: fixed layers (Explore's viewer and
+         overlays, the expanded 3D window), so they fill this area and are
+         pushed by the sidebar instead of sitting under it. -->
+    <div id="app-main" class="app-main">
 
 
     <!-- =====================================================
@@ -467,52 +489,6 @@
              tier routing + START GENERATION on the right. The generation
              grid below replaces it once generation starts. -->
         <div id="input-view" class="input-view"></div>
-
-        <!-- Jobs (src/jobs.js): every START GENERATION is a job, newest at the
-             top. Session only — nothing is stored on a server. -->
-        <aside id="jobs-panel" class="jobs-panel" aria-labelledby="jobs-panel-title" hidden>
-            <div class="jobs-panel-head">
-                <button
-                    id="jobs-panel-toggle"
-                    class="jobs-toggle"
-                    type="button"
-                    aria-expanded="true"
-                    aria-controls="jobs-panel-body"
-                    aria-label="Hide toolbar"
-                >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
-                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="3" y="4" width="18" height="16" rx="3" />
-                        <path d="M9 4v16" />
-                    </svg>
-                    <span class="jobs-tip" aria-hidden="true">Hide toolbar</span>
-                </button>
-                <div id="jobs-panel-title" class="panel-title">JOBS</div>
-                <div id="jobs-count" class="jobs-count numeric-mono"></div>
-            </div>
-            <div id="jobs-panel-body" class="jobs-panel-body">
-                <button id="generate-new-button" class="secondary-button generate-new-button" type="button">
-                    + Generate New
-                </button>
-                <button id="saved-open-button" class="jobs-nav-item" type="button" aria-haspopup="dialog">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"
-                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                    </svg>
-                    <span>Saved</span>
-                    <span id="saved-count" class="jobs-nav-count numeric-mono"></span>
-                </button>
-                <div class="jobs-section-title">PINNED</div>
-                <ol id="jobs-pinned" class="jobs-list"></ol>
-                <div id="jobs-pinned-empty" class="jobs-empty">No pinned tabs currently</div>
-                <div class="jobs-section-title">RECENT</div>
-                <ol id="jobs-list" class="jobs-list"></ol>
-                <p class="jobs-note">
-                    Jobs live in this tab’s memory; there’s no server-side storage yet, so reloading or closing the tab
-                    loses unsaved jobs. Save downloads a job as JSON and keeps a copy under Saved in this browser.
-                </p>
-            </div>
-        </aside>
 
         <div class="workbench-grid is-hidden">
 
@@ -1001,21 +977,6 @@
 
     </div>
 
-    <!-- Job delete confirmation (job trash icon). Same modal pattern as the
-         unsaved-work warning; deliberately no "don't show again". -->
-    <div id="job-delete-modal" class="upload-modal confirm-modal" role="alertdialog" aria-modal="true"
-         aria-labelledby="job-delete-title" aria-describedby="job-delete-body" hidden>
-        <div id="job-delete-backdrop" class="upload-backdrop"></div>
-        <div class="upload-panel confirm-panel">
-            <div id="job-delete-title" class="confirm-title"></div>
-            <p id="job-delete-body" class="confirm-body"></p>
-            <div class="confirm-actions">
-                <button id="job-delete-cancel" class="confirm-button" type="button">Cancel</button>
-                <button id="job-delete-ok" class="confirm-button confirm-danger" type="button">Delete job</button>
-            </div>
-        </div>
-    </div>
-
     <!-- =====================================================
          PAGE 3 — DOCS (what the tool does, how the pages work, real capabilities and limits)
     ====================================================== -->
@@ -1192,6 +1153,23 @@
 
         </article>
 
+    </div>
+
+    </div><!-- /#app-main -->
+
+    <!-- Job delete confirmation (job trash icon). Same modal pattern as the
+         unsaved-work warning; deliberately no "don't show again". -->
+    <div id="job-delete-modal" class="upload-modal confirm-modal" role="alertdialog" aria-modal="true"
+         aria-labelledby="job-delete-title" aria-describedby="job-delete-body" hidden>
+        <div id="job-delete-backdrop" class="upload-backdrop"></div>
+        <div class="upload-panel confirm-panel">
+            <div id="job-delete-title" class="confirm-title"></div>
+            <p id="job-delete-body" class="confirm-body"></p>
+            <div class="confirm-actions">
+                <button id="job-delete-cancel" class="confirm-button" type="button">Cancel</button>
+                <button id="job-delete-ok" class="confirm-button confirm-danger" type="button">Delete job</button>
+            </div>
+        </div>
     </div>
 
 </div>

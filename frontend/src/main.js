@@ -4,6 +4,7 @@ import { createTerrainViewer } from "./viewer.js";
 import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
 import { createFloodSim } from "./flood-sim.js";
+import { createSidebar } from "./sidebar.js";
 import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderSource, renderTerrainStats } from "./side-panels.js";
 import { createInputView } from "./input-view.js";
 import {
@@ -19,7 +20,16 @@ const canvas = document.getElementById("terrain-canvas");
 // flythrough's zoom pivot; an X mismatch between the two is what drifted
 // the structure sideways as the flythrough zoomed in.
 const exploreViewer = createTerrainViewer(canvas, { rigOffsetY: -10 });
-exploreViewer.resize(window.innerWidth, window.innerHeight);
+// Sized by its container (#app-main minus the sidebar), not the window: a
+// ResizeObserver keeps the renderer and camera aspect in step while the
+// sidebar's width animates, so the view never stretches.
+const exploreViewerEl = canvas.parentElement;
+exploreViewer.resize(exploreViewerEl.clientWidth || window.innerWidth, exploreViewerEl.clientHeight || window.innerHeight);
+new ResizeObserver(() => {
+    if (exploreViewerEl.clientWidth && exploreViewerEl.clientHeight) {
+        exploreViewer.resize(exploreViewerEl.clientWidth, exploreViewerEl.clientHeight);
+    }
+}).observe(exploreViewerEl);
 
 const { scene, camera, renderer, controls } = exploreViewer;
 
@@ -548,7 +558,6 @@ function markSceneSelected() {
 const inputViewEl = document.getElementById("input-view");
 const workbenchGridEl = document.querySelector("#page-workbench .workbench-grid");
 const workbenchPageEl = document.getElementById("page-workbench");
-const jobsPanelEl = document.getElementById("jobs-panel");
 const jobsListEl = document.getElementById("jobs-list");
 const jobsCountEl = document.getElementById("jobs-count");
 const generateNewButton = document.getElementById("generate-new-button");
@@ -557,9 +566,12 @@ const jobTabInfoEl = document.getElementById("job-tab-info");
 const jobsPinnedEl = document.getElementById("jobs-pinned");
 const jobsPinnedEmptyEl = document.getElementById("jobs-pinned-empty");
 const savedCountEl = document.getElementById("saved-count");
-const jobsPanelToggle = document.getElementById("jobs-panel-toggle");
 
 const jobStore = createJobStore();
+
+// The one global sidebar (src/sidebar.js). Created before the first
+// renderJobs() so the jobs-running line and the JOBS tab exist from the start.
+const sidebar = createSidebar({ onNavigate: pageId => setActivePage(pageId) });
 let inputView = null;
 let unloadAllowed = false;
 
@@ -610,7 +622,7 @@ function collapseFinalDemoInstantly() {
     finalDemoPlaceholder?.remove();
     finalDemoPlaceholder = null;
     finalDemoAnimating = false;
-    syncNavDefault();
+    syncSidebarDefault();
     if (finalDemoExpandedBar) {
         finalDemoExpandedBar.hidden = true;
     }
@@ -787,6 +799,7 @@ function tierDotClass(routing) {
 
 const ICONS = {
     pin: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>',
+    pencil: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
     trash: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
 };
 
@@ -855,7 +868,20 @@ function jobItem(job, { running, active, choosing }) {
     if (button.disabled) {
         button.title = "Available when the current generation finishes";
     }
-    button.addEventListener("click", () => selectJob(job.id));
+    // open-in-viewer: from any page, a finished job opens in the 3D viewer window
+    button.addEventListener("click", () => {
+        if (activePageId !== "page-workbench") {
+            setActivePage("page-workbench");
+        }
+        selectJob(job.id);
+        if (job.status === "complete" && jobStore.active() === job) {
+            expandFinalDemo();
+        }
+    });
+    button.addEventListener("dblclick", event => {
+        event.preventDefault();
+        startRename(job.id, "list");
+    });
 
     const head = document.createElement("div");
     head.className = "job-head";
@@ -894,6 +920,9 @@ function jobItem(job, { running, active, choosing }) {
     save.disabled = job.status !== "complete";
     save.addEventListener("click", () => saveJobs([job.id]));
 
+    const rename = iconAction("job-rename", `Rename ${jobLabel(job)}`, ICONS.pencil);
+    rename.addEventListener("click", () => startRename(job.id, "list"));
+
     const pin = iconAction(`job-pin${job.pinned ? " is-pinned" : ""}`,
         job.pinned ? `Unpin ${jobLabel(job)}` : `Pin ${jobLabel(job)}`, ICONS.pin);
     pin.setAttribute("aria-pressed", String(job.pinned));
@@ -907,28 +936,25 @@ function jobItem(job, { running, active, choosing }) {
         }
     });
 
-    actions.append(save, pin, trash);
+    actions.append(save, rename, pin, trash);
     foot.append(saved, actions);
     li.append(button, foot);
+    // inline rename: the field sits above the (still clickable) job button, never inside it
+    if (renaming?.id === job.id && renaming.where === "list") {
+        li.prepend(renameField(job, "job-rename-row"));
+    }
     return li;
 }
 
 function renderJobs() {
-    // Pages-panel Jobs list first: it must also refresh (to its empty state)
-    // when the jobs panel below bails out with no jobs and no saved work.
-    renderNavJobs();
     const hasJobs = jobStore.count() > 0;
     const savedCount = savedStore.list().length;
-    // Shown once there's a job, or earlier saved work to reopen (after a reload).
-    const showPanel = hasJobs || savedCount > 0;
-    workbenchPageEl?.classList.toggle("has-jobs", showPanel);
-    if (jobsPanelEl) {
-        jobsPanelEl.hidden = !showPanel;
-    }
+    sidebar.setJobsRunning(jobStore.count());
     if (savedCountEl) {
         savedCountEl.textContent = savedCount ? String(savedCount) : "";
     }
-    if (!showPanel || !jobsListEl) {
+    // The JOBS tab always exists now, so it always renders (incl. its empty state).
+    if (!jobsListEl) {
         return;
     }
 
@@ -1048,73 +1074,6 @@ function renameField(job, className) {
     return wrap;
 }
 
-// ---- Jobs section of the pages panel
-const navJobsList = document.getElementById("page-nav-jobs-list");
-const navJobsCount = document.getElementById("page-nav-jobs-count");
-document.getElementById("page-nav-jobs")?.addEventListener("click", () => {
-    if (!pageNav?.classList.contains("expanded")) {
-        setNavExpanded(true);
-    }
-    navJobsList?.querySelector("button")?.focus({ preventScroll: true });
-});
-
-function renderNavJobs() {
-    if (!navJobsList) {
-        return;
-    }
-    const jobs = jobStore.panelOrder().concat(jobStore.pinnedOrder());
-    if (navJobsCount) {
-        navJobsCount.textContent = String(jobStore.count());
-    }
-    if (!jobs.length) {
-        const empty = document.createElement("p");
-        empty.className = "page-nav-jobs-empty";
-        empty.textContent = "No jobs running. Choose an input on Workbench and press START GENERATION.";
-        navJobsList.replaceChildren(empty);
-        return;
-    }
-    const active = jobStore.active();
-    const running = jobStore.generating();
-    navJobsList.replaceChildren(...jobs.map(job => {
-        if (renaming?.id === job.id && renaming.where === "nav") {
-            return renameField(job, "page-nav-job is-editing");
-        }
-        const row = document.createElement("div");
-        row.className = `page-nav-job${job === active ? " is-active" : ""}`;
-        const open = document.createElement("button");
-        open.type = "button";
-        open.className = "page-nav-job-open";
-        open.disabled = Boolean(running) && job !== running;
-        open.title = `${jobLabel(job)} · ${job.input.title} · double-click to rename`;
-        const name = document.createElement("span");
-        name.className = "page-nav-job-name";
-        name.textContent = jobLabel(job);
-        const meta = document.createElement("span");
-        meta.className = "page-nav-job-meta";
-        meta.textContent = job.status === "generating"
-            ? `Generating ${job.progress}%`
-            : `${job.saved ? "Saved" : "Unsaved"} · ${job.input.title}`;
-        open.append(name, meta);
-        open.addEventListener("click", () => {
-            setActivePage("page-workbench");
-            selectJob(job.id);
-        });
-        open.addEventListener("dblclick", event => {
-            event.preventDefault();
-            startRename(job.id, "nav");
-        });
-        const edit = document.createElement("button");
-        edit.type = "button";
-        edit.className = "page-nav-job-edit";
-        edit.setAttribute("aria-label", `Rename ${jobLabel(job)}`);
-        edit.title = "Rename";
-        edit.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
-        edit.addEventListener("click", () => startRename(job.id, "nav"));
-        row.append(open, edit);
-        return row;
-    }));
-}
-
 // ---- Job delete confirmation (trash icon): a real modal, no "don't show again"
 const jobDeleteModal = document.getElementById("job-delete-modal");
 let jobDeleteResolve = null;
@@ -1223,39 +1182,7 @@ function renderJobTabs() {
 }
 
 jobStore.onChange(renderJobs);
-renderNavJobs(); // empty state before the first job
 generateNewButton?.addEventListener("click", generateNew);
-
-// ---- Toolbar show/hide (the panel collapses to a narrow strip and the page
-// content, including the expanded 3D view, moves over — never an overlay) ----
-
-const JOBS_COLLAPSED_KEY = "dw2.jobsPanelCollapsed";
-
-function setJobsPanelCollapsed(collapsed) {
-    workbenchPageEl?.classList.toggle("jobs-collapsed", collapsed);
-    const label = collapsed ? "Show toolbar" : "Hide toolbar";
-    jobsPanelToggle?.setAttribute("aria-expanded", String(!collapsed));
-    jobsPanelToggle?.setAttribute("aria-label", label);
-    const tip = jobsPanelToggle?.querySelector(".jobs-tip");
-    if (tip) {
-        tip.textContent = label;
-    }
-    try {
-        localStorage.setItem(JOBS_COLLAPSED_KEY, collapsed ? "1" : "0");
-    } catch {
-        // storage blocked: the choice just isn't remembered
-    }
-}
-
-jobsPanelToggle?.addEventListener("click", () => {
-    setJobsPanelCollapsed(!workbenchPageEl.classList.contains("jobs-collapsed"));
-});
-
-try {
-    setJobsPanelCollapsed(localStorage.getItem(JOBS_COLLAPSED_KEY) === "1");
-} catch {
-    setJobsPanelCollapsed(false);
-}
 
 // ---- Saved window: earlier saved work, reopened as a (finished) job ----
 
@@ -1543,12 +1470,9 @@ renderJobs(); // shows the panel on load if there is saved work to reopen
 
 
 // ============================================================
-// PAGE NAVIGATION (collapsible left icon rail)
+// PAGE NAVIGATION — the global sidebar's PAGES tab (src/sidebar.js)
 // ============================================================
 
-const pageNav = document.getElementById("page-nav");
-const pageNavToggle = document.getElementById("page-nav-toggle");
-const pageNavTabs = document.querySelectorAll(".page-nav-tab");
 const pages = document.querySelectorAll(".page");
 
 // Page order (2026-09-24): 1 Workbench (default), 2 Explore, 3 Docs.
@@ -1560,42 +1484,21 @@ function setActivePage(pageId) {
     pages.forEach(page => {
         page.classList.toggle("active", page.id === pageId);
     });
-
-    pageNavTabs.forEach(tab => {
-        tab.classList.toggle("active", tab.dataset.page === pageId);
-    });
+    sidebar.setActivePage(pageId);
 
     if (pageId === "page-workbench") {
         requestAnimationFrame(initWorkbenchGrid);
     }
-    syncNavDefault();
+    syncSidebarDefault();
 }
 
-pageNavTabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-        setActivePage(tab.dataset.page);
-    });
-});
-
-// The panel's expanded state also drives --nav-w (body.nav-expanded), so the
-// Workbench jobs panel and the expanded 3D view move over instead of being covered.
-function setNavExpanded(expanded) {
-    pageNav?.classList.toggle("expanded", expanded);
-    document.body.classList.toggle("nav-expanded", expanded);
-    pageNavToggle?.setAttribute("aria-expanded", String(expanded));
-}
-
-pageNavToggle?.addEventListener("click", () => {
-    setNavExpanded(!pageNav?.classList.contains("expanded"));
-});
-
-// Default visibility: expanded while the post-generation 3D window is open,
-// collapsed everywhere else. Applied on each transition; manual toggles in
-// between are respected.
-function syncNavDefault() {
+// Default sidebar tab: JOBS inside the 3D viewer window, PAGES everywhere
+// else. Applied on each transition (viewer opened/closed, page changed);
+// the user's own tab choice in between is left alone.
+function syncSidebarDefault() {
     const viewing3d = activePageId === "page-workbench"
         && document.getElementById("final-demo-box")?.classList.contains("is-expanded");
-    setNavExpanded(Boolean(viewing3d));
+    sidebar.setTab(viewing3d ? "jobs" : "pages");
 }
 
 // Workbench is the landing page, so run its first-show init (grid entrance) on load too.
@@ -2097,7 +2000,7 @@ async function runFinalDemoReconstruction() {
 
 // ============================================================
 // WORKBENCH THEME TOGGLE (light/dark — Workbench only, Explore and the
-// shared page-nav rail are untouched since they never receive a
+// global sidebar are untouched since they never receive a
 // [data-theme] attribute). Every color in styles.css reads from the
 // custom properties #page-workbench[data-theme="light"] overrides, so flipping
 // this one attribute repaints the whole page; the only piece CSS can't
@@ -2155,6 +2058,9 @@ function initFinalDemoViewer() {
         rigOffsetY: 0,
         backgroundColor: WORKBENCH_THEME_BG_HEX[workbenchTheme],
     });
+    // Renderer + camera aspect follow the canvas's container as the sidebar
+    // pushes it (the animate loop's resizeToCanvas() also catches this).
+    new ResizeObserver(() => finalDemoViewer.resizeToCanvas()).observe(canvas.parentElement);
 
     // Measurement tool (expanded view only; deliverables-audit item 6).
     finalDemoMeasureTool = createMeasureTool({
@@ -2567,27 +2473,21 @@ function prefersReducedMotion() {
 
 // Edge offsets (top/right/bottom/left, px) of a viewport rect, for animating
 // the fixed box between its grid cell and the full window.
+// A viewport rect as inset edges of #app-main (the fixed box's containing block).
 function edgesOf(rect) {
+    const main = document.getElementById("app-main").getBoundingClientRect();
     return {
-        top: `${rect.top}px`,
-        right: `${window.innerWidth - rect.right}px`,
-        bottom: `${window.innerHeight - rect.bottom}px`,
-        left: `${rect.left}px`,
+        top: `${rect.top - main.top}px`,
+        right: `${main.right - rect.right}px`,
+        bottom: `${main.bottom - rect.bottom}px`,
+        left: `${rect.left - main.left}px`,
     };
 }
 
-// "Full window" = everything right of the jobs panel once jobs exist
-// (matches the .has-jobs .is-expanded rule in styles.css).
-// Same arithmetic as the CSS rule (left: nav-w + 16px + jobs-w), not the
-// panel's live rect, which may still be mid-transition when the nav opens.
+// The expanded box is position: fixed inside #app-main, whose contain: layout
+// makes it the containing block, so "full window" is inset 0 of the main area.
 function fullWindowEdges() {
-    const panel = document.getElementById("jobs-panel");
-    if (!panel || panel.hidden) {
-        return { top: "0px", right: "0px", bottom: "0px", left: "0px" };
-    }
-    const px = (el, name) => parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
-    const left = px(document.body, "--nav-w") + 16 + px(workbenchPageEl, "--jobs-w");
-    return { top: "0px", right: "0px", bottom: "0px", left: `${Math.round(left)}px` };
+    return { top: "0px", right: "0px", bottom: "0px", left: "0px" };
 }
 
 // The canvas resizes every frame via animate() → resizeToCanvas(), so the 3D
@@ -2620,7 +2520,7 @@ async function expandFinalDemo() {
     finalDemoBoxEl.before(finalDemoPlaceholder);
 
     finalDemoBoxEl.classList.add("is-expanded", "is-animating");
-    syncNavDefault(); // pages panel opens with the 3D window (before the edges are computed)
+    syncSidebarDefault(); // JOBS tab is the default inside the 3D viewer
     if (finalDemoExpandedBar) {
         finalDemoExpandedBar.hidden = false;
     }
@@ -2656,7 +2556,7 @@ async function collapseFinalDemo() {
         finalDemoExpandedBar.hidden = true;
     }
     finalDemoAnimating = false;
-    syncNavDefault();
+    syncSidebarDefault();
     requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
     document.getElementById("final-demo-fullscreen")?.focus({ preventScroll: true });
 }
@@ -2761,9 +2661,6 @@ function animate() {
 // RESIZE
 // ============================================================
 
-window.addEventListener("resize", () => {
-    exploreViewer.resize(window.innerWidth, window.innerHeight);
-});
 
 
 // ============================================================
