@@ -645,3 +645,15 @@ to match.
   - Tests: frontend 40/40; backend 22 passed + 1 skipped (the dormant R2 boto3 check).
   - Costs: no card or billing anywhere.
 - **Not started, on purpose:** Prompt 2 (Render backend deployment).
+
+**Session footer: 2026-09-26 (night), "deployment + desktop freeze trial"** (records: `docs/DEPLOY.md`, `docs/DESKTOP_FREEZE_TRIAL.md`)
+- **Relative depth:**
+  - Primary host: the ZeroGPU Space `sancharimouri/DepthWizard2`, through `/api/depth` with HF_TOKEN as an explicit header (audited).
+  - Fallback: the Colab bridge, opt-in via `DAV2_FALLBACK_URL`. The UI's Relative Depth box shows the job's real depth.
+- **ZeroGPU quota, measured:** 585 calls/day on the free account, then a 429.
+  **Spent until about 2026-09-27 02:40 IST.** Use the fallback or wait.
+- **Desktop freeze (macOS arm64):** 813 MB installed. Three build fixes: freeze_support, rasterio submodules, rasterio/pyproj data. `ee`/googleapiclient excluded (−103 MB).
+- **Next session:**
+  1. Push `desktop/freeze_trial/` to the private CI repo over HTTPS and run the Windows/Linux matrix. Report sizes and whether each fix is needed.
+  2. Then the tiered tile bundling + update mechanism.
+- **Still untouched, on purpose:** the 4 modified Sentinel `.tif` files, the `earthengine-api` line in pyproject/uv.lock, and the deleted `last_session.md`.

@@ -161,3 +161,29 @@ Model load time is 3–4.5 s, once per process.
 - 0 page errors.
 
 `uv.lock` is not regenerated for `gradio_client` (the lockfile has unrelated uncommitted changes); `uv pip install gradio_client==2.7.1` adds it.
+
+## ZeroGPU daily quota: MEASURED (2026-09-26)
+
+**Setup:**
+- Authenticated calls (HF_TOKEN as an explicit header; the audit showed every Space request carried it).
+- One real 1024² image per call, back to back, through the real backend path (`POST /api/depth/relative` → gradio_client → Space).
+- Per-call log: `docs/zerogpu_quota_log_2026-09-26.jsonl`.
+
+**Result:**
+- **585 successful calls in 55 min**, then the first quota refusal at call 587:
+  > You have exceeded your free ZeroGPU quota (45s requested vs. 45s left). Try again in 22:55:31.
+  > Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day.
+- The run stopped itself on that 429 before the stop request arrived, so this is the **actual ceiling for the day**, not only a lower bound.
+- Before it: 1 transient failure (call 541, "write operation timed out"). No other refusals.
+- Summed model inference over the 585 calls was **452.9 s** (median 0.20 s per call, p95 4.7 s, max 10.0 s).
+- ZeroGPU charges its own GPU-slot time, which includes attach/overhead and is larger than our inference timer. Its exact daily seconds figure isn't exposed.
+  The message shows each call is admitted only with **45 s** left, so the last ~45 s of quota is unusable.
+- The message says "free ZeroGPU quota", attributed to the logged-in free account (not an anonymous/IP quota). It refills on a ~24 h window.
+
+**What it supports:**
+- About **585 depth calls per day** for this workload.
+- A demo session that runs 10–20 generations therefore gives **~30–60 full demo sessions a day**.
+- That comfortably exceeds real demo use.
+
+**⚠ As of this run the account's ZeroGPU quota is spent until about 2026-09-27 02:40 IST** (refusal at 03:44:32 IST + 22:55:31).
+Until then, `/api/depth` needs `DAV2_FALLBACK_URL` (e.g. the Colab bridge); otherwise the UI shows its labelled Darjeeling fallback.
