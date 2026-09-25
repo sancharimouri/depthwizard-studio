@@ -341,6 +341,7 @@ export function createInputView(root, { onStart }) {
             meta: sel.meta,
             routing: sel.routing,
             dem: sel.dem ?? null,
+            geo: sel.geo ?? null,
             logLines: log,
         };
     }
@@ -437,6 +438,8 @@ export function createInputView(root, { onStart }) {
             previewUrl: item.preview_url,
             meta,
             routing: item.routing,
+            // centre from the tile's own geotransform (scripts/library_catalog.py _geo); none for DFC2019
+            geo: item.geo ? { lat: item.geo.lat, lon: item.geo.lon, origin: "the file's geotransform (tile centre)" } : null,
         });
         // Server-side routing is authoritative (Sentinel-2 is locked to Tier 1 there).
         try {
@@ -500,6 +503,20 @@ export function createInputView(root, { onStart }) {
         return meta;
     }
 
+    // Coordinates only from real geo-metadata: the upload's geotransform, or the
+    // area a searched Sentinel-2 scene was cropped to. Never inferred.
+    function inputGeo(m, source) {
+        if (!m.georeferenced || !m.footprint_wgs84) {
+            return null;
+        }
+        const [w, s, e, n] = m.footprint_wgs84;
+        return {
+            lat: Number(((s + n) / 2).toFixed(5)),
+            lon: Number(((w + e) / 2).toFixed(5)),
+            origin: source === "search" ? "the searched Sentinel-2 scene's area (centre)" : "the file's geotransform (footprint centre)",
+        };
+    }
+
     function selectionFromInput(m, source) {
         return {
             source,
@@ -509,6 +526,7 @@ export function createInputView(root, { onStart }) {
             previewUrl: `${m.preview_url}?v=${m.id}`,
             meta: inputMeta(m),
             routing: m.routing,
+            geo: inputGeo(m, source),
             dem: m.dem,
             demPreviewUrl: m.dem_preview_url,
         };

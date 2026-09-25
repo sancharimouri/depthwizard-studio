@@ -818,6 +818,27 @@
                                 </div>
                             </section>
 
+                            <!-- Facts: live queries only (backend/facts/sources.py); coordinates come from
+                                 the job's geo-metadata or are typed in by the user, never guessed. -->
+                            <section class="xp-box" data-box="facts">
+                                <button class="xp-head" type="button" aria-expanded="false">
+                                    <span class="xp-title">FACTS</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
+                                    <div id="xp-facts-where" class="xp-facts-where"></div>
+                                    <form id="xp-facts-form" class="xp-facts-form" hidden>
+                                        <p class="xp-note xp-note-lead">This image has no geo-metadata, so its location is unknown. Enter coordinates to look up facts, or leave this empty.</p>
+                                        <div class="xp-facts-inputs">
+                                            <label>Lat <input id="xp-facts-lat" type="number" step="any" min="-90" max="90" placeholder="latitude" required></label>
+                                            <label>Lon <input id="xp-facts-lon" type="number" step="any" min="-180" max="180" placeholder="longitude" required></label>
+                                        </div>
+                                        <button class="xp-tour-start" type="submit">Look up</button>
+                                    </form>
+                                    <div id="xp-facts-body" class="xp-facts-body" aria-live="polite"></div>
+                                </div>
+                            </section>
+
                             <section class="xp-box" data-box="gestures">
                                 <button class="xp-head" type="button" aria-expanded="false">
                                     <span class="xp-title">LEARN GESTURES</span>
