@@ -12,6 +12,13 @@ client = TestClient(app)
 pytestmark = pytest.mark.skipif(not catalog.MANIFEST.exists(), reason="library manifest not generated")
 
 
+@pytest.fixture(autouse=True)
+def local_library(monkeypatch):
+    """These tests exercise the catalog/routing rules against the local manifest;
+    the remote stores are covered in test_library_store.py (no network)."""
+    monkeypatch.setenv("DW2_LIBRARY", "local")
+
+
 def test_list_has_exactly_the_curated_sets():
     r = client.get("/api/library")
     assert r.status_code == 200

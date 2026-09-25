@@ -7,29 +7,25 @@ from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
 from backend.library import catalog
-from backend.storage import r2
+from backend.storage import library_store
 
 router = APIRouter(prefix="/api/library")
 
 
 def _public(item: dict) -> dict:
-    """Client view of an item.
+    """Client view of an item (backend/storage/library_store.py).
 
-    Public bucket: direct, stable R2 URLs. Private bucket: stable routes on this
-    server that 307-redirect to a fresh presigned R2 URL on every request (a
-    presigned URL expires, and saved jobs keep their preview URL). tile_url is
-    presigned at listing time (short-lived by design). No R2: local-dev routes.
+    Public items (Sentinel-2, Maxar): direct, stable GitHub Release URLs, incl. the tile.
+    Private items (DFC2019): this server's routes, which serve the image from the private
+    HF dataset; no tile URL (the DFC2019 terms forbid distributing the data).
+    Local mode: this server's local-dev routes.
     """
-    out = {k: v for k, v in item.items() if k not in ("thumbnail", "preview", "file", "r2")}
-    if r2.public_base():
-        keys = catalog.keys(item)
-        out["thumbnail_url"] = r2.object_url(keys["thumbnail"])
-        out["preview_url"] = r2.object_url(keys["preview"])
-        out["tile_url"] = r2.object_url(keys["tile"])
-    elif r2.configured():
-        out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"  # → presigned R2 redirect
-        out["preview_url"] = f"/api/library/{item['id']}/preview"
-        out["tile_url"] = r2.object_url(catalog.keys(item)["tile"])
+    out = {k: v for k, v in item.items() if k not in ("thumbnail", "preview", "file", "r2", "assets", "store")}
+    if library_store.mode() == "remote" and library_store.is_public(item):
+        names = item.get("assets") or library_store.asset_names(item)
+        out["thumbnail_url"] = library_store.release_url(names["thumbnail"])
+        out["preview_url"] = library_store.release_url(names["preview"])
+        out["tile_url"] = library_store.release_url(names["tile"])
     else:
         out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"
         out["preview_url"] = f"/api/library/{item['id']}/preview"
@@ -37,8 +33,15 @@ def _public(item: dict) -> dict:
 
 
 def _image(item: dict, kind: str):
-    if r2.configured():
-        return RedirectResponse(r2.object_url(catalog.keys(item)[kind]), status_code=307)
+    if library_store.mode() == "remote":
+        if library_store.is_public(item):
+            names = item.get("assets") or library_store.asset_names(item)
+            return RedirectResponse(library_store.release_url(names[kind]), status_code=307)
+        try:
+            path = library_store.private_file(item, kind)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(status_code=503, detail=f"Private library image unavailable ({type(exc).__name__}).") from exc
+        return FileResponse(path, media_type="image/jpeg")
     return FileResponse(catalog.image_path(item, kind), media_type="image/jpeg")
 
 
