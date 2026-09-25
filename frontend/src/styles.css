@@ -2866,7 +2866,8 @@ kbd {
 
 .xv-toolbar {
     position: absolute;
-    z-index: 4;
+    /* above the navigation bar (4): its tooltips and menus open upward over it */
+    z-index: 6;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
@@ -5613,4 +5614,122 @@ kbd {
     font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
     font-size: 12px;
     text-align: right;
+}
+
+
+/* ============================================================
+   3D viewer side columns (2026-09-25 reorganisation)
+   Left: Terrain Statistics, Image Inspection, Details, Facts.
+   Right: Scenario Analysis, Fly-through, Learn Gestures, Explore Options.
+   Each column scrolls on its own and stops above the bottom toolbars.
+============================================================ */
+
+.final-demo-box.is-expanded .final-demo-left-rail {
+    top: 64px;
+    max-height: calc(100% - 64px - 150px);
+}
+
+.final-demo-box.is-expanded .final-demo-right-rail {
+    top: 70px;
+    max-height: calc(100% - 70px - 150px);
+}
+
+.final-demo-box.is-expanded .final-demo-left-rail,
+.final-demo-box.is-expanded .final-demo-right-rail {
+    gap: 10px;
+    padding-right: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--text-rgb), 0.25) transparent;
+}
+
+.final-demo-box.is-expanded .final-demo-left-rail::-webkit-scrollbar,
+.final-demo-box.is-expanded .final-demo-right-rail::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+}
+
+.final-demo-box.is-expanded .final-demo-left-rail::-webkit-scrollbar-thumb,
+.final-demo-box.is-expanded .final-demo-right-rail::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: rgba(var(--text-rgb), 0.25);
+}
+
+/* consistent box rhythm */
+.xp-head {
+    padding: 12px 16px;
+}
+
+.xp-body {
+    padding: 2px 16px 16px;
+}
+
+.xp-section-label {
+    margin: 14px 0 8px;
+}
+
+.xp-section-label:first-child {
+    margin-top: 2px;
+}
+
+.xp-meta {
+    gap: 7px 14px;
+    margin-bottom: 4px;
+    font-size: 11.5px;
+    line-height: 1.4;
+}
+
+.xp-meta dt {
+    white-space: nowrap;
+}
+
+/* Terrain Statistics: label above value, roomy 2-column grid */
+.stats-strip.xp-stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+    margin-bottom: 4px;
+}
+
+.xp-stat-grid .stat-tile {
+    gap: 4px;
+}
+
+.xp-stat-grid .stat-value {
+    font-size: 15px;
+}
+
+/* Fly-through box */
+.xp-fly-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.xp-fly-actions .xp-fly-main {
+    grid-column: 1 / -1;
+    height: 34px;
+}
+
+.xp-fly-actions button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* Scenario: three options; Landslide is a coming-soon placeholder */
+.danger-zone-buttons {
+    flex-wrap: wrap;
+}
+
+.danger-zone-buttons .danger-button {
+    flex: 1 1 30%;
+    min-width: 0;
+}
+
+.danger-button.danger-button-soon {
+    border-style: dashed;
+    opacity: 0.75;
+}
+
+.danger-button.danger-button-soon.is-soon-open {
+    opacity: 1;
+    background: rgba(230, 90, 70, 0.12);
 }
