@@ -2,7 +2,7 @@
 //
 // One run: a short eased lead-in from wherever the camera is to the start
 // pose, then a 300° orbit while zooming in (start: 1.1× the worst-case box
-// fit ÷ 2.25; end: the final azimuth's fit ÷ 3). The run may leave the
+// fit ÷ 1.75; end: the final azimuth's fit ÷ 2.5). The run may leave the
 // screen edges:
 // there is no per-frame fit clamp, so the motion is one smooth ease with no
 // kinks. Every phase starts and ends at rest, and pause/resume ramp the
@@ -27,8 +27,9 @@ const MARGIN = 0.04;
 // the start is now 1.5× closer again (2.25× total) and the end 2× closer
 // again (3× total), so the flight really zooms in and finishes closer than
 // the default view.
-const START_ZOOM = 2.25;
-const END_ZOOM = 3;
+// 2026-09-25: zoomed out a little (each factor −0.5) — 3× read too close.
+const START_ZOOM = 1.75;
+const END_ZOOM = 2.5;
 const RATE_TAU_MS = 150; // pause/resume ease
 
 const easeInOutCubic = t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
