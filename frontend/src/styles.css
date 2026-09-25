@@ -4430,7 +4430,7 @@ kbd {
 }
 
 .job-pin.is-pinned {
-    color: rgb(var(--accent-rgb));
+    color: rgb(var(--neon-rgb)); /* green in both themes */
 }
 
 .job-pin.is-pinned svg {
@@ -5625,13 +5625,14 @@ kbd {
 ============================================================ */
 
 .final-demo-box.is-expanded .final-demo-left-rail {
-    top: 64px;
-    max-height: calc(100% - 64px - 150px);
+    /* 0.7 cm lower than before; scrollable region 1 cm taller */
+    top: calc(64px + 0.7cm);
+    max-height: calc(100% - 64px - 150px + 1cm);
 }
 
 .final-demo-box.is-expanded .final-demo-right-rail {
-    top: 70px;
-    max-height: calc(100% - 70px - 150px);
+    top: calc(70px + 0.7cm);
+    max-height: calc(100% - 70px - 150px + 1cm);
 }
 
 .final-demo-box.is-expanded .final-demo-left-rail,
@@ -5732,4 +5733,27 @@ kbd {
 .danger-button.danger-button-soon.is-soon-open {
     opacity: 1;
     background: rgba(230, 90, 70, 0.12);
+}
+
+
+/* Terrain Statistics: the four elevation figures in the mode colour
+   (green in dark mode, orange in bright mode) */
+#xp-elev-min,
+#xp-elev-max,
+#xp-elev-mean,
+#xp-elev-relief {
+    color: var(--accent-solid);
+}
+
+/* Details: a clear break between IMAGE SOURCE and TERRAIN SOURCE */
+.xp-divider {
+    height: 0;
+    margin: 16px 0 4px;
+    border: 0;
+    border-top: 1px solid rgba(var(--text-rgb), 0.1);
+}
+
+/* 3D viewer header tile: the dot is green (mode accent), no tier colouring */
+.job-tab .job-tab-dot {
+    background: var(--accent-solid);
 }

@@ -117,9 +117,10 @@ export function createJobStore() {
         creationOrder() {
             return jobs.slice();
         },
-        // newest first (side panel); pinned jobs have their own section
+        // newest first (side panel). Pinned jobs stay here too (and also
+        // appear in the PINNED section).
         panelOrder() {
-            return jobs.slice().reverse().filter(job => !job.pinned);
+            return jobs.slice().reverse();
         },
         pinnedOrder() {
             return jobs.slice().reverse().filter(job => job.pinned);

@@ -725,12 +725,7 @@
                                             <div class="stat-label">RELIEF</div>
                                             <div id="xp-elev-relief" class="stat-value">—</div>
                                         </div>
-                                        <div class="stat-tile">
-                                            <div class="stat-label">MESH GRID</div>
-                                            <div id="final-demo-stat-grid" class="stat-value">361×325</div>
-                                        </div>
                                     </div>
-                                    <p class="xp-note">Statistics of the 3D terrain shown: the Darjeeling reference DSM, the same for every job (placeholder).</p>
 
                                     <div class="xp-slider-row">
                                         <label for="xp-vex-slider" class="xp-slider-label">
@@ -756,7 +751,6 @@
                                         <div id="xp-inspect-empty" class="xp-note" hidden>No preview image for this job.</div>
                                     </div>
                                     <div id="xp-inspect-readout" class="xp-inspect-readout numeric-mono">Hover the image to magnify (3×)</div>
-                                    <p class="xp-note">Hover shows the matching spot on the 3D surface (yellow); click selects it. The link is by image position, and the 3D terrain is the Darjeeling reference for every job.</p>
                                 </div>
                             </section>
 
@@ -769,6 +763,7 @@
                                     <div class="xp-section-label">IMAGE SOURCE</div>
                                     <dl id="xp-source-meta" class="xp-meta"></dl>
 
+                                    <hr class="xp-divider">
                                     <div class="xp-section-label">TERRAIN SOURCE</div>
                                     <dl class="xp-meta">
                                         <dt>Source</dt><dd id="final-demo-terrain-source-value">OpenTopography DSM</dd>
@@ -790,7 +785,6 @@
                                 <div class="xp-body">
                                     <div id="xp-facts-where" class="xp-facts-where"></div>
                                     <form id="xp-facts-form" class="xp-facts-form" hidden>
-                                        <p class="xp-note xp-note-lead">This image has no geo-metadata, so its location is unknown. Enter coordinates to look up facts, or leave this empty.</p>
                                         <div class="xp-facts-inputs">
                                             <label>Lat <input id="xp-facts-lat" type="number" step="any" min="-90" max="90" placeholder="latitude" required></label>
                                             <label>Lon <input id="xp-facts-lon" type="number" step="any" min="-180" max="180" placeholder="longitude" required></label>
