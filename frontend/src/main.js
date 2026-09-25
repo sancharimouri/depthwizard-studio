@@ -640,13 +640,14 @@ async function computeJobDepth(job) {
             status: "ok",
             url: await depthImageUrl(depth),
             lines: [
-                "Depth Anything V2 (ViT-Small) · this input",
+                resp.fallback_used ? "Depth Anything V2 (ViT-Small) · this input · fallback host" : "Depth Anything V2 (ViT-Small) · this input",
                 `${where} ${resp.infer_s}s inference · ${roundTripS.toFixed(1)}s round trip`,
                 "Relative depth (brighter = nearer), not elevation",
             ],
         };
         appendCalcLogLine(scrollEl, `Relative depth: DAv2-Small on ${where}, ${depth.width}×${depth.height}, `
-            + `${resp.infer_s}s inference, ${roundTripS.toFixed(1)}s round trip (${resp.encoding ?? "float32"})`, job);
+            + `${resp.infer_s}s inference, ${roundTripS.toFixed(1)}s round trip (${resp.encoding ?? "float32"}) `
+            + `via ${resp.host ?? "inference host"}${resp.fallback_used ? " (fallback: primary host failed)" : ""}`, job);
     } catch (error) {
         job.depth = { status: "failed", error: String(error.message ?? error).slice(0, 140) };
         appendCalcLogLine(scrollEl, `Relative depth unavailable (${job.depth.error}); showing the Darjeeling reference`, job);
