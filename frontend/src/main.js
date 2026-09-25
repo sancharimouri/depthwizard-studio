@@ -2255,6 +2255,39 @@ function initPointSelection(canvas) {
         onPick: (u, v) => selectPoint(u, v),
     });
 
+    // Is the pointer over the selected marker? Same 14 px radius as the
+    // click that keeps it (measure off) or snaps a measurement to it (measure on).
+    function overMarker(event) {
+        const grid = finalDemoSurfacePoints.selectedGrid();
+        if (!grid) {
+            return false;
+        }
+        const sp = finalDemoMeasureTool.project(grid.x, grid.y);
+        const rect = canvas.getBoundingClientRect();
+        return Boolean(sp) && Math.hypot(sp.sx - (event.clientX - rect.left), sp.sy - (event.clientY - rect.top)) <= 14;
+    }
+
+    // Hover highlight, like a measure point's: the marker turns #ffd23f with
+    // a stronger glow and the cursor becomes a pointer.
+    let hoverFrame = 0;
+    let lastMove = null;
+    canvas.addEventListener("pointermove", event => {
+        lastMove = event;
+        if (hoverFrame) {
+            return;
+        }
+        hoverFrame = requestAnimationFrame(() => {
+            hoverFrame = 0;
+            const on = overMarker(lastMove);
+            finalDemoSurfacePoints.setHighlight(on);
+            canvas.classList.toggle("is-over-selected-point", on);
+        });
+    });
+    canvas.addEventListener("pointerleave", () => {
+        finalDemoSurfacePoints.setHighlight(false);
+        canvas.classList.remove("is-over-selected-point");
+    });
+
     // a plain click (not an orbit drag) on the canvas, measure tool off
     let down = null;
     canvas.addEventListener("pointerdown", event => {
@@ -2266,14 +2299,10 @@ function initPointSelection(canvas) {
         if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) {
             return;
         }
-        const grid = finalDemoSurfacePoints.selectedGrid();
-        if (!grid || finalDemoMeasureTool.model.mode !== "normal") {
+        if (!finalDemoSurfacePoints.selectedGrid() || finalDemoMeasureTool.model.mode !== "normal") {
             return;
         }
-        const sp = finalDemoMeasureTool.project(grid.x, grid.y);
-        const rect = canvas.getBoundingClientRect();
-        const onMarker = sp && Math.hypot(sp.sx - (event.clientX - rect.left), sp.sy - (event.clientY - rect.top)) <= 14;
-        if (!onMarker) {
+        if (!overMarker(event)) {
             clearPointSelection();
         }
     });
