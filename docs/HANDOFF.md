@@ -378,6 +378,23 @@ terrain.** None of the research-track work is deployed into it.
     only against a simulated `window.__TAURI__` in headless Chrome, not in a real Tauri build.
 - **Not per-job:** measurements, notes and the session Library in the 3D view belong to the one shared viewer, not to a job.
 
+**Jobs toolbar + pop-up follow-ups (2026-09-25).**
+- **Pop-up right rail:** Visualization Layer, RUN RECONSTRUCTION and FLYTHROUGH are removed; only Scenario Analysis stays. The icon
+  toolbar's View ▾ and Flythrough cover them, and `createFlythroughController` no longer needs a button.
+- **Grow/shrink animation:** now linear, 470 ms. It holds the speed the old ease-out started at (cubic-bezier(0.2, 0.8, 0.2, 1) over
+  1880 ms opens at 4× its average speed). The slow tail is gone; measured ~530 ms headless, with the first and last thirds equally fast.
+- **Show/hide icon** (panel-left glyph) next to JOBS: a custom "Hide toolbar" / "Show toolbar" tooltip on hover. The panel collapses to a 44 px strip.
+  - It pushes content rather than overlaying it: `--jobs-w` sets the grid/input padding and the expanded view's `left`.
+  - The choice is remembered in localStorage.
+- **Per job:** Save · Pin · Trash. Trash is two-step ("Delete?" within 3 s) and disabled while generating; deleting the active job switches to the newest remaining job,
+  and deleting the last one returns to a fresh input page.
+- **Panel order:** Generate New → Saved → PINNED (empty text "No pinned tabs currently") → RECENT. Pinned jobs move to PINNED, and the tab strip marks them.
+- **Saved window** (a centred, 60% × 60% window): every save also goes to localStorage (`dw2.savedJobs.v1`: input, routing, DEM, log).
+  - The panel stays visible after a reload if saved work exists.
+  - Open restores the job as a finished job (and creates the output views if nothing was generated yet). Download re-exports the JSON; Remove is two-step.
+  - Per browser only, still no server storage.
+- **Tests:** 31/31 unit; 29/29 toolbar headless checks; the Prompt 3 driver still passes 30/30.
+
 **Expanded-view chrome (2026-09-25; `frontend/src/expanded-chrome.js`):**
 - **Icon toolbar** (outline icons; names as tooltips only), in `reference.jpg` order: Screenshot, Record (disabled placeholder),
   Measure ▾, View ▾, Flythrough, Save + Library ▾, Mouse pointer, Notes, Trash (clears the current selection).

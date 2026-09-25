@@ -4,7 +4,9 @@ import { createTerrainViewer } from "./viewer.js";
 import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
 import { createInputView } from "./input-view.js";
-import { STORAGE_NOTE, createJobStore, exportFilename, jobLabel, jobsExport, unsavedCopy } from "./jobs.js";
+import {
+    STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobLabel, jobsExport, savedRecord, unsavedCopy,
+} from "./jobs.js";
 import { installCloseGuard } from "./desktop-close.js";
 
 const canvas = document.getElementById("terrain-canvas");
@@ -372,7 +374,8 @@ function createFlythroughController({ controls: flControls, button }) {
     }
 
     function start() {
-        if (flythrough || !button || button.disabled) {
+        // The button is optional: the final demo's toolbar icon starts it too.
+        if (flythrough || button?.disabled) {
             return;
         }
 
@@ -390,8 +393,10 @@ function createFlythroughController({ controls: flControls, button }) {
         // rotation afterward — stays elevated until the next reset.
         flControls.setSpeedMultiplier(FLYTHROUGH_ROTATE_SPEED_MULTIPLIER);
 
-        button.disabled = true;
-        button.textContent = "FLYING THROUGH…";
+        if (button) {
+            button.disabled = true;
+            button.textContent = "FLYING THROUGH…";
+        }
     }
 
     function update() {
@@ -522,6 +527,10 @@ const jobsCountEl = document.getElementById("jobs-count");
 const generateNewButton = document.getElementById("generate-new-button");
 const jobTabsEl = document.getElementById("job-tabs");
 const jobTabInfoEl = document.getElementById("job-tab-info");
+const jobsPinnedEl = document.getElementById("jobs-pinned");
+const jobsPinnedEmptyEl = document.getElementById("jobs-pinned-empty");
+const savedCountEl = document.getElementById("saved-count");
+const jobsPanelToggle = document.getElementById("jobs-panel-toggle");
 
 const jobStore = createJobStore();
 let inputView = null;
@@ -711,26 +720,35 @@ async function generateNew() {
     renderJobs();
 }
 
-// ---- Save = download the job(s) as JSON (there is no server storage) ----
+// ---- Save = download the job(s) as JSON and keep a copy in this browser's
+// Saved list (there is no server storage) ----
+
+const savedStore = createSavedStore();
+
+function downloadJson(data, filename) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 function saveJobs(ids) {
     const jobs = ids.map(id => jobStore.get(id)).filter(Boolean);
     if (!jobs.length) {
         return;
     }
-    const blob = new Blob([JSON.stringify(jobsExport(jobs), null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = exportFilename(jobs);
-    document.body.append(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadJson(jobsExport(jobs), exportFilename(jobs));
+    jobs.forEach(job => savedStore.put(savedRecord(job)));
     jobStore.markSaved(jobs.map(job => job.id));
 }
 
-// ---- Jobs panel (newest at the top) + expanded-view tab strip ----
+// ---- Jobs panel: Generate New, Saved, PINNED, RECENT (newest at the top);
+// plus the expanded-view tab strip ----
 
 function tierDotClass(routing) {
     if (!routing || routing.tier == null) {
@@ -739,13 +757,157 @@ function tierDotClass(routing) {
     return routing.tier === 2 ? "tier-2" : "tier-1";
 }
 
+const ICONS = {
+    pin: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+};
+
+// Delete is two-step (click, then "Delete?" within 3 s), so a stray click
+// never throws a job away. Survives re-renders via this id.
+let pendingDelete = null;
+
+function armDelete(key) {
+    clearTimeout(pendingDelete?.timer);
+    pendingDelete = {
+        key,
+        timer: setTimeout(() => {
+            pendingDelete = null;
+            renderJobs();
+            if (!savedModal?.hidden) {
+                renderSaved();
+            }
+        }, 3000),
+    };
+}
+
+function deleteJob(id) {
+    const job = jobStore.get(id);
+    if (!job || job.status === "generating") {
+        return;
+    }
+    clearTimeout(pendingDelete?.timer);
+    pendingDelete = null;
+    const wasActive = jobStore.active() === job;
+    const next = jobStore.remove(id);
+    if (!next) {
+        // last job gone: back to a fresh input page
+        collapseFinalDemoInstantly();
+        inputView?.reset();
+        showInputView();
+        return;
+    }
+    if (wasActive && !choosingNewInput()) {
+        showCompletedJob(next);
+    }
+    renderJobs();
+}
+
+function iconAction(className, label, iconSvg) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `job-icon ${className}`;
+    button.setAttribute("aria-label", label);
+    button.title = label;
+    button.innerHTML = iconSvg;
+    return button;
+}
+
+function jobItem(job, { running, active, choosing }) {
+    const li = document.createElement("li");
+    li.className = "job-item";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "job-select";
+    button.dataset.jobId = job.id;
+    if (job === active && !choosing) {
+        button.setAttribute("aria-current", "true");
+    }
+    button.disabled = Boolean(running) && job !== running;
+    if (button.disabled) {
+        button.title = "Available when the current generation finishes";
+    }
+    button.addEventListener("click", () => selectJob(job.id));
+
+    const head = document.createElement("div");
+    head.className = "job-head";
+    const num = document.createElement("span");
+    num.className = "job-num";
+    num.textContent = jobLabel(job);
+    const status = document.createElement("span");
+    status.className = `job-status${job.status === "generating" ? " is-running" : ""}`;
+    status.textContent = job.status === "generating" ? `Generating ${job.progress}%` : "Complete";
+    head.append(num, status);
+
+    const title = document.createElement("div");
+    title.className = "job-title";
+    title.textContent = job.input.title;
+
+    const tier = document.createElement("div");
+    tier.className = `job-tier ${tierDotClass(job.input.routing)}`;
+    tier.textContent = job.input.routing.label;
+
+    button.append(head, title, tier);
+
+    const foot = document.createElement("div");
+    foot.className = "job-foot";
+    const saved = document.createElement("span");
+    saved.className = `job-saved${job.saved ? " is-saved" : ""}`;
+    saved.textContent = job.saved ? "Saved" : "Unsaved";
+
+    const actions = document.createElement("div");
+    actions.className = "job-actions";
+
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "job-save";
+    save.textContent = "Save";
+    save.setAttribute("aria-label", `Save ${jobLabel(job)} (downloads a JSON file and adds it to Saved)`);
+    save.disabled = job.status !== "complete";
+    save.addEventListener("click", () => saveJobs([job.id]));
+
+    const pin = iconAction(`job-pin${job.pinned ? " is-pinned" : ""}`,
+        job.pinned ? `Unpin ${jobLabel(job)}` : `Pin ${jobLabel(job)}`, ICONS.pin);
+    pin.setAttribute("aria-pressed", String(job.pinned));
+    pin.addEventListener("click", () => jobStore.togglePin(job.id));
+
+    const confirming = pendingDelete?.key === `job:${job.id}`;
+    const trash = iconAction(`job-trash${confirming ? " is-confirm" : ""}`,
+        confirming ? `Confirm: delete ${jobLabel(job)}` : `Delete ${jobLabel(job)}`, confirming ? "" : ICONS.trash);
+    if (confirming) {
+        trash.textContent = "Delete?";
+    }
+    trash.disabled = job.status === "generating";
+    trash.addEventListener("click", () => {
+        if (pendingDelete?.key === `job:${job.id}`) {
+            deleteJob(job.id);
+        } else {
+            armDelete(`job:${job.id}`);
+            renderJobs();
+            jobsListEl?.parentElement?.querySelector(`.job-select[data-job-id="${job.id}"]`)
+                ?.closest(".job-item")?.querySelector(".job-trash")?.focus();
+        }
+    });
+
+    actions.append(save, pin, trash);
+    foot.append(saved, actions);
+    li.append(button, foot);
+    return li;
+}
+
 function renderJobs() {
     const hasJobs = jobStore.count() > 0;
-    workbenchPageEl?.classList.toggle("has-jobs", hasJobs);
+    const savedCount = savedStore.list().length;
+    // Shown once there's a job, or earlier saved work to reopen (after a reload).
+    const showPanel = hasJobs || savedCount > 0;
+    workbenchPageEl?.classList.toggle("has-jobs", showPanel);
     if (jobsPanelEl) {
-        jobsPanelEl.hidden = !hasJobs;
+        jobsPanelEl.hidden = !showPanel;
     }
-    if (!hasJobs || !jobsListEl) {
+    if (savedCountEl) {
+        savedCountEl.textContent = savedCount ? String(savedCount) : "";
+    }
+    if (!showPanel || !jobsListEl) {
         return;
     }
 
@@ -753,6 +915,7 @@ function renderJobs() {
     const active = jobStore.active();
     const choosing = choosingNewInput();
     const unsavedCount = jobStore.unsaved().length;
+    const ctx = { running, active, choosing };
 
     if (jobsCountEl) {
         jobsCountEl.textContent = `${jobStore.count()} · ${unsavedCount} unsaved`;
@@ -764,70 +927,33 @@ function renderJobs() {
             : choosing ? "Already choosing a new input" : "Choose a new input; current jobs stay open";
     }
 
+    const pinned = jobStore.pinnedOrder();
+    jobsPinnedEl?.replaceChildren(...pinned.map(job => jobItem(job, ctx)));
+    if (jobsPinnedEmptyEl) {
+        jobsPinnedEmptyEl.hidden = pinned.length > 0;
+    }
+
     const items = [];
-    if (choosing) {
+    if (!hasJobs) {
+        const none = document.createElement("li");
+        none.className = "jobs-empty";
+        none.textContent = "No jobs in this tab yet";
+        items.push(none);
+    } else if (choosing) {
         const pending = document.createElement("li");
         pending.className = "job-item job-item-pending";
         pending.textContent = "New job — choosing input…";
         items.push(pending);
     }
-
-    jobStore.panelOrder().forEach(job => {
-        const li = document.createElement("li");
-        li.className = "job-item";
-
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "job-select";
-        button.dataset.jobId = job.id;
-        if (job === active && !choosing) {
-            button.setAttribute("aria-current", "true");
-        }
-        button.disabled = Boolean(running) && job !== running;
-        if (button.disabled) {
-            button.title = "Available when the current generation finishes";
-        }
-        button.addEventListener("click", () => selectJob(job.id));
-
-        const head = document.createElement("div");
-        head.className = "job-head";
-        const num = document.createElement("span");
-        num.className = "job-num";
-        num.textContent = jobLabel(job);
-        const status = document.createElement("span");
-        status.className = `job-status${job.status === "generating" ? " is-running" : ""}`;
-        status.textContent = job.status === "generating" ? `Generating ${job.progress}%` : "Complete";
-        head.append(num, status);
-
-        const title = document.createElement("div");
-        title.className = "job-title";
-        title.textContent = job.input.title;
-
-        const tier = document.createElement("div");
-        tier.className = `job-tier ${tierDotClass(job.input.routing)}`;
-        tier.textContent = job.input.routing.label;
-
-        button.append(head, title, tier);
-
-        const foot = document.createElement("div");
-        foot.className = "job-foot";
-        const saved = document.createElement("span");
-        saved.className = `job-saved${job.saved ? " is-saved" : ""}`;
-        saved.textContent = job.saved ? "Saved (downloaded)" : "Unsaved";
-        const save = document.createElement("button");
-        save.type = "button";
-        save.className = "job-save";
-        save.textContent = job.saved ? "Save again" : "Save";
-        save.setAttribute("aria-label", `Save ${jobLabel(job)} (downloads a JSON file)`);
-        save.disabled = job.status !== "complete";
-        save.addEventListener("click", () => saveJobs([job.id]));
-        foot.append(saved, save);
-
-        li.append(button, foot);
-        items.push(li);
-    });
-
+    jobStore.panelOrder().forEach(job => items.push(jobItem(job, ctx)));
+    if (!items.length) {
+        const none = document.createElement("li");
+        none.className = "jobs-empty";
+        none.textContent = "No other jobs (all pinned)";
+        items.push(none);
+    }
     jobsListEl.replaceChildren(...items);
+
     renderJobTabs();
 }
 
@@ -855,6 +981,13 @@ function renderJobTabs() {
         label.className = "job-tab-label";
         label.textContent = `${jobLabel(job)} · ${job.input.title}`;
         tab.append(dot, label);
+        if (job.pinned) {
+            const pinMark = document.createElement("span");
+            pinMark.className = "job-tab-pin";
+            pinMark.setAttribute("aria-label", "pinned");
+            pinMark.innerHTML = ICONS.pin;
+            tab.append(pinMark);
+        }
         if (!job.saved) {
             const mark = document.createElement("span");
             mark.className = "job-tab-unsaved";
@@ -879,6 +1012,209 @@ function renderJobTabs() {
 
 jobStore.onChange(renderJobs);
 generateNewButton?.addEventListener("click", generateNew);
+
+// ---- Toolbar show/hide (the panel collapses to a narrow strip and the page
+// content, including the expanded 3D view, moves over — never an overlay) ----
+
+const JOBS_COLLAPSED_KEY = "dw2.jobsPanelCollapsed";
+
+function setJobsPanelCollapsed(collapsed) {
+    workbenchPageEl?.classList.toggle("jobs-collapsed", collapsed);
+    const label = collapsed ? "Show toolbar" : "Hide toolbar";
+    jobsPanelToggle?.setAttribute("aria-expanded", String(!collapsed));
+    jobsPanelToggle?.setAttribute("aria-label", label);
+    const tip = jobsPanelToggle?.querySelector(".jobs-tip");
+    if (tip) {
+        tip.textContent = label;
+    }
+    try {
+        localStorage.setItem(JOBS_COLLAPSED_KEY, collapsed ? "1" : "0");
+    } catch {
+        // storage blocked: the choice just isn't remembered
+    }
+}
+
+jobsPanelToggle?.addEventListener("click", () => {
+    setJobsPanelCollapsed(!workbenchPageEl.classList.contains("jobs-collapsed"));
+});
+
+try {
+    setJobsPanelCollapsed(localStorage.getItem(JOBS_COLLAPSED_KEY) === "1");
+} catch {
+    setJobsPanelCollapsed(false);
+}
+
+// ---- Saved window: earlier saved work, reopened as a (finished) job ----
+
+const savedModal = document.getElementById("saved-modal");
+const savedListEl = document.getElementById("saved-list");
+const savedOpenButton = document.getElementById("saved-open-button");
+let savedReturnFocus = null;
+
+function formatSavedAt(iso) {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(undefined, {
+        year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+}
+
+// Opening a saved job before anything was generated this session: the shared
+// output views (mini previews, final 3D viewer) must exist first.
+async function ensureGeneratedViews() {
+    [["dsm-3d-canvas", "dsm-3d"], ["metric-elevation-3d-canvas", "elevation-3d"]].forEach(([canvasId, layer]) => {
+        const canvas = document.getElementById(canvasId);
+        if (canvas && !miniPreviewCanvases.has(canvas)) {
+            miniPreviewCanvases.add(canvas);
+            createMiniPreview(canvas, layer);
+        }
+    });
+    await Promise.all([initFinalDemoViewer(), loadMiniPreviewAssets()]);
+    staggerGridEntrance();
+}
+
+async function openSavedWork(uid) {
+    if (jobStore.generating()) {
+        return;
+    }
+    const record = savedStore.get(uid);
+    if (!record) {
+        return;
+    }
+    closeSaved();
+    const existing = jobStore.findByUid(uid);
+    if (existing) {
+        selectJob(existing.id);
+        return;
+    }
+    await ensureGeneratedViews();
+    const job = jobStore.add(record.input, record);
+    showCompletedJob(job);
+    renderJobs();
+}
+
+function renderSaved() {
+    if (!savedListEl) {
+        return;
+    }
+    const records = savedStore.list();
+    if (!records.length) {
+        const empty = document.createElement("div");
+        empty.className = "saved-empty";
+        empty.textContent = "No saved work yet. Use Save on a job in the jobs panel.";
+        savedListEl.replaceChildren(empty);
+        return;
+    }
+    const running = jobStore.generating();
+
+    savedListEl.replaceChildren(...records.map(record => {
+        const card = document.createElement("article");
+        card.className = "saved-card";
+
+        const thumb = document.createElement("div");
+        thumb.className = "saved-thumb";
+        if (record.input.previewUrl) {
+            const img = document.createElement("img");
+            img.src = record.input.previewUrl;
+            img.alt = "";
+            img.loading = "lazy";
+            img.addEventListener("error", () => img.remove()); // the input file may be gone
+            thumb.append(img);
+        }
+
+        const body = document.createElement("div");
+        body.className = "saved-body";
+        const title = document.createElement("div");
+        title.className = "saved-card-title";
+        title.textContent = record.input.title;
+        const tier = document.createElement("div");
+        tier.className = `job-tier ${tierDotClass(record.input.routing)}`;
+        tier.textContent = record.input.routing?.label ?? "";
+        const meta = document.createElement("div");
+        meta.className = "saved-meta";
+        const dem = record.input.dem;
+        meta.textContent = [
+            `Saved ${formatSavedAt(record.savedAt)}`,
+            dem ? `DEM ${dem.min_m}–${dem.max_m} m` : null,
+            jobStore.findByUid(record.uid) ? "open now" : null,
+        ].filter(Boolean).join(" · ");
+        body.append(title, tier, meta);
+
+        const actions = document.createElement("div");
+        actions.className = "saved-actions";
+        const open = document.createElement("button");
+        open.type = "button";
+        open.className = "confirm-button confirm-primary";
+        open.textContent = jobStore.findByUid(record.uid) ? "Go to job" : "Open";
+        open.disabled = Boolean(running);
+        if (running) {
+            open.title = "Available when the current generation finishes";
+        }
+        open.addEventListener("click", () => openSavedWork(record.uid));
+
+        const download = document.createElement("button");
+        download.type = "button";
+        download.className = "confirm-button";
+        download.textContent = "Download";
+        download.addEventListener("click", () => {
+            const pseudo = { ...record, n: 1, status: "complete" };
+            downloadJson(jobsExport([pseudo]), `depthwizard-saved-${record.savedAt.slice(0, 19).replace(/[:T]/g, "-")}.json`);
+        });
+
+        const confirming = pendingDelete?.key === `saved:${record.uid}`;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = `confirm-button${confirming ? " confirm-danger" : ""}`;
+        remove.textContent = confirming ? "Remove?" : "Remove";
+        remove.setAttribute("aria-label", confirming ? `Confirm: remove ${record.input.title} from Saved` : `Remove ${record.input.title} from Saved`);
+        remove.addEventListener("click", () => {
+            if (pendingDelete?.key === `saved:${record.uid}`) {
+                clearTimeout(pendingDelete.timer);
+                pendingDelete = null;
+                savedStore.remove(record.uid);
+                const openJob = jobStore.findByUid(record.uid);
+                if (openJob) {
+                    jobStore.update(openJob.id, { saved: false });
+                }
+                renderSaved();
+                renderJobs();
+            } else {
+                armDelete(`saved:${record.uid}`);
+                renderSaved();
+            }
+        });
+
+        actions.append(open, download, remove);
+        card.append(thumb, body, actions);
+        return card;
+    }));
+}
+
+function openSaved() {
+    if (!savedModal) {
+        return;
+    }
+    renderSaved();
+    savedReturnFocus = document.activeElement;
+    savedModal.hidden = false;
+    document.getElementById("saved-close")?.focus();
+}
+
+function closeSaved() {
+    if (!savedModal || savedModal.hidden) {
+        return;
+    }
+    savedModal.hidden = true;
+    savedReturnFocus?.focus?.({ preventScroll: true });
+}
+
+savedOpenButton?.addEventListener("click", openSaved);
+document.getElementById("saved-close")?.addEventListener("click", closeSaved);
+document.getElementById("saved-backdrop")?.addEventListener("click", closeSaved);
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && savedModal && !savedModal.hidden) {
+        closeSaved();
+    }
+});
 
 // ---- Unsaved-work modal (in-app navigation, Close, and the desktop app's
 // window close). Job count + per-job save choice; no "don't show again". ----
@@ -983,12 +1319,14 @@ const closeGuardReady = installCloseGuard({
 });
 
 if (import.meta.env.DEV) {
-    window.__dwJobs = { store: jobStore, closeGuardReady };
+    window.__dwJobs = { store: jobStore, closeGuardReady, viewer: () => finalDemoViewer };
 }
 
 if (inputViewEl) {
     inputView = createInputView(inputViewEl, { onStart: startFromInput });
 }
+
+renderJobs(); // shows the panel on load if there is saved work to reopen
 
 
 // ============================================================
@@ -1915,8 +2253,12 @@ const finalDemoBoxEl = document.getElementById("final-demo-box");
 const finalDemoExpandedBar = document.getElementById("final-demo-expanded-bar");
 const finalDemoBackButton = document.getElementById("final-demo-back");
 const finalDemoCloseButton = document.getElementById("final-demo-close");
-const FINAL_DEMO_ANIM_MS = 1880; // 380 ms + 1.5 s (user request, 2026-09-25)
-const FINAL_DEMO_EASING = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+// Constant speed, equal to the speed the earlier ease-out opened with (user
+// request, 2026-09-25: "starts at the right speed, then drags"). That curve,
+// cubic-bezier(0.2, 0.8, 0.2, 1) over 1880 ms, starts at 0.8 / 0.2 = 4x its
+// average speed, so holding that speed covers the distance in 1880 / 4 ms.
+const FINAL_DEMO_ANIM_MS = 470;
+const FINAL_DEMO_EASING = "linear";
 let finalDemoPlaceholder = null;
 let finalDemoAnimating = false;
 

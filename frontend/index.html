@@ -464,17 +464,46 @@
              top. Session only — nothing is stored on a server. -->
         <aside id="jobs-panel" class="jobs-panel" aria-labelledby="jobs-panel-title" hidden>
             <div class="jobs-panel-head">
+                <button
+                    id="jobs-panel-toggle"
+                    class="jobs-toggle"
+                    type="button"
+                    aria-expanded="true"
+                    aria-controls="jobs-panel-body"
+                    aria-label="Hide toolbar"
+                >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="16" rx="3" />
+                        <path d="M9 4v16" />
+                    </svg>
+                    <span class="jobs-tip" aria-hidden="true">Hide toolbar</span>
+                </button>
                 <div id="jobs-panel-title" class="panel-title">JOBS</div>
                 <div id="jobs-count" class="jobs-count numeric-mono"></div>
             </div>
-            <button id="generate-new-button" class="secondary-button generate-new-button" type="button">
-                + Generate New
-            </button>
-            <ol id="jobs-list" class="jobs-list"></ol>
-            <p class="jobs-note">
-                Session only: jobs live in this tab’s memory. There’s no server-side storage yet, so reloading or
-                closing the tab loses any job you haven’t saved. Save downloads the job as a JSON file.
-            </p>
+            <div id="jobs-panel-body" class="jobs-panel-body">
+                <button id="generate-new-button" class="secondary-button generate-new-button" type="button">
+                    + Generate New
+                </button>
+                <button id="saved-open-button" class="jobs-nav-item" type="button" aria-haspopup="dialog">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <span>Saved</span>
+                    <span id="saved-count" class="jobs-nav-count numeric-mono"></span>
+                </button>
+                <div class="jobs-section-title">PINNED</div>
+                <ol id="jobs-pinned" class="jobs-list"></ol>
+                <div id="jobs-pinned-empty" class="jobs-empty">No pinned tabs currently</div>
+                <div class="jobs-section-title">RECENT</div>
+                <ol id="jobs-list" class="jobs-list"></ol>
+                <p class="jobs-note">
+                    Jobs live in this tab’s memory; there’s no server-side storage yet, so reloading or closing the tab
+                    loses unsaved jobs. Save downloads a job as JSON and keeps a copy under Saved in this browser.
+                </p>
+            </div>
         </aside>
 
         <div class="workbench-grid is-hidden">
@@ -761,61 +790,10 @@
 
                         <div class="final-demo-right-rail">
 
-                            <div class="layer-panel">
-
-                                <div class="panel-title">VISUALIZATION LAYER</div>
-
-                                <div class="layer-buttons-grid">
-
-                                    <div class="layer-buttons-row">
-                                        <button class="layer-button" data-layer="satellite-flat">SATELLITE</button>
-                                        <button class="layer-button" data-layer="depth-flat">RELATIVE DEPTH</button>
-                                        <button class="layer-button" data-layer="elevation-flat">ELEVATION</button>
-                                    </div>
-
-                                    <div class="layer-buttons-row">
-                                        <button class="layer-button" data-layer="dsm-3d">DSM</button>
-                                        <button class="layer-button" data-layer="elevation-3d">DEM ELEVATION</button>
-                                        <button class="layer-button active" data-layer="satellite-3d">TRUE COLOR</button>
-                                    </div>
-
-                                </div>
-
-                                <div id="final-demo-layer-description" class="layer-description">
-                                    Sentinel-2 RGB draped on extruded terrain
-                                </div>
-
-                                <div
-                                    id="final-demo-pipeline-progress"
-                                    class="pipeline-progress"
-                                    hidden
-                                >
-                                    <div id="final-demo-pipeline-progress-fill" class="pipeline-progress-fill"></div>
-                                </div>
-
-                            </div>
-
-                            <div id="final-demo-run-panel" class="run-panel">
-                                <button id="final-demo-run-button" class="run-reconstruction-button">
-                                    ▶ RUN RECONSTRUCTION
-                                </button>
-                            </div>
-
-                            <div id="final-demo-post-run-panel" class="post-run-panel" hidden>
-
-                                <button id="final-demo-run-again-button" class="run-reconstruction-button">
-                                    ↻ RUN AGAIN
-                                </button>
-
-                            </div>
-
-                            <!-- Always visible/usable regardless of reconstruction state —
-                                 not gated behind post-run-panel's [hidden]. -->
+                            <!-- Layer switching, RUN RECONSTRUCTION and FLYTHROUGH were removed from
+                                 this pop-up (user request, 2026-09-25): the icon toolbar's View ▾ and
+                                 Flythrough cover them. -->
                             <div class="always-on-controls">
-
-                                <button id="final-demo-flythrough-button" class="secondary-button">
-                                    ◎ FLYTHROUGH
-                                </button>
 
                                 <div class="danger-zone-panel">
 
@@ -884,6 +862,27 @@
 
         </div>
 
+
+        <!-- Saved works (jobs panel → Saved): jobs saved earlier, kept in this
+             browser's storage; open one again as a job, download it, or remove it. -->
+
+        <div id="saved-modal" class="upload-modal saved-modal" role="dialog" aria-modal="true"
+             aria-labelledby="saved-title" hidden>
+            <div id="saved-backdrop" class="upload-backdrop"></div>
+            <div class="saved-panel">
+                <div class="saved-head">
+                    <div>
+                        <div id="saved-title" class="saved-title">Saved</div>
+                        <p class="saved-sub">
+                            Work you saved, kept in this browser (each save was also downloaded as JSON).
+                            Nothing is stored on a server.
+                        </p>
+                    </div>
+                    <button id="saved-close" class="saved-close" type="button" aria-label="Close saved">✕</button>
+                </div>
+                <div id="saved-list" class="saved-list"></div>
+            </div>
+        </div>
 
         <!-- Unsaved-work warning: Generate New, ✕ Close, and (desktop app) window
              close. Job count + save choice per job; deliberately no "don't show
@@ -963,8 +962,10 @@
                             <li>The <strong>Start generation</strong> button is green for Tier 2, orange for Tier 1.</li>
                             <li>Each start is a <strong>job</strong>. <strong>Generate New</strong> starts another without
                                 closing the current one. The jobs panel lists them newest first, and the 3D view has a tab
-                                per job. Jobs are kept in this tab only: <strong>Save</strong> downloads a job as JSON.
-                                Leaving with unsaved jobs asks first.</li>
+                                per job. Each job can be saved, pinned or deleted. <strong>Save</strong> downloads the job as
+                                JSON and keeps a copy under <strong>Saved</strong> in this browser, where it can be
+                                reopened later. Unsaved jobs live only in this tab, and leaving with any asks first. The
+                                panel icon hides or shows the jobs panel.</li>
                             <li><strong>Start generation</strong> plays the pipeline’s steps. It is a
                                 <strong>prototype</strong>: the relative-depth, elevation, DSM and 3D panels show the
                                 Darjeeling reference results whatever scene you picked or uploaded. It is not a live
