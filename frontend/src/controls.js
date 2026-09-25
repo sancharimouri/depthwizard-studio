@@ -239,8 +239,10 @@ export function createControls(camera, domElement, target, homePosition = new TH
         return nativeReset(false);
     };
 
-    // Reset View: back to the saved default framing, animated.
-    controls.resetView = () => nativeReset(true);
+    // Reset View: straight back to the saved default framing (the first
+    // frame after creation), instantly. Auto-rotation's on/off state is left
+    // exactly as the user set it.
+    controls.resetView = () => nativeReset(false);
 
     controls.setAutoRotatePaused = function setAutoRotatePaused(paused) {
         autoRotateUserPaused = !!paused;

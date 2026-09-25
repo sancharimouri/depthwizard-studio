@@ -50,14 +50,23 @@ export function createTerrainViewer(canvas, options = {}) {
     const YAW_ANIM_MS = 450;
     let yawTarget = 0;
     let yawAnim = null;
-    function setStructureYaw(yaw, animate = true) {
+    // shortest: animate the shortest way round (undo/redo) instead of the
+    // literal difference (the rotate buttons keep their exact direction)
+    function setStructureYaw(yaw, animate = true, { shortest = false } = {}) {
         yawTarget = yaw;
         if (!animate) {
             yawAnim = null;
             terrainGroup.rotation.y = yaw;
             return;
         }
-        yawAnim = { from: terrainGroup.rotation.y, to: yaw, start: performance.now() };
+        let from = terrainGroup.rotation.y;
+        if (shortest) {
+            // the current angle's equivalent within ±180° of the target, so a
+            // large accumulated yaw never unwinds in whole turns
+            from = yaw + Math.atan2(Math.sin(from - yaw), Math.cos(from - yaw));
+            terrainGroup.rotation.y = from;
+        }
+        yawAnim = { from, to: yaw, start: performance.now() };
     }
     function stepYaw() {
         if (!yawAnim) {

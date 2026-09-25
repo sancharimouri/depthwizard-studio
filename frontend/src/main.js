@@ -2364,8 +2364,10 @@ function createNavActions() {
         },
         resetView() {
             recordCameraChange(() => {
+                // the first frame after creation, immediately: no animated unwinding
+                // of the rotation accumulated this session
                 c().resetView();
-                finalDemoViewer.setStructureYaw(0, true);
+                finalDemoViewer.setStructureYaw(0, false);
             });
         },
         isPaused: () => c().isAutoRotatePaused?.() ?? false,
@@ -2436,7 +2438,7 @@ function initViewerHistory(canvas) {
         applyCamera: c => {
             controlsRef.setLookAt(...c.p, ...c.t, true);
             if (c.yaw !== undefined) {
-                finalDemoViewer.setStructureYaw(c.yaw, true);
+                finalDemoViewer.setStructureYaw(c.yaw, true, { shortest: true });
             }
             finalDemoChrome?.syncPlay?.(); // keep the Top/Side icon honest
         },
