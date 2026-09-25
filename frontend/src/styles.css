@@ -4187,14 +4187,30 @@ kbd {
     --jobs-w: 212px;
 }
 
+/* collapsed: only the show/hide icon stays, in a narrow strip */
+#page-workbench.has-jobs.jobs-collapsed {
+    --jobs-w: 60px;
+}
+
+#page-workbench .input-view,
+#page-workbench .workbench-grid {
+    transition: padding-left 0.22s ease;
+}
+
 #page-workbench.has-jobs .input-view,
 #page-workbench.has-jobs .workbench-grid {
     padding-left: calc(80px + var(--jobs-w));
 }
 
-/* the expanded 3D view fills everything right of the panel (fullWindowEdges() in main.js) */
+/* the expanded 3D view fills everything right of the panel and moves with it
+   when the panel is shown/hidden (fullWindowEdges() in main.js matches this) */
 #page-workbench.has-jobs .final-demo-box.is-expanded {
-    left: 284px;
+    left: calc(72px + var(--jobs-w));
+    transition: left 0.22s ease;
+}
+
+#page-workbench.has-jobs .final-demo-box.is-expanded.is-animating {
+    transition: none;
 }
 
 .jobs-panel {
@@ -4202,7 +4218,9 @@ kbd {
     top: 24px;
     bottom: 24px;
     left: 80px;
-    z-index: 20;
+    /* above the expanded 3D view (z 200) so the toggle's tooltip isn't hidden;
+       the two never overlap otherwise */
+    z-index: 210;
 
     display: flex;
     flex-direction: column;
@@ -4210,6 +4228,8 @@ kbd {
 
     width: 196px;
     padding: 14px 12px;
+
+    transition: width 0.22s ease, padding 0.22s ease;
 
     border: 1px solid rgba(var(--text-rgb), 0.12);
     border-radius: 12px;
@@ -4224,9 +4244,145 @@ kbd {
 
 .jobs-panel-head {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
+    align-items: center;
     gap: 8px;
+}
+
+.jobs-panel-head .jobs-count {
+    margin-left: auto;
+}
+
+.jobs-toggle {
+    position: relative;
+
+    display: grid;
+    place-items: center;
+    flex: none;
+
+    width: 28px;
+    height: 28px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 7px;
+
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.7);
+
+    cursor: pointer;
+}
+
+.jobs-toggle:hover {
+    background: rgba(var(--text-rgb), 0.08);
+    color: rgb(var(--text-rgb));
+}
+
+.jobs-toggle:focus-visible {
+    outline: 2px solid rgba(var(--accent-rgb), 0.7);
+    outline-offset: 1px;
+}
+
+.jobs-tip {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 8px);
+
+    padding: 4px 8px;
+
+    border-radius: 6px;
+    background: rgba(var(--text-rgb), 0.92);
+    color: rgb(var(--bg-rgb));
+
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-4px, -50%);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.jobs-toggle:hover .jobs-tip,
+.jobs-toggle:focus-visible .jobs-tip {
+    opacity: 1;
+    transform: translate(0, -50%);
+    transition-delay: 0.25s;
+}
+
+.jobs-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0 -4px;
+    padding: 0 4px;
+
+    overflow-y: auto;
+}
+
+.jobs-collapsed .jobs-panel {
+    width: 44px;
+    padding: 12px 8px;
+}
+
+.jobs-collapsed .jobs-panel-body,
+.jobs-collapsed .jobs-panel-head .panel-title,
+.jobs-collapsed .jobs-panel-head .jobs-count {
+    display: none;
+}
+
+.jobs-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    width: 100%;
+    padding: 8px 10px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.85);
+
+    font-family: inherit;
+    font-size: 12.5px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.jobs-nav-item:hover {
+    background: rgba(var(--text-rgb), 0.07);
+    color: rgb(var(--text-rgb));
+}
+
+.jobs-nav-count {
+    margin-left: auto;
+    font-size: 10.5px;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+.jobs-section-title {
+    margin-top: 4px;
+
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+    color: rgba(var(--text-rgb), 0.45);
+}
+
+.jobs-empty {
+    padding: 2px 2px 4px;
+    list-style: none;
+    font-size: 11.5px;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+.jobs-empty[hidden] {
+    display: none;
 }
 
 .jobs-panel-head .panel-title {
@@ -4252,13 +4408,14 @@ kbd {
     flex-direction: column;
     gap: 8px;
 
-    flex: 1 1 auto;
-    min-height: 0;
     margin: 0;
     padding: 0;
 
     list-style: none;
-    overflow-y: auto;
+}
+
+.jobs-list:empty {
+    display: none;
 }
 
 .job-item {
@@ -4527,4 +4684,198 @@ kbd {
     font-size: 11px;
     color: rgba(var(--text-rgb), 0.7);
     text-align: center;
+}
+
+.job-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.job-icon {
+    display: grid;
+    place-items: center;
+
+    min-width: 24px;
+    height: 22px;
+    padding: 0 4px;
+
+    border: 1px solid transparent;
+    border-radius: 6px;
+
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.6);
+
+    font-family: inherit;
+    font-size: 10.5px;
+    cursor: pointer;
+}
+
+.job-icon:hover:not(:disabled) {
+    border-color: rgba(var(--text-rgb), 0.18);
+    color: rgb(var(--text-rgb));
+}
+
+.job-icon:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.job-icon:focus-visible {
+    outline: 2px solid rgba(var(--accent-rgb), 0.7);
+    outline-offset: 0;
+}
+
+.job-pin.is-pinned {
+    color: rgb(var(--accent-rgb));
+}
+
+.job-pin.is-pinned svg {
+    fill: currentColor;
+}
+
+.job-trash.is-confirm {
+    border-color: rgba(var(--danger-text-rgb), 0.5);
+    background: rgba(var(--danger-bg-rgb), 0.9);
+    color: rgb(var(--danger-text-rgb));
+}
+
+.job-tab-pin {
+    display: grid;
+    color: rgba(var(--text-rgb), 0.55);
+}
+
+/* ---- Saved window: centred, about 60% of the window ---- */
+
+.saved-modal {
+    z-index: 300;
+}
+
+.saved-panel {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    width: max(60vw, min(560px, calc(100vw - 32px)));
+    height: max(60vh, min(420px, calc(100vh - 32px)));
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 32px);
+    padding: 20px 22px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.14);
+    border-radius: 14px;
+
+    background: rgb(var(--bg-alt-rgb));
+    color: rgb(var(--text-rgb));
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.saved-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.saved-title {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.saved-sub {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: rgba(var(--text-rgb), 0.6);
+}
+
+.saved-close {
+    width: 30px;
+    height: 30px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.16);
+    border-radius: 8px;
+
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.8);
+
+    cursor: pointer;
+}
+
+.saved-close:hover {
+    color: rgb(var(--text-rgb));
+    border-color: rgba(var(--text-rgb), 0.35);
+}
+
+.saved-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    align-content: start;
+    gap: 12px;
+
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.saved-empty {
+    grid-column: 1 / -1;
+    padding: 40px 0;
+    text-align: center;
+    font-size: 13px;
+    color: rgba(var(--text-rgb), 0.55);
+}
+
+.saved-card {
+    display: flex;
+    flex-direction: column;
+
+    border: 1px solid rgba(var(--text-rgb), 0.12);
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+.saved-thumb {
+    aspect-ratio: 16 / 9;
+    background: rgba(var(--text-rgb), 0.05);
+}
+
+.saved-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.saved-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px 4px;
+}
+
+.saved-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.saved-meta {
+    font-size: 11px;
+    color: rgba(var(--text-rgb), 0.55);
+}
+
+.saved-actions {
+    display: flex;
+    gap: 6px;
+    padding: 10px 12px 12px;
+}
+
+.saved-actions .confirm-button {
+    padding: 7px 6px;
+    font-size: 10.5px;
 }

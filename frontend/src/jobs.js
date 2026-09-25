@@ -11,8 +11,8 @@
 // ============================================================
 
 export const STORAGE_NOTE =
-    "Session only: jobs live in this browser tab's memory. There is no server-side storage yet, "
-    + "so reloading or closing the tab loses any job you haven't saved (downloaded).";
+    "Jobs live in this browser tab's memory, and there is no server-side storage yet: reloading or closing the tab "
+    + "loses any job you haven't saved. Saving downloads the job as JSON and keeps a copy in this browser's Saved list.";
 
 export function createJobStore() {
     const jobs = [];
@@ -25,22 +25,49 @@ export function createJobStore() {
     }
 
     return {
-        add(input) {
+        add(input, restored = null) {
             seq += 1;
+            const createdAt = restored?.createdAt ?? new Date().toISOString();
             const job = {
                 id: `job-${seq}`,
                 n: seq,
-                createdAt: new Date().toISOString(),
-                status: "generating",
-                progress: 0,
-                saved: false,
+                // stable across sessions: identifies the job in the Saved list
+                uid: restored?.uid ?? `${Date.parse(createdAt).toString(36)}-${seq}-${Math.random().toString(36).slice(2, 7)}`,
+                createdAt,
+                status: restored ? "complete" : "generating",
+                progress: restored ? 100 : 0,
+                saved: Boolean(restored),
+                pinned: false,
                 input,
-                log: [],
+                log: restored?.log ? restored.log.map(line => ({ ...line })) : [],
             };
             jobs.push(job);
             activeId = job.id;
             emit();
             return job;
+        },
+        // Removes a job; if it was active, the most recent remaining job becomes active.
+        remove(id) {
+            const index = jobs.findIndex(job => job.id === id);
+            if (index < 0) {
+                return null;
+            }
+            jobs.splice(index, 1);
+            if (activeId === id) {
+                activeId = jobs.length ? jobs[jobs.length - 1].id : null;
+            }
+            emit();
+            return this.active();
+        },
+        togglePin(id) {
+            const job = this.get(id);
+            if (job) {
+                job.pinned = !job.pinned;
+                emit();
+            }
+        },
+        findByUid(uid) {
+            return jobs.find(job => job.uid === uid) ?? null;
         },
         get(id) {
             return jobs.find(job => job.id === id) ?? null;
@@ -74,9 +101,12 @@ export function createJobStore() {
         creationOrder() {
             return jobs.slice();
         },
-        // newest first (side panel)
+        // newest first (side panel); pinned jobs have their own section
         panelOrder() {
-            return jobs.slice().reverse();
+            return jobs.slice().reverse().filter(job => !job.pinned);
+        },
+        pinnedOrder() {
+            return jobs.slice().reverse().filter(job => job.pinned);
         },
         unsaved() {
             return jobs.filter(job => !job.saved);
@@ -158,4 +188,60 @@ export function exportFilename(jobs, now = new Date()) {
     const stamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
     const which = jobs.length === 1 ? `job${jobs[0].n}` : `${jobs.length}-jobs`;
     return `depthwizard-${which}-${stamp}.json`;
+}
+
+// ---------------------------------------------------------------- Saved works
+// "Save" downloads the job and also keeps a copy here, in this browser's
+// localStorage, so the Saved window can list (and reopen) earlier work after a
+// reload. Per-browser only; storage failures (private window, blocked site
+// data) leave the list empty rather than breaking anything.
+
+export const SAVED_KEY = "dw2.savedJobs.v1";
+
+export function savedRecord(job, now = new Date()) {
+    return {
+        uid: job.uid,
+        savedAt: now.toISOString(),
+        createdAt: job.createdAt,
+        input: job.input,
+        log: job.log,
+    };
+}
+
+export function createSavedStore(storage = globalThis.localStorage) {
+    function read() {
+        try {
+            const list = JSON.parse(storage?.getItem(SAVED_KEY) ?? "[]");
+            return Array.isArray(list) ? list : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function write(list) {
+        try {
+            storage?.setItem(SAVED_KEY, JSON.stringify(list));
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    return {
+        // newest save first
+        list() {
+            return read().sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+        },
+        put(record) {
+            const list = read().filter(item => item.uid !== record.uid);
+            list.push(record);
+            return write(list);
+        },
+        remove(uid) {
+            return write(read().filter(item => item.uid !== uid));
+        },
+        get(uid) {
+            return read().find(item => item.uid === uid) ?? null;
+        },
+    };
 }
