@@ -38,6 +38,8 @@ export function createJobStore() {
                 progress: restored ? 100 : 0,
                 saved: Boolean(restored),
                 pinned: false,
+                // user-editable display name (null → "Job N"); see jobLabel()
+                name: restored?.name ?? null,
                 input,
                 log: restored?.log ? restored.log.map(line => ({ ...line })) : [],
             };
@@ -58,6 +60,20 @@ export function createJobStore() {
             }
             emit();
             return this.active();
+        },
+        // Inline rename (pages-panel Jobs list and the 3D view's tab strip).
+        // Blank or whitespace-only names fall back to the default "Job N".
+        rename(id, name) {
+            const job = this.get(id);
+            if (!job) {
+                return;
+            }
+            const clean = String(name ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+            const next = clean && clean !== `Job ${job.n}` ? clean : null;
+            if (next !== job.name) {
+                job.name = next;
+                emit();
+            }
         },
         togglePin(id) {
             const job = this.get(id);
@@ -125,7 +141,7 @@ export function createJobStore() {
 }
 
 export function jobLabel(job) {
-    return `Job ${job.n}`;
+    return job.name || `Job ${job.n}`;
 }
 
 // The unsaved-work modal's copy, per action. Always states the count; never
@@ -170,6 +186,7 @@ export function jobsExport(jobs, now = new Date()) {
             + "the input, its ground resolution, tier routing and DEM below are real.",
         jobs: jobs.map(job => ({
             job: job.n,
+            name: jobLabel(job),
             created_at: job.createdAt,
             status: job.status,
             input: {
@@ -203,6 +220,7 @@ export function savedRecord(job, now = new Date()) {
         uid: job.uid,
         savedAt: now.toISOString(),
         createdAt: job.createdAt,
+        name: job.name,
         input: job.input,
         log: job.log,
     };

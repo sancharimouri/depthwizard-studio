@@ -544,7 +544,55 @@ export function createTerrain(
         "dsm-3d",
         "elevation-3d",
         "satellite-3d",
+        "wireframe-3d",
     ]);
+
+    // Wireframe view: thin neon-green grid lines over the extruded surface,
+    // no solid fill (the mesh's own material is hidden, so picking — which
+    // uses the heightfield, not the material — keeps working). Lines follow
+    // every WIREFRAME_STRIDE-th row/column so the net stays legible rather
+    // than a solid green blur at 361×325. Built lazily from extrudedZ; a
+    // child of the mesh, so it follows the display exaggeration too.
+    const WIREFRAME_STRIDE = 3;
+    let wireframe = null;
+
+    function buildWireframe() {
+        const cols = [];
+        for (let x = 0; x < width; x += WIREFRAME_STRIDE) {
+            cols.push(x);
+        }
+        if (cols[cols.length - 1] !== width - 1) {
+            cols.push(width - 1);
+        }
+        const rows = [];
+        for (let y = 0; y < height; y += WIREFRAME_STRIDE) {
+            rows.push(y);
+        }
+        if (rows[rows.length - 1] !== height - 1) {
+            rows.push(height - 1);
+        }
+        const verts = [];
+        const at = (x, y) => {
+            const i = y * width + x;
+            return [positions.getX(i), positions.getY(i), extrudedZ[i]];
+        };
+        for (const y of rows) {
+            for (let k = 0; k < cols.length - 1; k++) {
+                verts.push(...at(cols[k], y), ...at(cols[k + 1], y));
+            }
+        }
+        for (const x of cols) {
+            for (let k = 0; k < rows.length - 1; k++) {
+                verts.push(...at(x, rows[k]), ...at(x, rows[k + 1]));
+            }
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+        const lines = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x39ff14 }));
+        lines.visible = false;
+        terrain.add(lines);
+        return lines;
+    }
 
 
     function setExtruded(extruded) {
@@ -586,6 +634,15 @@ export function createTerrain(
 
         material.color.set(0xffffff);
         material.needsUpdate = true;
+
+        const isWire = layer === "wireframe-3d";
+        if (isWire && !wireframe) {
+            wireframe = buildWireframe();
+        }
+        if (wireframe) {
+            wireframe.visible = isWire;
+        }
+        material.visible = !isWire;
 
         setExtruded(EXTRUDED_LAYERS.has(layer));
     }

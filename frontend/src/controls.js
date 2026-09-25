@@ -10,12 +10,6 @@ const IDLE_RESUME_MS = 2500;
 // under camera-controls' delta-based update().
 const AUTO_ROTATE_RADIANS_PER_SEC = 0.0018 * 60;
 
-// Was ±72° (could tip past horizontal toward upside-down). Restricted to
-// ~30% of that range so the camera tilts noticeably but can never approach
-// upside-down: ±72° * 0.3 = ±21.6°, applied around the initial framing's
-// elevation angle (not the literal horizon).
-const PITCH_LIMIT = THREE.MathUtils.degToRad(72 * 0.3);
-
 // Matches the old OrbitControls-based zoom: a fixed ~5% distance change
 // per wheel event regardless of the event's raw deltaY magnitude (that
 // magnitude varies wildly across trackpads/browsers — scaling by it made
@@ -47,8 +41,13 @@ export function createControls(camera, domElement, target, homePosition = new TH
     // captured at construction, before this setLookAt ever ran.
     controls.saveState();
 
-    controls.minDistance = 40;
-    controls.maxDistance = 260;
+    // Movement envelope matched (2026-09-25) to the reference SIH26175 repo
+    // (external/SIH26175-DepthWizard-notvishuuuu, CameraControls.jsx:
+    // OrbitControls minDistance 5 / maxDistance 140 on a 60-unit terrain,
+    // maxPolarAngle 0.495π, dampingFactor 0.08). Distances are scaled by
+    // 100/60 to our 100-unit terrain.
+    controls.minDistance = 5 * (100 / 60);
+    controls.maxDistance = 140 * (100 / 60);
 
     // Negative: camera-controls' default azimuth sign is a "camera orbit"
     // feel (drag right → camera swings right → the terrain's near face
@@ -71,14 +70,18 @@ export function createControls(camera, domElement, target, homePosition = new TH
     // flick keeps drifting briefly before friction settles it — tuned down
     // from the library's defaults (0.125 / 0.25) so release-and-coast
     // reads as weighted without feeling loose or slow to settle.
-    controls.draggingSmoothTime = 0.09;
-    controls.smoothTime = 0.22;
+    // OrbitControls dampingFactor 0.08 at 60 fps is an exponential lag with a
+    // ~0.21 s time constant, applied to drags and releases alike. smoothDamp
+    // with smoothTime 0.2 reaches 63% of a step in ~0.21 s, so both match.
+    controls.draggingSmoothTime = 0.2;
+    controls.smoothTime = 0.2;
 
     // Pitch: clamp polar angle to ±21.6° around the initial framing's
     // elevation, matching the old rig's pitch clamp.
-    const basePolarAngle = controls.polarAngle;
-    controls.minPolarAngle = basePolarAngle - PITCH_LIMIT;
-    controls.maxPolarAngle = basePolarAngle + PITCH_LIMIT;
+    // Reference repo: from straight down (0) to just above the horizon
+    // (0.495π), so the camera can never dip under the terrain.
+    controls.minPolarAngle = 0;
+    controls.maxPolarAngle = Math.PI * 0.495;
 
     // Roll (the old rig's "third axis"): camera-controls' orbit keeps the
     // camera's up vector fixed to world Y at all times, so roll never
@@ -107,6 +110,9 @@ export function createControls(camera, domElement, target, homePosition = new TH
     let autoRotateHeld = false;
     // The user's Play/Pause choice (expanded view's playback button).
     let autoRotateUserPaused = false;
+    // Set while something else (the flythrough) drives the camera itself:
+    // base auto-rotate stays out of the way so the two never add up.
+    let externallyDriven = false;
     let speedMultiplier = 1;
     let idleTimer = null;
 
@@ -174,7 +180,7 @@ export function createControls(camera, domElement, target, homePosition = new TH
         const delta = Math.min((now - lastFrameTime) / 1000, 0.1);
         lastFrameTime = now;
 
-        if (autoRotating && !autoRotateHeld && !autoRotateUserPaused) {
+        if (autoRotating && !autoRotateHeld && !autoRotateUserPaused && !externallyDriven) {
             // Positive, matching a rightward drag under the
             // azimuthRotateSpeed=-1 fix above (both increase azimuthAngle)
             // — old code's auto-rotate and drag shared the same sign too.
@@ -200,6 +206,12 @@ export function createControls(camera, domElement, target, homePosition = new TH
     controls.setAutoRotateHold = function setAutoRotateHold(held) {
         autoRotateHeld = !!held;
     };
+
+    controls.setExternallyDriven = function setExternallyDriven(driven) {
+        externallyDriven = !!driven;
+    };
+
+    controls.AUTO_ROTATE_RADIANS_PER_SEC = AUTO_ROTATE_RADIANS_PER_SEC;
 
     controls.setSpeedMultiplier = function setSpeedMultiplier(multiplier) {
         speedMultiplier = multiplier;
