@@ -5326,3 +5326,54 @@ kbd {
     max-height: 55vh;
     overflow-y: auto;
 }
+
+
+/* ---- Sliders: vertical exaggeration + flood water level */
+.xp-slider-row {
+    margin-top: 12px;
+}
+
+.xp-slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: rgba(var(--text-rgb), 0.7);
+}
+
+.xp-slider-label .numeric-mono {
+    color: rgb(var(--text-rgb));
+    font-weight: 700;
+}
+
+.xp-slider {
+    width: 100%;
+    margin: 6px 0 2px;
+    accent-color: var(--accent-solid);
+}
+
+.xp-slider-ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9.5px;
+    color: rgba(var(--text-rgb), 0.4);
+}
+
+.xp-flood-panel[hidden] {
+    display: none;
+}
+
+.xp-flood-panel .xp-slider {
+    accent-color: #3d8fe0;
+}
+
+.xp-flood-actions {
+    display: flex;
+    gap: 8px;
+    margin: 8px 0 12px;
+}
+
+.xp-flood-actions .xp-tour-start {
+    flex: 1;
+    border-color: #3d8fe0;
+    color: #7db8f0;
+}

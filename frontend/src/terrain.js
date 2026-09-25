@@ -703,9 +703,51 @@ export function createTerrain(
     }
 
 
+    // DISPLAY-ONLY vertical exaggeration (expanded view's slider). It is a
+    // render-time scale on the mesh's local Z (world Y after the -90° X
+    // rotation): vertex positions, `heights`, and everything measured from
+    // `grid` are untouched, so Measure / terrain stats / exports keep real,
+    // un-exaggerated values. Picking still works because the measure tool
+    // maps rays through mesh.matrixWorld, which includes this scale.
+    //
+    // Units match the existing "exaggeration 1.07x" readout (the auto factor
+    // above). Range is per-terrain: the max keeps the displayed relief within
+    // ~80% of the tile's north-south extent, so a flat scene (tens of metres
+    // of relief) can go far higher than an already-steep one.
+    const DISPLAY_RELIEF_CAP = 0.8 * terrainHeight;
+    const reliefUnitsPerFactor = Math.max(elevationRange * baseVerticalScale, 1e-6);
+    const maxDisplayExaggeration = Math.min(
+        50,
+        Math.max(exaggerationFactor * 1.5, DISPLAY_RELIEF_CAP / reliefUnitsPerFactor)
+    );
+    const minDisplayExaggeration = Math.min(0.25, exaggerationFactor);
+    let displayExaggeration = exaggerationFactor;
+
+    function setDisplayExaggeration(factor) {
+        displayExaggeration = Math.min(maxDisplayExaggeration, Math.max(minDisplayExaggeration, factor));
+        terrain.scale.z = displayExaggeration / exaggerationFactor;
+        terrain.updateMatrixWorld(true);
+        return displayExaggeration;
+    }
+
     return {
 
         mesh: terrain,
+
+        setDisplayExaggeration,
+
+        displayExaggeration: () => displayExaggeration,
+
+        minDisplayExaggeration,
+
+        maxDisplayExaggeration,
+
+        // Local mesh Z of a real elevation (metres), before the display scale.
+        localZForElevation: elevationM => (elevationM - elevationMin) * verticalExaggeration,
+
+        footprintWidthMeters,
+
+        footprintHeightMeters,
 
         material,
 

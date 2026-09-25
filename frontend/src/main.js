@@ -3,6 +3,7 @@ import { createTerrain } from "./terrain.js";
 import { createTerrainViewer } from "./viewer.js";
 import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
+import { createFloodSim } from "./flood-sim.js";
 import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderSource, renderTerrainStats } from "./side-panels.js";
 import { createInputView } from "./input-view.js";
 import {
@@ -1626,6 +1627,7 @@ let finalDemoRunning = false;
 let finalDemoFloodActive = false;
 let finalDemoFlythrough = null;
 let finalDemoInitialized = false;
+let finalDemoFloodSim = null;
 
 // Workbench's Final Demo box stays locked to whatever scene the box 1-7
 // sequence generated — no region switcher, unlike Explore's own viewer.
@@ -1637,6 +1639,7 @@ function updateFinalDemoStats(regionKey, terrain, terrainData) {
     const region = REGIONS[regionKey];
 
     renderTerrainStats(terrainData);
+    syncExaggerationSlider(terrain);
 
     const elevationElement = document.getElementById("final-demo-elevation-value");
     if (elevationElement) {
@@ -1669,6 +1672,38 @@ function updateFinalDemoStats(regionKey, terrain, terrainData) {
     }
 }
 
+// Vertical exaggeration slider (Details box): display-only mesh scale, range
+// computed per terrain in terrain.js; measurements/stats read the raw grid.
+function formatExaggeration(value) {
+    return `x${value < 10 ? value.toFixed(value < 1 ? 2 : 1) : Math.round(value)}`;
+}
+
+function syncExaggerationSlider(terrain) {
+    const slider = document.getElementById("xp-vex-slider");
+    if (!slider || !terrain?.setDisplayExaggeration) {
+        return;
+    }
+    slider.min = String(terrain.minDisplayExaggeration);
+    slider.max = String(terrain.maxDisplayExaggeration);
+    slider.step = String((terrain.maxDisplayExaggeration - terrain.minDisplayExaggeration) / 400);
+    slider.value = String(terrain.displayExaggeration());
+    document.getElementById("xp-vex-min").textContent = formatExaggeration(terrain.minDisplayExaggeration);
+    document.getElementById("xp-vex-max").textContent = formatExaggeration(terrain.maxDisplayExaggeration);
+    document.getElementById("xp-vex-value").textContent = formatExaggeration(terrain.displayExaggeration());
+}
+
+function initExaggerationSlider() {
+    const slider = document.getElementById("xp-vex-slider");
+    slider?.addEventListener("input", () => {
+        if (!finalDemoCurrentTerrain) {
+            return;
+        }
+        const value = finalDemoCurrentTerrain.setDisplayExaggeration(Number(slider.value));
+        document.getElementById("xp-vex-value").textContent = formatExaggeration(value);
+        finalDemoMeasureTool?.invalidate(); // markers/pins re-project onto the rescaled surface
+    });
+}
+
 function activateFinalDemoLayer(layer) {
     if (!finalDemoCurrentTerrain) {
         return;
@@ -1676,6 +1711,7 @@ function activateFinalDemoLayer(layer) {
 
     finalDemoCurrentTerrain.setLayer(layer);
     finalDemoCurrentLayer = layer;
+    finalDemoFloodSim?.refresh();
 
     document.querySelectorAll("#final-demo-box .layer-button").forEach(button => {
         button.classList.toggle("active", button.dataset.layer === layer);
@@ -1691,13 +1727,15 @@ function setFinalDemoFloodActive(active) {
     finalDemoFloodActive = active;
 
     document.getElementById("final-demo-flood-button")?.classList.toggle("active", finalDemoFloodActive);
-    finalDemoCurrentTerrain?.setFloodOverlay(finalDemoFloodActive);
+    // Expanded view: a water plane at a chosen level (flood-sim.js) instead of the old low-ground tint.
+    finalDemoFloodSim?.setActive(finalDemoFloodActive);
     syncScenarioNote();
 }
 
 // Scenario overlays share the terrain's vertex colours, so at most one is on.
 const SCENARIO_NOTES = {
-    flood: "Flood (illustrative): shades the lowest 30% of elevations in this tile. It is not a hydrological flood model.",
+    flood: "Flood (illustrative): a flat water plane at the chosen level, filling every DEM cell below it (a 'bathtub' fill). "
+        + "It ignores flow and connectivity. It is not a hydrological flood model.",
     earthquake: "Earthquake — PLACEHOLDER, not a seismic hazard model. The red gradient only marks the steepest slopes " +
         "(a slope-based heuristic on the DEM); there is no earthquake model anywhere in this project.",
 };
@@ -1917,6 +1955,26 @@ function initFinalDemoViewer() {
     initCollapsibleBoxes(document.getElementById("final-demo-box"));
     initTour(document.getElementById("final-demo-box"));
     initFacts(() => jobStore.active());
+    initExaggerationSlider();
+    finalDemoFloodSim = createFloodSim({
+        getTerrain: () => finalDemoCurrentTerrain,
+        onChange: () => finalDemoMeasureTool?.invalidate(),
+        els: {
+            panel: document.getElementById("xp-flood-panel"),
+            slider: document.getElementById("xp-flood-slider"),
+            levelLabel: document.getElementById("xp-flood-level"),
+            playBtn: document.getElementById("xp-flood-play"),
+            resetBtn: document.getElementById("xp-flood-reset"),
+            pctEl: document.getElementById("xp-flood-pct"),
+            areaEl: document.getElementById("xp-flood-area"),
+        },
+    });
+    if (import.meta.env?.DEV) {
+        window.__dwFloodSim = finalDemoFloodSim; // dev-only, headless checks
+        window.__dwTerrain = () => finalDemoCurrentTerrain;
+        window.__dwCamera = () => finalDemoViewer.camera;
+        window.__dwTHREE = THREE;
+    }
     renderSource(jobStore.active());
     renderFacts(jobStore.active());
 

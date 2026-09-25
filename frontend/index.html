@@ -772,6 +772,15 @@
                                         <span id="final-demo-terrain-source-value">OpenTopography DSM</span>
                                     </div>
                                     <p id="xp-terrain-note" class="xp-note"></p>
+
+                                    <div class="xp-slider-row">
+                                        <label for="xp-vex-slider" class="xp-slider-label">
+                                            Vertical exaggeration <span id="xp-vex-value" class="numeric-mono">x1.0</span>
+                                        </label>
+                                        <input id="xp-vex-slider" class="xp-slider" type="range" min="0.25" max="2" step="0.01" value="1">
+                                        <div class="xp-slider-ends numeric-mono"><span id="xp-vex-min">x0.25</span><span id="xp-vex-max">x2</span></div>
+                                        <p class="xp-note">Display only. Measurements, statistics and exports always use the real elevations.</p>
+                                    </div>
                                     <span id="final-demo-elevation-value" hidden></span>
 
                                 </div>
@@ -815,6 +824,29 @@
                                         </button>
                                     </div>
                                     <div id="final-demo-scenario-note" class="scenario-note" hidden></div>
+
+                                    <div id="xp-flood-panel" class="xp-flood-panel" hidden>
+                                        <div class="xp-slider-row">
+                                            <label for="xp-flood-slider" class="xp-slider-label">
+                                                Flood water level <span id="xp-flood-level" class="numeric-mono">—</span>
+                                            </label>
+                                            <input id="xp-flood-slider" class="xp-slider" type="range">
+                                        </div>
+                                        <div class="xp-flood-actions">
+                                            <button id="xp-flood-play" class="xp-tour-start" type="button" aria-pressed="false">▶ Play flood simulation</button>
+                                            <button id="xp-flood-reset" class="xp-tour-close" type="button" title="Return the water to the slider level">↺ Reset</button>
+                                        </div>
+                                        <div class="stats-strip xp-inline-strip">
+                                            <div class="stat-tile">
+                                                <div id="xp-flood-pct" class="stat-value">—</div>
+                                                <div class="stat-label">INUNDATED AREA</div>
+                                            </div>
+                                            <div class="stat-tile">
+                                                <div id="xp-flood-area" class="stat-value">—</div>
+                                                <div class="stat-label">EXPOSED FOOTPRINT</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
 
