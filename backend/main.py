@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.api.depth_routes import router as depth_router
 from backend.api.facts_routes import router as facts_router
 from backend.api.input_routes import router as input_router
 from backend.api.library_routes import router as library_router
@@ -55,3 +56,4 @@ app.include_router(router)
 app.include_router(library_router)
 app.include_router(input_router)
 app.include_router(facts_router)
+app.include_router(depth_router)
