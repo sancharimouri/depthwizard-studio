@@ -31,3 +31,17 @@ Model load time is 3–4.5 s, once per process.
 - Render's free and Starter instances (512 MB) cannot load any model.
 - Standard (2 GB) fits DAv2-Small or Method 6, but not DAv2-Large.
 - DAv2-Large needs ≥ 8 GB (Pro Plus).
+
+## Hugging Face inference Space: BLOCKED on HF PRO (2026-09-26)
+
+- **Files ready in `space/`** (not live):
+  - `app.py`: DAv2-Small on plain CPU; loading and preprocessing copied verbatim from `scripts/bench/cpu_inference_bench.py`; Gradio `api_name="/predict"`.
+    Output: JSON with the raw 518×518 `predicted_depth` as base64 float32, plus shape and range.
+  - `requirements.txt`: `torch==2.14.0+cpu` from the PyTorch CPU index, and the project's working versions.
+  - `README.md`: Python 3.11, gradio 6.28.0.
+- **What HF refused.** The HF_TOKEN in `.env` has `write` role, so it was reused and no new credential was made. The Hub then refused both routes with HTTP 402:
+  - Changing the hardware to `cpu-basic`: "Without a PRO subscription, you can't downgrade this Space to cpu-basic."
+  - Creating a new Gradio Space on `cpu-basic`: "Static Spaces are free for everyone, but hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription."
+  - **Free accounts can no longer host Gradio or Docker Spaces.** The existing Space `sancharimouri/DepthWizard2` requests ZeroGPU, which needs PRO too.
+- **Space state.** It was deleted and recreated during the attempt. It is now restored as it was (Gradio, `zero-a10g` requested, same README), and it is not running.
+- **Sleep behaviour (if it ever runs on CPU Basic).** Free CPU Basic Spaces sleep after 48 h of inactivity (the runtime reports `gcTimeout: 172800`). The first request after an idle period includes a cold start: container boot plus model load, about 3–5 s on the M4 benchmark and longer on HF. The same caveat applies to Render's free tier.

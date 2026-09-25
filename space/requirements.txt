@@ -1,0 +1,9 @@
+# CPU-only torch (no CUDA wheels): same torch version as the project's working env
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.14.0+cpu
+transformers==5.17.0
+safetensors==0.8.0
+numpy==2.4.6
+pillow==12.3.0
+huggingface-hub==1.30.0
+gradio==6.28.0
