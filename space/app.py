@@ -1,4 +1,8 @@
-"""DepthWizard2 inference Space: DAv2-Small relative depth on plain CPU (CPU Basic).
+"""DepthWizard2 inference Space: DAv2-Small relative depth on ZeroGPU.
+
+ZeroGPU pattern: the model is moved to "cuda" at import (ZeroGPU defers the real
+allocation) and the forward pass runs inside a @spaces.GPU function, which gets a GPU
+slice per call.
 
 Called by the Render backend through gradio_client (api_name="/predict"); not a
 user-facing UI. The model loading and preprocessing lines are copied verbatim from
@@ -14,16 +18,17 @@ import time
 import zlib
 
 import gradio as gr
+import spaces
 import numpy as np
 import torch
 from transformers import AutoModelForDepthEstimation, DPTImageProcessorPil
 
 mid = "depth-anything/Depth-Anything-V2-Small-hf"
-torch.set_num_threads(2)  # CPU Basic = 2 vCPU
 
 # --- verbatim from scripts/bench/cpu_inference_bench.py -------------------------
 proc = DPTImageProcessorPil.from_pretrained(mid); model = AutoModelForDepthEstimation.from_pretrained(mid, use_safetensors=True).eval()
 # ---------------------------------------------------------------------------------
+model = model.to("cuda")
 
 
 def encode_depth(depth) -> dict:
@@ -37,6 +42,12 @@ def encode_depth(depth) -> dict:
             "data_b64": base64.b64encode(zlib.compress(q.tobytes(), 6)).decode("ascii")}
 
 
+@spaces.GPU(duration=30)
+def _forward(x):
+    with torch.no_grad():
+        return model(pixel_values=x.to("cuda")).predicted_depth[0].float().cpu().numpy().astype("<f4")
+
+
 def predict(img):
     if img is None:
         raise gr.Error("No image.")
@@ -45,10 +56,10 @@ def predict(img):
     # --- verbatim from scripts/bench/cpu_inference_bench.py ---------------------
     x = proc(images=img, return_tensors="pt", do_resize=True, keep_aspect_ratio=False, size={"height": 518, "width": 518})["pixel_values"]
     # -----------------------------------------------------------------------------
-    with torch.no_grad():
-        depth = model(pixel_values=x).predicted_depth[0].numpy().astype("<f4")
+    depth = _forward(x)
     return {
         "model": mid,
+        "device": "cuda (ZeroGPU)",
         "kind": "relative_depth",
         "source_size": list(img.size),  # (width, height) of the input image
         "infer_s": round(time.perf_counter() - t, 3),
@@ -57,7 +68,7 @@ def predict(img):
 
 
 demo = gr.Interface(fn=predict, inputs=gr.Image(type="pil"), outputs=gr.JSON(),
-                    title="DepthWizard2 DAv2-Small (CPU)", api_name="predict", flagging_mode="never")
+                    title="DepthWizard2 DAv2-Small (ZeroGPU)", api_name="predict", flagging_mode="never")
 
 if __name__ == "__main__":
     demo.queue(max_size=8).launch()

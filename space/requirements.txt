@@ -1,9 +1,7 @@
-# CPU-only torch (no CUDA wheels): same torch version as the project's working env
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.14.0+cpu
+# ZeroGPU needs a CUDA torch build (not +cpu) from its supported list (2.13.0 is the newest; project env uses 2.14.0)
+torch==2.13.0
 transformers==5.17.0
 safetensors==0.8.0
 numpy==2.4.6
 pillow==12.3.0
 huggingface-hub==1.30.0
-gradio==6.28.0

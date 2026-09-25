@@ -115,3 +115,27 @@ Model load time is 3–4.5 s, once per process.
 - An upload of a JPG: the same, 15.8 s.
 - Host down (simulated 502): the labelled fallback.
 - 0 page errors.
+
+## ZeroGPU Space: WORKS without PRO (verified 2026-09-26)
+
+`sancharimouri/DepthWizard2` (https://huggingface.co/spaces/sancharimouri/DepthWizard2), which already existed with `zero-a10g` requested.
+
+**Code and build:**
+- The code in `space/` has `@spaces.GPU(duration=30)` around the forward pass and the model moved to CUDA at import.
+- `torch==2.13.0`. ZeroGPU rejected 2.14.0 at config time: "Supported versions: 2.13.0, 2.12.1, 2.11.0, 2.10.0, 2.9.1, 2.8.0".
+- The hardware tier was not touched.
+- Build → `RUNNING` on `zero-a10g` in about 2 min, with **no payment prompt**. (The earlier 402s were for *creating* a Gradio Space and for *downgrading* to cpu-basic.)
+
+**Real calls** (`gradio_client` 2.7.1, `Client("sancharimouri/DepthWizard2").predict(handle_file(img), api_name="/predict")`):
+- Anonymous, no token: 3/3 OK on `cuda (ZeroGPU)`. The first call took 18 s (cold GPU attach); later calls took 5–6 s round trip with 0.2–0.9 s inference.
+- With `HF_TOKEN`: 3/3 OK, about 5–7 s.
+- Output: 518×518 u16-zlib. Against the local float32 CPU reference (Almora): max |diff| 9.6e-4, Pearson 0.99999998. That is GPU vs CPU numerics plus torch 2.13 vs 2.14.
+
+**Auth:** the public Space's API needs **no token**.
+
+**Caveats (not verified here):**
+- ZeroGPU has a daily GPU-time quota per caller. Anonymous callers are counted per IP; logged-in callers get a larger allowance.
+- A backend on one server IP shares one quota, so passing `HF_TOKEN` is safer. Exact quota numbers were not measured.
+- Idle Spaces sleep; the first call after a sleep is slow.
+
+**Not done:** the backend's `/api/depth` routes still speak the bridge's plain `/predict` HTTP. Using the Space needs a `gradio_client` path in `backend/api/depth_routes.py`.
