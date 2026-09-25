@@ -1,5 +1,5 @@
-"""R2 storage: key layout, R2-served catalog URLs, private presigned URLs, and the
-local-dev fallback. No network: the R2 manifest fetch is monkeypatched."""
+"""Dormant Cloudflare R2 module (backend/storage/r2.py): key layout and the SigV4
+presigner. The active library path is backend/storage/library_store.py."""
 
 import datetime as dt
 import importlib.util
@@ -23,9 +23,7 @@ R2_VARS = ("R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCK
 def clean_env(monkeypatch):
     for k in R2_VARS:
         monkeypatch.delenv(k, raising=False)
-    catalog._r2_cache.update(at=0.0, data=None)
     yield
-    catalog._r2_cache.update(at=0.0, data=None)
 
 
 def test_key_layout():
@@ -40,62 +38,8 @@ def test_key_layout():
 
 
 @needs_manifest
-def test_unconfigured_serves_local(monkeypatch):
-    assert not r2.configured()
-    item = client.get("/api/library").json()["items"][0]
-    assert item["preview_url"].startswith("/api/library/")
-    assert "tile_url" not in item
-
-
 @needs_manifest
-def test_public_bucket_urls_and_r2_manifest(monkeypatch):
-    monkeypatch.setenv("R2_PUBLIC_BASE_URL", "https://assets.example.org/")
-    fetched = []
-    monkeypatch.setattr(r2, "fetch_bytes", lambda key, timeout=30.0: fetched.append(key) or catalog.MANIFEST.read_bytes())
-    d = client.get("/api/library").json()
-    assert fetched == [r2.MANIFEST_KEY]  # the catalog comes from R2, not the local file
-    item = d["items"][0]
-    keys = r2.library_keys(item)
-    assert item["preview_url"] == f"https://assets.example.org/{keys['preview']}"
-    assert item["thumbnail_url"] == f"https://assets.example.org/{keys['thumbnail']}"
-    assert item["tile_url"] == f"https://assets.example.org/{keys['tile']}"
-    for k in ("file", "r2", "thumbnail", "preview"):
-        assert k not in item
-    r = client.get(f"/api/library/{item['id']}/preview", follow_redirects=False)
-    assert r.status_code == 307 and r.headers["location"] == item["preview_url"]
-
-
 @needs_manifest
-def test_private_bucket_presigned(monkeypatch):
-    monkeypatch.setenv("R2_ACCOUNT_ID", "acct")
-    monkeypatch.setenv("R2_ACCESS_KEY_ID", "AKIDEXAMPLE")
-    monkeypatch.setenv("R2_SECRET_ACCESS_KEY", "secret")
-    monkeypatch.setattr(r2, "fetch_bytes", lambda key, timeout=30.0: catalog.MANIFEST.read_bytes())
-    item = client.get("/api/library").json()["items"][0]
-    # stable route (saved jobs keep it) that redirects to a fresh presigned URL
-    assert item["preview_url"] == f"/api/library/{item['id']}/preview"
-    r = client.get(item["preview_url"], follow_redirects=False)
-    assert r.status_code == 307
-    url = r.headers["location"]
-    assert up.urlparse(item["tile_url"]).netloc == "acct.r2.cloudflarestorage.com"
-    parts = up.urlparse(url)
-    q = dict(up.parse_qsl(parts.query))
-    assert parts.netloc == "acct.r2.cloudflarestorage.com"
-    assert parts.path.startswith("/depthwizard2/library/previews/")
-    assert q["X-Amz-Algorithm"] == "AWS4-HMAC-SHA256" and len(q["X-Amz-Signature"]) == 64
-    assert "secret" not in url
-
-
-def test_r2_unreachable_is_an_error_not_a_local_fallback(monkeypatch):
-    monkeypatch.setenv("R2_PUBLIC_BASE_URL", "https://assets.example.org")
-
-    def boom(key, timeout=30.0):
-        raise ConnectionError("offline")
-
-    monkeypatch.setattr(r2, "fetch_bytes", boom)
-    assert client.get("/api/library").status_code == 503
-
-
 @pytest.mark.skipif(importlib.util.find_spec("boto3") is None, reason="boto3 not installed (cross-check only)")
 def test_presign_matches_boto3(monkeypatch):
     import boto3

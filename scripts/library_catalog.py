@@ -46,7 +46,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from backend.storage import r2  # noqa: E402  (R2 key layout shared with the backend)
+from backend.storage import library_store  # noqa: E402  (asset layout shared with the backend)
 
 import numpy as np
 import pandas as pd
@@ -253,10 +253,12 @@ def build(_args) -> None:
                 "thumbnail": thumb,
                 "preview": preview,
                 # provenance / upload source on the machine that built the catalog;
-                # the backend never reads it (it serves from R2, backend/storage/r2.py)
+                # the backend never reads it (backend/storage/library_store.py)
                 "file": str(real.relative_to(ROOT)),
             }
-            item["r2"] = r2.library_keys(item)  # where scripts/r2_sync.py puts it
+            # where scripts/publish_library.py puts it (public release vs private dataset)
+            item["store"] = "github" if library_store.is_public(item) else "hf-private"
+            item["assets"] = library_store.asset_names(item)
             items.append(item)
             print(f"{item_id:32s} gsd {meta['gsd_m']} m  tier {ROUTING[src_name]['tier']}", flush=True)
 

@@ -369,6 +369,13 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
   So the ~0.13 Sentinel-2/Landsat terrain nulls are genuine absence of signal at 10–15 m, validated on terrain at the right scale.
 - **Kaggle GPU run:** `scripts/s2_token_grid_phase_c_kaggle.py`, bit-exact CPU parity with `scripts/s2_token_grid_phase_c.py`.
 
+## Tile-library storage (2026-09-26; `docs/STORAGE.md`, `backend/storage/library_store.py`)
+
+- Split by licence. Sentinel-2 + Maxar → PUBLIC GitHub Release (`sancharimouri/depthwizard2-assets@library-v1`).
+  DFC2019 (redistribution forbidden by the contest terms) + `manifest.json` → PRIVATE HF dataset, served only through the backend (needs `HF_TOKEN`).
+- Method 6 checkpoints → PRIVATE HF repo (`backend/storage/hf_checkpoints.py`). R2 (`backend/storage/r2.py`) is dormant.
+- `DW2_LIBRARY=local` switches to `data/library/` (dev only). Never put DFC2019 data anywhere public.
+
 ## SIH26175 brief — evaluation criteria (standing reference; full text `docs/SIH26175_problem_statement.md`)
 
 Source: github.com/IMG-PROCESS-SAC/SIH-DepthWizard-2026 README, commit `ac078d5`.

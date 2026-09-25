@@ -628,3 +628,20 @@ to match.
   - `kaggle/`, `kaggle_phase2.5_package/` and `scripts 2/` were consolidated: scripts went to `scripts/` and manuals to `data/kaggle_bundles/` (1.86 GB freed; `data/REGENERATION.md`).
   - The Phase C Kaggle export was deleted after validation. Its script is kept as `scripts/s2_token_grid_phase_c_kaggle.py`.
 - The numbers here were checked against `data/dfc2019/experiments/resolution_transfer/matrix_summary.json` and `data/sentinel2_benchmark/token_grid_test/kaggle/summary.json`.
+
+**Session footer: 2026-09-26, "storage migration (licence split)"** (resumed after a usage-limit cut; code: `backend/storage/library_store.py`, `scripts/publish_library.py`; record: `docs/STORAGE.md`)
+- **Licensing (primary sources):** the DFC2019 contest terms forbid redistribution, so its 50 tiles and ~100 thumbnails/previews stay private.
+  Sentinel-2 (all 2025 acquisitions, Copernicus licence) and Maxar Open Data (3 distinct 2022 scenes, CC BY-NC 4.0) are public with attribution.
+- **Checkpoints:** 5 Method 6 files (496 MB) on a PRIVATE HF repo. Byte-identical, load in PyTorch, anonymous access → 401.
+  `scripts/vhr_dsm_pipeline.py` and the sanity-check script fetch from it (commit `fa4e22e`).
+- **Library store (active):** sentinel2/vhr → public GitHub Release assets (`sancharimouri/depthwizard2-assets`, tag `library-v1`,
+  114 files, 138.9 MB, attribution README, anonymous download verified, no DFC2019). dfc2019 + manifest → private HF dataset
+  (`sancharimouri/depthwizard2-library-private`, 150 files + manifest, 140.7 MB, checksums match, anonymous → 401), proxied by the backend,
+  no public tile URL. `DW2_LIBRARY=local` = local dev files. The R2 module (`backend/storage/r2.py`) is kept but dormant.
+- **Verified before the cut:** live backend served all 88 catalog items with correct per-source routing; backend tests 23/23 (an outdated R2 fixture fixed).
+- **Closed out after the resume:** all checks passed; details in `docs/STORAGE.md` §Verification.
+  - Browser: 88/88 thumbnails; preview and magnifier work on both GitHub and HF-proxied items.
+  - Production-mode backend: 176/176 image URLs return 200; it fails closed (503) without a token.
+  - Tests: frontend 40/40; backend 22 passed + 1 skipped (the dormant R2 boto3 check).
+  - Costs: no card or billing anywhere.
+- **Not started, on purpose:** Prompt 2 (Render backend deployment).
