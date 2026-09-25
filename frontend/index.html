@@ -716,75 +716,81 @@
                         hidden
                     >
 
+                        <!-- Side-panel boxes (2026-09-25): every box collapses to a thin
+                             heading-only tab via its chevron. Only Details and Image
+                             Inspection start open. Wiring: src/side-panels.js. -->
                         <div class="final-demo-left-rail">
 
-                            <div class="region-panel">
+                            <section class="xp-box" data-box="details" data-default-open>
+                                <button class="xp-head" type="button" aria-expanded="true">
+                                    <span class="xp-title">DETAILS</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
 
-                                <div class="panel-title">REGIONS</div>
+                                    <div class="xp-section-label">IMAGE SOURCE</div>
+                                    <dl id="xp-source-meta" class="xp-meta"></dl>
 
-                                <div class="region-list">
+                                    <div class="xp-section-label">TERRAIN STATISTICS</div>
+                                    <div class="stats-strip xp-inline-strip">
+                                        <div class="stat-tile">
+                                            <div id="xp-elev-min" class="stat-value">—</div>
+                                            <div class="stat-label">MIN ELEV</div>
+                                        </div>
+                                        <div class="stat-tile">
+                                            <div id="xp-elev-max" class="stat-value">—</div>
+                                            <div class="stat-label">MAX ELEV</div>
+                                        </div>
+                                        <div class="stat-tile">
+                                            <div id="xp-elev-mean" class="stat-value">—</div>
+                                            <div class="stat-label">MEAN ELEV</div>
+                                        </div>
+                                        <div class="stat-tile">
+                                            <div id="xp-elev-relief" class="stat-value">—</div>
+                                            <div class="stat-label">RELIEF</div>
+                                        </div>
+                                        <div class="stat-tile">
+                                            <div id="final-demo-stat-resolution" class="stat-value">10m</div>
+                                            <div class="stat-label">REF. IMAGE RES</div>
+                                        </div>
+                                        <div class="stat-tile">
+                                            <div id="final-demo-stat-grid" class="stat-value">361×325</div>
+                                            <div class="stat-label">MESH GRID</div>
+                                        </div>
+                                        <div class="stat-tile">
+                                            <div id="final-demo-stat-epsg" class="stat-value">32645</div>
+                                            <div class="stat-label">EPSG</div>
+                                        </div>
+                                        <div class="stat-tile">
+                                            <div id="final-demo-stat-inference" class="stat-value">1.17s</div>
+                                            <div class="stat-label">DAv2 INFERENCE</div>
+                                        </div>
+                                    </div>
 
-                                    <button class="region-card active" data-region="darjeeling">
-                                        <div class="region-name">Darjeeling</div>
-                                        <div class="region-meta">West Bengal · 10×10 km</div>
-                                    </button>
-
-                                    <button class="region-card" data-region="kolkata">
-                                        <div class="region-name">Kolkata</div>
-                                        <div class="region-meta">West Bengal · 10×10 km</div>
-                                    </button>
-
-                                    <button class="region-card" data-region="bardhaman">
-                                        <div class="region-name">Bardhaman</div>
-                                        <div class="region-meta">West Bengal · 10×10 km</div>
-                                    </button>
-
-                                    <button class="region-card" data-region="sundarbans">
-                                        <div class="region-name">Sundarbans</div>
-                                        <div class="region-meta">West Bengal · 10×10 km</div>
-                                    </button>
+                                    <div class="metric metric-stacked xp-terrain-source">
+                                        <span class="metric-label">TERRAIN SOURCE</span>
+                                        <span id="final-demo-terrain-source-value">OpenTopography DSM</span>
+                                    </div>
+                                    <p id="xp-terrain-note" class="xp-note"></p>
+                                    <span id="final-demo-elevation-value" hidden></span>
 
                                 </div>
+                            </section>
 
-                            </div>
-
-                            <div class="stats-strip">
-
-                                <div class="stat-tile">
-                                    <div id="final-demo-stat-inference" class="stat-value">1.17s</div>
-                                    <div class="stat-label">DAv2 INFERENCE</div>
+                            <section class="xp-box" data-box="inspect" data-default-open>
+                                <button class="xp-head" type="button" aria-expanded="true">
+                                    <span class="xp-title">IMAGE INSPECTION</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
+                                    <div id="xp-inspect-stage" class="xp-inspect-stage">
+                                        <img id="xp-inspect-img" alt="Source image of the current job" draggable="false">
+                                        <div id="xp-inspect-lens" class="xp-inspect-lens" hidden></div>
+                                        <div id="xp-inspect-empty" class="xp-note" hidden>No preview image for this job.</div>
+                                    </div>
+                                    <div id="xp-inspect-readout" class="xp-inspect-readout numeric-mono">Hover the image to magnify (3×)</div>
                                 </div>
-
-                                <div class="stat-tile">
-                                    <div id="final-demo-stat-resolution" class="stat-value">10m</div>
-                                    <div class="stat-label">RESOLUTION</div>
-                                </div>
-
-                                <div class="stat-tile">
-                                    <div id="final-demo-stat-grid" class="stat-value">361×325</div>
-                                    <div class="stat-label">MESH GRID</div>
-                                </div>
-
-                                <div class="stat-tile">
-                                    <div id="final-demo-stat-epsg" class="stat-value">32645</div>
-                                    <div class="stat-label">EPSG</div>
-                                </div>
-
-                            </div>
-
-                            <div class="terrain-card">
-
-                                <div class="metric">
-                                    <span class="metric-label">ELEVATION RANGE</span>
-                                    <span id="final-demo-elevation-value">—</span>
-                                </div>
-
-                                <div class="metric metric-stacked">
-                                    <span class="metric-label">TERRAIN SOURCE</span>
-                                    <span id="final-demo-terrain-source-value">OpenTopography DSM</span>
-                                </div>
-
-                            </div>
+                            </section>
 
                         </div>
 
@@ -793,39 +799,56 @@
                             <!-- Layer switching, RUN RECONSTRUCTION and FLYTHROUGH were removed from
                                  this pop-up (user request, 2026-09-25): the icon toolbar's View ▾ and
                                  Flythrough cover them. -->
-                            <div class="always-on-controls">
-
-                                <div class="danger-zone-panel">
-
-                                    <div class="panel-title">SCENARIO ANALYSIS</div>
-
+                            <section class="xp-box xp-box-danger" data-box="scenario">
+                                <button class="xp-head" type="button" aria-expanded="false">
+                                    <span class="xp-title">SCENARIO ANALYSIS</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
                                     <div class="danger-zone-buttons">
-
                                         <button id="final-demo-flood-button" class="danger-button">
                                             FLOOD
                                         </button>
-
                                         <button id="final-demo-earthquake-button" class="danger-button" title="Illustrative placeholder — not a seismic hazard model">
                                             EARTHQUAKE
                                             <span class="coming-soon-tag">PLACEHOLDER</span>
                                         </button>
-
                                     </div>
                                     <div id="final-demo-scenario-note" class="scenario-note" hidden></div>
-
                                 </div>
+                            </section>
 
-                            </div>
+                            <section class="xp-box" data-box="gestures">
+                                <button class="xp-head" type="button" aria-expanded="false">
+                                    <span class="xp-title">LEARN GESTURES</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
+                                    <table class="xp-gestures">
+                                        <tbody>
+                                            <tr><td><kbd>drag</kbd></td><td>Rotate the terrain</td></tr>
+                                            <tr><td><kbd>scroll</kbd></td><td>Rotate (mouse wheel or two-finger trackpad scroll)</td></tr>
+                                            <tr><td><kbd>pinch</kbd></td><td>Zoom in / out (trackpad or touch)</td></tr>
+                                            <tr><td><kbd>1 finger</kbd></td><td>Rotate (touch screens)</td></tr>
+                                            <tr><td><kbd>right-click</kbd></td><td>Terrain menu: save a point, add a note</td></tr>
+                                            <tr><td><kbd>esc</kbd></td><td>Cancel a measurement or close a menu</td></tr>
+                                        </tbody>
+                                    </table>
+                                    <p class="xp-note">Rotation resumes on its own after a few idle seconds; the pause button at the top centre stops it.</p>
+                                </div>
+                            </section>
 
-                        </div>
+                            <section class="xp-box" data-box="explore">
+                                <button class="xp-head" type="button" aria-expanded="false">
+                                    <span class="xp-title">EXPLORE OPTIONS</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
+                                    <p class="xp-note xp-note-lead">A short guided tour of the controls in this view, one at a time.</p>
+                                    <button id="xp-tour-start" class="xp-tour-start" type="button">Start tour</button>
+                                </div>
+                            </section>
 
-                        <div class="final-demo-bottom-right">
-                            <div class="controls-hint">
-                                <div><kbd>drag</kbd><kbd>scroll</kbd></div>
-                                <span>Rotate</span>
-                                <div><kbd>pinch</kbd></div>
-                                <span>Zoom</span>
-                            </div>
                         </div>
 
                     </div>
