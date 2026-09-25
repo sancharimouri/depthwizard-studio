@@ -1,6 +1,9 @@
 """Cross-platform PyInstaller build for the desktop freeze trial (docs/DESKTOP_FREEZE_TRIAL.md).
 
-  python build_freeze.py --root REPO --hf HF_CACHE_DIR --out DIST [--variant full|no-rasterio-submodules]
+  python build_freeze.py --root REPO --onnx dav2_small.onnx --out DIST [--variant full|no-rasterio-submodules]
+
+DAv2-Small runs on ONNX Runtime (bridge/dav2_server_onnx.py); torch, transformers and
+their stack are excluded (export the model first with export_onnx.py).
 
 "full" carries every fix found on macOS; "no-rasterio-submodules" drops
 --collect-submodules rasterio to check that fix is still needed on this platform.
@@ -14,7 +17,7 @@ import PyInstaller.__main__
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--root", required=True)
-ap.add_argument("--hf", required=True)
+ap.add_argument("--onnx", required=True)
 ap.add_argument("--out", required=True)
 ap.add_argument("--variant", default="full", choices=["full", "no-rasterio-submodules"])
 a = ap.parse_args()
@@ -25,11 +28,12 @@ args = [
     "--noconfirm", "--onedir", "--name", "dw2-backend",
     "--distpath", str(out / "dist"), "--workpath", str(out / "build"), "--specpath", str(out),
     "--paths", str(root), "--paths", str(root / "bridge"),
-    "--add-data", f"{Path(a.hf).resolve()}:hf",
+    "--add-data", f"{Path(a.onnx).resolve()}:models",
     "--hidden-import", "gradio_client", "--hidden-import", "huggingface_hub",
     "--exclude-module", "ee", "--exclude-module", "googleapiclient",
-    "--hidden-import", "transformers.models.depth_anything.modeling_depth_anything",
-    "--hidden-import", "transformers.models.dpt.image_processing_dpt",
+    "--collect-binaries", "onnxruntime",
+    "--exclude-module", "torch", "--exclude-module", "transformers", "--exclude-module", "tokenizers",
+    "--exclude-module", "safetensors", "--exclude-module", "torchvision",
     "--collect-submodules", "backend", "--collect-submodules", "pyproj",
     "--collect-data", "rasterio", "--collect-data", "pyproj",
 ]
@@ -37,8 +41,7 @@ if a.variant == "full":
     args += ["--collect-submodules", "rasterio"]
 from importlib.metadata import PackageNotFoundError, distribution  # noqa: E402
 
-for m in ["transformers", "torch", "tokenizers", "safetensors", "huggingface-hub", "numpy", "tqdm", "regex",
-          "requests", "packaging", "filelock", "pyyaml"]:
+for m in ["huggingface-hub", "numpy", "tqdm", "packaging", "filelock", "pyyaml", "onnxruntime"]:
     try:
         distribution(m)
     except PackageNotFoundError:  # e.g. requests only came in with earthengine-api
