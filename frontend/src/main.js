@@ -709,6 +709,7 @@ function showCompletedJob(job) {
     if (controlsEl) {
         controlsEl.hidden = false;
     }
+    syncStudioButton();
     const fullscreenToggle = document.getElementById("final-demo-fullscreen");
     if (fullscreenToggle) {
         fullscreenToggle.hidden = false;
@@ -943,6 +944,7 @@ function jobItem(job, { running, active, choosing }, section = "recent") {
 }
 
 function renderJobs() {
+    syncStudioButton();
     const hasJobs = jobStore.count() > 0;
     const savedCount = savedStore.list().length;
     sidebar.setJobsRunning(jobStore.count());
@@ -1163,6 +1165,27 @@ function renderJobTabs() {
         jobTabInfoEl.hidden = true; // the header shows only the job tab (dot + name)
     }
 }
+
+// DEPTH WIZARD STUDIO: an extra way into the same 3D window that also opens
+// automatically when generation completes. Usable once the 3D structure
+// exists and the active job is complete.
+const studioOpenButton = document.getElementById("studio-open-button");
+function syncStudioButton() {
+    if (!studioOpenButton) {
+        return;
+    }
+    // the 3D view's controls are revealed once the structure has been built
+    // (a DOM check: this runs before the final-demo state variables exist)
+    const built = document.getElementById("final-demo-controls")?.hidden === false;
+    const ready = built && jobStore.active()?.status === "complete";
+    studioOpenButton.disabled = !ready;
+    studioOpenButton.title = ready ? "Open the 3D structure in Depth Wizard Studio" : "Available when the 3D structure is ready";
+}
+studioOpenButton?.addEventListener("click", () => {
+    if (!studioOpenButton.disabled) {
+        expandFinalDemo();
+    }
+});
 
 jobStore.onChange(renderJobs);
 generateNewButton?.addEventListener("click", generateNew);
@@ -1664,6 +1687,15 @@ function resizeMiniPreview(preview) {
     preview.lastHeight = height;
 
     preview.camera.aspect = width / height;
+    // The framing (0,58,143 → 0,12,0) was tuned for wide boxes. In a
+    // narrower pane (the processing page's black screen) back the camera
+    // off along the same line so the terrain's full width stays in view.
+    // distance at which the terrain's half-width (~56 units, + margin for the
+    // near edge's perspective) fits the horizontal FOV, vs the tuned 150
+    const tanHalfH = Math.tan(THREE.MathUtils.degToRad(preview.camera.fov) / 2) * preview.camera.aspect;
+    const fit = Math.max(1, (64 / tanHalfH) / 150);
+    preview.camera.position.set(0, 12 + 46 * fit, 143 * fit);
+    preview.camera.lookAt(0, 12, 0);
     preview.camera.updateProjectionMatrix();
     preview.renderer.setSize(width, height, false);
 }
@@ -2741,6 +2773,7 @@ async function generateFinalDemoBox() {
     if (fullscreenToggle) {
         fullscreenToggle.hidden = false;
     }
+    syncStudioButton();
 }
 
 // One job's run through the staged boxes. Only one job generates at a time
@@ -2941,14 +2974,18 @@ finalDemoCloseButton?.addEventListener("click", async () => {
 // ---- Staged grid entrance: the 8 boxes fade/slide in left-to-right,
 // top-to-bottom, one subtle cascade rather than 8 independent panels. ----
 
+// Reading order of the processing page: the top row (preview, relative
+// depth, elevation), the second row (logs, DSM, DEM), then the 3D result and
+// the Studio button.
 const GRID_ENTER_ORDER = [
-    "depth-preview-box",
-    "dsm-3d-box",
-    "calc-logs-box",
     "preview-box",
+    "depth-preview-box",
     "elevation-preview-box",
+    "calc-logs-box",
+    "dsm-3d-box",
     "metric-elevation-3d-box",
     "final-demo-box",
+    "wb-studio",
 ];
 
 function staggerGridEntrance() {

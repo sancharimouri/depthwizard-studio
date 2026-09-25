@@ -30,11 +30,9 @@ export function tierClass(routing) {
     return routing.tier === 2 ? "tier-2" : "tier-1";
 }
 
-export function startLabel(routing) {
-    if (!routing || routing.tier == null) {
-        return "▶ START GENERATION · RELATIVE PREVIEW";
-    }
-    return `▶ START GENERATION · TIER ${routing.tier}`;
+// No tier on the button (2026-09-25): the routing card below it says it.
+export function startLabel(_routing) {
+    return "▶ START GENERATION";
 }
 
 export function formatGsd(gsd) {
@@ -218,7 +216,8 @@ export function createInputView(root, { onStart }) {
 
     const previewPane = el("section", { class: "iv-pane iv-preview-pane" },
         el("div", { class: "panel-title", text: "PREVIEW" }),
-        previewStage, previewReadout, metaList, routingCard, demCard, startButton, startNote);
+        // image first, then START GENERATION, then everything else
+        previewStage, previewReadout, startButton, metaList, routingCard, demCard, startNote);
 
     root.replaceChildren(inputPane, previewPane);
 

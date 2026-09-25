@@ -8,8 +8,9 @@ test("tier colour classes: green T2, orange T1, neutral otherwise", () => {
     assert.equal(tierClass({ tier: 1 }), "tier-1");
     assert.equal(tierClass({ tier: null }), "tier-none");
     assert.equal(tierClass(null), "tier-none");
-    assert.match(startLabel({ tier: 1 }), /TIER 1/);
-    assert.match(startLabel({ tier: null }), /RELATIVE PREVIEW/);
+    // the button carries no tier (the routing card below it does)
+    assert.equal(startLabel({ tier: 1 }), "▶ START GENERATION");
+    assert.equal(startLabel({ tier: null }), "▶ START GENERATION");
 });
 
 test("GSD formatting", () => {
