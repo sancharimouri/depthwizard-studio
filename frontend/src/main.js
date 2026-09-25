@@ -2110,7 +2110,8 @@ function initFinalDemoViewer() {
         getRegionKey: () => finalDemoCurrentRegionKey,
         setLayer: selectFinalDemoLayer,
         getLayer: () => finalDemoCurrentLayer,
-        startFlythrough: () => finalDemoFlythrough?.start(),
+        // flythrough moved out of the edit toolbar (Reset View took its place)
+        nav: createNavActions(),
         getTheme: () => workbenchTheme,
         setTheme: applyWorkbenchTheme,
     });
@@ -2308,6 +2309,48 @@ function initPointSelection(canvas) {
     });
 }
 
+// ---- Navigation bar actions (expanded-chrome.js draws the bar) ----
+// Every camera/structure change runs through recordCameraChange, so it is one
+// undo/redo step. The ground grid is never moved: Up/Down/Top/Side orbit the
+// camera; the rotate buttons turn the structure about the world vertical axis.
+let recordCameraChange = action => action(); // replaced once the history exists
+const NAV_ORBIT_STEP = THREE.MathUtils.degToRad(15);
+const NAV_TOP_POLAR = 0.001;
+const NAV_SIDE_POLAR = THREE.MathUtils.degToRad(80);
+
+function createNavActions() {
+    const c = () => finalDemoViewer.controls;
+    return {
+        // where the camera is heading (end value), not its mid-animation angle
+        isTopView: () => (c()._sphericalEnd?.phi ?? c().polarAngle) < THREE.MathUtils.degToRad(12),
+        toggleTopSide() {
+            const toTop = !this.isTopView();
+            recordCameraChange(() => c().rotatePolarTo(toTop ? NAV_TOP_POLAR : NAV_SIDE_POLAR, true));
+        },
+        // dir -1 = Up (camera higher), +1 = Down; clamped by the polar limits
+        orbitStep(dir) {
+            const ctl = c();
+            const next = THREE.MathUtils.clamp(ctl.polarAngle + dir * NAV_ORBIT_STEP, Math.max(ctl.minPolarAngle, NAV_TOP_POLAR), ctl.maxPolarAngle);
+            recordCameraChange(() => ctl.rotatePolarTo(next, true));
+        },
+        // + = anticlockwise seen from above
+        rotateBy(degrees) {
+            recordCameraChange(() => finalDemoViewer.setStructureYaw(
+                finalDemoViewer.getStructureYaw() + THREE.MathUtils.degToRad(degrees), true));
+        },
+        resetView() {
+            recordCameraChange(() => {
+                c().resetView();
+                finalDemoViewer.setStructureYaw(0, true);
+            });
+        },
+        isPaused: () => c().isAutoRotatePaused?.() ?? false,
+        togglePlay: () => c().setAutoRotatePaused(!(c().isAutoRotatePaused?.() ?? false)),
+        isLocked: () => c().isInputLocked?.() ?? false,
+        toggleLock: () => c().setInputLocked(!(c().isInputLocked?.() ?? false)),
+    };
+}
+
 // ---- Viewer-wide undo / redo (src/viewer-history.js) ----
 // State entries cover measurements/selections, notes, the view layer,
 // vertical exaggeration and the scenario overlay; camera entries cover one
@@ -2324,6 +2367,14 @@ function initViewerHistory(canvas) {
         controlsRef.getPosition(v1, true);
         controlsRef.getTarget(v2, true);
         return { p: v1.toArray(), t: v2.toArray() };
+    };
+    // Nav-bar actions record the structure's yaw too (drag gestures don't, so
+    // undoing a drag never rewinds rotation that auto-rotation added meanwhile).
+    recordCameraChange = action => {
+        const before = { ...cam(), yaw: finalDemoViewer.getStructureYaw() };
+        action();
+        const after = { ...cam(), yaw: finalDemoViewer.getStructureYaw() };
+        finalDemoHistory.commitCamera(before, after);
     };
 
     finalDemoHistory = createViewerHistory({
@@ -2360,8 +2411,14 @@ function initViewerHistory(canvas) {
         },
         applyCamera: c => {
             controlsRef.setLookAt(...c.p, ...c.t, true);
+            if (c.yaw !== undefined) {
+                finalDemoViewer.setStructureYaw(c.yaw, true);
+            }
+            finalDemoChrome?.syncPlay?.(); // keep the Top/Side icon honest
         },
-        sameCamera: (a, b) => a.p.every((x, i) => Math.abs(x - b.p[i]) < 1e-3) && a.t.every((x, i) => Math.abs(x - b.t[i]) < 1e-3),
+        sameCamera: (a, b) => a.p.every((x, i) => Math.abs(x - b.p[i]) < 1e-3)
+            && a.t.every((x, i) => Math.abs(x - b.t[i]) < 1e-3)
+            && Math.abs((a.yaw ?? 0) - (b.yaw ?? 0)) < 1e-4,
         onChange: () => {
             undoBtn.disabled = !finalDemoHistory.canUndo;
             redoBtn.disabled = !finalDemoHistory.canRedo;

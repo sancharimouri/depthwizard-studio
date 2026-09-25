@@ -126,6 +126,32 @@ export function createControls(camera, domElement, target, homePosition = new TH
 
     controls.addEventListener("control", pauseAutoRotate);
 
+    // Lock View: while locked, mouse/touch orbit/pan/zoom are off whatever
+    // else sets `enabled` (e.g. the measure tool re-enables it after a point
+    // drag). Programmatic camera moves (the nav bar buttons) still work.
+    let inputLocked = false;
+    let enabledWanted = true;
+    const enabledDesc = Object.getOwnPropertyDescriptor(CameraControls.prototype, "enabled");
+    Object.defineProperty(controls, "enabled", {
+        configurable: true,
+        get() {
+            return enabledDesc.get.call(this);
+        },
+        set(value) {
+            enabledWanted = Boolean(value);
+            enabledDesc.set.call(this, enabledWanted && !inputLocked);
+        },
+    });
+    controls.setInputLocked = locked => {
+        inputLocked = Boolean(locked);
+        enabledDesc.set.call(controls, enabledWanted && !inputLocked);
+    };
+    controls.isInputLocked = () => inputLocked;
+
+    // Auto-rotation target: by default the camera orbits; a viewer can hand in
+    // its own handler (radians this frame) to spin the structure instead.
+    controls.autoRotateHandler = null;
+
     // camera-controls always treats a ctrlKey wheel event (trackpad pinch,
     // or the ctrl-scroll a mouse+keyboard user substitutes for it) as its
     // own ACTION.ZOOM — a camera.zoom lens scale — no matter how
@@ -141,6 +167,9 @@ export function createControls(camera, domElement, target, homePosition = new TH
 
         event.preventDefault();
         event.stopImmediatePropagation();
+        if (inputLocked) {
+            return; // Lock View: no zoom either
+        }
         pauseAutoRotate();
 
         // Sign only, not scaled by |deltaY| — see PINCH_DOLLY_SCALE above.
@@ -184,7 +213,12 @@ export function createControls(camera, domElement, target, homePosition = new TH
             // Positive, matching a rightward drag under the
             // azimuthRotateSpeed=-1 fix above (both increase azimuthAngle)
             // — old code's auto-rotate and drag shared the same sign too.
-            controls.azimuthAngle += AUTO_ROTATE_RADIANS_PER_SEC * speedMultiplier * delta;
+            const step = AUTO_ROTATE_RADIANS_PER_SEC * speedMultiplier * delta;
+            if (controls.autoRotateHandler) {
+                controls.autoRotateHandler(step);
+            } else {
+                controls.azimuthAngle += step;
+            }
         }
 
         return nativeUpdate(delta);
@@ -196,6 +230,9 @@ export function createControls(camera, domElement, target, homePosition = new TH
         clearTimeout(idleTimer);
         return nativeReset(false);
     };
+
+    // Reset View: back to the saved default framing, animated.
+    controls.resetView = () => nativeReset(true);
 
     controls.setAutoRotatePaused = function setAutoRotatePaused(paused) {
         autoRotateUserPaused = !!paused;

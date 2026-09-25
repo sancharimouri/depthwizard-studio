@@ -2725,25 +2725,24 @@ kbd {
 ============================================================ */
 
 .xv-toolbar,
-.xv-play,
+.xv-navbar,
 .xv-theme,
 .xv-overlay,
 .xv-note-popup {
     display: none;
 }
 
-.final-demo-box.is-expanded .xv-toolbar {
+.final-demo-box.is-expanded .xv-toolbar,
+.final-demo-box.is-expanded .xv-navbar {
     display: flex;
 }
 
-.final-demo-box.is-expanded .xv-play,
 .final-demo-box.is-expanded .xv-theme {
     display: grid;
 }
 
 /* .xv-icon-btn sets display:grid later in this file; out-rank it so the
-   play/theme buttons never show on the collapsed grid-cell box. */
-.final-demo-box:not(.is-expanded) .xv-play,
+   theme button never shows on the collapsed grid-cell box. */
 .final-demo-box:not(.is-expanded) .xv-theme {
     display: none;
 }
@@ -2757,7 +2756,7 @@ kbd {
 }
 
 .final-demo-box.is-animating .xv-toolbar,
-.final-demo-box.is-animating .xv-play,
+.final-demo-box.is-animating .xv-navbar,
 .final-demo-box.is-animating .xv-theme,
 .final-demo-box.is-animating .xv-overlay {
     opacity: 0;
@@ -2917,17 +2916,10 @@ kbd {
     text-align: center;
 }
 
-.xv-play,
 .xv-theme {
     position: absolute;
     z-index: 4;
     top: 14px;
-}
-
-.xv-play {
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 999px;
 }
 
 .xv-theme {
@@ -5525,4 +5517,100 @@ kbd {
 /* Hovering the Image Inspection's selected point on the terrain (like a measure point's hover) */
 .final-demo-canvas.is-over-selected-point {
     cursor: pointer;
+}
+
+
+/* ---- Navigation bar: frosted, centred directly above the edit toolbar,
+   slightly smaller icons (36px targets vs the toolbar's 44px). */
+.xv-navbar {
+    position: absolute;
+    z-index: 4;
+    bottom: 90px; /* toolbar: bottom 20px + 60px tall + 10px gap */
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 4px;
+    padding: 5px 6px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.12);
+    border-radius: 12px;
+    background: rgba(var(--bg-rgb), 0.35);
+    backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.xv-navbar .xv-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-color: transparent;
+    border-radius: 9px;
+    background: transparent;
+    backdrop-filter: none;
+}
+
+.xv-navbar .xv-icon-btn.is-locked {
+    border-color: rgba(var(--accent-rgb), 0.7);
+    background: rgba(var(--accent-rgb), 0.25);
+    color: rgb(var(--text-rgb));
+}
+
+/* locked: the canvas no longer takes orbit/pan/zoom input */
+.final-demo-box.is-view-locked .final-demo-canvas {
+    cursor: not-allowed;
+}
+
+.xv-rot-wrap {
+    position: relative;
+}
+
+.xv-rot-pop {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.16);
+    border-radius: 8px;
+    background: rgba(var(--bg-strong-rgb), 0.96);
+    color: rgb(var(--text-rgb));
+    white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.xv-rot-pop[hidden] {
+    display: none;
+}
+
+/* bridge the gap so moving from the button to the popover keeps it open */
+.xv-rot-pop::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: -12px;
+    left: 0;
+    height: 12px;
+}
+
+.xv-rot-label {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+}
+
+.xv-rot-input {
+    width: 46px;
+    height: 24px;
+    padding: 0 4px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.2);
+    border-radius: 5px;
+    background: rgba(var(--text-rgb), 0.06);
+    color: rgb(var(--text-rgb));
+
+    font-family: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    text-align: right;
 }
