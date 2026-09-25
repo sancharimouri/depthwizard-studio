@@ -35,7 +35,14 @@ args = [
 ]
 if a.variant == "full":
     args += ["--collect-submodules", "rasterio"]
+from importlib.metadata import PackageNotFoundError, distribution  # noqa: E402
+
 for m in ["transformers", "torch", "tokenizers", "safetensors", "huggingface-hub", "numpy", "tqdm", "regex",
           "requests", "packaging", "filelock", "pyyaml"]:
+    try:
+        distribution(m)
+    except PackageNotFoundError:  # e.g. requests only came in with earthengine-api
+        print(f"(no {m} installed: metadata not copied)")
+        continue
     args += ["--copy-metadata", m]
 PyInstaller.__main__.run(args)

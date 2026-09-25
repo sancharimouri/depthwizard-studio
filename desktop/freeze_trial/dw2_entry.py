@@ -23,14 +23,40 @@ from pathlib import Path
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 PORT = int(os.environ.get("DW2_PORT", "8765"))
+# The bundled DAv2-Small checkpoint loads OFFLINE from the read-only bundle (below);
+# after that, Hub access is switched back on with a writable per-user cache, so the
+# library (manifest, private previews) can still download. Nothing is written into
+# the install folder: uploads and HF downloads go to the per-user cache.
 os.environ["HF_HOME"] = str(BASE / "hf")
 os.environ["HF_HUB_OFFLINE"] = "1"
+
+
+def _user_cache() -> Path:
+    if sys.platform == "darwin":
+        root = Path.home() / "Library" / "Caches"
+    elif sys.platform == "win32":
+        root = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
+    else:
+        root = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+    return root / "DepthWizard"
+
+
+USER_CACHE = Path(os.environ.get("DW2_USER_CACHE") or _user_cache())
+os.environ.setdefault("DW2_UPLOADS_DIR", str(USER_CACHE / "uploads"))
 os.environ["DAV2_INFERENCE_URL"] = f"http://127.0.0.1:{PORT}/local-dav2"
 os.environ.setdefault("DW2_LIBRARY", "local")
 
 import uvicorn  # noqa: E402
 
-import dav2_server  # noqa: E402  (bridge/dav2_server.py, unchanged)
+import dav2_server  # noqa: E402  (bridge/dav2_server.py, unchanged; loads the bundled model)
+import huggingface_hub.constants as _hfc  # noqa: E402
+
+_hfc.HF_HUB_OFFLINE = False  # read at call time by huggingface_hub and transformers
+_hfc.HF_HOME = str(USER_CACHE / "hf")
+_hfc.HF_HUB_CACHE = str(USER_CACHE / "hf" / "hub")
+os.environ["HF_HOME"] = _hfc.HF_HOME
+os.environ.pop("HF_HUB_OFFLINE", None)
+
 from backend.main import app  # noqa: E402
 
 app.mount("/local-dav2", dav2_server.app)

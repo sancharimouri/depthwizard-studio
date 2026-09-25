@@ -25,6 +25,7 @@ import json
 import math
 import re
 import uuid
+import os
 from pathlib import Path
 
 import numpy as np
@@ -37,7 +38,9 @@ from rasterio.warp import transform_bounds
 from backend.dem import fabdem
 
 ROOT = Path(__file__).resolve().parents[2]
-UPLOADS = ROOT / "data" / "uploads"
+# DW2_UPLOADS_DIR: a writable per-user folder when the backend runs from a read-only
+# install (the desktop app, desktop/freeze_trial/dw2_entry.py); default for dev.
+UPLOADS = Path(os.environ["DW2_UPLOADS_DIR"]) if os.environ.get("DW2_UPLOADS_DIR") else ROOT / "data" / "uploads"
 TIER2_MAX_GSD_M = 2.4
 MIN_DEM_OVERLAP = 0.9
 ALLOWED_EXT = {".tif", ".tiff", ".png", ".jpg", ".jpeg"}
