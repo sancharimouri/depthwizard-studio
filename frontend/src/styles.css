@@ -5564,12 +5564,12 @@ kbd {
 .final-demo-box.is-expanded .final-demo-left-rail {
     /* 0.7 cm lower than before; scrollable region 1 cm taller */
     top: calc(64px + 0.7cm);
-    max-height: calc(100% - 64px - 150px + 1cm);
+    max-height: calc(100% - 64px - 150px + 1.5cm);
 }
 
 .final-demo-box.is-expanded .final-demo-right-rail {
     top: calc(70px + 0.7cm);
-    max-height: calc(100% - 70px - 150px + 1cm);
+    max-height: calc(100% - 70px - 150px + 1.5cm);
 }
 
 .final-demo-box.is-expanded .final-demo-left-rail,

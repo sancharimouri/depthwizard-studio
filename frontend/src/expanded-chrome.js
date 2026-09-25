@@ -26,7 +26,8 @@ const ICONS = {
     chevronDown: '<path d="M6 9l6 6 6-6"/>',
     chevronRight: '<path d="M9 6l6 6-6 6"/>',
     // classic arrow cursor with its stem (not just the head)
-    cursor: '<path d="M5 3v15.5l4.2-4 2.9 6.6 2.6-1.1-2.9-6.5H17.5z"/>',
+    // shifted ~1 mm right so it sits centred in its square
+    cursor: '<path d="M9 3v15.5l4.2-4 2.9 6.6 2.6-1.1-2.9-6.5H21.5z"/>',
     notes: '<path d="M4 4h16v10l-6 6H4z"/><path d="M14 20v-6h6"/><path d="M8 9h8M8 13h4"/>',
     trash: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/>',
     play: '<path d="M7 4.5v15l12.5-7.5z"/>',
@@ -35,8 +36,10 @@ const ICONS = {
     moon: '<path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.8 6.8 0 0 0 9.7 9.7z"/>',
     pin: '<path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
     x: '<path d="M6 6l12 12M18 6 6 18"/>',
-    resetView: '<path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><circle cx="12" cy="12" r="2.5"/>',
-    topView: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v8M8 12h8"/>',
+    // home: back to the default view
+    resetView: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/>',
+    // look straight down onto the ground plane
+    topView: '<path d="M12 3v8"/><path d="M8.5 7.5 12 11l3.5-3.5"/><path d="M3 18l4-4h14l-4 4z"/>',
     sideView: '<path d="M3 18l5-7 4 5 3-4 6 6z"/><path d="M3 21h18"/>',
     chevronUp: '<path d="M6 15l6-6 6 6"/>',
     rotateCw: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
