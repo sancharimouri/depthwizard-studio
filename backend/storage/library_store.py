@@ -35,7 +35,9 @@ _memo: dict = {"at": 0.0, "data": None}
 
 
 def mode() -> str:
-    return "local" if os.environ.get("DW2_LIBRARY", "remote").strip().lower() == "local" else "remote"
+    """remote (default), local (dev: data/library), or bundle (the desktop app)."""
+    v = os.environ.get("DW2_LIBRARY", "remote").strip().lower()
+    return v if v in ("local", "bundle") else "remote"
 
 
 def is_public(item: dict) -> bool:
@@ -76,3 +78,63 @@ def private_file(item: dict, kind: str) -> Path:
     if is_public(item):
         raise ValueError(f"{item['id']} is public; use its release URL")
     return _hub_file(item.get("assets", asset_names(item))[kind])
+
+
+# --------------------------------------------------------------------------- bundle mode
+# The desktop app ships a tiered library (desktop/tiles/build_bundle.py): some items in
+# full, the rest thumbnail-only and downloaded on demand into a writable per-user folder.
+#   DW2_LIBRARY_BUNDLE  the read-only bundled library (manifest.json, thumbnails/, previews/, tiles/)
+#   DW2_LIBRARY_USER    per-user folder for downloaded items (previews/, tiles/)
+FOLDERS = {"thumbnail": "thumbnails", "preview": "previews", "tile": "tiles"}
+
+
+class DownloadNeedsToken(PermissionError):
+    """A private (DFC2019) item needs HF_TOKEN to download."""
+
+
+def bundle_dir() -> Path:
+    return Path(os.environ["DW2_LIBRARY_BUNDLE"])
+
+
+def user_dir() -> Path:
+    return Path(os.environ.get("DW2_LIBRARY_USER") or bundle_dir() / "_downloads")
+
+
+def local_asset(item: dict, kind: str) -> Path | None:
+    """The bundled or already-downloaded file for this item, if there is one."""
+    for base in (bundle_dir(), user_dir()):
+        p = base / FOLDERS[kind] / item[kind]
+        if p.is_file():
+            return p
+    return None
+
+
+def is_available(item: dict) -> bool:
+    return local_asset(item, "preview") is not None and local_asset(item, "tile") is not None
+
+
+def download(item: dict) -> None:
+    """Fetch an on-demand item's preview and tile into the per-user folder (atomic per file).
+    Public items: the GitHub Release (no token). DFC2019: the private HF dataset (HF_TOKEN)."""
+    import shutil
+
+    import httpx
+
+    src = item["download"]
+    if src["source"] == "hf-private" and not hf_token():
+        raise DownloadNeedsToken("DFC2019 tiles come from a private Hugging Face dataset: set HF_TOKEN to download them.")
+    for kind in ("preview", "tile"):
+        dst = user_dir() / FOLDERS[kind] / item[kind]
+        if dst.is_file():
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        part = dst.with_name(dst.name + ".part")
+        if src["source"] == "github-release":
+            with httpx.stream("GET", src[kind], follow_redirects=True, timeout=120) as r:
+                r.raise_for_status()
+                with open(part, "wb") as f:
+                    for chunk in r.iter_bytes():
+                        f.write(chunk)
+        else:
+            shutil.copyfile(_hub_file(src[kind]), part)
+        part.replace(dst)

@@ -9,6 +9,7 @@ Source of truth (backend/storage/library_store.py, docs/STORAGE.md):
                         public GitHub Release (Sentinel-2, Maxar) or the private
                         dataset (DFC2019)
   DW2_LIBRARY=local  -> data/library/manifest.json (development only)
+  DW2_LIBRARY=bundle -> the desktop app's tiered bundle (DW2_LIBRARY_BUNDLE; desktop/tiles/)
 (The Cloudflare R2 path in backend/storage/r2.py is dormant, kept as an alternative.)
 """
 
@@ -30,7 +31,19 @@ class CatalogUnavailable(RuntimeError):
     """The manifest hasn't been generated (run scripts/library_catalog.py build)."""
 
 
+_bundle_cache: dict = {"mtime": None, "data": None}
+
+
 def load() -> dict:
+    if library_store.mode() == "bundle":
+        path = library_store.bundle_dir() / "manifest.json"
+        try:
+            mtime = path.stat().st_mtime
+        except (FileNotFoundError, KeyError) as exc:
+            raise CatalogUnavailable(f"Bundled library manifest missing ({path}).") from exc
+        if _bundle_cache["mtime"] != mtime:
+            _bundle_cache.update(mtime=mtime, data=json.loads(path.read_text()))
+        return _bundle_cache["data"]
     if library_store.mode() == "remote":
         try:
             return library_store.load_manifest()

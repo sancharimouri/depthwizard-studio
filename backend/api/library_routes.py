@@ -21,6 +21,16 @@ def _public(item: dict) -> dict:
     Local mode: this server's local-dev routes.
     """
     out = {k: v for k, v in item.items() if k not in ("thumbnail", "preview", "file", "r2", "assets", "store")}
+    out.pop("download", None)
+    if library_store.mode() == "bundle":
+        out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"
+        out["preview_url"] = f"/api/library/{item['id']}/preview"
+        out["tile_url"] = None
+        out["bundled"] = item.get("bundled", False)
+        out["available"] = library_store.is_available(item)
+        out["download_bytes"] = (item.get("download") or {}).get("bytes")
+        out["download_source"] = (item.get("download") or {}).get("source")
+        return out
     if library_store.mode() == "remote" and library_store.is_public(item):
         names = item.get("assets") or library_store.asset_names(item)
         out["thumbnail_url"] = library_store.release_url(names["thumbnail"])
@@ -33,6 +43,11 @@ def _public(item: dict) -> dict:
 
 
 def _image(item: dict, kind: str):
+    if library_store.mode() == "bundle":
+        path = library_store.local_asset(item, kind)
+        if path is None:
+            raise HTTPException(status_code=404, detail="Not downloaded yet: download this tile first.")
+        return FileResponse(path, media_type="image/jpeg")
     if library_store.mode() == "remote":
         if library_store.is_public(item):
             names = item.get("assets") or library_store.asset_names(item)
@@ -102,3 +117,18 @@ def select(item_id: str, req: SelectRequest | None = None):
     item = _item(item_id)
     plan = catalog.route(item, req.requested_tier if req else None)
     return {"item": _public(item), **plan}
+
+
+@router.post("/{item_id}/download")
+def download(item_id: str):
+    """Desktop app (bundle mode): fetch an on-demand item into the per-user library."""
+    item = _item(item_id)
+    if library_store.mode() != "bundle":
+        raise HTTPException(status_code=400, detail="Downloads exist only in the desktop app's bundled library.")
+    try:
+        library_store.download(item)
+    except library_store.DownloadNeedsToken as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001 - network / Hub errors
+        raise HTTPException(status_code=502, detail=f"Download failed ({type(exc).__name__}: {str(exc)[:160]}).") from exc
+    return _public(item)
