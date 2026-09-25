@@ -5714,3 +5714,165 @@ kbd {
 #page-explore .topbar {
     padding-right: 76px;
 }
+
+
+/* ============================================================
+   INPUT PAGE (Workbench → Scene input + Preview), 2026-09-25 redesign
+   - both boxes together cover 75% of the main area (each ~25% smaller),
+     centred, with a 0.7 cm gap between them
+   - headings: green, twice the size, centred horizontally in the top row
+   - a calmer vertical rhythm everywhere (8px grid: 8 / 12 / 16 / 20 / 24)
+============================================================ */
+
+#page-workbench .input-view {
+    position: absolute;
+    inset: 12.5%;
+    width: auto;
+    height: auto;
+    padding: 0;
+    gap: 0.7cm;
+}
+
+.iv-pane {
+    gap: 18px;
+    padding: 22px 24px 24px;
+}
+
+/* SCENE INPUT / PREVIEW */
+.iv-pane > .panel-title {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: 3px;
+    text-align: center;
+    color: var(--neon);
+}
+
+.iv-tabs {
+    padding: 4px;
+}
+
+.iv-tab {
+    padding: 10px 6px;
+    font-size: 12.5px;
+    white-space: nowrap; /* 'Choose from Library' stays on one line in the narrower box */
+}
+
+.iv-panel {
+    gap: 16px;
+}
+
+.iv-hint,
+.iv-placeholder-note {
+    font-size: 12px;
+    line-height: 1.65;
+}
+
+.iv-chips {
+    gap: 8px;
+}
+
+.iv-chip {
+    padding: 6px 13px;
+}
+
+/* curated scenes: three per row, 0.3 cm apart */
+.iv-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.3cm;
+}
+
+.iv-card-body {
+    gap: 5px;
+    padding: 10px 11px 12px;
+}
+
+.iv-card-title {
+    font-size: 12.5px;
+}
+
+.iv-card-sub {
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.iv-card-tags {
+    margin-top: 2px;
+}
+
+/* preview column */
+.iv-preview-stage {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: clamp(150px, 20vh, 240px);
+}
+
+.iv-preview-readout {
+    margin-top: -6px; /* belongs to the image above it */
+}
+
+.iv-meta {
+    gap: 8px 20px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.iv-routing,
+.iv-dem {
+    padding: 14px 16px;
+}
+
+.iv-routing-label {
+    font-size: 13px;
+}
+
+.iv-routing-summary,
+.iv-routing-note {
+    margin-top: 8px;
+    line-height: 1.6;
+}
+
+.iv-dem .panel-title {
+    margin-bottom: 10px;
+}
+
+.iv-dem-row {
+    gap: 14px;
+}
+
+.iv-dem-text {
+    gap: 5px;
+    line-height: 1.45;
+}
+
+/* upload / search online */
+.iv-rules {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.iv-rules li + li {
+    margin-top: 8px;
+}
+
+.iv-field-row {
+    gap: 12px;
+}
+
+.iv-field {
+    gap: 6px;
+}
+
+.iv-status {
+    line-height: 1.5;
+}
+
+.iv-results {
+    gap: 10px;
+}
+
+/* the preview column carries more rows; a touch less gap keeps it all visible */
+.iv-preview-pane {
+    gap: 16px;
+}

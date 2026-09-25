@@ -36,10 +36,14 @@ const ICONS = {
     moon: '<path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.8 6.8 0 0 0 9.7 9.7z"/>',
     pin: '<path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
     x: '<path d="M6 6l12 12M18 6 6 18"/>',
-    // home: back to the default view
-    resetView: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/>',
-    // look straight down onto the ground plane
-    topView: '<path d="M12 3v8"/><path d="M8.5 7.5 12 11l3.5-3.5"/><path d="M3 18l4-4h14l-4 4z"/>',
+    // redrawn from reset.png (repo root): two arrows circling clockwise with
+    // solid heads at the top-left and bottom-right, in the site's line weight
+    resetView: '<path d="M8.95 5.15A7.5 7.5 0 0 1 19.24 13.94"/><path d="M15.29 18.74A7.5 7.5 0 0 1 4.83 9.81"/>'
+        + '<path d="M18.93 15.1 22.04 12.82 17.38 11.58z" fill="currentColor"/><path d="M5.18 8.66 2.01 10.83 6.59 12.23z" fill="currentColor"/>',
+    // redrawn from top_view.png (repo root): outer ring with four diagonal
+    // ticks, inner ring crossed by an X (looking straight down)
+    topView: '<circle cx="12" cy="12" r="7.4"/><circle cx="12" cy="12" r="3.3"/><path d="M9.67 9.67l4.66 4.66M14.33 9.67l-4.66 4.66"/>'
+        + '<path d="M6.77 6.77 4.3 4.3M17.23 6.77 19.7 4.3M6.77 17.23 4.3 19.7M17.23 17.23l2.47 2.47"/>',
     sideView: '<path d="M3 18l5-7 4 5 3-4 6 6z"/><path d="M3 21h18"/>',
     chevronUp: '<path d="M6 15l6-6 6 6"/>',
     rotateCw: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
