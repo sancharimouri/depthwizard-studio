@@ -3,19 +3,43 @@
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
 from backend.library import catalog
+from backend.storage import r2
 
 router = APIRouter(prefix="/api/library")
 
 
 def _public(item: dict) -> dict:
-    out = {k: v for k, v in item.items() if k not in ("thumbnail", "preview", "file")}
-    out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"
-    out["preview_url"] = f"/api/library/{item['id']}/preview"
+    """Client view of an item.
+
+    Public bucket: direct, stable R2 URLs. Private bucket: stable routes on this
+    server that 307-redirect to a fresh presigned R2 URL on every request (a
+    presigned URL expires, and saved jobs keep their preview URL). tile_url is
+    presigned at listing time (short-lived by design). No R2: local-dev routes.
+    """
+    out = {k: v for k, v in item.items() if k not in ("thumbnail", "preview", "file", "r2")}
+    if r2.public_base():
+        keys = catalog.keys(item)
+        out["thumbnail_url"] = r2.object_url(keys["thumbnail"])
+        out["preview_url"] = r2.object_url(keys["preview"])
+        out["tile_url"] = r2.object_url(keys["tile"])
+    elif r2.configured():
+        out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"  # → presigned R2 redirect
+        out["preview_url"] = f"/api/library/{item['id']}/preview"
+        out["tile_url"] = r2.object_url(catalog.keys(item)["tile"])
+    else:
+        out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"
+        out["preview_url"] = f"/api/library/{item['id']}/preview"
     return out
+
+
+def _image(item: dict, kind: str):
+    if r2.configured():
+        return RedirectResponse(r2.object_url(catalog.keys(item)[kind]), status_code=307)
+    return FileResponse(catalog.image_path(item, kind), media_type="image/jpeg")
 
 
 def _load():
@@ -58,12 +82,12 @@ def get_item(item_id: str):
 
 @router.get("/{item_id}/thumbnail")
 def thumbnail(item_id: str):
-    return FileResponse(catalog.image_path(_item(item_id), "thumbnail"), media_type="image/jpeg")
+    return _image(_item(item_id), "thumbnail")
 
 
 @router.get("/{item_id}/preview")
 def preview(item_id: str):
-    return FileResponse(catalog.image_path(_item(item_id), "preview"), media_type="image/jpeg")
+    return _image(_item(item_id), "preview")
 
 
 class SelectRequest(BaseModel):
