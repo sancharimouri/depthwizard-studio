@@ -10,6 +10,8 @@
 // prediction), orange = Tier 1 (DEM only), neutral = relative preview only.
 // ============================================================
 
+import { attachMagnifier } from "./magnifier.js";
+
 const TIER2_MAX_GSD_M = 2.4;
 
 const COLLECTIONS = [
@@ -191,6 +193,9 @@ export function createInputView(root, { onStart }) {
     const previewImg = el("img", { class: "iv-preview-img", alt: "" });
     const previewEmpty = el("div", { class: "iv-preview-empty", text: "Nothing selected yet — pick a scene on the left." });
     const previewStage = el("div", { class: "iv-preview-stage" }, previewEmpty, previewImg);
+    // same magnifying-glass inspector as the 3D viewer's Image Inspection box
+    const previewReadout = el("div", { class: "xp-inspect-readout iv-preview-readout numeric-mono" });
+    attachMagnifier({ stage: previewStage, img: previewImg, readout: previewReadout, zoom: 3 });
     const metaList = el("dl", { class: "iv-meta" });
     const routingCard = el("div", { class: "iv-routing", hidden: true });
     const demCard = el("div", { class: "iv-dem", hidden: true });
@@ -213,7 +218,7 @@ export function createInputView(root, { onStart }) {
 
     const previewPane = el("section", { class: "iv-pane iv-preview-pane" },
         el("div", { class: "panel-title", text: "PREVIEW" }),
-        previewStage, metaList, routingCard, demCard, startButton, startNote);
+        previewStage, previewReadout, metaList, routingCard, demCard, startButton, startNote);
 
     root.replaceChildren(inputPane, previewPane);
 

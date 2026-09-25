@@ -8,6 +8,8 @@
 // view's `meta` list already omits unknown fields, e.g. DFC2019 tiles have no
 // acquisition date); nothing is filled in by guesswork here.
 
+import { attachMagnifier } from "./magnifier.js";
+
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 // ------------------------------------------------------------------ boxes
@@ -109,17 +111,38 @@ export function renderTerrainStats(terrainData) {
 }
 
 // ------------------------------------------------------------------ inspection
+// The shared magnifier (src/magnifier.js). Hover / pick are forwarded to the
+// 3D viewer (main.js) through setInspectionHandlers().
 const LENS_ZOOM = 3;
-let inspectWired = false;
+let inspectMag = null;
+let inspectHandlers = {};
+
+export function setInspectionHandlers(handlers) {
+    inspectHandlers = handlers;
+}
+
+// the selected pixel's marker on the inspection image (null hides it)
+export function setInspectionSelected(uv) {
+    inspectMag?.setSelected(uv);
+}
 
 function renderInspection(input) {
     const img = document.getElementById("xp-inspect-img");
     const empty = document.getElementById("xp-inspect-empty");
-    const readout = document.getElementById("xp-inspect-readout");
     if (!img) {
         return;
     }
-    wireInspection();
+    if (!inspectMag) {
+        inspectMag = attachMagnifier({
+            stage: document.getElementById("xp-inspect-stage"),
+            img,
+            readout: document.getElementById("xp-inspect-readout"),
+            zoom: LENS_ZOOM,
+            onHover: (u, v) => inspectHandlers.onHover?.(u, v),
+            onLeave: () => inspectHandlers.onLeave?.(),
+            onPick: (u, v) => inspectHandlers.onPick?.(u, v),
+        });
+    }
     const url = input?.previewUrl ?? "data/darjeeling/satellite.png";
     if (img.getAttribute("src") !== url) {
         img.hidden = false;
@@ -130,43 +153,6 @@ function renderInspection(input) {
         img.hidden = true;
         empty.hidden = false;
     };
-    img.onload = () => {
-        readout.textContent = `${img.naturalWidth} × ${img.naturalHeight} px preview · hover to magnify (${LENS_ZOOM}×)`;
-    };
-}
-
-function wireInspection() {
-    if (inspectWired) {
-        return;
-    }
-    inspectWired = true;
-    const stage = document.getElementById("xp-inspect-stage");
-    const img = document.getElementById("xp-inspect-img");
-    const lens = document.getElementById("xp-inspect-lens");
-    const readout = document.getElementById("xp-inspect-readout");
-    stage.addEventListener("pointermove", e => {
-        const r = img.getBoundingClientRect();
-        if (img.hidden || !img.naturalWidth || !r.width) {
-            return;
-        }
-        const fx = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
-        const fy = Math.min(Math.max((e.clientY - r.top) / r.height, 0), 1);
-        const size = lens.offsetWidth || 96;
-        lens.hidden = false;
-        lens.style.left = `${e.clientX - stage.getBoundingClientRect().left - size / 2}px`;
-        lens.style.top = `${e.clientY - stage.getBoundingClientRect().top - size / 2}px`;
-        lens.style.backgroundImage = `url("${img.src}")`;
-        lens.style.backgroundSize = `${r.width * LENS_ZOOM}px ${r.height * LENS_ZOOM}px`;
-        lens.style.backgroundPosition = `${size / 2 - fx * r.width * LENS_ZOOM}px ${size / 2 - fy * r.height * LENS_ZOOM}px`;
-        readout.textContent = `px ${Math.floor(fx * (img.naturalWidth - 1))}, ${Math.floor(fy * (img.naturalHeight - 1))}`
-            + ` of ${img.naturalWidth} × ${img.naturalHeight} (preview)`;
-    });
-    stage.addEventListener("pointerleave", () => {
-        lens.hidden = true;
-        if (img.naturalWidth) {
-            readout.textContent = `${img.naturalWidth} × ${img.naturalHeight} px preview · hover to magnify (${LENS_ZOOM}×)`;
-        }
-    });
 }
 
 // ------------------------------------------------------------------ tour

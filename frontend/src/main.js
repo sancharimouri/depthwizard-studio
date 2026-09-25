@@ -6,7 +6,8 @@ import { createExpandedChrome } from "./expanded-chrome.js";
 import { createFloodSim } from "./flood-sim.js";
 import { createSidebar } from "./sidebar.js";
 import { createViewerHistory } from "./viewer-history.js";
-import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderSource, renderTerrainStats } from "./side-panels.js";
+import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderSource, renderTerrainStats, setInspectionHandlers, setInspectionSelected } from "./side-panels.js";
+import { createSurfacePoints } from "./surface-point.js";
 import { createInputView } from "./input-view.js";
 import {
     STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobLabel, jobsExport, savedRecord, unsavedCopy,
@@ -573,6 +574,10 @@ const jobStore = createJobStore();
 // The one global sidebar (src/sidebar.js). Created before the first
 // renderJobs() so the jobs-running line and the JOBS tab exist from the start.
 const sidebar = createSidebar({ onNavigate: pageId => setActivePage(pageId) });
+
+// Image Inspection ↔ 3D surface markers (see initPointSelection). Declared up
+// here because the first renderJobs() below already clears the selection.
+let finalDemoSurfacePoints = null;
 let inputView = null;
 let unloadAllowed = false;
 
@@ -1113,6 +1118,8 @@ document.addEventListener("keydown", event => {
     }
 });
 
+let lastInspectedJobId = null;
+
 function renderJobTabs() {
     if (!jobTabsEl) {
         return;
@@ -1176,6 +1183,10 @@ function renderJobTabs() {
 
     renderSource(active);
     renderFacts(active);
+    if (active?.id !== lastInspectedJobId) {
+        lastInspectedJobId = active?.id;
+        clearPointSelection();
+    }
 
     if (jobTabInfoEl && active) {
         const dem = active.input.dem;
@@ -1857,6 +1868,7 @@ function activateFinalDemoLayer(layer) {
     finalDemoCurrentTerrain.setLayer(layer);
     finalDemoCurrentLayer = layer;
     finalDemoFloodSim?.refresh();
+    finalDemoSurfacePoints?.refresh();
     // Wireframe: neon lines on pure black; every other layer uses the theme's background.
     finalDemoViewer.setBackground(layer === "wireframe-3d" ? 0x000000 : WORKBENCH_THEME_BG_HEX[workbenchTheme]);
 
@@ -2083,6 +2095,11 @@ function initFinalDemoViewer() {
         viewer: finalDemoViewer,
         box: document.getElementById("final-demo-box"),
         canvas,
+        // measure mode: a click on the Image Inspection's selected point starts the measurement there
+        snapTarget: {
+            get: () => finalDemoSurfacePoints?.selectedGrid() ?? null,
+            onUsed: () => clearPointSelection(),
+        },
     });
     // Toolbar, library, terrain context menu, notes, screenshots, play/pause, theme.
     finalDemoChrome = createExpandedChrome({
@@ -2120,8 +2137,10 @@ function initFinalDemoViewer() {
         },
     });
     initViewerHistory(canvas);
+    initPointSelection(canvas);
     if (import.meta.env?.DEV) {
         window.__dwHistory = finalDemoHistory;
+        window.__dwSurfacePoints = finalDemoSurfacePoints;
         window.__dwFloodSim = finalDemoFloodSim; // dev-only, headless checks
         window.__dwTerrain = () => finalDemoCurrentTerrain;
         window.__dwCamera = () => finalDemoViewer.camera;
@@ -2208,6 +2227,55 @@ function initFinalDemoViewer() {
     return loadFinalDemoRegion("darjeeling").then(terrain => {
         finalDemoHistory?.reset();
         return terrain;
+    });
+}
+
+// ---- Image Inspection ↔ 3D surface (src/surface-point.js) ----
+// Hovering the magnifier shows a yellow disc at the matching surface spot;
+// clicking selects that point (one at a time, persistent marker). Selecting
+// never starts the measure tool. Measure ON: clicking exactly on the marker
+// starts a measurement there (measure-tool snapTarget). Measure OFF: a click
+// anywhere else on the 3D canvas clears it; clicking another pixel in the
+// image replaces it.
+function selectPoint(u, v) {
+    finalDemoSurfacePoints?.select(u, v);
+    setInspectionSelected({ u, v });
+}
+
+function clearPointSelection() {
+    finalDemoSurfacePoints?.clear();
+    setInspectionSelected(null);
+}
+
+function initPointSelection(canvas) {
+    finalDemoSurfacePoints = createSurfacePoints({ getTerrain: () => finalDemoCurrentTerrain });
+    setInspectionHandlers({
+        onHover: (u, v) => finalDemoSurfacePoints.hover(u, v),
+        onLeave: () => finalDemoSurfacePoints.clearHover(),
+        onPick: (u, v) => selectPoint(u, v),
+    });
+
+    // a plain click (not an orbit drag) on the canvas, measure tool off
+    let down = null;
+    canvas.addEventListener("pointerdown", event => {
+        down = event.button === 0 ? { x: event.clientX, y: event.clientY } : null;
+    });
+    canvas.addEventListener("pointerup", event => {
+        const start = down;
+        down = null;
+        if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) {
+            return;
+        }
+        const grid = finalDemoSurfacePoints.selectedGrid();
+        if (!grid || finalDemoMeasureTool.model.mode !== "normal") {
+            return;
+        }
+        const sp = finalDemoMeasureTool.project(grid.x, grid.y);
+        const rect = canvas.getBoundingClientRect();
+        const onMarker = sp && Math.hypot(sp.sx - (event.clientX - rect.left), sp.sy - (event.clientY - rect.top)) <= 14;
+        if (!onMarker) {
+            clearPointSelection();
+        }
     });
 }
 
