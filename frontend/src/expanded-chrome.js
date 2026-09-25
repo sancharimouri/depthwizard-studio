@@ -34,6 +34,14 @@ const ICONS = {
     moon: '<path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.8 6.8 0 0 0 9.7 9.7z"/>',
     pin: '<path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
     x: '<path d="M6 6l12 12M18 6 6 18"/>',
+    resetView: '<path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><circle cx="12" cy="12" r="2.5"/>',
+    topView: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v8M8 12h8"/>',
+    sideView: '<path d="M3 18l5-7 4 5 3-4 6 6z"/><path d="M3 21h18"/>',
+    chevronUp: '<path d="M6 15l6-6 6 6"/>',
+    rotateCw: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
+    rotateCcw: '<path d="M4 12a8 8 0 1 0 2.34-5.66"/><path d="M4 4v5h5"/>',
+    lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    unlock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>',
     download: '<path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>',
     point: '<path d="M12 21s-6-5.6-6-10a6 6 0 0 1 12 0c0 4.4-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>',
     line: '<path d="M5 19 19 5"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/>',
@@ -88,7 +96,7 @@ function iconButton(parent, { name, iconName, cls = "", tipBelow = false, disabl
 }
 
 export function createExpandedChrome({
-    box, canvas, viewer, tool, getRegionKey, setLayer, getLayer, startFlythrough, getTheme, setTheme,
+    box, canvas, viewer, tool, getRegionKey, setLayer, getLayer, getTheme, setTheme, nav,
 }) {
     // ------------------------------------------------------------------ state (session-only)
     const library = { points: [], lines: [], areas: [], screenshots: [], recordings: [] };
@@ -189,23 +197,8 @@ export function createExpandedChrome({
     const toast = (msg, kind = "info") => tool.showToast(msg, kind);
 
     // ------------------------------------------------------------------ top controls
-    const playBtn = iconButton(box, { name: "Pause rotation", iconName: "pause", cls: "xv-play", tipBelow: true });
-    playBtn.dataset.xvUi = "";
     const themeBtn = iconButton(box, { name: "Switch to bright mode", iconName: "sun", cls: "xv-theme", tipBelow: true });
     themeBtn.dataset.xvUi = "";
-
-    function syncPlay() {
-        const paused = viewer.controls.isAutoRotatePaused?.() ?? false;
-        playBtn.innerHTML = icon(paused ? "play" : "pause");
-        const name = paused ? "Play rotation" : "Pause rotation";
-        playBtn.setAttribute("aria-label", name);
-        playBtn.dataset.tip = name;
-        playBtn.setAttribute("aria-pressed", String(paused));
-    }
-    playBtn.addEventListener("click", () => {
-        viewer.controls.setAutoRotatePaused?.(!(viewer.controls.isAutoRotatePaused?.() ?? false));
-        syncPlay();
-    });
 
     // The icon is the mode you'd switch TO: sun while dark, moon while bright.
     function syncTheme() {
@@ -220,22 +213,129 @@ export function createExpandedChrome({
         syncTheme();
     });
 
-    // ------------------------------------------------------------------ toolbar (reference order)
+    // ------------------------------------------------------------------ edit toolbar
+    // Exactly: Pointer, Screenshot, Record, Measure, View, Reset View, Notes,
+    // Save, Trash. Tooltips are the item name only; sub-options (Measure,
+    // View, Notes, Save ▾) appear only when the item is clicked.
     const toolbar = el("div", { class: "xv-toolbar", role: "toolbar", "aria-label": "3D view tools", "data-xv-ui": "" }, box);
+    const pointerBtn = iconButton(toolbar, { name: "Pointer", iconName: "cursor" });
     const shotBtn = iconButton(toolbar, { name: "Screenshot", iconName: "camera" });
-    const recBtn = iconButton(toolbar, { name: "Record video — not yet available", iconName: "video", disabled: true });
+    const recBtn = iconButton(toolbar, { name: "Record", iconName: "video", disabled: true });
     const measureWrap = el("div", { class: "xv-wrap" }, toolbar);
-    const measureBtn = iconButton(measureWrap, { name: "Measure (A to B · 2 points / continuous)", iconName: "ruler" });
+    const measureBtn = iconButton(measureWrap, { name: "Measure", iconName: "ruler" });
     const viewWrap = el("div", { class: "xv-wrap" }, toolbar);
-    const viewBtn = iconButton(viewWrap, { name: "View (true colour / DSM / DEM)", iconName: "layers" });
-    const flyBtn = iconButton(toolbar, { name: "Flythrough", iconName: "plane" });
-    const saveWrap = el("div", { class: "xv-wrap xv-split" }, toolbar);
-    const saveBtn = iconButton(saveWrap, { name: "Save current measurement", iconName: "save" });
-    const libBtn = iconButton(saveWrap, { name: "Saved items (library)", iconName: "chevronDown", cls: "xv-caret" });
-    const pointerBtn = iconButton(toolbar, { name: "Mouse pointer (navigate)", iconName: "cursor" });
+    const viewBtn = iconButton(viewWrap, { name: "View", iconName: "layers" });
+    const resetViewBtn = iconButton(toolbar, { name: "Reset view", iconName: "resetView" });
     const notesWrap = el("div", { class: "xv-wrap" }, toolbar);
     const notesBtn = iconButton(notesWrap, { name: "Notes", iconName: "notes", cls: "xv-notes-count" });
-    const trashBtn = iconButton(toolbar, { name: "Clear current selection", iconName: "trash" });
+    const saveWrap = el("div", { class: "xv-wrap xv-split" }, toolbar);
+    const saveBtn = iconButton(saveWrap, { name: "Save", iconName: "save" });
+    const libBtn = iconButton(saveWrap, { name: "Saved items", iconName: "chevronDown", cls: "xv-caret" });
+    const trashBtn = iconButton(toolbar, { name: "Trash", iconName: "trash" });
+
+    // ------------------------------------------------------------------ navigation bar
+    // Frosted bar directly above the edit toolbar: View (top/side), Up, Down,
+    // Play/Pause, Rotate CW, Rotate ACW, Lock View. Camera work is done by
+    // main.js (nav.*), so every move goes through the undo/redo history.
+    const navbar = el("div", { class: "xv-navbar", role: "toolbar", "aria-label": "3D navigation", "data-xv-ui": "" }, box);
+    const topSideBtn = iconButton(navbar, { name: "Top view", iconName: "topView", cls: "xv-nav-btn" });
+    const upBtn = iconButton(navbar, { name: "Up", iconName: "chevronUp", cls: "xv-nav-btn" });
+    const downBtn = iconButton(navbar, { name: "Down", iconName: "chevronDown", cls: "xv-nav-btn" });
+    const playNavBtn = iconButton(navbar, { name: "Pause", iconName: "pause", cls: "xv-nav-btn" });
+
+    // Rotate buttons: hovering shows "Rotate [45]°" with an editable step
+    // (1–180) per button, kept for the session.
+    function rotateButton(key, name, iconName, sign) {
+        const wrap = el("div", { class: "xv-wrap xv-rot-wrap" }, navbar);
+        const btn = iconButton(wrap, { name, iconName, cls: "xv-nav-btn" });
+        delete btn.dataset.tip; // the popover replaces the tooltip
+        const pop = el("div", { class: "xv-rot-pop", "data-xv-ui": "", hidden: "" }, wrap);
+        const label = el("label", { class: "xv-rot-label" }, pop);
+        el("span", { text: "Rotate" }, label);
+        const input = el("input", { type: "number", min: "1", max: "180", step: "1", class: "xv-rot-input", "aria-label": `${name} step in degrees` }, label);
+        el("span", { text: "°" }, label);
+        const storeKey = `dw2.rotateStep.${key}`;
+        let step = 45;
+        try {
+            step = Number(sessionStorage.getItem(storeKey)) || 45;
+        } catch {
+            // storage blocked: default 45°
+        }
+        input.value = String(step);
+        const commit = () => {
+            const v = Math.round(Number(input.value));
+            step = Number.isFinite(v) ? Math.min(180, Math.max(1, v)) : step;
+            input.value = String(step);
+            try {
+                sessionStorage.setItem(storeKey, String(step));
+            } catch {
+                // not remembered
+            }
+        };
+        input.addEventListener("change", commit);
+        input.addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+                commit();
+                input.blur();
+            }
+            e.stopPropagation(); // typing digits must not trigger viewer shortcuts
+        });
+        let hideTimer = 0;
+        const show = () => {
+            clearTimeout(hideTimer);
+            pop.hidden = false;
+        };
+        const hide = () => {
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(() => {
+                if (document.activeElement !== input) {
+                    pop.hidden = true;
+                }
+            }, 250);
+        };
+        wrap.addEventListener("pointerenter", show);
+        wrap.addEventListener("pointerleave", hide);
+        input.addEventListener("blur", hide);
+        btn.addEventListener("focus", show);
+        btn.addEventListener("blur", hide);
+        btn.addEventListener("click", () => {
+            commit();
+            nav.rotateBy(sign * step);
+        });
+        btn.setAttribute("aria-label", `${name} (step set on hover)`);
+        return btn;
+    }
+    rotateButton("cw", "Rotate clockwise", "rotateCw", -1);
+    rotateButton("acw", "Rotate anticlockwise", "rotateCcw", +1);
+    const lockBtn = iconButton(navbar, { name: "Lock view", iconName: "unlock", cls: "xv-nav-btn" });
+
+    function setName(btn, name) {
+        btn.setAttribute("aria-label", name);
+        btn.dataset.tip = name;
+    }
+    function syncNav() {
+        const top = nav.isTopView();
+        topSideBtn.innerHTML = icon(top ? "sideView" : "topView", 18);
+        setName(topSideBtn, top ? "Side view" : "Top view");
+        const paused = nav.isPaused();
+        playNavBtn.innerHTML = icon(paused ? "play" : "pause", 18);
+        setName(playNavBtn, paused ? "Play" : "Pause");
+        playNavBtn.setAttribute("aria-pressed", String(!paused));
+        const locked = nav.isLocked();
+        lockBtn.innerHTML = icon(locked ? "lock" : "unlock", 18);
+        setName(lockBtn, locked ? "Unlock view" : "Lock view");
+        lockBtn.classList.toggle("is-locked", locked);
+        lockBtn.setAttribute("aria-pressed", String(locked));
+        box.classList.toggle("is-view-locked", locked);
+    }
+    topSideBtn.addEventListener("click", () => { nav.toggleTopSide(); syncNav(); });
+    upBtn.addEventListener("click", () => { nav.orbitStep(-1); syncNav(); });
+    downBtn.addEventListener("click", () => { nav.orbitStep(+1); syncNav(); });
+    playNavBtn.addEventListener("click", () => { nav.togglePlay(); syncNav(); });
+    lockBtn.addEventListener("click", () => { nav.toggleLock(); syncNav(); });
+    navbar.querySelectorAll(".xv-nav-btn svg").forEach(svg => { svg.setAttribute("width", "18"); svg.setAttribute("height", "18"); });
+    // polar angle also changes by dragging: keep the Top/Side icon honest
+    viewer.controls.addEventListener("controlend", syncNav);
 
     // popovers
     const popovers = [];
@@ -279,7 +379,7 @@ export function createExpandedChrome({
     }
     viewBtn.addEventListener("click", () => { syncToolbar(); toggle(viewMenu, viewBtn); });
 
-    flyBtn.addEventListener("click", () => { closeAll(); startFlythrough(); });
+    resetViewBtn.addEventListener("click", () => { closeAll(); nav.resetView(); syncNav(); });
     pointerBtn.addEventListener("click", () => { closeAll(); tool.setMode(MODES.NORMAL); });
     trashBtn.addEventListener("click", () => {
         closeAll();
@@ -438,7 +538,7 @@ export function createExpandedChrome({
         const shown = notes.length && notes.every(n => n.visible);
         notesBtn.classList.toggle("is-active", !!shown);
         notesBtn.dataset.count = notes.length ? String(notes.length) : "";
-        const nName = notes.length ? `Notes (${notes.length})` : "Notes (none yet)";
+        const nName = "Notes"; // name only; the count is the badge
         notesBtn.setAttribute("aria-label", nName);
         notesBtn.dataset.tip = nName;
     }
@@ -1031,7 +1131,7 @@ export function createExpandedChrome({
         e.preventDefault();
     });
 
-    syncPlay();
+    syncNav();
     syncTheme();
     syncToolbar();
     renderLibrary();
@@ -1040,7 +1140,7 @@ export function createExpandedChrome({
     return {
         closeAll: () => { closeAll(); closeNotePopup(); preview.hidden = true; if (!confirmModal.hidden) settleConfirm(false); },
         syncTheme,
-        syncPlay,
+        syncPlay: () => syncNav(),
         // read-only views for tests/diagnostics
         get library() {
             return library;

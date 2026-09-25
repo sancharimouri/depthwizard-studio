@@ -608,7 +608,11 @@ export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
         // Redraw when the selection, the camera, the canvas size, or the
         // displayed surface (flat/3D) changed.
         const e = viewer.camera.matrixWorld.elements;
-        const cam = `${e[12].toFixed(3)},${e[13].toFixed(3)},${e[14].toFixed(3)},${e[8].toFixed(4)},${e[9].toFixed(4)},${e[10].toFixed(4)},${canvas.clientWidth}x${canvas.clientHeight},${viewer.camera.zoom}`;
+        // the terrain's own transform too: the structure can rotate (nav bar,
+        // auto-rotation) and scale (exaggeration) under a still camera
+        const m = terrainRef.mesh.matrixWorld.elements;
+        const cam = `${e[12].toFixed(3)},${e[13].toFixed(3)},${e[14].toFixed(3)},${e[8].toFixed(4)},${e[9].toFixed(4)},${e[10].toFixed(4)},${canvas.clientWidth}x${canvas.clientHeight},${viewer.camera.zoom}`
+            + `|${m[0].toFixed(4)},${m[2].toFixed(4)},${m[8].toFixed(4)},${m[9].toFixed(4)}`;
         if (cam !== lastCam) {
             lastCam = cam;
             dirty = true;

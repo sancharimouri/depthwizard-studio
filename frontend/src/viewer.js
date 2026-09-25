@@ -42,6 +42,42 @@ export function createTerrainViewer(canvas, options = {}) {
 
     const controls = createControls(camera, renderer.domElement, cameraTarget);
 
+    // Structure yaw: the terrain group turns about the world vertical axis
+    // (rotate buttons, auto-rotation). The camera and the ground grid stay
+    // put, so the grid never rotates or tilts. Everything that reads the
+    // terrain (picking, measurements, markers, water) goes through its
+    // matrixWorld, so it follows.
+    const YAW_ANIM_MS = 450;
+    let yawTarget = 0;
+    let yawAnim = null;
+    function setStructureYaw(yaw, animate = true) {
+        yawTarget = yaw;
+        if (!animate) {
+            yawAnim = null;
+            terrainGroup.rotation.y = yaw;
+            return;
+        }
+        yawAnim = { from: terrainGroup.rotation.y, to: yaw, start: performance.now() };
+    }
+    function stepYaw() {
+        if (!yawAnim) {
+            return;
+        }
+        const t = Math.min(1, (performance.now() - yawAnim.start) / YAW_ANIM_MS);
+        const e = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+        terrainGroup.rotation.y = yawAnim.from + (yawAnim.to - yawAnim.from) * e;
+        if (t >= 1) {
+            yawAnim = null;
+        }
+    }
+    // idle auto-rotation spins the structure, not the camera
+    controls.autoRotateHandler = radians => {
+        if (!yawAnim) {
+            yawTarget -= radians;
+            terrainGroup.rotation.y = yawTarget;
+        }
+    };
+
     scene.add(new THREE.HemisphereLight(0xddebd8, 0x172018, 2.0));
 
     const sun = new THREE.DirectionalLight(0xffffff, 3.0);
@@ -224,6 +260,7 @@ export function createTerrainViewer(canvas, options = {}) {
 
     function update() {
         controls.update();
+        stepYaw();
     }
 
     function render() {
@@ -245,6 +282,8 @@ export function createTerrainViewer(canvas, options = {}) {
             return currentRegionKey;
         },
         loadRegion,
+        setStructureYaw,
+        getStructureYaw: () => yawTarget,
         setLayer,
         setFloodOverlay,
         setBackground,
