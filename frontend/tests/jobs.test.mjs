@@ -65,14 +65,14 @@ function memoryStorage() {
     return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, String(v)) };
 }
 
-test("pin moves a job to the pinned section; remove re-activates the newest remaining job", () => {
+test("a pinned job shows in the pinned section AND stays in recent; remove re-activates the newest remaining job", () => {
     const store = createJobStore();
     const a = store.add(input("A", 2));
     const b = store.add(input("B", 1));
     const c = store.add(input("C", 1));
     store.togglePin(a.id);
     assert.deepEqual(store.pinnedOrder().map(j => j.input.title), ["A"]);
-    assert.deepEqual(store.panelOrder().map(j => j.input.title), ["C", "B"]);
+    assert.deepEqual(store.panelOrder().map(j => j.input.title), ["C", "B", "A"]);
     assert.equal(store.remove(c.id), b);
     assert.equal(store.remove(b.id), a);
     assert.equal(store.remove(a.id), null);

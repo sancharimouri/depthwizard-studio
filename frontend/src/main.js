@@ -861,7 +861,7 @@ function iconAction(className, label, iconSvg) {
     return button;
 }
 
-function jobItem(job, { running, active, choosing }) {
+function jobItem(job, { running, active, choosing }, section = "recent") {
     const li = document.createElement("li");
     li.className = "job-item";
 
@@ -886,6 +886,8 @@ function jobItem(job, { running, active, choosing }) {
             expandFinalDemo();
         }
     });
+    // rename: double-click the job (the only way; no pencil)
+    button.title = "Double-click to rename";
     button.addEventListener("dblclick", event => {
         event.preventDefault();
         startRename(job.id, "list");
@@ -901,12 +903,8 @@ function jobItem(job, { running, active, choosing }) {
     status.textContent = job.status === "generating" ? `Generating ${job.progress}%` : "Complete";
     head.append(num, status);
 
-    // only the (editable) job name identifies the job — no tile id line
-    const tier = document.createElement("div");
-    tier.className = `job-tier ${tierDotClass(job.input.routing)}`;
-    tier.textContent = job.input.routing.label;
-
-    button.append(head, tier);
+    // only the (editable) job name identifies the job: no tile id, no tier line
+    button.append(head);
 
     const foot = document.createElement("div");
     foot.className = "job-foot";
@@ -921,9 +919,6 @@ function jobItem(job, { running, active, choosing }) {
     save.disabled = job.status !== "complete";
     save.addEventListener("click", () => saveJobs([job.id]));
 
-    const rename = iconAction("job-rename", `Rename ${jobLabel(job)}`, ICONS.pencil);
-    rename.addEventListener("click", () => startRename(job.id, "list"));
-
     const pin = iconAction(`job-pin${job.pinned ? " is-pinned" : ""}`,
         job.pinned ? `Unpin ${jobLabel(job)}` : `Pin ${jobLabel(job)}`, ICONS.pin);
     pin.setAttribute("aria-pressed", String(job.pinned));
@@ -937,11 +932,11 @@ function jobItem(job, { running, active, choosing }) {
         }
     });
 
-    actions.append(save, rename, pin, trash);
+    actions.append(save, pin, trash);
     foot.append(saved, actions);
     li.append(button, foot);
     // inline rename: the field sits above the (still clickable) job button, never inside it
-    if (renaming?.id === job.id && renaming.where === "list") {
+    if (renaming?.id === job.id && renaming.where === "list" && section !== "pinned") {
         li.prepend(renameField(job, "job-rename-row"));
     }
     return li;
@@ -976,7 +971,7 @@ function renderJobs() {
     }
 
     const pinned = jobStore.pinnedOrder();
-    jobsPinnedEl?.replaceChildren(...pinned.map(job => jobItem(job, ctx)));
+    jobsPinnedEl?.replaceChildren(...pinned.map(job => jobItem(job, ctx, "pinned")));
     if (jobsPinnedEmptyEl) {
         jobsPinnedEmptyEl.hidden = pinned.length > 0;
     }
@@ -1131,12 +1126,12 @@ function renderJobTabs() {
     jobTabsEl.replaceChildren(...jobStore.creationOrder().map(job => {
         const tab = document.createElement("button");
         tab.type = "button";
-        tab.className = `job-tab ${tierDotClass(job.input.routing)}`;
+        tab.className = "job-tab";
         tab.setAttribute("role", "tab");
         tab.setAttribute("aria-selected", String(job === active));
         tab.dataset.jobId = job.id;
         tab.disabled = Boolean(running) && job !== running;
-        tab.title = `${jobLabel(job)} · ${job.input.routing.label}${job.saved ? "" : " · unsaved"}`;
+        tab.title = jobLabel(job);
 
         const dot = document.createElement("span");
         dot.className = "job-tab-dot";
@@ -1144,21 +1139,7 @@ function renderJobTabs() {
         const label = document.createElement("span");
         label.className = "job-tab-label";
         label.textContent = jobLabel(job);
-        tab.append(dot, label);
-        if (job.pinned) {
-            const pinMark = document.createElement("span");
-            pinMark.className = "job-tab-pin";
-            pinMark.setAttribute("aria-label", "pinned");
-            pinMark.innerHTML = ICONS.pin;
-            tab.append(pinMark);
-        }
-        if (!job.saved) {
-            const mark = document.createElement("span");
-            mark.className = "job-tab-unsaved";
-            mark.setAttribute("aria-label", "unsaved");
-            mark.textContent = "●";
-            tab.append(mark);
-        }
+        tab.append(dot, label); // header tile: the dot and the (editable) name only
         tab.addEventListener("click", () => selectJob(job.id));
         tab.addEventListener("dblclick", event => {
             event.preventDefault();
@@ -1168,18 +1149,7 @@ function renderJobTabs() {
         if (renaming?.id === job.id && renaming.where === "tab") {
             return renameField(job, "job-tab job-tab-editing");
         }
-        const wrap = document.createElement("div");
-        wrap.className = "job-tab-wrap";
-        const edit = document.createElement("button");
-        edit.type = "button";
-        edit.className = "job-tab-edit";
-        edit.setAttribute("aria-label", `Rename ${jobLabel(job)}`);
-        edit.title = "Rename";
-        edit.innerHTML = ICONS.pencil;
-        edit.disabled = tab.disabled;
-        edit.addEventListener("click", () => startRename(job.id, "tab"));
-        wrap.append(tab, edit);
-        return wrap;
+        return tab;
     }));
 
     renderSource(active);
@@ -1189,14 +1159,8 @@ function renderJobTabs() {
         clearPointSelection();
     }
 
-    if (jobTabInfoEl && active) {
-        const dem = active.input.dem;
-        jobTabInfoEl.textContent = [
-            jobLabel(active),
-            active.input.routing.label,
-            dem ? `DEM ${dem.min_m}–${dem.max_m} m` : null,
-            "3D terrain shown: Darjeeling reference (placeholder)",
-        ].filter(Boolean).join(" · ");
+    if (jobTabInfoEl) {
+        jobTabInfoEl.hidden = true; // the header shows only the job tab (dot + name)
     }
 }
 
