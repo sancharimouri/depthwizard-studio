@@ -49,27 +49,79 @@ export function createTerrainViewer(canvas, options = {}) {
     sun.castShadow = true;
     scene.add(sun);
 
-    // Persistent base reference grid under the terrain in every view mode
-    // (true colour, DSM, DEM, flat, wireframe), as in the reference repo
-    // (gridHelper 80 units / 40 divisions under a 60-unit terrain, i.e.
-    // 1.33× the terrain, shown by default). Rebuilt per terrain for its size.
-    let grid = null;
+    // Persistent base reference grid under the terrain in every view mode —
+    // now INFINITE: a shader grid on a horizontal plane that follows the
+    // camera in X/Z (so it never ends) while its lines are computed from
+    // world coordinates (so they never slide). It is a direct child of the
+    // scene, at a fixed height, and never rotated: orbiting / tilting /
+    // zooming moves only the camera, so the grid always stays flat.
+    // Anti-aliased with fwidth; fades out with distance from the camera.
+    const GRID_COLORS = { dark: [0x5b6b5e, 0x364038], light: [0xa08a60, 0xc9b690] }; // [major, minor]
     let gridDark = true;
-    const GRID_COLORS = { dark: [0x3f4a40, 0x252b26], light: [0xb4a17c, 0xd6c6a3] };
+    const gridMaterial = new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        uniforms: {
+            uMinor: { value: 100 / 30 }, // cell size in world units (≈ the old 40-division grid's 3.3)
+            uMajor: { value: 100 / 3 },
+            uMinorColor: { value: new THREE.Color(GRID_COLORS.dark[1]) },
+            uMajorColor: { value: new THREE.Color(GRID_COLORS.dark[0]) },
+            uFadeStart: { value: 120 },
+            uFadeEnd: { value: 520 },
+        },
+        vertexShader: /* glsl */ `
+            varying vec3 vWorld;
+            void main() {
+                vec4 world = modelMatrix * vec4(position, 1.0);
+                vWorld = world.xyz;
+                gl_Position = projectionMatrix * viewMatrix * world;
+            }
+        `,
+        fragmentShader: /* glsl */ `
+            uniform float uMinor;
+            uniform float uMajor;
+            uniform vec3 uMinorColor;
+            uniform vec3 uMajorColor;
+            uniform float uFadeStart;
+            uniform float uFadeEnd;
+            varying vec3 vWorld;
 
-    function buildGrid(terrain) {
-        if (grid) {
-            scene.remove(grid);
-            grid.geometry.dispose();
-            grid.material.dispose();
-        }
-        const size = 1.33 * Math.max(terrain.terrainWidth, terrain.terrainHeight);
-        const [center, line] = GRID_COLORS[gridDark ? "dark" : "light"];
-        grid = new THREE.GridHelper(size, 40, center, line);
-        grid.position.set(0, rigOffsetY - 0.3, 0);
-        grid.material.transparent = true;
-        grid.material.opacity = 0.9;
-        scene.add(grid);
+            float gridLine(vec2 p, float size) {
+                vec2 c = p / size;
+                vec2 d = abs(fract(c - 0.5) - 0.5) / fwidth(c);
+                return 1.0 - min(min(d.x, d.y), 1.0);
+            }
+
+            void main() {
+                float minor = gridLine(vWorld.xz, uMinor);
+                float major = gridLine(vWorld.xz, uMajor);
+                float dist = distance(vWorld.xz, cameraPosition.xz);
+                float fade = 1.0 - smoothstep(uFadeStart, uFadeEnd, dist);
+                vec3 color = mix(uMinorColor, uMajorColor, major);
+                float alpha = max(minor * 0.9, major) * fade;
+                if (alpha < 0.01) discard;
+                gl_FragColor = vec4(color, alpha);
+            }
+        `,
+    });
+    const grid = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400), gridMaterial);
+    grid.rotation.x = -Math.PI / 2; // lies in the world XZ plane — set once, never changed
+    grid.position.y = rigOffsetY - 0.3; // just under the terrain's base
+    grid.renderOrder = -1;
+    grid.frustumCulled = false;
+    grid.onBeforeRender = (_renderer, _scene, cam) => {
+        // follow the camera sideways only: the plane never ends, the lines stay put
+        grid.position.x = cam.position.x;
+        grid.position.z = cam.position.z;
+        grid.updateMatrixWorld();
+    };
+    scene.add(grid);
+
+    function setGridTheme(dark) {
+        const [major, minor] = GRID_COLORS[dark ? "dark" : "light"];
+        gridMaterial.uniforms.uMajorColor.value.setHex(major);
+        gridMaterial.uniforms.uMinorColor.value.setHex(minor);
     }
 
     let currentTerrain = null;
@@ -115,7 +167,6 @@ export function createTerrainViewer(canvas, options = {}) {
 
         currentTerrain = terrain;
         currentRegionKey = regionKey;
-        buildGrid(terrain);
 
         // ~18 degrees above the horizon, same distance regardless of
         // region — createTerrain() always builds at a fixed 100-unit
@@ -139,9 +190,7 @@ export function createTerrainViewer(canvas, options = {}) {
         const dark = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b < 0.5;
         if (dark !== gridDark) {
             gridDark = dark;
-            if (currentTerrain) {
-                buildGrid(currentTerrain);
-            }
+            setGridTheme(dark);
         }
     }
 
