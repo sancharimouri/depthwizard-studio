@@ -71,9 +71,11 @@
                     <button id="generate-new-button" class="secondary-button generate-new-button" type="button">
                         + Generate New
                     </button>
-                    <div class="jobs-section-title">SAVED</div>
-                    <ol id="jobs-saved" class="jobs-list"></ol>
-                    <div id="jobs-saved-empty" class="jobs-empty">No saved jobs yet</div>
+                    <!-- SAVED: styled like the PINNED / RECENT headings, but a button that opens the Saved window -->
+                    <button id="saved-open-button" class="jobs-section-title jobs-saved-link" type="button" aria-haspopup="dialog">
+                        <span>SAVED</span>
+                        <span id="saved-count" class="jobs-saved-count numeric-mono"></span>
+                    </button>
                     <div class="jobs-section-title">PINNED</div>
                     <ol id="jobs-pinned" class="jobs-list"></ol>
                     <div id="jobs-pinned-empty" class="jobs-empty">No pinned tabs currently</div>
@@ -918,6 +920,27 @@
 
         </div>
 
+
+        <!-- Saved works (jobs panel → Saved): jobs saved earlier, kept in this
+             browser's storage; open one again as a job, download it, or remove it. -->
+
+        <div id="saved-modal" class="upload-modal saved-modal" role="dialog" aria-modal="true"
+             aria-labelledby="saved-title" hidden>
+            <div id="saved-backdrop" class="upload-backdrop"></div>
+            <div class="saved-panel">
+                <div class="saved-head">
+                    <div>
+                        <div id="saved-title" class="saved-title">Saved</div>
+                        <p class="saved-sub">
+                            Work you saved, kept in this browser (each save was also downloaded as JSON).
+                            Nothing is stored on a server.
+                        </p>
+                    </div>
+                    <button id="saved-close" class="saved-close" type="button" aria-label="Close saved">✕</button>
+                </div>
+                <div id="saved-list" class="saved-list"></div>
+            </div>
+        </div>
 
         <!-- Unsaved-work warning: Generate New, ✕ Close, and (desktop app) window
              close. Job count + save choice per job; deliberately no "don't show

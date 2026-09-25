@@ -209,7 +209,7 @@ export function exportFilename(jobs, now = new Date()) {
 
 // ---------------------------------------------------------------- Saved works
 // "Save" downloads the job and also keeps a copy here, in this browser's
-// localStorage, so the JOBS tab's SAVED section can list (and reopen) earlier work after a
+// localStorage, so the Saved window can list (and reopen) earlier work after a
 // reload. Per-browser only; storage failures (private window, blocked site
 // data) leave the list empty rather than breaking anything.
 
@@ -221,7 +221,6 @@ export function savedRecord(job, now = new Date()) {
         savedAt: now.toISOString(),
         createdAt: job.createdAt,
         name: job.name,
-        label: jobLabel(job), // display name at save time ("Job 2" or the user's rename)
         input: job.input,
         log: job.log,
     };
