@@ -477,11 +477,17 @@
 
         <div class="workbench-grid is-hidden">
 
-            <div class="workbench-left">
+            <!-- Processing page (2026-09-25 redesign). LEFT 60%: Preview and
+                 Calculation Logs as cards, beside one seamless black screen
+                 holding the four outputs (Relative Depth, Elevation / DSM,
+                 DEM Elevation). RIGHT 40%: the generated 3D structure, then the
+                 DEPTH WIZARD STUDIO button (opens the same 3D window that also
+                 opens automatically when generation completes). -->
+            <div class="wb-main">
 
                 <div
                     id="preview-box"
-                    class="workbench-box preview-box"
+                    class="workbench-box preview-box wb-card wb-preview"
                 >
 
                     <div class="panel-title">PREVIEW</div>
@@ -512,23 +518,31 @@
 
                     </div>
 
-                </div>
-
-                <button
+                    <button
                     id="start-generation-button"
-                    class="run-reconstruction-button start-generation-button"
+                    class="run-reconstruction-button start-generation-button wb-status"
                     disabled
                 >
                     ▶ START GENERATION
                 </button>
-
-            </div>
-
-            <div class="workbench-col workbench-col-depth">
+                </div>
 
                 <div
+                    id="calc-logs-box"
+                    class="workbench-box calc-logs-box wb-card wb-logs"
+                >
+                    <div class="panel-title">CALCULATION LOGS</div>
+
+                    <div
+                        id="calc-log-scroll"
+                        class="calc-log-scroll"
+                    ></div>
+                </div>
+
+                <div class="wb-screen" aria-label="Generated outputs">
+                    <div
                     id="depth-preview-box"
-                    class="workbench-box preview-box"
+                    class="workbench-box preview-box wb-cell"
                 >
                     <div class="panel-title">RELATIVE DEPTH</div>
 
@@ -549,10 +563,9 @@
 
                     </div>
                 </div>
-
-                <div
+                    <div
                     id="elevation-preview-box"
-                    class="workbench-box preview-box"
+                    class="workbench-box preview-box wb-cell"
                 >
                     <div class="panel-title">ELEVATION</div>
 
@@ -573,14 +586,9 @@
 
                     </div>
                 </div>
-
-            </div>
-
-            <div class="workbench-col workbench-col-3d">
-
-                <div
+                    <div
                     id="dsm-3d-box"
-                    class="workbench-box mini-3d-box"
+                    class="workbench-box mini-3d-box wb-cell"
                 >
                     <div class="panel-title">DSM</div>
 
@@ -606,10 +614,9 @@
                         data-lines='["361×325 vertex grid · 10 m resolution","Elevation 557–2478 m (OpenTopography DSM)"]'
                     ></div>
                 </div>
-
-                <div
+                    <div
                     id="metric-elevation-3d-box"
-                    class="workbench-box mini-3d-box"
+                    class="workbench-box mini-3d-box wb-cell"
                 >
                     <div class="panel-title">DEM ELEVATION</div>
 
@@ -635,26 +642,15 @@
                         data-lines='["Spatial-trend validation (Darjeeling)","Correlation +0.60 → −0.41 after detrending"]'
                     ></div>
                 </div>
+                </div>
 
             </div>
 
-            <div class="workbench-col workbench-col-logs">
-
-                <div
-                    id="calc-logs-box"
-                    class="workbench-box calc-logs-box"
-                >
-                    <div class="panel-title">CALCULATION LOGS</div>
-
-                    <div
-                        id="calc-log-scroll"
-                        class="calc-log-scroll"
-                    ></div>
-                </div>
+            <div class="wb-side">
 
                 <div
                     id="final-demo-box"
-                    class="workbench-box final-demo-box"
+                    class="workbench-box final-demo-box wb-final"
                 >
                     <canvas
                         id="final-demo-canvas"
@@ -920,6 +916,14 @@
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
                         </button>
                     </div>
+                </div>
+
+                <div id="wb-studio" class="workbench-box wb-studio">
+                    <span class="wb-studio-kicker">edit in</span>
+                    <button id="studio-open-button" class="wb-studio-button" type="button" disabled
+                            title="Available when the 3D structure is ready">
+                        DEPTH WIZARD STUDIO
+                    </button>
                 </div>
 
             </div>
