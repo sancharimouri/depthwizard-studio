@@ -26,7 +26,7 @@ import rasterio
 import torch
 import torch.nn.functional as F
 
-PROJECT_ROOT = Path("/Users/anweshasaha/projects/DepthWizard2")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]  # was a hard-coded absolute path
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 from evaluate_method6_finetune_twinhead import (  # noqa: E402
@@ -34,6 +34,11 @@ from evaluate_method6_finetune_twinhead import (  # noqa: E402
 )
 
 CKPT = PROJECT_ROOT / "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019.pt"
+if not CKPT.exists():  # not on this machine: use the R2 copy (docs/R2_SETUP.md)
+    import sys as _sys
+    _sys.path.insert(0, str(PROJECT_ROOT))
+    from backend.storage import r2 as _r2
+    CKPT = _r2.ensure_local("checkpoints/method6/full_dfc2019/method6_full_dfc2019.pt", CKPT)
 OUT_DIR = PROJECT_ROOT / "data/maxar_sanity/method6_inference"
 
 CROPS = {

@@ -45,6 +45,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from backend.storage import r2  # noqa: E402  (R2 key layout shared with the backend)
+
 import numpy as np
 import pandas as pd
 import rasterio
@@ -241,7 +244,7 @@ def build(_args) -> None:
                     "geo": geo,
                 }
             thumb, preview = _images(path, item_id)
-            items.append({
+            item = {
                 "id": item_id,
                 "collection": src_name,
                 **meta,
@@ -249,8 +252,12 @@ def build(_args) -> None:
                 "routing": ROUTING[src_name],
                 "thumbnail": thumb,
                 "preview": preview,
+                # provenance / upload source on the machine that built the catalog;
+                # the backend never reads it (it serves from R2, backend/storage/r2.py)
                 "file": str(real.relative_to(ROOT)),
-            })
+            }
+            item["r2"] = r2.library_keys(item)  # where scripts/r2_sync.py puts it
+            items.append(item)
             print(f"{item_id:32s} gsd {meta['gsd_m']} m  tier {ROUTING[src_name]['tier']}", flush=True)
 
     counts = {s: sum(1 for i in items if i["collection"] == s) for s in SOURCES}
