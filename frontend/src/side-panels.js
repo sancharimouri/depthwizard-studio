@@ -76,7 +76,7 @@ export function renderSource(job) {
     const note = document.getElementById("xp-terrain-note");
     if (note) {
         note.textContent = job
-            ? "The 3D terrain and the statistics above are the Darjeeling reference DSM, shown for every job (placeholder). "
+            ? "The 3D terrain and its statistics are the Darjeeling reference DSM, shown for every job (placeholder). "
                 + (job.input.dem ? "The job's own DEM range is listed under Image source." : "")
             : "";
     }
@@ -173,9 +173,11 @@ const TOUR_STEPS = [
     { sel: '.xv-toolbar [aria-label="Notes"]', title: "Notes", text: "Lists every note you placed (right-click → Add note), each with its own show/hide switch and delete." },
     { sel: '.xv-toolbar [aria-label="Save"]', title: "Save", text: "Saves the current measurement; the arrow next to it opens everything saved this session." },
     { sel: '.xv-toolbar [aria-label="Trash"]', title: "Trash", text: "Clears the measurement currently being drawn." },
-    { sel: '[data-box="details"]', title: "Details", text: "Image-source metadata for this job and statistics for the terrain shown." },
+    { sel: '[data-box="terrain"]', title: "Terrain statistics", text: "Elevation range, mean, relief and mesh grid of the terrain shown, plus the vertical exaggeration control." },
+    { sel: '[data-box="details"]', title: "Details", text: "Where the image and the terrain come from: sensor, tile, date, GSD, CRS." },
     { sel: '[data-box="inspect"]', title: "Image inspection", text: "The job's source image. Hover it to magnify; click to select that point on the 3D surface." },
-    { sel: '[data-box="scenario"]', title: "Scenario analysis", text: "Illustrative flood and (placeholder) slope overlays. Not hazard models." },
+    { sel: '[data-box="scenario"]', title: "Scenario analysis", text: "Illustrative flood and (placeholder) slope overlays, and a Landslide option that is coming soon. Not hazard models." },
+    { sel: '[data-box="flythrough"]', title: "Fly-through", text: "One full orbit while zooming in, with pause/resume, Run again and Reset." },
     { sel: '[data-box="facts"]', title: "Facts", text: "Place, elevation, and earthquake and flood-alert history for this job's location, from live public sources." },
     { sel: '[data-box="gestures"]', title: "Learn gestures", text: "How to rotate, zoom and use the terrain menu with mouse, trackpad or touch." },
 ];

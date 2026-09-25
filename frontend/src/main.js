@@ -6,6 +6,7 @@ import { createExpandedChrome } from "./expanded-chrome.js";
 import { createFloodSim } from "./flood-sim.js";
 import { createSidebar } from "./sidebar.js";
 import { createViewerHistory } from "./viewer-history.js";
+import { createFlythrough } from "./flythrough.js";
 import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderSource, renderTerrainStats, setInspectionHandlers, setInspectionSelected } from "./side-panels.js";
 import { createSurfacePoints } from "./surface-point.js";
 import { createInputView } from "./input-view.js";
@@ -1884,6 +1885,9 @@ function activateFinalDemoLayer(layer) {
 
 function setFinalDemoFloodActive(active) {
     finalDemoFloodActive = active;
+    if (active) {
+        finalDemoLandslideInfo = false;
+    }
 
     document.getElementById("final-demo-flood-button")?.classList.toggle("active", finalDemoFloodActive);
     // Expanded view: a water plane at a chosen level (flood-sim.js) instead of the old low-ground tint.
@@ -1899,19 +1903,29 @@ const SCENARIO_NOTES = {
         "(a slope-based heuristic on the DEM); there is no earthquake model anywhere in this project.",
 };
 
+// Landslide: a visible, clickable placeholder with a "Coming soon" state.
+// There is no landslide logic, model or data behind it.
+let finalDemoLandslideInfo = false;
+SCENARIO_NOTES.landslide = "Landslide — coming soon. There is no landslide susceptibility model or data in this project yet, so this option does nothing for now.";
+
 function syncScenarioNote() {
     const note = document.getElementById("final-demo-scenario-note");
     if (!note) {
         return;
     }
-    const key = finalDemoEarthquakeActive ? "earthquake" : finalDemoFloodActive ? "flood" : null;
+    const key = finalDemoEarthquakeActive ? "earthquake" : finalDemoFloodActive ? "flood" : finalDemoLandslideInfo ? "landslide" : null;
+    document.getElementById("final-demo-landslide-button")?.classList.toggle("is-soon-open", key === "landslide");
+    document.getElementById("final-demo-landslide-button")?.setAttribute("aria-pressed", String(key === "landslide"));
     note.hidden = !key;
     note.textContent = key ? SCENARIO_NOTES[key] : "";
-    note.classList.toggle("is-placeholder", key === "earthquake");
+    note.classList.toggle("is-placeholder", key === "earthquake" || key === "landslide");
 }
 
 function setFinalDemoEarthquakeActive(active) {
     finalDemoEarthquakeActive = active;
+    if (active) {
+        finalDemoLandslideInfo = false;
+    }
     document.getElementById("final-demo-earthquake-button")?.classList.toggle("active", active);
     finalDemoCurrentTerrain?.setEarthquakeOverlay(active);
     syncScenarioNote();
@@ -1946,7 +1960,7 @@ function resetFinalDemoRunState() {
     if (progressFillEl) progressFillEl.style.width = "0%";
 
     setFinalDemoFloodActive(false);
-    finalDemoFlythrough?.reset();
+    finalDemoFlythrough?.stop();
 }
 
 async function loadFinalDemoRegion(regionKey) {
@@ -1976,7 +1990,7 @@ async function runFinalDemoReconstruction() {
     finalDemoRunning = true;
 
     setFinalDemoFloodActive(false);
-    finalDemoFlythrough?.reset();
+    finalDemoFlythrough?.stop();
 
     const runPanelEl = document.getElementById("final-demo-run-panel");
     const postRunPanelEl = document.getElementById("final-demo-post-run-panel");
@@ -2142,6 +2156,7 @@ function initFinalDemoViewer() {
     if (import.meta.env?.DEV) {
         window.__dwHistory = finalDemoHistory;
         window.__dwSurfacePoints = finalDemoSurfacePoints;
+        Object.defineProperty(window, "__dwFly", { configurable: true, get: () => finalDemoFlythrough });
         window.__dwFloodSim = finalDemoFloodSim; // dev-only, headless checks
         window.__dwTerrain = () => finalDemoCurrentTerrain;
         window.__dwCamera = () => finalDemoViewer.camera;
@@ -2151,9 +2166,36 @@ function initFinalDemoViewer() {
     renderSource(jobStore.active());
     renderFacts(jobStore.active());
 
-    finalDemoFlythrough = createFlythroughController({
-        controls: finalDemoViewer.controls,
-        button: document.getElementById("final-demo-flythrough-button"),
+    // Fly-through box (src/flythrough.js). Obstacles = what covers the canvas:
+    // the two panel columns, the job tabs at the top, the toolbars at the bottom.
+    finalDemoFlythrough = createFlythrough({
+        viewer: finalDemoViewer,
+        canvas,
+        getTerrain: () => finalDemoCurrentTerrain,
+        getObstacles: () => {
+            const box = document.getElementById("final-demo-box");
+            const rectOf = sel => {
+                const n = box.querySelector(sel);
+                const r = n?.getBoundingClientRect();
+                return r && r.width > 0 && r.height > 0 ? r : null;
+            };
+            const left = rectOf(".final-demo-left-rail");
+            const right = rectOf(".final-demo-right-rail");
+            const top = rectOf("#job-tab-info") ?? rectOf(".job-tabs-wrap");
+            const bottom = rectOf(".xv-navbar") ?? rectOf(".xv-toolbar");
+            return {
+                left: left ? left.right + 12 : null,
+                right: right ? right.left - 12 : null,
+                top: top ? top.bottom + 12 : null,
+                bottom: bottom ? bottom.top - 12 : null,
+            };
+        },
+        onReset: () => createNavActions().resetView(),
+        els: {
+            toggle: document.getElementById("xp-fly-toggle"),
+            again: document.getElementById("xp-fly-again"),
+            reset: document.getElementById("xp-fly-reset"),
+        },
     });
 
     document.querySelectorAll("#final-demo-box .layer-button").forEach(button => {
@@ -2189,6 +2231,11 @@ function initFinalDemoViewer() {
             activateFinalDemoLayer("dsm-3d");
         }
         setFinalDemoFloodActive(!finalDemoFloodActive);
+    });
+
+    document.getElementById("final-demo-landslide-button")?.addEventListener("click", () => {
+        finalDemoLandslideInfo = !finalDemoLandslideInfo;
+        syncScenarioNote();
     });
 
     document.getElementById("final-demo-earthquake-button")?.addEventListener("click", () => {

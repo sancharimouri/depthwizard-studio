@@ -702,57 +702,35 @@
                              Inspection start open. Wiring: src/side-panels.js. -->
                         <div class="final-demo-left-rail">
 
-                            <section class="xp-box" data-box="details" data-default-open>
+                            <section class="xp-box" data-box="terrain" data-default-open>
                                 <button class="xp-head" type="button" aria-expanded="true">
-                                    <span class="xp-title">DETAILS</span>
+                                    <span class="xp-title">TERRAIN STATISTICS</span>
                                     <span class="xp-chevron" aria-hidden="true"></span>
                                 </button>
                                 <div class="xp-body">
-
-                                    <div class="xp-section-label">IMAGE SOURCE</div>
-                                    <dl id="xp-source-meta" class="xp-meta"></dl>
-
-                                    <div class="xp-section-label">TERRAIN STATISTICS</div>
-                                    <div class="stats-strip xp-inline-strip">
+                                    <div class="stats-strip xp-inline-strip xp-stat-grid">
                                         <div class="stat-tile">
+                                            <div class="stat-label">MIN ELEVATION</div>
                                             <div id="xp-elev-min" class="stat-value">—</div>
-                                            <div class="stat-label">MIN ELEV</div>
                                         </div>
                                         <div class="stat-tile">
+                                            <div class="stat-label">MAX ELEVATION</div>
                                             <div id="xp-elev-max" class="stat-value">—</div>
-                                            <div class="stat-label">MAX ELEV</div>
                                         </div>
                                         <div class="stat-tile">
+                                            <div class="stat-label">MEAN ELEVATION</div>
                                             <div id="xp-elev-mean" class="stat-value">—</div>
-                                            <div class="stat-label">MEAN ELEV</div>
                                         </div>
                                         <div class="stat-tile">
-                                            <div id="xp-elev-relief" class="stat-value">—</div>
                                             <div class="stat-label">RELIEF</div>
+                                            <div id="xp-elev-relief" class="stat-value">—</div>
                                         </div>
                                         <div class="stat-tile">
-                                            <div id="final-demo-stat-resolution" class="stat-value">10m</div>
-                                            <div class="stat-label">REF. IMAGE RES</div>
-                                        </div>
-                                        <div class="stat-tile">
-                                            <div id="final-demo-stat-grid" class="stat-value">361×325</div>
                                             <div class="stat-label">MESH GRID</div>
-                                        </div>
-                                        <div class="stat-tile">
-                                            <div id="final-demo-stat-epsg" class="stat-value">32645</div>
-                                            <div class="stat-label">EPSG</div>
-                                        </div>
-                                        <div class="stat-tile">
-                                            <div id="final-demo-stat-inference" class="stat-value">1.17s</div>
-                                            <div class="stat-label">DAv2 INFERENCE</div>
+                                            <div id="final-demo-stat-grid" class="stat-value">361×325</div>
                                         </div>
                                     </div>
-
-                                    <div class="metric metric-stacked xp-terrain-source">
-                                        <span class="metric-label">TERRAIN SOURCE</span>
-                                        <span id="final-demo-terrain-source-value">OpenTopography DSM</span>
-                                    </div>
-                                    <p id="xp-terrain-note" class="xp-note"></p>
+                                    <p class="xp-note">Statistics of the 3D terrain shown: the Darjeeling reference DSM, the same for every job (placeholder).</p>
 
                                     <div class="xp-slider-row">
                                         <label for="xp-vex-slider" class="xp-slider-label">
@@ -763,7 +741,6 @@
                                         <p class="xp-note">Display only. Measurements, statistics and exports always use the real elevations.</p>
                                     </div>
                                     <span id="final-demo-elevation-value" hidden></span>
-
                                 </div>
                             </section>
 
@@ -780,6 +757,47 @@
                                     </div>
                                     <div id="xp-inspect-readout" class="xp-inspect-readout numeric-mono">Hover the image to magnify (3×)</div>
                                     <p class="xp-note">Hover shows the matching spot on the 3D surface (yellow); click selects it. The link is by image position, and the 3D terrain is the Darjeeling reference for every job.</p>
+                                </div>
+                            </section>
+
+                            <section class="xp-box" data-box="details">
+                                <button class="xp-head" type="button" aria-expanded="false">
+                                    <span class="xp-title">DETAILS</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
+                                    <div class="xp-section-label">IMAGE SOURCE</div>
+                                    <dl id="xp-source-meta" class="xp-meta"></dl>
+
+                                    <div class="xp-section-label">TERRAIN SOURCE</div>
+                                    <dl class="xp-meta">
+                                        <dt>Source</dt><dd id="final-demo-terrain-source-value">OpenTopography DSM</dd>
+                                        <dt>CRS</dt><dd class="numeric-mono">EPSG:<span id="final-demo-stat-epsg">32645</span></dd>
+                                        <dt>Ref. image res</dt><dd id="final-demo-stat-resolution" class="numeric-mono">10m</dd>
+                                        <dt>DAv2 inference</dt><dd id="final-demo-stat-inference" class="numeric-mono">1.17s</dd>
+                                    </dl>
+                                    <p id="xp-terrain-note" class="xp-note"></p>
+                                </div>
+                            </section>
+
+                            <!-- Facts: live queries only (backend/facts/sources.py); coordinates come from
+                                 the job's geo-metadata or are typed in by the user, never guessed. -->
+                            <section class="xp-box" data-box="facts">
+                                <button class="xp-head" type="button" aria-expanded="false">
+                                    <span class="xp-title">FACTS</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
+                                    <div id="xp-facts-where" class="xp-facts-where"></div>
+                                    <form id="xp-facts-form" class="xp-facts-form" hidden>
+                                        <p class="xp-note xp-note-lead">This image has no geo-metadata, so its location is unknown. Enter coordinates to look up facts, or leave this empty.</p>
+                                        <div class="xp-facts-inputs">
+                                            <label>Lat <input id="xp-facts-lat" type="number" step="any" min="-90" max="90" placeholder="latitude" required></label>
+                                            <label>Lon <input id="xp-facts-lon" type="number" step="any" min="-180" max="180" placeholder="longitude" required></label>
+                                        </div>
+                                        <button class="xp-tour-start" type="submit">Look up</button>
+                                    </form>
+                                    <div id="xp-facts-body" class="xp-facts-body" aria-live="polite"></div>
                                 </div>
                             </section>
 
@@ -803,6 +821,10 @@
                                         <button id="final-demo-earthquake-button" class="danger-button" title="Illustrative placeholder — not a seismic hazard model">
                                             EARTHQUAKE
                                             <span class="coming-soon-tag">PLACEHOLDER</span>
+                                        </button>
+                                        <button id="final-demo-landslide-button" class="danger-button danger-button-soon" type="button" aria-pressed="false" title="Landslide — coming soon (no model yet)">
+                                            LANDSLIDE
+                                            <span class="coming-soon-tag">COMING SOON</span>
                                         </button>
                                     </div>
                                     <div id="final-demo-scenario-note" class="scenario-note" hidden></div>
@@ -832,24 +854,20 @@
                                 </div>
                             </section>
 
-                            <!-- Facts: live queries only (backend/facts/sources.py); coordinates come from
-                                 the job's geo-metadata or are typed in by the user, never guessed. -->
-                            <section class="xp-box" data-box="facts">
+                            <!-- Fly-through (src/flythrough.js): one 360° orbit while zooming in,
+                                 fitted so the whole structure stays in view. -->
+                            <section class="xp-box" data-box="flythrough">
                                 <button class="xp-head" type="button" aria-expanded="false">
-                                    <span class="xp-title">FACTS</span>
+                                    <span class="xp-title">FLY-THROUGH</span>
                                     <span class="xp-chevron" aria-hidden="true"></span>
                                 </button>
                                 <div class="xp-body">
-                                    <div id="xp-facts-where" class="xp-facts-where"></div>
-                                    <form id="xp-facts-form" class="xp-facts-form" hidden>
-                                        <p class="xp-note xp-note-lead">This image has no geo-metadata, so its location is unknown. Enter coordinates to look up facts, or leave this empty.</p>
-                                        <div class="xp-facts-inputs">
-                                            <label>Lat <input id="xp-facts-lat" type="number" step="any" min="-90" max="90" placeholder="latitude" required></label>
-                                            <label>Lon <input id="xp-facts-lon" type="number" step="any" min="-180" max="180" placeholder="longitude" required></label>
-                                        </div>
-                                        <button class="xp-tour-start" type="submit">Look up</button>
-                                    </form>
-                                    <div id="xp-facts-body" class="xp-facts-body" aria-live="polite"></div>
+                                    <div class="xp-fly-actions">
+                                        <button id="xp-fly-toggle" class="xp-tour-start xp-fly-main" type="button">▶ Fly-through</button>
+                                        <button id="xp-fly-again" class="xp-tour-close" type="button" disabled>↻ Run again</button>
+                                        <button id="xp-fly-reset" class="xp-tour-close" type="button" disabled>Reset</button>
+                                    </div>
+                                    <p class="xp-note">One full 360° orbit while zooming in; the whole structure stays in view. Press again to pause or resume.</p>
                                 </div>
                             </section>
 
