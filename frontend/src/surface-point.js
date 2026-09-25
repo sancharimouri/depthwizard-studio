@@ -37,17 +37,25 @@ const hoverFragment = /* glsl */ `
     }
 `;
 
+// uHighlight = 1 while the pointer is over the marker: the same hover
+// treatment as a measure point (#ffd23f with a stronger glow), plus a
+// thicker ring and a larger core.
 const selectedFragment = /* glsl */ `
     uniform float uOpacity;
+    uniform float uHighlight;
     varying vec2 vOff;
     void main() {
         float d = length(vOff);
         if (d > 1.0) discard;
-        float ring = smoothstep(0.62, 0.72, d) * (1.0 - smoothstep(0.88, 1.0, d));
-        float core = 1.0 - smoothstep(0.16, 0.26, d);
-        float glow = (1.0 - smoothstep(0.0, 1.0, d)) * 0.25;
+        float inner = mix(0.62, 0.52, uHighlight);
+        float ring = smoothstep(inner, inner + 0.1, d) * (1.0 - smoothstep(0.88, 1.0, d));
+        float coreR = mix(0.16, 0.24, uHighlight);
+        float core = 1.0 - smoothstep(coreR, coreR + 0.1, d);
+        float glow = (1.0 - smoothstep(0.0, 1.0, d)) * mix(0.25, 0.55, uHighlight);
         float a = max(max(ring, core), glow);
-        gl_FragColor = vec4(1.0, 0.82, 0.2, a * uOpacity);
+        vec3 color = mix(vec3(1.0, 0.82, 0.2), vec3(1.0, 0.824, 0.247), uHighlight);
+        color = mix(color, vec3(1.0, 0.93, 0.6), 0.35 * uHighlight * core);
+        gl_FragColor = vec4(color, a * uOpacity);
     }
 `;
 
@@ -57,7 +65,7 @@ function material(fragmentShader, ghost = false) {
     return new THREE.ShaderMaterial({
         vertexShader,
         fragmentShader,
-        uniforms: { uOpacity: { value: ghost ? 0.45 : 1 } },
+        uniforms: { uOpacity: { value: ghost ? 0.45 : 1 }, uHighlight: { value: 0 } },
         // double-sided: a point on a slope facing away from the camera must still show
         side: THREE.DoubleSide,
         transparent: true,
@@ -217,7 +225,22 @@ export function createSurfacePoints({ getTerrain, onChange = () => {} }) {
             placePin(u, v);
             onChange();
         },
+        // hover highlight of the selected marker (like a measure point's :hover)
+        setHighlight(on) {
+            const v = on && selectedUV ? 1 : 0;
+            if (!selected || selected.material.uniforms.uHighlight.value === v) {
+                return;
+            }
+            selected.material.uniforms.uHighlight.value = v;
+            selected.children[0].material.uniforms.uHighlight.value = v;
+            if (pin) {
+                pin.children[1].scale.setScalar(v ? 1.35 : 1);
+                pin.children.forEach(m => m.material.color.setHex(v ? 0xffd23f : 0xf5d042));
+            }
+            onChange();
+        },
         clear() {
+            this.setHighlight(false);
             selectedUV = null;
             if (selected) {
                 selected.visible = false;

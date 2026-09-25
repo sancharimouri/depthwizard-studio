@@ -5521,3 +5521,8 @@ kbd {
 .iv-preview-stage {
     cursor: crosshair;
 }
+
+/* Hovering the Image Inspection's selected point on the terrain (like a measure point's hover) */
+.final-demo-canvas.is-over-selected-point {
+    cursor: pointer;
+}
