@@ -2005,45 +2005,58 @@ async function runFinalDemoReconstruction() {
 }
 
 // ============================================================
-// WORKBENCH THEME TOGGLE (light/dark — Workbench only, Explore and the
-// global sidebar are untouched since they never receive a
-// [data-theme] attribute). Every color in styles.css reads from the
-// custom properties #page-workbench[data-theme="light"] overrides, so flipping
-// this one attribute repaints the whole page; the only piece CSS can't
-// reach is the Final Demo viewer's THREE.js scene background (UI
-// chrome, not imagery), updated here via viewer.setBackground().
+// GLOBAL THEME (dark / bright): one sun/moon button for every page, the
+// sidebar and the 3D viewer. It sets [data-theme] on <html>; every colour in
+// styles.css reads the custom properties :root[data-theme="light"]
+// overrides. The only parts CSS can't reach are the two THREE.js scene
+// backgrounds (UI chrome, not imagery), set here. Remembered per browser.
 // ============================================================
 
 const WORKBENCH_THEME_BG_HEX = {
     dark: 0x110f0e,
     light: 0xf4e9d2,
 };
+const THEME_KEY = "dw2.theme";
 
 let workbenchTheme = "dark";
 
+const THEME_ICONS = {
+    sun: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>',
+    moon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.8 6.8 0 0 0 9.7 9.7z"/></svg>',
+};
+
 function applyWorkbenchTheme(theme) {
     workbenchTheme = theme;
+    document.documentElement.dataset.theme = theme;
 
-    const page2 = document.getElementById("page-workbench");
-    if (page2) {
-        page2.dataset.theme = theme;
-    }
-
-    const toggle = document.getElementById("workbench-theme-toggle");
+    // the icon is the mode you'd switch TO: sun while dark, moon while bright
+    const toggle = document.getElementById("global-theme-toggle");
     if (toggle) {
-        const isLight = theme === "light";
-        toggle.setAttribute("aria-checked", String(isLight));
-        toggle.setAttribute("aria-label", `Switch Workbench to ${isLight ? "dark" : "light"} mode`);
-        toggle.title = `Switch to ${isLight ? "dark" : "light"} mode`;
+        const dark = theme === "dark";
+        toggle.innerHTML = dark ? THEME_ICONS.sun : THEME_ICONS.moon;
+        const name = dark ? "Switch to bright mode" : "Switch to dark mode";
+        toggle.setAttribute("aria-label", name);
+        toggle.dataset.tip = name;
     }
 
+    exploreViewer?.setBackground(WORKBENCH_THEME_BG_HEX[theme]);
     finalDemoViewer?.setBackground(finalDemoCurrentLayer === "wireframe-3d" ? 0x000000 : WORKBENCH_THEME_BG_HEX[theme]);
-    finalDemoChrome?.syncTheme();
+    try {
+        localStorage.setItem(THEME_KEY, theme);
+    } catch {
+        // storage blocked: the choice just isn't remembered
+    }
 }
 
-document.getElementById("workbench-theme-toggle")?.addEventListener("click", () => {
+document.getElementById("global-theme-toggle")?.addEventListener("click", () => {
     applyWorkbenchTheme(workbenchTheme === "dark" ? "light" : "dark");
 });
+
+try {
+    applyWorkbenchTheme(localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark");
+} catch {
+    applyWorkbenchTheme("dark");
+}
 
 // Creates the viewer, wires every control, and loads Darjeeling. Returns
 // the loadFinalDemoRegion() promise so callers can await real asset load

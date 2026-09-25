@@ -58,6 +58,8 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
     let terrain = null;
     let index = null;
     let water = null;
+    let walls = null; // the water body's side walls around the tile's edge
+    let perimeter = null; // grid vertex indices around the edge, in order
     let active = false;
     let shown = null; // level currently drawn (m)
     let target = null; // level the slider asks for (m)
@@ -75,6 +77,10 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
         water?.geometry.dispose();
         water?.material.dispose();
         water = null;
+        walls?.parent?.remove(walls);
+        walls?.geometry.dispose();
+        walls?.material.dispose();
+        walls = null;
         terrain = t;
         if (!t) {
             return null;
@@ -103,6 +109,50 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
         water.renderOrder = 2;
         water.visible = false;
         t.mesh.add(water);
+
+        // Fill, not just a sheet: translucent walls around the tile's edge,
+        // from the terrain's edge up to the water level wherever the ground
+        // there is below the water, so the flooded volume reads from the sides.
+        const { width: W, height: H } = t.grid;
+        perimeter = [];
+        for (let x = 0; x < W; x++) perimeter.push(x); // north edge (row 0)
+        for (let y = 1; y < H; y++) perimeter.push(y * W + W - 1); // east edge
+        for (let x = W - 2; x >= 0; x--) perimeter.push((H - 1) * W + x); // south edge
+        for (let y = H - 2; y >= 1; y--) perimeter.push(y * W); // west edge
+        const n = perimeter.length;
+        const wallPos = new Float32Array(n * 2 * 3);
+        const pos = t.mesh.geometry.attributes.position;
+        perimeter.forEach((vi, k) => {
+            for (const j of [0, 1]) {
+                wallPos[(k * 2 + j) * 3] = pos.getX(vi);
+                wallPos[(k * 2 + j) * 3 + 1] = pos.getY(vi);
+            }
+        });
+        const wallIdx = [];
+        for (let k = 0; k < n; k++) {
+            const k2 = (k + 1) % n;
+            const b0 = k * 2;
+            const t0 = k * 2 + 1;
+            const b1 = k2 * 2;
+            const t1 = k2 * 2 + 1;
+            wallIdx.push(b0, b1, t0, t0, b1, t1);
+        }
+        const wallGeom = new THREE.BufferGeometry();
+        wallGeom.setAttribute("position", new THREE.BufferAttribute(wallPos, 3));
+        wallGeom.setIndex(wallIdx);
+        walls = new THREE.Mesh(wallGeom, new THREE.MeshStandardMaterial({
+            color: 0x1f5f9e,
+            transparent: true,
+            opacity: 0.6,
+            roughness: 0.3,
+            metalness: 0.05,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+        }));
+        walls.renderOrder = 2;
+        walls.visible = false;
+        walls.frustumCulled = false;
+        t.mesh.add(walls);
         return t;
     }
 
@@ -110,8 +160,23 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
         shown = level;
         if (water && terrain) {
             // a flat (2D) layer has z = 0 everywhere; the plane would hide it
-            water.visible = active && terrain.isExtruded();
-            water.position.z = terrain.localZForElevation(level) + 0.02;
+            const show = active && terrain.isExtruded();
+            const zWater = terrain.localZForElevation(level) + 0.02;
+            water.visible = show;
+            water.position.z = zWater;
+            walls.visible = show;
+            if (show) {
+                // wall = ground edge → water level where the ground is lower
+                const pos = terrain.mesh.geometry.attributes.position;
+                const wp = walls.geometry.attributes.position;
+                perimeter.forEach((vi, k) => {
+                    const zg = pos.getZ(vi);
+                    wp.setZ(k * 2, zg);
+                    wp.setZ(k * 2 + 1, Math.max(zg, zWater));
+                });
+                wp.needsUpdate = true;
+                walls.geometry.computeVertexNormals();
+            }
         }
         levelLabel.textContent = `${Math.round(level).toLocaleString()} m`;
         const now = performance.now();

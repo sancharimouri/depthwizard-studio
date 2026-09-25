@@ -113,6 +113,8 @@ export function createControls(camera, domElement, target, homePosition = new TH
     // Set while something else (the flythrough) drives the camera itself:
     // base auto-rotate stays out of the way so the two never add up.
     let externallyDriven = false;
+    let autoRotateRamp = 0; // 0 → 1 while auto-rotation eases in
+    const AUTO_ROTATE_RAMP_SEC = 1;
     let speedMultiplier = 1;
     let idleTimer = null;
 
@@ -213,12 +215,18 @@ export function createControls(camera, domElement, target, homePosition = new TH
             // Positive, matching a rightward drag under the
             // azimuthRotateSpeed=-1 fix above (both increase azimuthAngle)
             // — old code's auto-rotate and drag shared the same sign too.
-            const step = AUTO_ROTATE_RADIANS_PER_SEC * speedMultiplier * delta;
+            // Eased back in (~1 s) whenever it (re)starts, so resuming after a
+            // fly-through, the idle timer or Play never jolts.
+            autoRotateRamp = Math.min(1, autoRotateRamp + delta / AUTO_ROTATE_RAMP_SEC);
+            const ramp = autoRotateRamp * autoRotateRamp * (3 - 2 * autoRotateRamp);
+            const step = AUTO_ROTATE_RADIANS_PER_SEC * speedMultiplier * delta * ramp;
             if (controls.autoRotateHandler) {
                 controls.autoRotateHandler(step);
             } else {
                 controls.azimuthAngle += step;
             }
+        } else {
+            autoRotateRamp = 0;
         }
 
         return nativeUpdate(delta);

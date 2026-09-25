@@ -27,7 +27,7 @@
 
     <!-- =====================================================
          GLOBAL SIDEBAR — the one navigation surface on every page
-         (Workbench / processing, Explore, Docs, the 3D viewer window).
+         (Workbench / processing, Demo, Docs, the 3D viewer window).
          PAGES + JOBS tabs. It pushes #app-main (flex), never overlays it.
          Wiring: src/sidebar.js.
     ====================================================== -->
@@ -56,7 +56,7 @@
             <div id="sb-panel-pages" class="sb-panel" role="tabpanel" aria-labelledby="sb-tab-pages">
                 <nav class="sb-pages" aria-label="Pages">
                     <button class="sb-page-link active" type="button" data-page="page-workbench" aria-current="page">Workbench</button>
-                    <button class="sb-page-link" type="button" data-page="page-explore">Explore</button>
+                    <button class="sb-page-link" type="button" data-page="page-explore">Demo</button>
                     <button class="sb-page-link" type="button" data-page="page-docs">Docs</button>
                 </nav>
                 <p id="sb-jobs-running" class="sb-muted">No jobs running</p>
@@ -95,6 +95,10 @@
          overlays, the expanded 3D window), so they fill this area and are
          pushed by the sidebar instead of sitting under it. -->
     <div id="app-main" class="app-main">
+
+        <!-- Global dark / bright switch (all pages, sidebar and the 3D viewer). -->
+        <button id="global-theme-toggle" class="xv-icon-btn tip-below global-theme-toggle" type="button"
+                aria-label="Switch to bright mode" data-tip="Switch to bright mode"></button>
 
 
     <!-- =====================================================
@@ -465,22 +469,6 @@
 
     <div id="page-workbench" class="page active">
 
-        <button
-            id="workbench-theme-toggle"
-            class="theme-toggle"
-            type="button"
-            role="switch"
-            aria-checked="false"
-            aria-label="Switch Workbench to light mode"
-            title="Switch to light mode"
-        >
-            <span class="theme-toggle-icon theme-toggle-icon-dark" aria-hidden="true">🌙</span>
-            <span class="theme-toggle-track">
-                <span class="theme-toggle-thumb"></span>
-            </span>
-            <span class="theme-toggle-icon theme-toggle-icon-light" aria-hidden="true">☀️</span>
-        </button>
-
         <!-- Page 1 input view (src/input-view.js builds its contents):
              Library / Upload / Search Online on the left, live preview +
              tier routing + START GENERATION on the right. The generation
@@ -733,7 +721,6 @@
                                         </label>
                                         <input id="xp-vex-slider" class="xp-slider" type="range" min="0.25" max="2" step="0.01" value="1">
                                         <div class="xp-slider-ends numeric-mono"><span id="xp-vex-min">x0.25</span><span id="xp-vex-max">x2</span></div>
-                                        <p class="xp-note">Display only. Measurements, statistics and exports always use the real elevations.</p>
                                     </div>
                                     <span id="final-demo-elevation-value" hidden></span>
                                 </div>
@@ -857,11 +844,10 @@
                                 </button>
                                 <div class="xp-body">
                                     <div class="xp-fly-actions">
-                                        <button id="xp-fly-toggle" class="xp-tour-start xp-fly-main" type="button">▶ Fly-through</button>
+                                        <button id="xp-fly-toggle" class="xp-tour-start xp-fly-main" type="button">◎ Fly-through</button>
                                         <button id="xp-fly-again" class="xp-tour-close" type="button" disabled>↻ Run again</button>
                                         <button id="xp-fly-reset" class="xp-tour-close" type="button" disabled>Reset</button>
                                     </div>
-                                    <p class="xp-note">One full 360° orbit while zooming in; the whole structure stays in view. Press again to pause or resume.</p>
                                 </div>
                             </section>
 
@@ -881,7 +867,6 @@
                                             <tr><td><kbd>esc</kbd></td><td>Cancel a measurement or close a menu</td></tr>
                                         </tbody>
                                     </table>
-                                    <p class="xp-note">Rotation resumes on its own after a few idle seconds; the Play/Pause button in the navigation bar (above the toolbar) stops it.</p>
                                 </div>
                             </section>
 
@@ -1053,7 +1038,7 @@
                     </div>
                     <div class="docs-card">
                         <div class="docs-card-num">2</div>
-                        <h3>Explore</h3>
+                        <h3>Demo</h3>
                         <ul>
                             <li>Four real 10 × 10 km regions in West Bengal — Darjeeling, Kolkata, Bardhaman and
                                 Sundarbans — each with Sentinel-2 imagery, DAv2 relative depth and a DEM.</li>
