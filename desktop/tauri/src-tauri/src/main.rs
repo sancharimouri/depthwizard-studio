@@ -50,6 +50,8 @@ fn main() {
             let t0 = Instant::now();
             let mut child = Command::new(&exe)
                 .env("DW2_PORT", PORT.to_string())
+                // the tiered tile library shipped with the app (desktop/tiles/build_bundle.py)
+                .env("DW2_LIBRARY_BUNDLE", app.path().resource_dir()?.join("library"))
                 // the webview's own origin (macOS/Linux: tauri://localhost; Windows: http(s)://tauri.localhost)
                 .env("CORS_ORIGINS", "tauri://localhost,http://tauri.localhost,https://tauri.localhost")
                 .current_dir(exe.parent().expect("backend dir"))

@@ -403,13 +403,16 @@ export function createInputView(root, { onStart }) {
         }
         const items = state.library.items.filter(item => state.filter === "all" || item.collection === state.filter);
         cardGrid.replaceChildren(...items.map(item => el("button", {
-            class: `iv-card ${tierClass(item.routing)}`,
+            class: `iv-card ${tierClass(item.routing)}${item.available === false ? " is-remote" : ""}`,
             type: "button",
             "data-id": item.id,
             "aria-pressed": String(state.selection?.id === item.id),
-            onclick: () => selectLibraryItem(item),
+            "aria-label": item.available === false ? `${item.title}: not downloaded yet, download` : null,
+            onclick: event => (item.available === false ? downloadLibraryItem(item, event.currentTarget) : selectLibraryItem(item)),
         },
-        el("img", { class: "iv-card-thumb", src: apiUrl(item.thumbnail_url), alt: "", loading: "lazy" }),
+        el("div", { class: "iv-card-media" },
+            el("img", { class: "iv-card-thumb", src: apiUrl(item.thumbnail_url), alt: "", loading: "lazy" }),
+            item.available === false ? downloadOverlay(item) : null),
         el("div", { class: "iv-card-body" },
             el("div", { class: "iv-card-title", text: item.title }),
             el("div", { class: "iv-card-sub", text: item.location }),
@@ -418,6 +421,50 @@ export function createInputView(root, { onStart }) {
                 el("span", { text: item.collection === "vhr" ? "Maxar" : item.collection === "dfc2019" ? "DFC2019" : "Sentinel-2" }),
                 el("span", { class: "iv-card-tier", text: `T${item.routing.tier}` })),
         ))));
+    }
+
+    // Desktop app only (the backend's bundle mode): an item that isn't bundled shows its
+    // thumbnail under a translucent overlay; clicking downloads its preview + tile into the
+    // per-user library, then selects it. The web app never sets `available`.
+    function downloadOverlay(item) {
+        const mb = item.download_bytes ? ` · ${(item.download_bytes / 1e6).toFixed(1)} MB` : "";
+        const overlay = el("div", { class: "iv-card-download" }, el("span", { class: "iv-card-download-label", text: `Download${mb}` }));
+        overlay.prepend(downloadIcon());
+        return overlay;
+    }
+
+    function downloadIcon() {
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("aria-hidden", "true");
+        svg.classList.add("iv-card-download-icon");
+        const path = document.createElementNS(ns, "path");
+        path.setAttribute("d", "M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14");
+        svg.append(path);
+        return svg;
+    }
+
+    async function downloadLibraryItem(item, card) {
+        if (card.classList.contains("is-downloading")) {
+            return;
+        }
+        const label = card.querySelector(".iv-card-download-label");
+        card.classList.remove("is-error");
+        card.classList.add("is-downloading");
+        label.textContent = "Downloading…";
+        try {
+            const updated = await (await api(`/api/library/${item.id}/download`, { method: "POST" })).json();
+            const i = state.library.items.findIndex(x => x.id === item.id);
+            state.library.items[i] = { ...state.library.items[i], ...updated };
+            renderCards();
+            selectLibraryItem(state.library.items[i]);
+        } catch (error) {
+            card.classList.remove("is-downloading");
+            card.classList.add("is-error");
+            label.textContent = error.status === 401 ? "Needs a Hugging Face token" : "Download failed: retry";
+            card.title = error.message;
+        }
     }
 
     async function selectLibraryItem(item) {

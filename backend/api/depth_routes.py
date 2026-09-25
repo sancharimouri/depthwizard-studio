@@ -214,6 +214,11 @@ async def _preview_bytes(source: str, item_id: str) -> bytes:
         raise HTTPException(status_code=404, detail="Unknown library item.")
     if library_store.mode() == "local":
         return catalog.image_path(item, "preview").read_bytes()
+    if library_store.mode() == "bundle":
+        path = library_store.local_asset(item, "preview")
+        if path is None:
+            raise HTTPException(status_code=409, detail="Download this tile first.")
+        return path.read_bytes()
     if not library_store.is_public(item):
         return library_store.private_file(item, "preview").read_bytes()
     names = item.get("assets") or library_store.asset_names(item)

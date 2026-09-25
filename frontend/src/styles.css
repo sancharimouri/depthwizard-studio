@@ -3597,6 +3597,63 @@ kbd {
     box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.5);
 }
 
+/* Desktop app: not-yet-downloaded library items (bundle mode) */
+.iv-card-media {
+    position: relative;
+}
+
+.iv-card-download {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    background: rgba(var(--bg-rgb), 0.55);
+    backdrop-filter: blur(1.5px);
+    color: rgb(var(--text-rgb));
+
+    font-size: 11px;
+    letter-spacing: 0.04em;
+
+    transition: background 160ms ease;
+}
+
+.iv-card.is-remote:hover .iv-card-download {
+    background: rgba(var(--bg-rgb), 0.4);
+}
+
+.iv-card-download-icon {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.iv-card.is-downloading .iv-card-download-icon {
+    animation: iv-download-pulse 1s ease-in-out infinite;
+}
+
+.iv-card.is-error .iv-card-download {
+    color: rgb(var(--danger-rgb, 220, 90, 80));
+}
+
+@keyframes iv-download-pulse {
+    50% { transform: translateY(3px); opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .iv-card.is-downloading .iv-card-download-icon {
+        animation: none;
+    }
+}
+
 .iv-card-thumb {
     display: block;
     width: 100%;

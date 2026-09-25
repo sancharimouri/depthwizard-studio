@@ -1,0 +1,647 @@
+{
+ "generated": "2026-09-26",
+ "dfc2019": {
+  "rule": "mean over the 4 quadrant folds per tile; rank = mean of per-metric ranks (MAE, RMSE asc; Pearson, Spearman desc) (source: data/dfc2019/experiments/method6_finetune_twinhead/method6_results.json)",
+  "bundled": [
+   "dfc2019-OMA_315_020",
+   "dfc2019-OMA_212_033",
+   "dfc2019-JAX_161_001",
+   "dfc2019-OMA_269_035",
+   "dfc2019-OMA_364_043",
+   "dfc2019-OMA_315_019",
+   "dfc2019-OMA_364_003",
+   "dfc2019-OMA_225_001",
+   "dfc2019-JAX_072_015",
+   "dfc2019-OMA_248_029"
+  ],
+  "metrics": {
+   "dfc2019-OMA_315_020": {
+    "mae_m": 1.5702,
+    "rmse_m": 2.4166,
+    "pearson": 0.8492,
+    "spearman": 0.8047,
+    "mean_rank": 10.5
+   },
+   "dfc2019-OMA_212_033": {
+    "mae_m": 0.6244,
+    "rmse_m": 1.3264,
+    "pearson": 0.9297,
+    "spearman": 0.4128,
+    "mean_rank": 13.25
+   },
+   "dfc2019-JAX_161_001": {
+    "mae_m": 1.2731,
+    "rmse_m": 2.1894,
+    "pearson": 0.8521,
+    "spearman": 0.6864,
+    "mean_rank": 13.25
+   },
+   "dfc2019-OMA_269_035": {
+    "mae_m": 1.2687,
+    "rmse_m": 2.0335,
+    "pearson": 0.7631,
+    "spearman": 0.7267,
+    "mean_rank": 13.75
+   },
+   "dfc2019-OMA_364_043": {
+    "mae_m": 1.4199,
+    "rmse_m": 2.3829,
+    "pearson": 0.792,
+    "spearman": 0.7328,
+    "mean_rank": 14
+   },
+   "dfc2019-OMA_315_019": {
+    "mae_m": 1.7043,
+    "rmse_m": 2.6708,
+    "pearson": 0.823,
+    "spearman": 0.7776,
+    "mean_rank": 14.5
+   },
+   "dfc2019-OMA_364_003": {
+    "mae_m": 1.3934,
+    "rmse_m": 2.3834,
+    "pearson": 0.7996,
+    "spearman": 0.7158,
+    "mean_rank": 14.75
+   },
+   "dfc2019-OMA_225_001": {
+    "mae_m": 1.2407,
+    "rmse_m": 2.1178,
+    "pearson": 0.8143,
+    "spearman": 0.6508,
+    "mean_rank": 15
+   },
+   "dfc2019-JAX_072_015": {
+    "mae_m": 1.6163,
+    "rmse_m": 2.6411,
+    "pearson": 0.8056,
+    "spearman": 0.7474,
+    "mean_rank": 15.5
+   },
+   "dfc2019-OMA_248_029": {
+    "mae_m": 1.794,
+    "rmse_m": 3.1593,
+    "pearson": 0.8935,
+    "spearman": 0.7772,
+    "mean_rank": 17
+   },
+   "dfc2019-JAX_004_016": {
+    "mae_m": 1.867,
+    "rmse_m": 3.1182,
+    "pearson": 0.8519,
+    "spearman": 0.7814,
+    "mean_rank": 18.25
+   },
+   "dfc2019-OMA_230_036": {
+    "mae_m": 1.2462,
+    "rmse_m": 2.0716,
+    "pearson": 0.7441,
+    "spearman": 0.6767,
+    "mean_rank": 18.5
+   },
+   "dfc2019-OMA_258_020": {
+    "mae_m": 0.851,
+    "rmse_m": 1.6407,
+    "pearson": 0.7571,
+    "spearman": 0.5204,
+    "mean_rank": 19
+   },
+   "dfc2019-JAX_018_012": {
+    "mae_m": 1.6676,
+    "rmse_m": 2.5435,
+    "pearson": 0.7961,
+    "spearman": 0.69,
+    "mean_rank": 19.75
+   },
+   "dfc2019-JAX_004_006": {
+    "mae_m": 1.8344,
+    "rmse_m": 2.9566,
+    "pearson": 0.8371,
+    "spearman": 0.7229,
+    "mean_rank": 20.5
+   },
+   "dfc2019-JAX_004_014": {
+    "mae_m": 1.9338,
+    "rmse_m": 3.2764,
+    "pearson": 0.8511,
+    "spearman": 0.7769,
+    "mean_rank": 20.5
+   },
+   "dfc2019-JAX_118_015": {
+    "mae_m": 1.5179,
+    "rmse_m": 2.7228,
+    "pearson": 0.7771,
+    "spearman": 0.6894,
+    "mean_rank": 21
+   },
+   "dfc2019-JAX_118_012": {
+    "mae_m": 1.5986,
+    "rmse_m": 2.6713,
+    "pearson": 0.7899,
+    "spearman": 0.6771,
+    "mean_rank": 21.25
+   },
+   "dfc2019-OMA_248_030": {
+    "mae_m": 2.09,
+    "rmse_m": 3.7697,
+    "pearson": 0.8705,
+    "spearman": 0.7616,
+    "mean_rank": 21.25
+   },
+   "dfc2019-JAX_022_009": {
+    "mae_m": 1.8864,
+    "rmse_m": 2.8659,
+    "pearson": 0.7891,
+    "spearman": 0.7354,
+    "mean_rank": 22.25
+   },
+   "dfc2019-OMA_134_027": {
+    "mae_m": 1.4277,
+    "rmse_m": 2.3172,
+    "pearson": 0.6892,
+    "spearman": 0.6872,
+    "mean_rank": 22.5
+   },
+   "dfc2019-OMA_281_030": {
+    "mae_m": 1.5739,
+    "rmse_m": 3.653,
+    "pearson": 0.7692,
+    "spearman": 0.7247,
+    "mean_rank": 22.75
+   },
+   "dfc2019-JAX_165_015": {
+    "mae_m": 3.8861,
+    "rmse_m": 6.142,
+    "pearson": 0.855,
+    "spearman": 0.8615,
+    "mean_rank": 24.25
+   },
+   "dfc2019-OMA_376_038": {
+    "mae_m": 0.9123,
+    "rmse_m": 1.7771,
+    "pearson": 0.6019,
+    "spearman": 0.4696,
+    "mean_rank": 25.25
+   },
+   "dfc2019-OMA_144_030": {
+    "mae_m": 0.2646,
+    "rmse_m": 0.5129,
+    "pearson": 0.0349,
+    "spearman": 0.0333,
+    "mean_rank": 25.5
+   },
+   "dfc2019-OMA_376_023": {
+    "mae_m": 0.895,
+    "rmse_m": 1.8506,
+    "pearson": 0.5491,
+    "spearman": 0.4697,
+    "mean_rank": 25.5
+   },
+   "dfc2019-JAX_416_022": {
+    "mae_m": 1.7378,
+    "rmse_m": 2.6795,
+    "pearson": 0.7497,
+    "spearman": 0.6141,
+    "mean_rank": 26.75
+   },
+   "dfc2019-JAX_214_015": {
+    "mae_m": 4.8663,
+    "rmse_m": 9.8352,
+    "pearson": 0.8472,
+    "spearman": 0.8395,
+    "mean_rank": 27
+   },
+   "dfc2019-JAX_224_025": {
+    "mae_m": 1.4973,
+    "rmse_m": 2.8122,
+    "pearson": 0.7383,
+    "spearman": 0.5777,
+    "mean_rank": 27.75
+   },
+   "dfc2019-OMA_211_032": {
+    "mae_m": 0.9911,
+    "rmse_m": 2.2339,
+    "pearson": 0.5773,
+    "spearman": 0.3918,
+    "mean_rank": 28
+   },
+   "dfc2019-JAX_269_009": {
+    "mae_m": 1.6442,
+    "rmse_m": 2.7345,
+    "pearson": 0.7472,
+    "spearman": 0.5567,
+    "mean_rank": 28
+   },
+   "dfc2019-JAX_214_023": {
+    "mae_m": 5.0961,
+    "rmse_m": 9.2504,
+    "pearson": 0.8261,
+    "spearman": 0.7909,
+    "mean_rank": 28
+   },
+   "dfc2019-JAX_416_009": {
+    "mae_m": 1.7523,
+    "rmse_m": 2.7624,
+    "pearson": 0.7313,
+    "spearman": 0.6277,
+    "mean_rank": 29
+   },
+   "dfc2019-OMA_281_002": {
+    "mae_m": 1.8065,
+    "rmse_m": 3.7412,
+    "pearson": 0.7326,
+    "spearman": 0.7022,
+    "mean_rank": 29.75
+   },
+   "dfc2019-JAX_175_002": {
+    "mae_m": 2.3454,
+    "rmse_m": 4.3564,
+    "pearson": 0.7853,
+    "spearman": 0.6903,
+    "mean_rank": 30.75
+   },
+   "dfc2019-JAX_166_006": {
+    "mae_m": 5.4618,
+    "rmse_m": 11.1847,
+    "pearson": 0.8097,
+    "spearman": 0.7625,
+    "mean_rank": 30.75
+   },
+   "dfc2019-OMA_198_002": {
+    "mae_m": 2.2278,
+    "rmse_m": 3.0872,
+    "pearson": 0.6826,
+    "spearman": 0.7073,
+    "mean_rank": 31.25
+   },
+   "dfc2019-JAX_264_013": {
+    "mae_m": 1.8665,
+    "rmse_m": 2.9763,
+    "pearson": 0.7319,
+    "spearman": 0.6229,
+    "mean_rank": 31.75
+   },
+   "dfc2019-OMA_211_039": {
+    "mae_m": 1.2639,
+    "rmse_m": 2.8056,
+    "pearson": 0.5454,
+    "spearman": 0.4373,
+    "mean_rank": 32
+   },
+   "dfc2019-OMA_221_034": {
+    "mae_m": 2.2959,
+    "rmse_m": 3.8579,
+    "pearson": 0.6905,
+    "spearman": 0.7054,
+    "mean_rank": 33.25
+   },
+   "dfc2019-JAX_204_005": {
+    "mae_m": 1.9145,
+    "rmse_m": 2.9683,
+    "pearson": 0.7261,
+    "spearman": 0.5925,
+    "mean_rank": 33.75
+   },
+   "dfc2019-JAX_505_016": {
+    "mae_m": 3.2382,
+    "rmse_m": 4.9269,
+    "pearson": 0.7437,
+    "spearman": 0.7198,
+    "mean_rank": 34.25
+   },
+   "dfc2019-OMA_332_037": {
+    "mae_m": 1.719,
+    "rmse_m": 2.9068,
+    "pearson": 0.6167,
+    "spearman": 0.5562,
+    "mean_rank": 34.5
+   },
+   "dfc2019-OMA_084_038": {
+    "mae_m": 2.4556,
+    "rmse_m": 3.9127,
+    "pearson": 0.6416,
+    "spearman": 0.703,
+    "mean_rank": 35.25
+   },
+   "dfc2019-JAX_505_018": {
+    "mae_m": 3.1215,
+    "rmse_m": 4.8442,
+    "pearson": 0.726,
+    "spearman": 0.7096,
+    "mean_rank": 35.75
+   },
+   "dfc2019-OMA_042_011": {
+    "mae_m": 2.5218,
+    "rmse_m": 3.5964,
+    "pearson": 0.6259,
+    "spearman": 0.6696,
+    "mean_rank": 37.25
+   },
+   "dfc2019-JAX_164_008": {
+    "mae_m": 4.6215,
+    "rmse_m": 8.1049,
+    "pearson": 0.7666,
+    "spearman": 0.6062,
+    "mean_rank": 38.75
+   },
+   "dfc2019-JAX_149_025": {
+    "mae_m": 2.8635,
+    "rmse_m": 4.5486,
+    "pearson": 0.6454,
+    "spearman": 0.6429,
+    "mean_rank": 39
+   },
+   "dfc2019-JAX_031_006": {
+    "mae_m": 2.8744,
+    "rmse_m": 4.3867,
+    "pearson": 0.6362,
+    "spearman": 0.5814,
+    "mean_rank": 41.25
+   },
+   "dfc2019-JAX_149_006": {
+    "mae_m": 3.0997,
+    "rmse_m": 4.8222,
+    "pearson": 0.6299,
+    "spearman": 0.6031,
+    "mean_rank": 41.75
+   }
+  }
+ },
+ "sentinel2": {
+  "rule": "post-QC actual (SCL) cloud + shadow + nodata == 0 (tiles with an unmeasured value excluded) AND real ICESat-2 photon + 20 m segment files on disk; best 2 per category by ICESat-2 ground-photon count, then 2 more by the same count, max 3 per category (sources: data/sentinel2_benchmark/manifest.csv, content_audit.csv, remediation_*.csv; data/icesat2_photons/, data/icesat2_segments20m/)",
+  "bundled": [
+   "sentinel2-manali",
+   "sentinel2-almora",
+   "sentinel2-jaipur",
+   "sentinel2-hyderabad",
+   "sentinel2-bathinda",
+   "sentinel2-nizamabad",
+   "sentinel2-amalapuram",
+   "sentinel2-bhitarkanika",
+   "sentinel2-kota",
+   "sentinel2-pune"
+  ],
+  "candidates": [
+   {
+    "tile": "bathinda",
+    "category": "agricultural",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 1190240,
+    "is2_photon_rows": 1194809,
+    "is2_segment_rows": 44591
+   },
+   {
+    "tile": "fatehpur",
+    "category": "agricultural",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 546485,
+    "is2_photon_rows": 560011,
+    "is2_segment_rows": 30423
+   },
+   {
+    "tile": "hisar",
+    "category": "agricultural",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 555024,
+    "is2_photon_rows": 552653,
+    "is2_segment_rows": 31319
+   },
+   {
+    "tile": "karnal",
+    "category": "agricultural",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 354293,
+    "is2_photon_rows": 353137,
+    "is2_segment_rows": 20118
+   },
+   {
+    "tile": "kota",
+    "category": "agricultural",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 622457,
+    "is2_photon_rows": 624926,
+    "is2_segment_rows": 32930
+   },
+   {
+    "tile": "kurnool",
+    "category": "agricultural",
+    "qc_sum": null,
+    "is2_ground_photons_manifest": 222503,
+    "is2_photon_rows": 220520,
+    "is2_segment_rows": 15138
+   },
+   {
+    "tile": "nizamabad",
+    "category": "agricultural",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 709144,
+    "is2_photon_rows": 721743,
+    "is2_segment_rows": 30227
+   },
+   {
+    "tile": "vidisha",
+    "category": "agricultural",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 506762,
+    "is2_photon_rows": 503839,
+    "is2_segment_rows": 29038
+   },
+   {
+    "tile": "amalapuram",
+    "category": "coastal",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 1041293,
+    "is2_photon_rows": 1060531,
+    "is2_segment_rows": 33315
+   },
+   {
+    "tile": "bhitarkanika",
+    "category": "coastal",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 427837,
+    "is2_photon_rows": 434455,
+    "is2_segment_rows": 24119
+   },
+   {
+    "tile": "digha",
+    "category": "coastal",
+    "qc_sum": 0.0030517578125,
+    "is2_ground_photons_manifest": 717297,
+    "is2_photon_rows": 727241,
+    "is2_segment_rows": 29528
+   },
+   {
+    "tile": "goa_estuary",
+    "category": "coastal",
+    "qc_sum": 0.0030517578125,
+    "is2_ground_photons_manifest": 730595,
+    "is2_photon_rows": 728750,
+    "is2_segment_rows": 28084
+   },
+   {
+    "tile": "kakinada",
+    "category": "coastal",
+    "qc_sum": 0.0244140625,
+    "is2_ground_photons_manifest": 585242,
+    "is2_photon_rows": 586656,
+    "is2_segment_rows": 27214
+   },
+   {
+    "tile": "kutch",
+    "category": "coastal",
+    "qc_sum": 0.81787109375,
+    "is2_ground_photons_manifest": 1055927,
+    "is2_photon_rows": 1062057,
+    "is2_segment_rows": 34785
+   },
+   {
+    "tile": "nagapattinam",
+    "category": "coastal",
+    "qc_sum": 0.0244140625,
+    "is2_ground_photons_manifest": 582698,
+    "is2_photon_rows": 587696,
+    "is2_segment_rows": 25653
+   },
+   {
+    "tile": "vembanad",
+    "category": "coastal",
+    "qc_sum": null,
+    "is2_ground_photons_manifest": 323329,
+    "is2_photon_rows": 325409,
+    "is2_segment_rows": 14773
+   },
+   {
+    "tile": "almora",
+    "category": "hilly",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 133786,
+    "is2_photon_rows": 122645,
+    "is2_segment_rows": 25136
+   },
+   {
+    "tile": "dehradun",
+    "category": "hilly",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 28438,
+    "is2_photon_rows": 24295,
+    "is2_segment_rows": 7185
+   },
+   {
+    "tile": "dharamshala",
+    "category": "hilly",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 60230,
+    "is2_photon_rows": 56895,
+    "is2_segment_rows": 9716
+   },
+   {
+    "tile": "kohima",
+    "category": "hilly",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 83403,
+    "is2_photon_rows": 75202,
+    "is2_segment_rows": 16336
+   },
+   {
+    "tile": "manali",
+    "category": "hilly",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 172806,
+    "is2_photon_rows": 169513,
+    "is2_segment_rows": 14711
+   },
+   {
+    "tile": "nainital",
+    "category": "hilly",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 52423,
+    "is2_photon_rows": 43424,
+    "is2_segment_rows": 14082
+   },
+   {
+    "tile": "ooty",
+    "category": "hilly",
+    "qc_sum": 0.0518798828125,
+    "is2_ground_photons_manifest": 104740,
+    "is2_photon_rows": 102110,
+    "is2_segment_rows": 12980
+   },
+   {
+    "tile": "shimla",
+    "category": "hilly",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 49604,
+    "is2_photon_rows": 41431,
+    "is2_segment_rows": 13880
+   },
+   {
+    "tile": "bengaluru",
+    "category": "urban",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 145805,
+    "is2_photon_rows": 141799,
+    "is2_segment_rows": 16696
+   },
+   {
+    "tile": "chennai",
+    "category": "urban",
+    "qc_sum": 0.0457763671875,
+    "is2_ground_photons_manifest": 284734,
+    "is2_photon_rows": 281071,
+    "is2_segment_rows": 21641
+   },
+   {
+    "tile": "delhi",
+    "category": "urban",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 73302,
+    "is2_photon_rows": 69005,
+    "is2_segment_rows": 12896
+   },
+   {
+    "tile": "hyderabad",
+    "category": "urban",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 241818,
+    "is2_photon_rows": 236177,
+    "is2_segment_rows": 25369
+   },
+   {
+    "tile": "jaipur",
+    "category": "urban",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 338720,
+    "is2_photon_rows": 331373,
+    "is2_segment_rows": 39319
+   },
+   {
+    "tile": "kochi_city",
+    "category": "urban",
+    "qc_sum": 0.0518798828125,
+    "is2_ground_photons_manifest": 373215,
+    "is2_photon_rows": 374118,
+    "is2_segment_rows": 17806
+   },
+   {
+    "tile": "mumbai",
+    "category": "urban",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 142816,
+    "is2_photon_rows": 137231,
+    "is2_segment_rows": 15125
+   },
+   {
+    "tile": "pune",
+    "category": "urban",
+    "qc_sum": 0.0,
+    "is2_ground_photons_manifest": 164383,
+    "is2_photon_rows": 158255,
+    "is2_segment_rows": 20751
+   }
+  ]
+ },
+ "vhr": {
+  "rule": "all 6 Maxar crops bundled",
+  "bundled": "all"
+ }
+}

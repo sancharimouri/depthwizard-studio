@@ -41,10 +41,14 @@ def _user_cache() -> Path:
 
 USER_CACHE = Path(os.environ.get("DW2_USER_CACHE") or _user_cache())
 os.environ.setdefault("DW2_UPLOADS_DIR", str(USER_CACHE / "uploads"))
+os.environ["DW2_NO_DOTENV"] = "1"  # config comes only from the environment the shell passes
 os.environ.setdefault("HF_HOME", str(USER_CACHE / "hf"))
 os.environ["DW2_DAV2_ONNX"] = str(BASE / "models" / "dav2_small.onnx")
+# The desktop shell passes DW2_LIBRARY_BUNDLE (the tiered tile library shipped with the app,
+# desktop/tiles/); on-demand tiles download into the per-user cache.
+os.environ.setdefault("DW2_LIBRARY", "bundle" if os.environ.get("DW2_LIBRARY_BUNDLE") else "local")
+os.environ.setdefault("DW2_LIBRARY_USER", str(USER_CACHE / "library"))
 os.environ["DAV2_INFERENCE_URL"] = f"http://127.0.0.1:{PORT}/local-dav2"
-os.environ.setdefault("DW2_LIBRARY", "local")
 
 import uvicorn  # noqa: E402
 

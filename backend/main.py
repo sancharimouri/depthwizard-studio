@@ -22,7 +22,10 @@ from backend.api.input_routes import router as input_router
 from backend.api.library_routes import router as library_router
 from backend.api.routes import router
 
-load_dotenv()
+# DW2_NO_DOTENV=1 (the desktop app): python-dotenv searches upward from this file's
+# location, so a packaged app would pick up any .env in a folder above its install path.
+if os.environ.get("DW2_NO_DOTENV") != "1":
+    load_dotenv()
 
 app = FastAPI(title="DepthWizard2 backend")
 
