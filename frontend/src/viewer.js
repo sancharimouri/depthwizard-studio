@@ -92,7 +92,7 @@ export function createTerrainViewer(canvas, options = {}) {
     // scene, at a fixed height, and never rotated: orbiting / tilting /
     // zooming moves only the camera, so the grid always stays flat.
     // Anti-aliased with fwidth; fades out with distance from the camera.
-    const GRID_COLORS = { dark: [0x5b6b5e, 0x364038], light: [0xa08a60, 0xc9b690] }; // [major, minor]
+    const GRID_COLORS = { dark: [0x3a443c, 0x2a312c], light: [0xd9ccae, 0xe2d5b8] }; // [line, unused] — sRGB, shown as-is now
     let gridDark = true;
     const gridMaterial = new THREE.ShaderMaterial({
         transparent: true,
@@ -140,6 +140,9 @@ export function createTerrainViewer(canvas, options = {}) {
                 float alpha = minor * fade;
                 if (alpha < 0.01) discard;
                 gl_FragColor = vec4(color, alpha);
+                // uniforms hold linear colours: convert to the output colour
+                // space, or every line renders darker than its hex value
+                #include <colorspace_fragment>
             }
         `,
     });

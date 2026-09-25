@@ -1,26 +1,28 @@
 // Fly-through for the expanded 3D viewer (the Fly-through box).
 //
-// One run: start zoomed out (structure small), then zoom in while orbiting
-// exactly one full 360° turn, in FLY_MS (faster than the old 9.5 s flight).
+// One run (2026-09-25 revision): a short eased lead-in from wherever the
+// camera is to the start pose, then a 270° orbit while zooming in. The start
+// is twice the size it used to be (half the old start distance: 1.1× the
+// worst-case box fit instead of 2.2×), and the run may leave the screen
+// edges: the old per-frame fit clamp is gone so the motion is one smooth
+// ease with no kinks. Every phase starts and ends at rest, and pause/resume
+// ramp the playback rate instead of snapping, so nothing is jarring.
 //
-// Fit: the structure's bounding sphere (radius R, world space) must stay
-// inside the view for the whole run, including the last frame. The camera
-// looks at the sphere centre, so the centre projects to the canvas centre;
-// the usable half-extent on each axis is the smaller distance from that
-// centre to the nearest obstruction (the left / right panel columns, the job
-// tabs at the top, the toolbars at the bottom). With the tighter of the
-// vertical and horizontal half-angles θ, a sphere is fully inside the view
-// cone at distance ≥ R / sin θ. The distance only decreases, from
-// START_FACTOR × that to (1 + MARGIN) × that, so every frame fits.
+// The fit maths (freeHalfExtents, fitDistance, boxFitDistance) still sets
+// the start and end distances from the structure's bounding box, the camera
+// FOV/aspect and the free area between the panels.
 //
 // Buttons: Fly-through (start / pause at the current position / resume),
 // Run again (restart), Reset (stop and return to the default view).
 
 import * as THREE from "three";
 
-const FLY_MS = 6000;
-const START_FACTOR = 2.2;
+const LEAD_MS = 900; // eased move from the current view to the start pose
+const ORBIT_MS = 5000; // the 270° orbit + zoom-in
+const ORBIT = 1.5 * Math.PI; // 270°
+const START_FACTOR = 1.1; // × worst-case fit (was 2.2: the structure now starts twice as big)
 const MARGIN = 0.04;
+const RATE_TAU_MS = 150; // pause/resume ease
 
 const easeInOutCubic = t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const easeInOutSine = t => -(Math.cos(Math.PI * t) - 1) / 2;
@@ -134,6 +136,7 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
     let elapsed = 0;
     let last = 0;
     let everPressed = false;
+    let rate = 0; // playback rate, eased towards 1 (running) or 0 (paused)
     let savedMaxDistance = null;
 
     function computePlan() {
@@ -156,26 +159,47 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
         });
         const az0 = controls.azimuthAngle;
         const worst = Math.max(...profile);
-        // ends on the tight fit for the final azimuth (= the start azimuth, one full turn later)
-        const endDist = profileAt(profile, az0) * (1 + MARGIN);
+        // ends on the tight fit for the final azimuth (270° after the start)
+        const endDist = profileAt(profile, az0 + ORBIT) * (1 + MARGIN);
+        const from = controls.getTarget(new THREE.Vector3(), true);
         return {
             center: sphere.center.clone(),
             endDist,
             startDist: worst * (1 + MARGIN) * START_FACTOR,
-            profile,
             az0,
             polar,
+            // where the camera is now: the lead-in starts here
+            from: { target: from, polar: controls.polarAngle, dist: controls.distance },
         };
     }
 
-    // Zoom eases in, but never closer than this azimuth's fit, so every frame
-    // keeps the whole structure inside the free area.
-    function applyAt(k) {
-        const az = plan.az0 + 2 * Math.PI * easeInOutSine(k);
-        const eased = plan.startDist + (plan.endDist - plan.startDist) * easeInOutCubic(k);
-        const d = Math.max(eased, profileAt(plan.profile, az) * (1 + MARGIN));
-        controls.rotateTo(az, plan.polar, false);
-        controls.dollyTo(d, false);
+    const target = new THREE.Vector3();
+    const position = new THREE.Vector3();
+    function pose(tgt, polar, az, dist) {
+        position.set(
+            tgt.x + dist * Math.sin(polar) * Math.sin(az),
+            tgt.y + dist * Math.cos(polar),
+            tgt.z + dist * Math.sin(polar) * Math.cos(az),
+        );
+        controls.setLookAt(position.x, position.y, position.z, tgt.x, tgt.y, tgt.z, false);
+    }
+
+    // time (ms since the run began) → camera: lead-in, then the orbit.
+    // Both phases ease in and out, so the joins are at rest (no jolt).
+    function applyAt(ms) {
+        if (ms < LEAD_MS) {
+            const e = easeInOutCubic(ms / LEAD_MS);
+            target.lerpVectors(plan.from.target, plan.center, e);
+            const polar = plan.from.polar + (plan.polar - plan.from.polar) * e;
+            const dist = plan.from.dist + (plan.startDist - plan.from.dist) * e;
+            pose(target, polar, plan.az0, dist);
+            return false;
+        }
+        const k = Math.min(1, (ms - LEAD_MS) / ORBIT_MS);
+        const az = plan.az0 + ORBIT * easeInOutSine(k);
+        const dist = plan.startDist + (plan.endDist - plan.startDist) * easeInOutCubic(k);
+        pose(plan.center, plan.polar, az, dist);
+        return k >= 1;
     }
 
     function releaseCamera() {
@@ -196,10 +220,9 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
         }
         controls.maxDistance = Math.max(controls.maxDistance, plan.startDist * 1.01);
         controls.setExternallyDriven(true); // base auto-rotation stays out of it
-        controls.setTarget(plan.center.x, plan.center.y, plan.center.z, false);
         elapsed = 0;
+        rate = 1;
         last = performance.now();
-        applyAt(0);
         state = "running";
         sync();
     }
@@ -211,6 +234,7 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
 
     function resume() {
         last = performance.now();
+        rate = Math.max(rate, 0); // ramps back up from wherever it is
         controls.setExternallyDriven(true);
         state = "running";
         sync();
@@ -219,6 +243,7 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
     function stop() {
         const wasActive = state === "running" || state === "paused";
         state = "idle";
+        rate = 0;
         if (wasActive || savedMaxDistance !== null) {
             releaseCamera();
         }
@@ -226,7 +251,7 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
     }
 
     function sync() {
-        toggle.textContent = state === "running" ? "❚❚ Pause" : state === "paused" ? "▶ Resume" : "▶ Fly-through";
+        toggle.textContent = state === "running" ? "❚❚ Pause" : state === "paused" ? "▶ Resume" : "◎ Fly-through"; // ◎ as on the Demo page
         toggle.setAttribute("aria-pressed", String(state === "running"));
         again.disabled = !everPressed;
         reset.disabled = !everPressed;
@@ -261,16 +286,20 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
 
     return {
         update() {
-            if (state !== "running" || !plan) {
+            if (!plan || (state !== "running" && !(state === "paused" && rate > 0.002))) {
                 return;
             }
             const now = performance.now();
-            elapsed += Math.min(now - last, 100);
+            const dt = Math.min(now - last, 100);
             last = now;
-            const k = Math.min(1, elapsed / FLY_MS);
-            applyAt(k);
-            if (k >= 1) {
+            const goal = state === "running" ? 1 : 0;
+            rate += (goal - rate) * (1 - Math.exp(-dt / RATE_TAU_MS));
+            elapsed += dt * rate;
+            const finished = applyAt(elapsed);
+            globalThis.__flyTrace?.push([elapsed, position.x, position.y, position.z]); // dev/test trace only
+            if (finished && state === "running") {
                 state = "done";
+                rate = 0;
                 releaseCamera();
                 sync();
             }

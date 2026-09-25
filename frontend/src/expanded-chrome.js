@@ -25,7 +25,8 @@ const ICONS = {
     save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
     chevronDown: '<path d="M6 9l6 6 6-6"/>',
     chevronRight: '<path d="M9 6l6 6-6 6"/>',
-    cursor: '<path d="M4 3l7.5 17 2.3-7.2L21 10.5z"/>',
+    // classic arrow cursor with its stem (not just the head)
+    cursor: '<path d="M5 3v15.5l4.2-4 2.9 6.6 2.6-1.1-2.9-6.5H17.5z"/>',
     notes: '<path d="M4 4h16v10l-6 6H4z"/><path d="M14 20v-6h6"/><path d="M8 9h8M8 13h4"/>',
     trash: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/>',
     play: '<path d="M7 4.5v15l12.5-7.5z"/>',
@@ -197,21 +198,9 @@ export function createExpandedChrome({
     const toast = (msg, kind = "info") => tool.showToast(msg, kind);
 
     // ------------------------------------------------------------------ top controls
-    const themeBtn = iconButton(box, { name: "Switch to bright mode", iconName: "sun", cls: "xv-theme", tipBelow: true });
-    themeBtn.dataset.xvUi = "";
-
-    // The icon is the mode you'd switch TO: sun while dark, moon while bright.
-    function syncTheme() {
-        const dark = getTheme() === "dark";
-        themeBtn.innerHTML = icon(dark ? "sun" : "moon");
-        const name = dark ? "Switch to bright mode" : "Switch to dark mode";
-        themeBtn.setAttribute("aria-label", name);
-        themeBtn.dataset.tip = name;
-    }
-    themeBtn.addEventListener("click", () => {
-        setTheme(getTheme() === "dark" ? "light" : "dark");
-        syncTheme();
-    });
+    // Theme: the global sun/moon switch (main.js, #global-theme-toggle) now
+    // serves every page including this view.
+    const syncTheme = () => {};
 
     // ------------------------------------------------------------------ edit toolbar
     // Exactly: Pointer, Screenshot, Record, Measure, View, Reset View, Notes,
