@@ -5401,3 +5401,88 @@ kbd {
 .jobs-saved-count:empty {
     display: none;
 }
+
+
+/* ---- 3D viewer top bar: unboxed icon buttons (Back, Close, Undo, Redo) */
+.xv-icon-btn.expanded-bar-icon {
+    width: 36px;
+    height: 36px;
+    border-color: transparent;
+    border-radius: 8px;
+    background: transparent;
+    backdrop-filter: none;
+    color: rgba(var(--text-rgb), 0.75);
+}
+
+.xv-icon-btn.expanded-bar-icon:hover:not(:disabled),
+.xv-icon-btn.expanded-bar-icon:focus-visible {
+    border-color: transparent;
+    background: rgba(var(--text-rgb), 0.08);
+    color: rgb(var(--text-rgb));
+}
+
+.xv-icon-btn.expanded-bar-close:hover:not(:disabled),
+.xv-icon-btn.expanded-bar-close:focus-visible {
+    border-color: transparent;
+    background: rgba(var(--danger-bg-rgb), 0.6);
+    color: rgb(var(--danger-text-rgb));
+}
+
+.xv-icon-btn.expanded-bar-icon:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.final-demo-expanded-bar {
+    align-items: center;
+    gap: 2px;
+}
+
+.expanded-bar-sep {
+    width: 1px;
+    height: 18px;
+    margin: 0 6px;
+    background: rgba(var(--text-rgb), 0.15);
+}
+
+
+/* ---- Job tab: name only, pencil on hover (a sibling button, not nested) */
+.job-tab-wrap {
+    position: relative;
+    display: flex;
+    flex: none;
+}
+
+.job-tab-wrap .job-tab {
+    padding-right: 30px;
+}
+
+.job-tab-edit {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: rgba(var(--text-rgb), 0.6);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity 0.15s ease;
+}
+
+.job-tab-wrap:hover .job-tab-edit:not(:disabled),
+.job-tab-edit:focus-visible {
+    opacity: 1;
+}
+
+.job-tab-edit:hover {
+    background: rgba(var(--text-rgb), 0.1);
+    color: rgb(var(--text-rgb));
+}
