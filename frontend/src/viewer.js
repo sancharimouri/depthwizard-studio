@@ -49,6 +49,29 @@ export function createTerrainViewer(canvas, options = {}) {
     sun.castShadow = true;
     scene.add(sun);
 
+    // Persistent base reference grid under the terrain in every view mode
+    // (true colour, DSM, DEM, flat, wireframe), as in the reference repo
+    // (gridHelper 80 units / 40 divisions under a 60-unit terrain, i.e.
+    // 1.33× the terrain, shown by default). Rebuilt per terrain for its size.
+    let grid = null;
+    let gridDark = true;
+    const GRID_COLORS = { dark: [0x3f4a40, 0x252b26], light: [0xb4a17c, 0xd6c6a3] };
+
+    function buildGrid(terrain) {
+        if (grid) {
+            scene.remove(grid);
+            grid.geometry.dispose();
+            grid.material.dispose();
+        }
+        const size = 1.33 * Math.max(terrain.terrainWidth, terrain.terrainHeight);
+        const [center, line] = GRID_COLORS[gridDark ? "dark" : "light"];
+        grid = new THREE.GridHelper(size, 40, center, line);
+        grid.position.set(0, rigOffsetY - 0.3, 0);
+        grid.material.transparent = true;
+        grid.material.opacity = 0.9;
+        scene.add(grid);
+    }
+
     let currentTerrain = null;
     let currentRegionKey = null;
     let lastWidth = 0;
@@ -92,6 +115,7 @@ export function createTerrainViewer(canvas, options = {}) {
 
         currentTerrain = terrain;
         currentRegionKey = regionKey;
+        buildGrid(terrain);
 
         // ~18 degrees above the horizon, same distance regardless of
         // region — createTerrain() always builds at a fixed 100-unit
@@ -111,6 +135,14 @@ export function createTerrainViewer(canvas, options = {}) {
 
     function setBackground(color) {
         scene.background = new THREE.Color(color);
+        const c = scene.background;
+        const dark = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b < 0.5;
+        if (dark !== gridDark) {
+            gridDark = dark;
+            if (currentTerrain) {
+                buildGrid(currentTerrain);
+            }
+        }
     }
 
     function resize(width, height) {
@@ -154,6 +186,9 @@ export function createTerrainViewer(canvas, options = {}) {
         controls,
         get currentTerrain() {
             return currentTerrain;
+        },
+        get grid() {
+            return grid;
         },
         get currentRegionKey() {
             return currentRegionKey;

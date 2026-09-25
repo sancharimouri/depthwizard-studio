@@ -362,11 +362,27 @@ runAgainButton?.addEventListener("click", runReconstruction);
 const FLYTHROUGH_ROTATE_SPEED_MULTIPLIER = 2;
 const FLYTHROUGH_DURATION_MS = 9500;
 
+// The flythrough drives its OWN rotation + zoom, independent of base
+// auto-rotate: it runs the same whether auto-rotate is on, user-paused
+// (the ⏸ button), held (measuring) or idle-paused after a drag. While it
+// runs, base auto-rotate is suspended (setExternallyDriven) so the two never
+// add up; afterwards the camera returns to whatever base state was set.
+// Grabbing the camera ends it.
 function createFlythroughController({ controls: flControls, button }) {
     let flythrough = null;
+    const rotateRadPerSec = flControls.AUTO_ROTATE_RADIANS_PER_SEC * FLYTHROUGH_ROTATE_SPEED_MULTIPLIER;
+
+    function finish(label = "✓ FLYTHROUGH") {
+        flythrough = null;
+        flControls.setExternallyDriven(false);
+        if (button) {
+            button.textContent = label;
+        }
+    }
 
     function reset() {
         flythrough = null;
+        flControls.setExternallyDriven(false);
         flControls.setSpeedMultiplier(1);
 
         if (button) {
@@ -388,12 +404,10 @@ function createFlythroughController({ controls: flControls, button }) {
             startDistance,
             endDistance,
             startTime: performance.now(),
+            lastTime: performance.now(),
             duration: FLYTHROUGH_DURATION_MS,
         };
-
-        // 2x idle rotation speed for the zoom-in and for the continued
-        // rotation afterward — stays elevated until the next reset.
-        flControls.setSpeedMultiplier(FLYTHROUGH_ROTATE_SPEED_MULTIPLIER);
+        flControls.setExternallyDriven(true);
 
         if (button) {
             button.disabled = true;
@@ -406,7 +420,10 @@ function createFlythroughController({ controls: flControls, button }) {
             return;
         }
 
-        const t = Math.min(1, (performance.now() - flythrough.startTime) / flythrough.duration);
+        const now = performance.now();
+        const t = Math.min(1, (now - flythrough.startTime) / flythrough.duration);
+        const dt = Math.min((now - flythrough.lastTime) / 1000, 0.1);
+        flythrough.lastTime = now;
         const eased = 1 - Math.pow(1 - t, 3);
 
         const distance = flythrough.startDistance + (flythrough.endDistance - flythrough.startDistance) * eased;
@@ -415,19 +432,27 @@ function createFlythroughController({ controls: flControls, button }) {
         // cubic ease, and letting controls' own damping smooth it too
         // would double up and lag behind the intended curve.
         flControls.dollyTo(distance, false);
+        // Own rotation, same sign as base auto-rotate.
+        flControls.azimuthAngle += rotateRadPerSec * dt;
 
         if (t >= 1) {
-            flythrough = null;
-
-            if (button) {
-                button.textContent = "✓ FLYTHROUGH";
-            }
+            finish();
         }
     }
 
+    // User grabbed the camera: stop driving it.
+    flControls.addEventListener("control", () => {
+        if (flythrough) {
+            finish(button ? "◎ FLYTHROUGH" : undefined);
+            if (button) {
+                button.disabled = false;
+            }
+        }
+    });
+
     button?.addEventListener("click", start);
 
-    return { start, update, reset };
+    return { start, update, reset, isRunning: () => Boolean(flythrough) };
 }
 
 const exploreFlythrough = createFlythroughController({
@@ -585,6 +610,7 @@ function collapseFinalDemoInstantly() {
     finalDemoPlaceholder?.remove();
     finalDemoPlaceholder = null;
     finalDemoAnimating = false;
+    syncNavDefault();
     if (finalDemoExpandedBar) {
         finalDemoExpandedBar.hidden = true;
     }
@@ -873,21 +899,11 @@ function jobItem(job, { running, active, choosing }) {
     pin.setAttribute("aria-pressed", String(job.pinned));
     pin.addEventListener("click", () => jobStore.togglePin(job.id));
 
-    const confirming = pendingDelete?.key === `job:${job.id}`;
-    const trash = iconAction(`job-trash${confirming ? " is-confirm" : ""}`,
-        confirming ? `Confirm: delete ${jobLabel(job)}` : `Delete ${jobLabel(job)}`, confirming ? "" : ICONS.trash);
-    if (confirming) {
-        trash.textContent = "Delete?";
-    }
+    const trash = iconAction("job-trash", `Delete ${jobLabel(job)}`, ICONS.trash);
     trash.disabled = job.status === "generating";
-    trash.addEventListener("click", () => {
-        if (pendingDelete?.key === `job:${job.id}`) {
+    trash.addEventListener("click", async () => {
+        if (await confirmDeleteJob(job)) {
             deleteJob(job.id);
-        } else {
-            armDelete(`job:${job.id}`);
-            renderJobs();
-            jobsListEl?.parentElement?.querySelector(`.job-select[data-job-id="${job.id}"]`)
-                ?.closest(".job-item")?.querySelector(".job-trash")?.focus();
         }
     });
 
@@ -898,6 +914,9 @@ function jobItem(job, { running, active, choosing }) {
 }
 
 function renderJobs() {
+    // Pages-panel Jobs list first: it must also refresh (to its empty state)
+    // when the jobs panel below bails out with no jobs and no saved work.
+    renderNavJobs();
     const hasJobs = jobStore.count() > 0;
     const savedCount = savedStore.list().length;
     // Shown once there's a job, or earlier saved work to reopen (after a reload).
@@ -959,6 +978,186 @@ function renderJobs() {
     renderJobTabs();
 }
 
+// ---- Inline job rename, shared by the pages panel's Jobs list and the 3D
+// view's tab strip. Both render from jobStore, so a rename in either place
+// shows in both (and in the jobs panel, logs and exports via jobLabel()).
+// One persistent <input> survives re-renders (progress ticks re-render the
+// lists) so typing isn't interrupted.
+let renaming = null; // { id, where: "nav" | "tab" }
+const renameInput = document.createElement("input");
+renameInput.type = "text";
+renameInput.maxLength = 60;
+renameInput.className = "job-rename-input";
+renameInput.setAttribute("aria-label", "Job name");
+
+function startRename(id, where) {
+    const job = jobStore.get(id);
+    if (!job) {
+        return;
+    }
+    renaming = { id, where };
+    renameInput.value = jobLabel(job);
+    renderJobs();
+    renameInput.focus();
+    renameInput.select();
+}
+
+function endRename(commit) {
+    if (!renaming) {
+        return;
+    }
+    const { id } = renaming;
+    renaming = null;
+    if (commit) {
+        jobStore.rename(id, renameInput.value); // emits → renderJobs
+    }
+    renderJobs();
+}
+
+renameInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        endRename(true);
+    } else if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        endRename(false);
+    }
+});
+renameInput.addEventListener("blur", () => {
+    // re-renders move the input (blur fires); only a real focus loss commits
+    setTimeout(() => {
+        if (renaming && document.activeElement !== renameInput) {
+            endRename(true);
+        }
+    }, 0);
+});
+
+function renameField(job, className) {
+    const wrap = document.createElement("div");
+    wrap.className = className;
+    const hadFocus = document.activeElement === renameInput;
+    const [a, b] = [renameInput.selectionStart, renameInput.selectionEnd];
+    wrap.append(renameInput);
+    if (hadFocus) {
+        requestAnimationFrame(() => {
+            renameInput.focus({ preventScroll: true });
+            renameInput.setSelectionRange(a, b);
+        });
+    }
+    return wrap;
+}
+
+// ---- Jobs section of the pages panel
+const navJobsList = document.getElementById("page-nav-jobs-list");
+const navJobsCount = document.getElementById("page-nav-jobs-count");
+document.getElementById("page-nav-jobs")?.addEventListener("click", () => {
+    if (!pageNav?.classList.contains("expanded")) {
+        setNavExpanded(true);
+    }
+    navJobsList?.querySelector("button")?.focus({ preventScroll: true });
+});
+
+function renderNavJobs() {
+    if (!navJobsList) {
+        return;
+    }
+    const jobs = jobStore.panelOrder().concat(jobStore.pinnedOrder());
+    if (navJobsCount) {
+        navJobsCount.textContent = String(jobStore.count());
+    }
+    if (!jobs.length) {
+        const empty = document.createElement("p");
+        empty.className = "page-nav-jobs-empty";
+        empty.textContent = "No jobs running. Choose an input on Workbench and press START GENERATION.";
+        navJobsList.replaceChildren(empty);
+        return;
+    }
+    const active = jobStore.active();
+    const running = jobStore.generating();
+    navJobsList.replaceChildren(...jobs.map(job => {
+        if (renaming?.id === job.id && renaming.where === "nav") {
+            return renameField(job, "page-nav-job is-editing");
+        }
+        const row = document.createElement("div");
+        row.className = `page-nav-job${job === active ? " is-active" : ""}`;
+        const open = document.createElement("button");
+        open.type = "button";
+        open.className = "page-nav-job-open";
+        open.disabled = Boolean(running) && job !== running;
+        open.title = `${jobLabel(job)} · ${job.input.title} · double-click to rename`;
+        const name = document.createElement("span");
+        name.className = "page-nav-job-name";
+        name.textContent = jobLabel(job);
+        const meta = document.createElement("span");
+        meta.className = "page-nav-job-meta";
+        meta.textContent = job.status === "generating"
+            ? `Generating ${job.progress}%`
+            : `${job.saved ? "Saved" : "Unsaved"} · ${job.input.title}`;
+        open.append(name, meta);
+        open.addEventListener("click", () => {
+            setActivePage("page-workbench");
+            selectJob(job.id);
+        });
+        open.addEventListener("dblclick", event => {
+            event.preventDefault();
+            startRename(job.id, "nav");
+        });
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "page-nav-job-edit";
+        edit.setAttribute("aria-label", `Rename ${jobLabel(job)}`);
+        edit.title = "Rename";
+        edit.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+        edit.addEventListener("click", () => startRename(job.id, "nav"));
+        row.append(open, edit);
+        return row;
+    }));
+}
+
+// ---- Job delete confirmation (trash icon): a real modal, no "don't show again"
+const jobDeleteModal = document.getElementById("job-delete-modal");
+let jobDeleteResolve = null;
+let jobDeleteReturnFocus = null;
+
+function confirmDeleteJob(job) {
+    if (!jobDeleteModal) {
+        return Promise.resolve(window.confirm(`Delete ${jobLabel(job)}?`));
+    }
+    jobDeleteResolve?.(false);
+    document.getElementById("job-delete-title").textContent = `Delete ${jobLabel(job)}?`;
+    document.getElementById("job-delete-body").textContent = `${jobLabel(job)} · ${job.input.title} will be removed from this session`
+        + (job.saved
+            ? ". Its saved copy stays in Saved."
+            : ". It isn't saved, so its input, DEM and calculation log will be lost. This can't be undone.");
+    jobDeleteReturnFocus = document.activeElement;
+    jobDeleteModal.hidden = false;
+    document.getElementById("job-delete-cancel").focus();
+    return new Promise(resolve => {
+        jobDeleteResolve = resolve;
+    });
+}
+
+function settleJobDelete(ok) {
+    if (!jobDeleteResolve) {
+        return;
+    }
+    jobDeleteModal.hidden = true;
+    const resolve = jobDeleteResolve;
+    jobDeleteResolve = null;
+    jobDeleteReturnFocus?.focus?.({ preventScroll: true });
+    resolve(ok);
+}
+
+document.getElementById("job-delete-cancel")?.addEventListener("click", () => settleJobDelete(false));
+document.getElementById("job-delete-backdrop")?.addEventListener("click", () => settleJobDelete(false));
+document.getElementById("job-delete-ok")?.addEventListener("click", () => settleJobDelete(true));
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && jobDeleteModal && !jobDeleteModal.hidden) {
+        settleJobDelete(false);
+    }
+});
+
 function renderJobTabs() {
     if (!jobTabsEl) {
         return;
@@ -998,6 +1197,14 @@ function renderJobTabs() {
             tab.append(mark);
         }
         tab.addEventListener("click", () => selectJob(job.id));
+        tab.addEventListener("dblclick", event => {
+            event.preventDefault();
+            startRename(job.id, "tab");
+        });
+        tab.title += " · double-click to rename";
+        if (renaming?.id === job.id && renaming.where === "tab") {
+            return renameField(job, "job-tab job-tab-editing");
+        }
         return tab;
     }));
 
@@ -1016,6 +1223,7 @@ function renderJobTabs() {
 }
 
 jobStore.onChange(renderJobs);
+renderNavJobs(); // empty state before the first job
 generateNewButton?.addEventListener("click", generateNew);
 
 // ---- Toolbar show/hide (the panel collapses to a narrow strip and the page
@@ -1360,6 +1568,7 @@ function setActivePage(pageId) {
     if (pageId === "page-workbench") {
         requestAnimationFrame(initWorkbenchGrid);
     }
+    syncNavDefault();
 }
 
 pageNavTabs.forEach(tab => {
@@ -1368,9 +1577,26 @@ pageNavTabs.forEach(tab => {
     });
 });
 
+// The panel's expanded state also drives --nav-w (body.nav-expanded), so the
+// Workbench jobs panel and the expanded 3D view move over instead of being covered.
+function setNavExpanded(expanded) {
+    pageNav?.classList.toggle("expanded", expanded);
+    document.body.classList.toggle("nav-expanded", expanded);
+    pageNavToggle?.setAttribute("aria-expanded", String(expanded));
+}
+
 pageNavToggle?.addEventListener("click", () => {
-    pageNav?.classList.toggle("expanded");
+    setNavExpanded(!pageNav?.classList.contains("expanded"));
 });
+
+// Default visibility: expanded while the post-generation 3D window is open,
+// collapsed everywhere else. Applied on each transition; manual toggles in
+// between are respected.
+function syncNavDefault() {
+    const viewing3d = activePageId === "page-workbench"
+        && document.getElementById("final-demo-box")?.classList.contains("is-expanded");
+    setNavExpanded(Boolean(viewing3d));
+}
 
 // Workbench is the landing page, so run its first-show init (grid entrance) on load too.
 setActivePage(activePageId);
@@ -1712,6 +1938,8 @@ function activateFinalDemoLayer(layer) {
     finalDemoCurrentTerrain.setLayer(layer);
     finalDemoCurrentLayer = layer;
     finalDemoFloodSim?.refresh();
+    // Wireframe: neon lines on pure black; every other layer uses the theme's background.
+    finalDemoViewer.setBackground(layer === "wireframe-3d" ? 0x000000 : WORKBENCH_THEME_BG_HEX[workbenchTheme]);
 
     document.querySelectorAll("#final-demo-box .layer-button").forEach(button => {
         button.classList.toggle("active", button.dataset.layer === layer);
@@ -1900,7 +2128,7 @@ function applyWorkbenchTheme(theme) {
         toggle.title = `Switch to ${isLight ? "dark" : "light"} mode`;
     }
 
-    finalDemoViewer?.setBackground(WORKBENCH_THEME_BG_HEX[theme]);
+    finalDemoViewer?.setBackground(finalDemoCurrentLayer === "wireframe-3d" ? 0x000000 : WORKBENCH_THEME_BG_HEX[theme]);
     finalDemoChrome?.syncTheme();
 }
 
@@ -1974,6 +2202,7 @@ function initFinalDemoViewer() {
         window.__dwTerrain = () => finalDemoCurrentTerrain;
         window.__dwCamera = () => finalDemoViewer.camera;
         window.__dwTHREE = THREE;
+        window.__dwViewer = finalDemoViewer;
     }
     renderSource(jobStore.active());
     renderFacts(jobStore.active());
@@ -2349,10 +2578,16 @@ function edgesOf(rect) {
 
 // "Full window" = everything right of the jobs panel once jobs exist
 // (matches the .has-jobs .is-expanded rule in styles.css).
+// Same arithmetic as the CSS rule (left: nav-w + 16px + jobs-w), not the
+// panel's live rect, which may still be mid-transition when the nav opens.
 function fullWindowEdges() {
     const panel = document.getElementById("jobs-panel");
-    const left = panel && !panel.hidden ? Math.round(panel.getBoundingClientRect().right + 8) : 0;
-    return { top: "0px", right: "0px", bottom: "0px", left: `${left}px` };
+    if (!panel || panel.hidden) {
+        return { top: "0px", right: "0px", bottom: "0px", left: "0px" };
+    }
+    const px = (el, name) => parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
+    const left = px(document.body, "--nav-w") + 16 + px(workbenchPageEl, "--jobs-w");
+    return { top: "0px", right: "0px", bottom: "0px", left: `${Math.round(left)}px` };
 }
 
 // The canvas resizes every frame via animate() → resizeToCanvas(), so the 3D
@@ -2385,6 +2620,7 @@ async function expandFinalDemo() {
     finalDemoBoxEl.before(finalDemoPlaceholder);
 
     finalDemoBoxEl.classList.add("is-expanded", "is-animating");
+    syncNavDefault(); // pages panel opens with the 3D window (before the edges are computed)
     if (finalDemoExpandedBar) {
         finalDemoExpandedBar.hidden = false;
     }
@@ -2420,6 +2656,7 @@ async function collapseFinalDemo() {
         finalDemoExpandedBar.hidden = true;
     }
     finalDemoAnimating = false;
+    syncNavDefault();
     requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
     document.getElementById("final-demo-fullscreen")?.focus({ preventScroll: true });
 }

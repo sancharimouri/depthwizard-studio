@@ -1212,7 +1212,9 @@ kbd {
     left: 0;
     bottom: 0;
 
-    z-index: 60;
+    /* above the expanded 3D view (200) and the Workbench jobs panel (210),
+       which used to cover the expanded panel */
+    z-index: 230;
 
     width: 56px;
     overflow: hidden;
@@ -2405,7 +2407,9 @@ kbd {
 }
 
 .expanded-bar-close:hover,
-.expanded-bar-close:focus-visible {
+.expanded-bar-close:focus-visible,
+.xv-icon-btn.expanded-bar-close:hover:not(:disabled),
+.xv-icon-btn.expanded-bar-close:focus-visible {
     background: rgba(var(--danger-bg-rgb), 0.85);
     border-color: rgba(var(--danger-text-rgb), 0.45);
     color: rgb(var(--danger-text-rgb));
@@ -3025,7 +3029,8 @@ kbd {
     border-bottom-left-radius: 0;
 }
 
-.xv-caret[data-count]:not([data-count=""])::before {
+.xv-caret[data-count]:not([data-count=""])::before,
+.xv-notes-count[data-count]:not([data-count=""])::before {
     content: attr(data-count);
     position: absolute;
     top: -6px;
@@ -4175,15 +4180,26 @@ kbd {
     transition: padding-left 0.22s ease;
 }
 
+/* --nav-w: the pages panel's width (56px collapsed, 180px expanded). The
+   jobs panel, content and expanded 3D view sit to its right, so opening the
+   panel moves them over instead of covering them. */
+body {
+    --nav-w: 56px;
+}
+
+body.nav-expanded {
+    --nav-w: 180px;
+}
+
 #page-workbench.has-jobs .input-view,
 #page-workbench.has-jobs .workbench-grid {
-    padding-left: calc(80px + var(--jobs-w));
+    padding-left: calc(var(--nav-w) + 24px + var(--jobs-w));
 }
 
 /* the expanded 3D view fills everything right of the panel and moves with it
    when the panel is shown/hidden (fullWindowEdges() in main.js matches this) */
 #page-workbench.has-jobs .final-demo-box.is-expanded {
-    left: calc(72px + var(--jobs-w));
+    left: calc(var(--nav-w) + 16px + var(--jobs-w));
     transition: left 0.22s ease;
 }
 
@@ -4195,7 +4211,7 @@ kbd {
     position: absolute;
     top: 24px;
     bottom: 24px;
-    left: 80px;
+    left: calc(var(--nav-w) + 24px);
     /* above the expanded 3D view (z 200) so the toggle's tooltip isn't hidden;
        the two never overlap otherwise */
     z-index: 210;
@@ -4207,7 +4223,7 @@ kbd {
     width: 196px;
     padding: 14px 12px;
 
-    transition: width 0.22s ease, padding 0.22s ease;
+    transition: width 0.22s ease, padding 0.22s ease, left 0.18s ease;
 
     border: 1px solid rgba(var(--text-rgb), 0.12);
     border-radius: 12px;
@@ -5376,4 +5392,152 @@ kbd {
     flex: 1;
     border-color: #3d8fe0;
     color: #7db8f0;
+}
+
+
+/* ---- Notes ▾ list (same pattern as the Save library) */
+.xv-sm-text {
+    margin-left: auto;
+    padding: 4px 9px;
+    font-size: 11px;
+}
+
+.xv-notes-panel .xv-fly-list {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+
+/* ---- Pages panel: Jobs section (list visible while the panel is expanded) */
+.page-nav-tabs {
+    flex: 1;
+    min-height: 0;
+}
+
+.page-nav-jobs-tab {
+    margin-top: 10px;
+}
+
+.page-nav-jobs-list {
+    display: none;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-left: 4px;
+}
+
+.page-nav.expanded .page-nav-jobs-list {
+    display: flex;
+}
+
+.page-nav-jobs-empty {
+    margin: 4px 6px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: rgba(var(--text-rgb), 0.5);
+    white-space: normal;
+}
+
+.page-nav-job {
+    display: flex;
+    align-items: center;
+    border-radius: 7px;
+}
+
+.page-nav-job.is-active {
+    background: rgba(var(--accent-rgb), 0.1);
+}
+
+.page-nav-job-open {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1px;
+    padding: 6px 6px;
+
+    border: 0;
+    background: none;
+    color: rgba(var(--text-rgb), 0.8);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.page-nav-job-open:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.page-nav-job-open:hover:not(:disabled) .page-nav-job-name {
+    color: rgb(var(--text-rgb));
+}
+
+.page-nav-job-name {
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page-nav-job-meta {
+    overflow: hidden;
+    font-size: 10px;
+    color: rgba(var(--text-rgb), 0.5);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page-nav-job-edit {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: rgba(var(--text-rgb), 0.45);
+    cursor: pointer;
+    opacity: 0;
+}
+
+.page-nav-job:hover .page-nav-job-edit,
+.page-nav-job-edit:focus-visible {
+    opacity: 1;
+}
+
+.page-nav-job-edit:hover {
+    color: rgb(var(--text-rgb));
+    background: rgba(var(--text-rgb), 0.08);
+}
+
+.page-nav-job.is-editing {
+    padding: 4px;
+}
+
+.job-rename-input {
+    width: 100%;
+    min-width: 0;
+    height: 26px;
+    padding: 0 8px;
+
+    border: 1px solid var(--accent-solid);
+    border-radius: 6px;
+    background: rgba(var(--bg-rgb), 0.9);
+    color: rgb(var(--text-rgb));
+
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.job-tab.job-tab-editing {
+    display: flex;
+    align-items: center;
+    padding: 3px;
+    min-width: 160px;
 }

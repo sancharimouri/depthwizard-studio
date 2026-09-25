@@ -65,6 +65,14 @@
                 <span class="page-nav-label">Docs</span>
             </button>
 
+            <!-- Jobs: one more entry in this same panel (not a separate panel).
+                 The list shows while the panel is expanded; click the entry to expand it. -->
+            <button id="page-nav-jobs" class="page-nav-tab page-nav-jobs-tab" type="button" aria-controls="page-nav-jobs-list">
+                <span id="page-nav-jobs-count" class="page-nav-icon">0</span>
+                <span class="page-nav-label">Jobs</span>
+            </button>
+            <div id="page-nav-jobs-list" class="page-nav-jobs-list" aria-label="Jobs"></div>
+
         </div>
 
     </nav>
@@ -925,11 +933,12 @@
                     </div>
 
                     <div id="final-demo-expanded-bar" class="final-demo-expanded-bar" hidden>
-                        <button id="final-demo-back" class="expanded-bar-button" type="button" title="Back to the grid">
-                            ← Back
+                        <!-- Icon-only, name on hover/focus (same tooltip convention as the 3D toolbar). -->
+                        <button id="final-demo-back" class="xv-icon-btn tip-below expanded-bar-icon" type="button" aria-label="Back to the grid" data-tip="Back">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
                         </button>
-                        <button id="final-demo-close" class="expanded-bar-button expanded-bar-close" type="button" title="Close and clear this scene">
-                            ✕ Close
+                        <button id="final-demo-close" class="xv-icon-btn tip-below expanded-bar-icon expanded-bar-close" type="button" aria-label="Close and clear this scene" data-tip="Close">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
                         </button>
                     </div>
                 </div>
@@ -990,6 +999,21 @@
         </div>
 
 
+    </div>
+
+    <!-- Job delete confirmation (job trash icon). Same modal pattern as the
+         unsaved-work warning; deliberately no "don't show again". -->
+    <div id="job-delete-modal" class="upload-modal confirm-modal" role="alertdialog" aria-modal="true"
+         aria-labelledby="job-delete-title" aria-describedby="job-delete-body" hidden>
+        <div id="job-delete-backdrop" class="upload-backdrop"></div>
+        <div class="upload-panel confirm-panel">
+            <div id="job-delete-title" class="confirm-title"></div>
+            <p id="job-delete-body" class="confirm-body"></p>
+            <div class="confirm-actions">
+                <button id="job-delete-cancel" class="confirm-button" type="button">Cancel</button>
+                <button id="job-delete-ok" class="confirm-button confirm-danger" type="button">Delete job</button>
+            </div>
+        </div>
     </div>
 
     <!-- =====================================================

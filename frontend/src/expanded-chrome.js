@@ -233,7 +233,8 @@ export function createExpandedChrome({
     const saveBtn = iconButton(saveWrap, { name: "Save current measurement", iconName: "save" });
     const libBtn = iconButton(saveWrap, { name: "Saved items (library)", iconName: "chevronDown", cls: "xv-caret" });
     const pointerBtn = iconButton(toolbar, { name: "Mouse pointer (navigate)", iconName: "cursor" });
-    const notesBtn = iconButton(toolbar, { name: "Show notes", iconName: "notes" });
+    const notesWrap = el("div", { class: "xv-wrap" }, toolbar);
+    const notesBtn = iconButton(notesWrap, { name: "Notes", iconName: "notes", cls: "xv-notes-count" });
     const trashBtn = iconButton(toolbar, { name: "Clear current selection", iconName: "trash" });
 
     // popovers
@@ -249,7 +250,7 @@ export function createExpandedChrome({
                 p.hidden = true;
             }
         }
-        for (const b of [measureBtn, viewBtn, libBtn]) {
+        for (const b of [measureBtn, viewBtn, libBtn, notesBtn]) {
             b.setAttribute("aria-expanded", "false");
         }
         if (!except || !libraryPanel.contains(except)) {
@@ -272,7 +273,7 @@ export function createExpandedChrome({
     optCont.addEventListener("click", () => { closeAll(); tool.setMode(MODES.CONTINUOUS); });
 
     const viewMenu = popover(viewWrap, "xv-menu xv-above");
-    for (const [layer, label] of [["satellite-3d", "True colour"], ["dsm-3d", "DSM (relative depth)"], ["elevation-3d", "DEM elevation"]]) {
+    for (const [layer, label] of [["satellite-3d", "True colour"], ["dsm-3d", "DSM (relative depth)"], ["elevation-3d", "DEM elevation"], ["wireframe-3d", "Wireframe"]]) {
         const b = el("button", { type: "button", role: "menuitemradio", "data-layer": layer, text: label }, viewMenu);
         b.addEventListener("click", () => { closeAll(); setLayer(layer); syncToolbar(); });
     }
@@ -289,20 +290,112 @@ export function createExpandedChrome({
         tool.clearSelection();
     });
 
+    // ------------------------------------------------------------------ notes (▾ list, same pattern as Save's library)
+    const notesPanel = popover(notesWrap, "xv-library xv-above xv-notes-panel");
+    notesBtn.setAttribute("aria-haspopup", "true");
     notesBtn.addEventListener("click", () => {
-        closeAll();
-        if (!notes.length) {
-            toast("No notes yet — right-click the terrain (in pointer mode) and choose “Add note”.");
+        if (toggle(notesPanel, notesBtn)) {
+            renderNotesList();
+        }
+    });
+
+    async function deleteAllNotes() {
+        const n = notes.length;
+        if (!n) {
             return;
         }
-        const anyHidden = notes.some(n => !n.visible);
-        notes.forEach(n => { n.visible = anyHidden; });
-        if (!anyHidden) {
-            closeNotePopup();
+        const ok = await confirmAction({
+            title: "Delete all notes?",
+            body: `This deletes ${n} note${n === 1 ? "" : "s"} from this session. It can't be undone.`,
+            okLabel: `Delete ${n}`,
+        });
+        if (!ok) {
+            return;
         }
+        notes.length = 0;
+        closeNotePopup();
+        toast("Deleted all notes.");
+        renderNotesList();
         syncToolbar();
         invalidate();
-    });
+    }
+
+    function renderNotesList() {
+        syncToolbar();
+        notesPanel.replaceChildren();
+        const head = el("div", { class: "xv-lib-head" }, notesPanel);
+        el("div", { class: "xv-lib-title", text: "Notes" }, head);
+        const allShown = notes.length && notes.every(n => n.visible);
+        const eye = el("button", {
+            type: "button", class: "xv-text-btn xv-sm-text",
+            text: allShown ? "Hide all" : "Show all",
+        }, head);
+        eye.disabled = !notes.length;
+        eye.addEventListener("click", () => {
+            const show = !(notes.length && notes.every(n => n.visible));
+            notes.forEach(n => { n.visible = show; });
+            if (!show) {
+                closeNotePopup();
+            }
+            renderNotesList();
+            invalidate();
+        });
+        const allTrash = el("button", {
+            type: "button", class: "xv-icon-btn xv-sm xv-danger-hover", "aria-label": "Delete all notes", "data-tip": "Delete all notes",
+            html: icon("trash", 18),
+        }, head);
+        allTrash.disabled = !notes.length;
+        allTrash.addEventListener("click", deleteAllNotes);
+
+        if (!notes.length) {
+            el("div", { class: "xv-empty", text: "No notes yet. Right-click the terrain in pointer mode and choose “Add note”." }, notesPanel);
+        } else {
+            const ul = el("ul", { class: "xv-fly-list" }, notesPanel);
+            notes.forEach((note, i) => {
+                const li = el("li", { class: "xv-fly-item" }, ul);
+                const lab = el("label", { class: "xv-switch", "data-tip": note.visible ? "Hide on terrain" : "Show on terrain" }, li);
+                const cb = el("input", { type: "checkbox", "aria-label": `Show note ${i + 1} on the terrain` }, lab);
+                cb.checked = note.visible;
+                el("span", { class: "xv-switch-track" }, lab);
+                cb.addEventListener("change", () => {
+                    note.visible = cb.checked;
+                    lab.dataset.tip = note.visible ? "Hide on terrain" : "Show on terrain";
+                    if (!note.visible && notePopup.dataset.note === String(note.id)) {
+                        closeNotePopup();
+                    }
+                    syncToolbar();
+                    invalidate();
+                });
+                const text = el("div", { class: "xv-fly-text" }, li);
+                el("div", { class: "xv-fly-name", text: note.text.length > 48 ? `${note.text.slice(0, 47)}…` : note.text }, text);
+                el("div", {
+                    class: "xv-fly-meta",
+                    text: `Note ${i + 1} · X ${note.x.toFixed(1)} · Y ${note.y.toFixed(1)} · ${note.createdAt.toLocaleTimeString()}`,
+                }, text);
+                const del = el("button", {
+                    type: "button", class: "xv-icon-btn xv-sm xv-danger-hover", "aria-label": `Delete note ${i + 1}`,
+                    "data-tip": "Delete", html: icon("trash", 16),
+                }, li);
+                del.addEventListener("click", () => {
+                    const at = notes.indexOf(note);
+                    if (at >= 0) {
+                        notes.splice(at, 1);
+                    }
+                    if (notePopup.dataset.note === String(note.id)) {
+                        closeNotePopup();
+                    }
+                    toast("Note deleted.");
+                    renderNotesList();
+                    syncToolbar();
+                    invalidate();
+                });
+            });
+        }
+        el("div", {
+            class: "xv-lib-note",
+            text: "Session only: notes are kept in this browser tab and are lost on reload or Close.",
+        }, notesPanel);
+    }
 
     saveBtn.addEventListener("click", () => {
         closeAll();
@@ -344,7 +437,8 @@ export function createExpandedChrome({
         libBtn.dataset.count = total ? String(total) : "";
         const shown = notes.length && notes.every(n => n.visible);
         notesBtn.classList.toggle("is-active", !!shown);
-        const nName = !notes.length ? "Notes (none yet)" : shown ? "Hide notes" : "Show notes";
+        notesBtn.dataset.count = notes.length ? String(notes.length) : "";
+        const nName = notes.length ? `Notes (${notes.length})` : "Notes (none yet)";
         notesBtn.setAttribute("aria-label", nName);
         notesBtn.dataset.tip = nName;
     }
