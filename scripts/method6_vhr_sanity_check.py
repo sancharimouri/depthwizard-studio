@@ -34,11 +34,11 @@ from evaluate_method6_finetune_twinhead import (  # noqa: E402
 )
 
 CKPT = PROJECT_ROOT / "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019.pt"
-if not CKPT.exists():  # not on this machine: use the R2 copy (docs/R2_SETUP.md)
+if not CKPT.exists():  # not on this machine: the private HF Hub copy (docs/STORAGE.md)
     import sys as _sys
     _sys.path.insert(0, str(PROJECT_ROOT))
-    from backend.storage import r2 as _r2
-    CKPT = _r2.ensure_local("checkpoints/method6/full_dfc2019/method6_full_dfc2019.pt", CKPT)
+    from backend.storage import hf_checkpoints as _hc
+    CKPT = _hc.checkpoint("full_dfc2019/method6_full_dfc2019.pt")
 OUT_DIR = PROJECT_ROOT / "data/maxar_sanity/method6_inference"
 
 CROPS = {

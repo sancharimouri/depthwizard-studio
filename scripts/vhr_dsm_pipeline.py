@@ -58,14 +58,14 @@ OUT = ROOT / "data/vhr_dsm"
 PREVIEW = ROOT / "frontend/public/data/vhr"
 
 
-def _checkpoint(local: Path, r2_key: str | None) -> Path:
-    """The local checkpoint if this machine has it, else the R2 copy (downloaded
-    once into ~/.cache/depthwizard2; backend/storage/r2.py, docs/R2_SETUP.md)."""
-    if local.exists() or r2_key is None:
+def _checkpoint(local: Path, hub_file: str | None) -> Path:
+    """The local checkpoint if this machine has it, else the copy in the private
+    HF Hub repo (backend/storage/hf_checkpoints.py, HF_TOKEN; docs/STORAGE.md)."""
+    if local.exists() or hub_file is None:
         return local
     sys.path.insert(0, str(ROOT))
-    from backend.storage import r2
-    return r2.ensure_local(r2_key, local)
+    from backend.storage import hf_checkpoints
+    return hf_checkpoints.checkpoint(hub_file)
 
 
 def load_models(device):
@@ -73,7 +73,7 @@ def load_models(device):
     seed43 = CKPT_DIR == ROOT / "data/dfc2019/experiments/method6_height_balanced_seed43"
     for q in range(4):
         path = _checkpoint(CKPT_DIR / f"fold{q}.pt",
-                           f"checkpoints/method6/height_balanced_seed43/fold{q}.pt" if seed43 else None)
+                           f"height_balanced_seed43/fold{q}.pt" if seed43 else None)
         ck = torch.load(path,
                         map_location="cpu", weights_only=False)
         m = hb.TwinHeadDav2GSD(height_scale=ck["height_scale"], init_sigma_m=5.0, log_var_max=7.0,
@@ -81,7 +81,7 @@ def load_models(device):
         m.load_state_dict(ck["state_dict"])
         folds.append(m.to(device).eval())
     ck = torch.load(_checkpoint(ROOT / "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019.pt",
-                                "checkpoints/method6/full_dfc2019/method6_full_dfc2019.pt"),
+                                "full_dfc2019/method6_full_dfc2019.pt"),
                     map_location="cpu", weights_only=False)
     full = TwinHeadDav2(height_scale=ck["height_scale"], **ck["config"])
     full.load_state_dict(ck["model"])
