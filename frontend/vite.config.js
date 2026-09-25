@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 
-// Proxies /api/* to the local FastAPI backend (backend/main.py) so the
-// frontend can call same-origin relative paths in both dev and any later
-// same-host deploy, and so we don't need to manage CORS beyond the
-// backend's own localhost:5173 allowlist.
+// Dev only: proxies /api/* to the local FastAPI backend (backend/main.py), so
+// local calls are same-origin. Deployed builds set VITE_API_BASE to the backend
+// URL (src/api-base.js) and the backend allows the frontend's origin via its
+// CORS_ORIGINS env var.
 export default defineConfig({
     server: {
         proxy: {

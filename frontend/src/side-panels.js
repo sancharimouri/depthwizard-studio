@@ -8,6 +8,7 @@
 // view's `meta` list already omits unknown fields, e.g. DFC2019 tiles have no
 // acquisition date); nothing is filled in by guesswork here.
 
+import { apiUrl } from "./api-base.js";
 import { attachMagnifier } from "./magnifier.js";
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -380,7 +381,7 @@ async function loadFacts(job, geo) {
     job.facts = { key, pending: true };
     body.innerHTML = `<p class="xp-note">Querying Nominatim, Open-Meteo, USGS and GDACS…</p>`;
     try {
-        const response = await fetch(`/api/facts?lat=${encodeURIComponent(geo.lat)}&lon=${encodeURIComponent(geo.lon)}`);
+        const response = await fetch(apiUrl(`/api/facts?lat=${encodeURIComponent(geo.lat)}&lon=${encodeURIComponent(geo.lon)}`));
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
