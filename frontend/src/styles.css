@@ -28,10 +28,18 @@
     /* body/label text and borders derived from it */
     --text-rgb: 255, 255, 255;
 
-    /* brand accent (green in dark mode) */
-    --accent-rgb: 98, 217, 139;
-    --accent-bright-rgb: 152, 255, 180;
-    --accent-solid: #62d98b;
+    /* THE green: one token for every green accent, highlight and the 3D
+       wireframe. It is the old #62d98b accent with saturation and
+       brightness each cut by 30% (2026-09-25), so it is less harsh; the
+       wireframe's #39ff14 now uses it too. The light theme keeps its own
+       (orange) accent, but --neon-rgb stays green for the wireframe. */
+    --neon-rgb: 94, 152, 114;
+    --neon: rgb(var(--neon-rgb));
+
+    /* brand accent (green in dark mode) = the token above */
+    --accent-rgb: var(--neon-rgb);
+    --accent-bright-rgb: 128, 178, 142; /* the old 152,255,180 with the same 30% cut */
+    --accent-solid: var(--neon);
     --accent-text: #e8f4ea;
     --border-accent-soft-rgb: 180, 220, 190;
     --border-accent-soft-hover-rgb: 190, 230, 200;

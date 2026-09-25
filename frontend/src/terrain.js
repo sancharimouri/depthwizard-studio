@@ -547,51 +547,78 @@ export function createTerrain(
         "wireframe-3d",
     ]);
 
-    // Wireframe view: thin neon-green grid lines over the extruded surface,
-    // no solid fill (the mesh's own material is hidden, so picking — which
-    // uses the heightfield, not the material — keeps working). Lines follow
-    // every WIREFRAME_STRIDE-th row/column so the net stays legible rather
-    // than a solid green blur at 361×325. Built lazily from extrudedZ; a
-    // child of the mesh, so it follows the display exaggeration too.
-    const WIREFRAME_STRIDE = 3;
+    // Wireframe view — replicates the reference SIH26175 repo
+    // (external/SIH26175-DepthWizard-notvishuuuu: utils/terrainMesh.js +
+    // components/TerrainMesh.jsx; read, not run): the heightfield is
+    // bilinearly resampled to 256 samples on its long side ("medium"), each
+    // cell is split into two triangles (a,c,b) + (b,c,d) — so the diagonals
+    // show — and drawn with MeshBasicMaterial({ wireframe: true }) at 0.85
+    // opacity (1 px WebGL lines). Colour: the app's green token (--neon-rgb)
+    // instead of their purple. No solid fill: the textured mesh is hidden.
+    // Built lazily from the displayed surface (extrudedZ); a child of the
+    // mesh, so it follows the display exaggeration. Picking is unaffected
+    // (it uses the heightfield, not materials).
+    const WIREFRAME_RESOLUTION = 256;
     let wireframe = null;
 
+    function neonColor() {
+        const raw = typeof document !== "undefined"
+            ? getComputedStyle(document.documentElement).getPropertyValue("--neon-rgb")
+            : "";
+        const [r, g, b] = raw.split(",").map(Number);
+        // CSS rgb() strings are parsed as sRGB (raw 0-1 components would be linear and wash out)
+        return new THREE.Color(Number.isFinite(b) ? `rgb(${r}, ${g}, ${b})` : "#5e9872");
+    }
+
     function buildWireframe() {
-        const cols = [];
-        for (let x = 0; x < width; x += WIREFRAME_STRIDE) {
-            cols.push(x);
-        }
-        if (cols[cols.length - 1] !== width - 1) {
-            cols.push(width - 1);
-        }
-        const rows = [];
-        for (let y = 0; y < height; y += WIREFRAME_STRIDE) {
-            rows.push(y);
-        }
-        if (rows[rows.length - 1] !== height - 1) {
-            rows.push(height - 1);
-        }
-        const verts = [];
-        const at = (x, y) => {
-            const i = y * width + x;
-            return [positions.getX(i), positions.getY(i), extrudedZ[i]];
-        };
-        for (const y of rows) {
-            for (let k = 0; k < cols.length - 1; k++) {
-                verts.push(...at(cols[k], y), ...at(cols[k + 1], y));
+        const longSide = Math.max(width, height);
+        const meshW = Math.max(2, Math.round(WIREFRAME_RESOLUTION * (width / longSide)));
+        const meshH = Math.max(2, Math.round(WIREFRAME_RESOLUTION * (height / longSide)));
+        const xRatio = (width - 1) / (meshW - 1);
+        const yRatio = (height - 1) / (meshH - 1);
+        const positionsOut = new Float32Array(meshW * meshH * 3);
+        for (let y = 0; y < meshH; y++) {
+            const sy = y * yRatio;
+            const y0 = Math.floor(sy);
+            const y1 = Math.min(y0 + 1, height - 1);
+            const fy = sy - y0;
+            for (let x = 0; x < meshW; x++) {
+                const sx = x * xRatio;
+                const x0 = Math.floor(sx);
+                const x1 = Math.min(x0 + 1, width - 1);
+                const fx = sx - x0;
+                const top = extrudedZ[y0 * width + x0] + (extrudedZ[y0 * width + x1] - extrudedZ[y0 * width + x0]) * fx;
+                const bottom = extrudedZ[y1 * width + x0] + (extrudedZ[y1 * width + x1] - extrudedZ[y1 * width + x0]) * fx;
+                const i = (y * meshW + x) * 3;
+                positionsOut[i] = (x / (meshW - 1) - 0.5) * terrainWidth; // same local frame as the PlaneGeometry
+                positionsOut[i + 1] = (0.5 - y / (meshH - 1)) * terrainHeight;
+                positionsOut[i + 2] = top + (bottom - top) * fy;
             }
         }
-        for (const x of cols) {
-            for (let k = 0; k < rows.length - 1; k++) {
-                verts.push(...at(x, rows[k]), ...at(x, rows[k + 1]));
+        const indices = new Uint32Array((meshW - 1) * (meshH - 1) * 6);
+        let k = 0;
+        for (let y = 0; y < meshH - 1; y++) {
+            for (let x = 0; x < meshW - 1; x++) {
+                const a = y * meshW + x;
+                const b = a + 1;
+                const c = a + meshW;
+                const d = c + 1;
+                indices[k++] = a; indices[k++] = c; indices[k++] = b;
+                indices[k++] = b; indices[k++] = c; indices[k++] = d;
             }
         }
         const g = new THREE.BufferGeometry();
-        g.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-        const lines = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0x39ff14 }));
-        lines.visible = false;
-        terrain.add(lines);
-        return lines;
+        g.setAttribute("position", new THREE.BufferAttribute(positionsOut, 3));
+        g.setIndex(new THREE.BufferAttribute(indices, 1));
+        const wire = new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+            color: neonColor(),
+            wireframe: true,
+            transparent: true,
+            opacity: 0.85,
+        }));
+        wire.visible = false;
+        terrain.add(wire);
+        return wire;
     }
 
 
