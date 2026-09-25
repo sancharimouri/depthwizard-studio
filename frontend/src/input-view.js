@@ -10,6 +10,7 @@
 // prediction), orange = Tier 1 (DEM only), neutral = relative preview only.
 // ============================================================
 
+import { apiUrl } from "./api-base.js";
 import { attachMagnifier } from "./magnifier.js";
 
 const TIER2_MAX_GSD_M = 2.4;
@@ -106,7 +107,7 @@ function el(tag, attrs = {}, ...children) {
 }
 
 async function api(url, options = {}) {
-    const response = await fetch(url, options);
+    const response = await fetch(apiUrl(url), options);
     if (!response.ok) {
         let detail = `HTTP ${response.status}`;
         try {
@@ -406,7 +407,7 @@ export function createInputView(root, { onStart }) {
             "aria-pressed": String(state.selection?.id === item.id),
             onclick: () => selectLibraryItem(item),
         },
-        el("img", { class: "iv-card-thumb", src: item.thumbnail_url, alt: "", loading: "lazy" }),
+        el("img", { class: "iv-card-thumb", src: apiUrl(item.thumbnail_url), alt: "", loading: "lazy" }),
         el("div", { class: "iv-card-body" },
             el("div", { class: "iv-card-title", text: item.title }),
             el("div", { class: "iv-card-sub", text: item.location }),
@@ -439,7 +440,7 @@ export function createInputView(root, { onStart }) {
             id: item.id,
             title: item.title,
             sourceLabel: "curated library",
-            previewUrl: item.preview_url,
+            previewUrl: apiUrl(item.preview_url),
             meta,
             routing: item.routing,
             // centre from the tile's own geotransform (scripts/library_catalog.py _geo); none for DFC2019
@@ -527,12 +528,12 @@ export function createInputView(root, { onStart }) {
             id: m.id,
             title: m.filename ?? `Sentinel-2 ${m.date}`,
             sourceLabel: source === "upload" ? "upload" : "Sentinel-2 via CDSE search",
-            previewUrl: `${m.preview_url}?v=${m.id}`,
+            previewUrl: `${apiUrl(m.preview_url)}?v=${m.id}`,
             meta: inputMeta(m),
             routing: m.routing,
             geo: inputGeo(m, source),
             dem: m.dem,
-            demPreviewUrl: m.dem_preview_url,
+            demPreviewUrl: apiUrl(m.dem_preview_url),
         };
     }
 
@@ -573,7 +574,7 @@ export function createInputView(root, { onStart }) {
         updateIfCurrent(sel, { demBusy: "Fetching FABDEM (30 m bare-earth) for this footprint from Google Earth Engine…", demError: null });
         try {
             const meta = await (await api(`/api/input/${sel.id}/fabdem`, { method: "POST" })).json();
-            updateIfCurrent(sel, { demBusy: null, dem: meta.dem, demPreviewUrl: `${meta.dem_preview_url}?t=${Date.now()}` });
+            updateIfCurrent(sel, { demBusy: null, dem: meta.dem, demPreviewUrl: `${apiUrl(meta.dem_preview_url)}?t=${Date.now()}` });
         } catch (error) {
             updateIfCurrent(sel, { demBusy: null, demError: `FABDEM fetch failed: ${error.message}` });
         }
@@ -585,7 +586,7 @@ export function createInputView(root, { onStart }) {
         body.append("file", file);
         try {
             const meta = await (await api(`/api/input/${sel.id}/dem`, { method: "POST", body })).json();
-            updateIfCurrent(sel, { demBusy: null, dem: meta.dem, demPreviewUrl: `${meta.dem_preview_url}?t=${Date.now()}` });
+            updateIfCurrent(sel, { demBusy: null, dem: meta.dem, demPreviewUrl: `${apiUrl(meta.dem_preview_url)}?t=${Date.now()}` });
         } catch (error) {
             updateIfCurrent(sel, { demBusy: null, demError: `DEM rejected: ${error.message}` });
         }
