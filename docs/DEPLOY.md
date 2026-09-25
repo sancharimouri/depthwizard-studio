@@ -139,3 +139,25 @@ Model load time is 3–4.5 s, once per process.
 - Idle Spaces sleep; the first call after a sleep is slow.
 
 **Not done:** the backend's `/api/depth` routes still speak the bridge's plain `/predict` HTTP. Using the Space needs a `gradio_client` path in `backend/api/depth_routes.py`.
+
+## Backend → ZeroGPU Space as the primary depth host (2026-09-26)
+
+**Config** (`backend/api/depth_routes.py`):
+- `DAV2_INFERENCE_URL` takes a Space id (`owner/name`, or its huggingface.co/spaces URL) → Gradio API via `gradio_client==2.7.1`, or a plain http(s) `/predict` URL (the Colab bridge).
+  - Default when unset: `sancharimouri/DepthWizard2`.
+- `DAV2_FALLBACK_URL` (optional, same forms) is tried only when set and the primary fails with a quota, 5xx or timeout error. It is meant for the Colab bridge. Both paths live in the code side by side.
+- The UI and log mark a result from the fallback ("fallback host", "via … (fallback: primary host failed)").
+
+**Token on every Space call:**
+- `gradio_client`'s `token=` alone does **not** reach the Space. Measured: it authenticated the huggingface.co API calls, but all 6 requests to `*.hf.space` (config, info, upload, queue join/data, heartbeat) went without `Authorization`, so they were anonymous for ZeroGPU.
+- The backend therefore also passes `headers={"Authorization": "Bearer $HF_TOKEN"}`, and refuses to call a Space without `HF_TOKEN` (503).
+- An httpx-level audit counts every `*.hf.space` request, shown in `GET /api/depth/status` → `space_request_auth`. After the UI runs: **9 with auth, 0 without**.
+
+**UI (headless Chrome → localhost:5173 → dev backend → Space):**
+- Library `sentinel2-almora`: real depth, 8.7 s round trip (1.04 s GPU, first call).
+- Upload JPG: 5.8 s (0.2 s GPU).
+- Primary broken (a nonexistent Space id), no fallback: the labelled Darjeeling reference with the real 404 reason.
+- Primary broken + `DAV2_FALLBACK_URL` = a plain-HTTP bridge: real depth, labelled fallback.
+- 0 page errors.
+
+`uv.lock` is not regenerated for `gradio_client` (the lockfile has unrelated uncommitted changes); `uv pip install gradio_client==2.7.1` adds it.

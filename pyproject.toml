@@ -26,6 +26,6 @@ ml = [
     "termcolor>=3.3.0",
     "submitit>=1.5.4",
 ]
-backend = ["fastapi","uvicorn","python-dotenv","httpx"]
+backend = ["fastapi","uvicorn","python-dotenv","httpx","gradio_client==2.7.1"]
 training = ["torchvision","albumentations"]
 dev = ["pytest","ruff"]
