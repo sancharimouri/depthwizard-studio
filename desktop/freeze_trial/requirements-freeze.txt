@@ -1,6 +1,3 @@
-transformers==5.17.0
-safetensors==0.8.0
-tokenizers==0.23.2
 numpy==2.4.6
 pillow==12.3.0
 rasterio==1.4.4
@@ -16,3 +13,4 @@ huggingface-hub==1.30.0
 gradio-client==2.7.1
 pyinstaller==6.22.3
 psutil
+onnxruntime==1.30.0
