@@ -51,6 +51,19 @@ def recompress(src: Path, dst: Path) -> None:
         assert r.crs == prof.get("crs") and r.transform == prof.get("transform"), f"{dst.name}: georeference differs"
 
 
+def published_sizes() -> dict:
+    """Asset sizes of the public release: what an on-demand download actually fetches."""
+    import subprocess
+    try:
+        out = subprocess.run(["gh", "release", "view", library_store.GH_TAG, "-R", library_store.GH_REPO,
+                              "--json", "assets"], capture_output=True, text=True, check=True, timeout=60).stdout
+        return {a["name"]: a["size"] for a in json.loads(out)["assets"]}
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARNING: release sizes unavailable ({type(exc).__name__}); using local file sizes")
+        return {}
+
+
+RELEASE = published_sizes()
 items, sizes = [], {"thumbnails": 0, "previews": 0, "tiles": 0, "tiles_original": 0}
 for it in man["items"]:
     it = {k: v for k, v in it.items() if k not in ("file", "store", "assets", "r2")}
@@ -63,7 +76,10 @@ for it in man["items"]:
     # TEMPORARY owner decision (2026-09-26), published by desktop/tiles/publish_dfc_ondemand.py.
     download = {"source": "github-release", "preview": library_store.release_url(f"{iid}__preview.jpg"),
                 "tile": library_store.release_url(f"{iid}.tif")}
-    download["bytes"] = (lib / "previews" / it["preview"]).stat().st_size + src_tile.stat().st_size
+    pub = (RELEASE.get(f"{iid}__preview.jpg"), RELEASE.get(f"{iid}.tif"))
+    download["bytes"] = (sum(pub) if all(pub) else
+                         (lib / "previews" / it["preview"]).stat().st_size + src_tile.stat().st_size)
+    download["bytes_source"] = "release" if all(pub) else "local"
     if iid in bundled:
         shutil.copyfile(lib / "previews" / it["preview"], out / "previews" / names["preview"])
         recompress(src_tile, out / "tiles" / names["tile"])
