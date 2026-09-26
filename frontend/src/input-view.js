@@ -401,7 +401,13 @@ export function createInputView(root, { onStart }) {
         if (!state.library) {
             return;
         }
-        const items = state.library.items.filter(item => state.filter === "all" || item.collection === state.filter);
+        // Desktop app: downloadable (not yet local) tiles first, then the ones already in the
+        // app; catalog order within each group. The web app never sets `available`.
+        const items = state.library.items
+            .filter(item => state.filter === "all" || item.collection === state.filter)
+            .map((item, i) => ({ item, i }))
+            .sort((a, b) => (a.item.available === false ? 0 : 1) - (b.item.available === false ? 0 : 1) || a.i - b.i)
+            .map(x => x.item);
         cardGrid.replaceChildren(...items.map(item => el("button", {
             class: `iv-card ${tierClass(item.routing)}${item.available === false ? " is-remote" : ""}`,
             type: "button",
