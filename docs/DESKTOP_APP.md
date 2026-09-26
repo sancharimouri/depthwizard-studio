@@ -239,4 +239,4 @@ It runs DAv2-Small relative depth once, then writes the viewer's asset contract 
   - Maxar and DFC2019 generation 200;
   - 0 page errors.
 - **Frozen backend:** a real GeoTIFF upload (Kohima) generated from live GLO-30 in 3.5 s.
-- **Sizes:** app 452.0 MB installed, DMG 324.6 MB (see the table below). Not yet published: that needs a v1.0.1 release.
+- **Sizes (measured):** app **455.2 MB** installed (library with tiles + elevation packs 100.1 MB), DMG **340.9 MB**. Not yet published: that needs a v1.0.1 release.
