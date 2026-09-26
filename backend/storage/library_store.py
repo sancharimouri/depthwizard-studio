@@ -85,7 +85,7 @@ def private_file(item: dict, kind: str) -> Path:
 # full, the rest thumbnail-only and downloaded on demand into a writable per-user folder.
 #   DW2_LIBRARY_BUNDLE  the read-only bundled library (manifest.json, thumbnails/, previews/, tiles/)
 #   DW2_LIBRARY_USER    per-user folder for downloaded items (previews/, tiles/)
-FOLDERS = {"thumbnail": "thumbnails", "preview": "previews", "tile": "tiles"}
+FOLDERS = {"thumbnail": "thumbnails", "preview": "previews", "tile": "tiles", "dem": "dem"}
 
 
 class DownloadNeedsToken(PermissionError):
@@ -100,10 +100,22 @@ def user_dir() -> Path:
     return Path(os.environ.get("DW2_LIBRARY_USER") or bundle_dir() / "_downloads")
 
 
+def _local_bases() -> list[Path]:
+    if mode() == "bundle":
+        return [bundle_dir(), user_dir()]
+    if mode() == "local":
+        return [Path(__file__).resolve().parents[2] / "data" / "library"]
+    return []
+
+
 def local_asset(item: dict, kind: str) -> Path | None:
-    """The bundled or already-downloaded file for this item, if there is one."""
-    for base in (bundle_dir(), user_dir()):
-        p = base / FOLDERS[kind] / item[kind]
+    """The bundled, already-downloaded (bundle mode) or dev-local (local mode) file, if any.
+    kind "dem" is the item's elevation pack (desktop/tiles/build_dem_pack.py)."""
+    name = item.get(kind) or (f"{item['id']}.tif" if kind == "dem" else None)
+    if not name:
+        return None
+    for base in _local_bases():
+        p = base / FOLDERS[kind] / name
         if p.is_file():
             return p
     return None
