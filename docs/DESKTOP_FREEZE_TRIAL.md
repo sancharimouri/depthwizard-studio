@@ -86,3 +86,25 @@ before committing to a full desktop bundle?
 - A **private** repo `sancharimouri/depthwizard2-desktop-ci` was created for it. It is still **empty**: the push failed because its remote was SSH and this machine has no GitHub SSH key.
   Push over HTTPS with `git -c credential.helper='!gh auth git-credential' push https://github.com/sancharimouri/depthwizard2-desktop-ci.git main`.
   Its contents are only `backend/` (committed source, no tests), `bridge/dav2_server.py`, and the files above. The model and test inputs are downloaded in CI from public sources.
+
+## Windows / Linux: MEASURED (2026-09-26, GitHub Actions run 36207174181, private repo `depthwizard2-desktop-ci`)
+
+**Build under test:** the ONNX backend, built by `desktop/freeze_trial/build_freeze.py` in a torch-free venv. The model is exported in a throwaway torch venv.
+Each check runs the frozen binary's self-test: depth through `/api/depth/relative` + a GeoTIFF upload, with a process-count respawn guard.
+
+| | Linux (ubuntu-latest) | Windows (windows-latest) | macOS arm64 (local, for reference) |
+|---|---|---|---|
+| **Installed (one-folder)** | **411.6 MB** | **317.0 MB** | 297.3 MB |
+| Download: zip / tar.gz | 246.6 / 205.3 MB | 176.7 MB (zip) | — |
+| Full build: depth + GeoTIFF | ✅ 518×518, EPSG:32644 10 m | ✅ | ✅ |
+| CPU inference on the runner | 1.4–1.7 s | 1.9–2.0 s | 0.2 s (M4) |
+| Without `freeze_support()` | works, 1 process | works, 1 process | (see below) |
+| Without `--collect-submodules rasterio` | **fails**: `No module named 'rasterio.serde'` | **fails**, same | fails, same |
+
+**Conclusions:**
+- **The rasterio fix is required on every platform.**
+- **`freeze_support()` is no longer needed.** The macOS respawn loop was caused by torch starting multiprocessing's resource tracker, and the ONNX backend contains no torch. It stays in the entry script (harmless).
+- The GDAL/PROJ data fix (`--collect-data rasterio/pyproj`) is part of every build here, and the GeoTIFF check passes with it on all three.
+- **Largest parts:**
+  - Linux: model 99.1, `rasterio.libs` 61.1, `rasterio` 49.1, onnxruntime 30.5 MB.
+  - Windows: model 99.1, `rasterio.libs` 54.3, onnxruntime 37.5 MB.
