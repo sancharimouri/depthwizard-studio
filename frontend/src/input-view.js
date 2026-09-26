@@ -22,6 +22,33 @@ const COLLECTIONS = [
     { key: "sentinel2", label: "Sentinel-2" },
 ];
 
+const TERRAINS = [
+    { key: "all", label: "Any terrain" },
+    { key: "hilly", label: "Hilly" },
+    { key: "agricultural", label: "Agricultural" },
+    { key: "urban", label: "Urban" },
+    { key: "coastal", label: "Coastal" },
+];
+
+// Always first in the library, in this order; everything else keeps the catalog's
+// (deliberately mixed) order from scripts/library_catalog.py.
+const PINNED_FIRST = ["sentinel2-darjeeling", "sentinel2-almora", "sentinel2-manali"];
+
+// The catalog's terrain class; older manifests carry only Sentinel-2's `category`.
+export function itemTerrain(item) {
+    return item.terrain ?? item.category ?? (item.collection === "dfc2019" ? "urban" : "hilly");
+}
+
+export function orderLibraryItems(items) {
+    const rank = item => {
+        const i = PINNED_FIRST.indexOf(item.id);
+        return i < 0 ? PINNED_FIRST.length : i;
+    };
+    return items.map((item, i) => ({ item, i }))
+        .sort((a, b) => rank(a.item) - rank(b.item) || a.i - b.i)
+        .map(x => x.item);
+}
+
 // ---------------------------------------------------------------- pure helpers (unit-tested)
 
 export function tierClass(routing) {
@@ -130,6 +157,7 @@ export function createInputView(root, { onStart }) {
         tab: "library",
         library: null,
         filter: "all",
+        terrain: "all",
         selection: null,
         userKey: null, // { id, secret } — memory only, never persisted
         searchAoi: null,
@@ -355,11 +383,29 @@ export function createInputView(root, { onStart }) {
 
     // ================================================================ LIBRARY
     const chipRow = el("div", { class: "iv-chips", role: "group", "aria-label": "Filter by collection" });
+    const terrainRow = el("div", { class: "iv-chips iv-chips-terrain", role: "group", "aria-label": "Filter by terrain" });
     const cardGrid = el("div", { class: "iv-cards" });
     const libraryStatus = el("div", { class: "iv-status", hidden: true });
     panels.library.append(
         el("p", { class: "iv-hint", text: "Curated scenes with real imagery. Selecting one loads it into the preview." }),
-        chipRow, libraryStatus, cardGrid);
+        chipRow, terrainRow, libraryStatus, cardGrid);
+
+    TERRAINS.forEach(t => {
+        terrainRow.append(el("button", {
+            class: "iv-chip",
+            type: "button",
+            "data-key": t.key,
+            "aria-pressed": String(t.key === state.terrain),
+            text: t.label,
+            onclick: () => {
+                state.terrain = t.key;
+                terrainRow.querySelectorAll(".iv-chip").forEach(chip => {
+                    chip.setAttribute("aria-pressed", String(chip.dataset.key === t.key));
+                });
+                renderCards();
+            },
+        }));
+    });
 
     COLLECTIONS.forEach(col => {
         chipRow.append(el("button", {
@@ -390,6 +436,12 @@ export function createInputView(root, { onStart }) {
                 const count = key === "all" ? state.library.total : state.library.counts[key];
                 chip.textContent = `${COLLECTIONS.find(c => c.key === key).label} ${count}`;
             });
+            terrainRow.querySelectorAll(".iv-chip").forEach(chip => {
+                const key = chip.dataset.key;
+                const count = key === "all" ? state.library.items.length
+                    : state.library.items.filter(item => itemTerrain(item) === key).length;
+                chip.textContent = `${TERRAINS.find(t => t.key === key).label} ${count}`;
+            });
             renderCards();
         } catch (error) {
             libraryStatus.className = "iv-status is-error";
@@ -401,13 +453,11 @@ export function createInputView(root, { onStart }) {
         if (!state.library) {
             return;
         }
-        // Desktop app: tiles already in the app (bundled or downloaded) first, then the
-        // downloadable ones; catalog order within each group. The web app never sets `available`.
-        const items = state.library.items
+        // Same order in the web and desktop apps (pinned hill scenes, then the catalog's mixed
+        // order); on-demand desktop tiles stay in place with their download overlay.
+        const items = orderLibraryItems(state.library.items
             .filter(item => state.filter === "all" || item.collection === state.filter)
-            .map((item, i) => ({ item, i }))
-            .sort((a, b) => (a.item.available === false ? 1 : 0) - (b.item.available === false ? 1 : 0) || a.i - b.i)
-            .map(x => x.item);
+            .filter(item => state.terrain === "all" || itemTerrain(item) === state.terrain));
         cardGrid.replaceChildren(...items.map(item => el("button", {
             class: `iv-card ${tierClass(item.routing)}${item.available === false ? " is-remote" : ""}`,
             type: "button",
@@ -425,6 +475,7 @@ export function createInputView(root, { onStart }) {
             el("div", { class: "iv-card-tags" },
                 el("span", { class: "numeric-mono", text: formatGsd(item.gsd_m) }),
                 el("span", { text: item.collection === "vhr" ? "Maxar" : item.collection === "dfc2019" ? "DFC2019" : "Sentinel-2" }),
+                el("span", { class: "iv-card-terrain", text: itemTerrain(item) }),
                 el("span", { class: "iv-card-tier", text: `T${item.routing.tier}` })),
         ))));
     }

@@ -1,6 +1,6 @@
 """Per-item elevation packs for real generation (docs/DESKTOP_APP.md, "Real generation").
 
-  python desktop/tiles/build_dem_pack.py OUT_DIR      # writes OUT_DIR/<item id>.tif
+  python desktop/tiles/build_dem_pack.py OUT_DIR [ITEM_ID ...]   # writes OUT_DIR/<item id>.tif
 
 One small 2-band float32 GeoTIFF per georeferenced library item, on that item's own
 footprint and CRS (NaN = no data), with the sources in its tags:
@@ -10,6 +10,9 @@ Sources (all real, produced by this project's earlier pipelines; nothing is esti
   Sentinel-2  terrain = FABDEM (data/sentinel2_benchmark/fabdem/<t>_fabdem.npy, already on the
               tile's 10 m grid); surface = Copernicus GLO-30 (copernicus_dem_raw/<t>_dem.tif,
               EPSG:4326, reprojected here). Output ~30 m, the DEMs' native resolution.
+              Darjeeling (the demo scene, scripts/library_catalog.py EXTRA_S2): FABDEM from
+              data/library/extra/darjeeling_fabdem.npy (Earth Engine, tile grid); GLO-30 from
+              data/elevation/darjeeling/Darjeeling_Copernicus_GLO30_DSM_cropped.tif (N26+N27 mosaic).
   Maxar VHR   terrain = FABDEM, surface = the VHR pipeline's DSM = FABDEM + Method 6
               above-ground height (data/vhr_dsm/<crop>_margin192/, scripts/vhr_dsm_pipeline.py).
               Output 512x512 (~1.2 m).
@@ -50,7 +53,10 @@ def write(path, terrain, surface, transform, crs, tags):
 
 
 n = 0
+only = set(sys.argv[2:])  # optional item ids: rebuild just these packs
 for it in items:
+    if only and it["id"] not in only:
+        continue
     iid, col = it["id"], it["collection"]
     rgb = Path(os.path.realpath(ROOT / it["file"]))
     if col == "sentinel2":
@@ -59,10 +65,15 @@ for it in items:
             crs, bounds, tile_tf, tile_shape = r.crs, r.bounds, r.transform, r.shape
         size = 334                                            # 10 km / 334 = 29.9 m
         tf = from_bounds(*bounds, size, size)
-        fab = np.load(ROOT / f"data/sentinel2_benchmark/fabdem/{t}_fabdem.npy").astype(np.float32)
+        extra = t == "darjeeling"
+        fab_path = ("data/library/extra/darjeeling_fabdem.npy" if extra
+                    else f"data/sentinel2_benchmark/fabdem/{t}_fabdem.npy")
+        glo_path = ("data/elevation/darjeeling/Darjeeling_Copernicus_GLO30_DSM_cropped.tif" if extra
+                    else f"data/sentinel2_benchmark/copernicus_dem_raw/{t}_dem.tif")
+        fab = np.load(ROOT / fab_path).astype(np.float32)
         assert fab.shape == tile_shape, (iid, fab.shape, tile_shape)
         terrain = regrid(fab, tile_tf, crs, (size, size), tf, crs, Resampling.average)
-        with rasterio.open(ROOT / f"data/sentinel2_benchmark/copernicus_dem_raw/{t}_dem.tif") as g:
+        with rasterio.open(ROOT / glo_path) as g:
             glo = g.read(1).astype(np.float32)
             if g.nodata is not None:
                 glo[glo == g.nodata] = np.nan

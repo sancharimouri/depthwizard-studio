@@ -23,10 +23,12 @@ def test_list_has_exactly_the_curated_sets():
     r = client.get("/api/library")
     assert r.status_code == 200
     d = r.json()
-    assert d["counts"] == {"dfc2019": 50, "sentinel2": 32, "vhr": 6}
-    assert d["total"] == 88
+    assert d["counts"] == {"dfc2019": 50, "sentinel2": 33, "vhr": 6}  # 32 benchmark + Darjeeling (demo scene)
+    assert d["total"] == 89
     ids = [i["id"] for i in d["items"]]
-    assert len(set(ids)) == 88
+    assert len(set(ids)) == 89
+    assert ids[:3] == ["sentinel2-darjeeling", "sentinel2-almora", "sentinel2-manali"]
+    assert {i["terrain"] for i in d["items"]} == {"hilly", "agricultural", "urban", "coastal"}
     # research artifacts are never exposed
     blob = r.text.lower()
     for marker in ("landsat", "cbers", "l1c", "brazil"):
@@ -35,7 +37,7 @@ def test_list_has_exactly_the_curated_sets():
 
 def test_filters():
     assert client.get("/api/library?collection=vhr").json()["total"] == 6
-    assert client.get("/api/library?tier=1").json()["total"] == 32
+    assert client.get("/api/library?tier=1").json()["total"] == 33
     assert client.get("/api/library?tier=2").json()["total"] == 56
     assert client.get("/api/library?collection=landsat").status_code == 422
     assert client.get("/api/library?tier=3").status_code == 422

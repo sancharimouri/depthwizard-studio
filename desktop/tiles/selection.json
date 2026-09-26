@@ -7,8 +7,6 @@
    "dfc2019-OMA_212_033",
    "dfc2019-JAX_161_001",
    "dfc2019-OMA_269_035",
-   "dfc2019-OMA_364_043",
-   "dfc2019-OMA_315_019",
    "dfc2019-OMA_364_003",
    "dfc2019-OMA_225_001",
    "dfc2019-JAX_072_015",
@@ -365,11 +363,17 @@
     "spearman": 0.6031,
     "mean_rank": 41.75
    }
-  }
+  },
+  "removed_2026_09_27": [
+   "dfc2019-OMA_364_043",
+   "dfc2019-OMA_315_019"
+  ],
+  "removed_note": "Owner request 2026-09-27: not bundled; listed thumbnail-only (download on demand)."
  },
  "sentinel2": {
   "rule": "post-QC actual (SCL) cloud + shadow + nodata == 0 (tiles with an unmeasured value excluded) AND real ICESat-2 photon + 20 m segment files on disk; best 2 per category by ICESat-2 ground-photon count, then 2 more by the same count, max 3 per category (sources: data/sentinel2_benchmark/manifest.csv, content_audit.csv, remediation_*.csv; data/icesat2_photons/, data/icesat2_segments20m/)",
   "bundled": [
+   "sentinel2-darjeeling",
    "sentinel2-manali",
    "sentinel2-almora",
    "sentinel2-jaipur",
@@ -638,7 +642,8 @@
     "is2_photon_rows": 158255,
     "is2_segment_rows": 20751
    }
-  ]
+  ],
+  "extra_note": "sentinel2-darjeeling: the demo page's scene (scripts/library_catalog.py EXTRA_S2), bundled on owner request 2026-09-27."
  },
  "vhr": {
   "rule": "all 6 Maxar crops bundled",

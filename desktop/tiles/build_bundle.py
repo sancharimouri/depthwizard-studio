@@ -8,7 +8,7 @@ Reads data/library/manifest.json and desktop/tiles/selection.json and writes:
   OUT_DIR/previews/, tiles/ the bundled items only; tiles re-encoded LOSSLESSLY
                             (deflate, horizontal predictor, level 9, 256 px blocks),
                             each verified pixel- and georeference-identical
-Bundled: 10 DFC2019 + 10 Sentinel-2 (selection.json) + all 6 Maxar. The rest are
+Bundled: 8 DFC2019 + 11 Sentinel-2 incl. Darjeeling (selection.json) + all 6 Maxar. The rest are
 thumbnail-only and downloaded on demand by POST /api/library/{id}/download:
 All from the public GitHub Release (DFC2019 too: temporary, publish_dfc_ondemand.py).
 """
@@ -31,7 +31,7 @@ man = json.loads((lib / "manifest.json").read_text())
 sel = json.loads((Path(__file__).parent / "selection.json").read_text())
 bundled = set(sel["dfc2019"]["bundled"]) | set(sel["sentinel2"]["bundled"]) | {
     i["id"] for i in man["items"] if i["collection"] == "vhr"}
-assert len(bundled) == 26, len(bundled)
+assert len(bundled) == 25, len(bundled)  # 8 DFC2019 + 11 Sentinel-2 + 6 Maxar
 
 if out.exists():
     shutil.rmtree(out)

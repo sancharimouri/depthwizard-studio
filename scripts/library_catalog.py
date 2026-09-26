@@ -9,7 +9,8 @@ never hand-written:
             dfc2019   the 50-tile DFC2019 benchmark (the set defined by
                       data/dfc2019/experiments/dav2_baseline/depth/*.npy),
                       symlinked to data/dfc2019/raw/RGB/Track1-RGB/
-            sentinel2 the 32 Sentinel-2 benchmark tiles (manifest.csv), symlinked
+            sentinel2 the 32 Sentinel-2 benchmark tiles (manifest.csv), symlinked,
+                      plus EXTRA_S2 (Darjeeling: the demo page's own scene)
             vhr       the 6 Maxar Sikkim/Darjeeling crops of vhr_dsm_pipeline.py,
                       cut from the source scenes with that script's own crop
                       definitions and written as georeferenced GeoTIFFs
@@ -66,6 +67,32 @@ SOURCES = ("dfc2019", "sentinel2", "vhr")
 # Paths that must never end up in the demo catalog (research artifacts).
 EXCLUDED_MARKERS = ("landsat", "cbers", "l1c", "brazil", "token_grid", "resolution_transfer", "gamus")
 
+# Sentinel-2 scenes outside the 32-tile benchmark. Darjeeling is the demo page's scene:
+# data/library/extra/darjeeling_RGB.tif = frontend/public/data/darjeeling/satellite.png on the
+# georeference of data/sentinel2/darjeeling/Darjeeling_RGB.tif @ 660ecb6 (EPSG:32645, 10 m);
+# its FABDEM (Earth Engine, same 10 m grid) is data/library/extra/darjeeling_fabdem.npy.
+EXTRA_S2 = {
+    "darjeeling": {"label": "Darjeeling, West Bengal", "category": "hilly", "date_acquired": None,
+                   "rgb_path": "data/library/extra/darjeeling_RGB.tif"},
+}
+
+# Terrain filter of the library UI (hilly / agricultural / urban / coastal). Sentinel-2 uses
+# its benchmark category; the Maxar crops are all Sikkim / Darjeeling Himalaya; the DFC2019
+# tiles are Jacksonville / Omaha city blocks.
+TERRAIN = {"dfc2019": "urban", "vhr": "hilly"}
+
+# Default order: these first, then every other item in a fixed pseudo-random order
+# (deliberately not grouped by terrain or satellite).
+PINNED_FIRST = ("sentinel2-darjeeling", "sentinel2-almora", "sentinel2-manali")
+
+
+def _order_key(item_id: str) -> tuple:
+    import hashlib
+    if item_id in PINNED_FIRST:
+        return (0, PINNED_FIRST.index(item_id), "")
+    return (1, 0, hashlib.sha1(f"dw2-library:{item_id}".encode()).hexdigest())
+
+
 DFC_CITY = {"JAX": "Jacksonville, Florida, USA", "OMA": "Omaha, Nebraska, USA"}
 # Measured from image content (lane-line cycles, lane widths, tractor-trailers):
 # DFC2019 tiles carry no geotransform. See
@@ -121,6 +148,8 @@ def curate(_args) -> None:
     assert len(man) == 32, f"expected the 32 Sentinel-2 benchmark tiles, found {len(man)}"
     for _, m in man.iterrows():
         _symlink(ROOT / m.rgb_path, CURATED / "sentinel2" / f"{m.tile_id}_RGB.tif")
+    for tile, m in EXTRA_S2.items():
+        _symlink(ROOT / m["rgb_path"], CURATED / "sentinel2" / f"{tile}_RGB.tif")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     import vhr_dsm_pipeline as vhr  # reuse the pipeline's own crop definitions
@@ -182,6 +211,7 @@ def build(_args) -> None:
         for old in d.iterdir():
             old.unlink()
     s2 = pd.read_csv(ROOT / "data/sentinel2_benchmark/manifest.csv").set_index("tile_id")
+    s2 = pd.concat([s2, pd.DataFrame.from_dict(EXTRA_S2, orient="index")])
 
     items = []
     for src_name in SOURCES:
@@ -221,7 +251,7 @@ def build(_args) -> None:
                     "tile_id": tile,
                     "location": str(m.label),
                     "category": str(m.category),
-                    "acquired": str(m.date_acquired),
+                    "acquired": None if pd.isna(m.date_acquired) else str(m.date_acquired),
                     "gsd_m": round(gsd, 3),
                     "gsd_source": "geotransform",
                     "georeferenced": True,
@@ -248,6 +278,7 @@ def build(_args) -> None:
                 "id": item_id,
                 "collection": src_name,
                 **meta,
+                "terrain": meta.get("category") or TERRAIN[src_name],
                 "size_px": [width, height],
                 "routing": ROUTING[src_name],
                 "thumbnail": thumb,
@@ -262,11 +293,14 @@ def build(_args) -> None:
             items.append(item)
             print(f"{item_id:32s} gsd {meta['gsd_m']} m  tier {ROUTING[src_name]['tier']}", flush=True)
 
+    items.sort(key=lambda i: _order_key(i["id"]))
     counts = {s: sum(1 for i in items if i["collection"] == s) for s in SOURCES}
+    terrain_counts = {t: sum(1 for i in items if i["terrain"] == t) for t in ("hilly", "agricultural", "urban", "coastal")}
     MANIFEST.write_text(json.dumps({
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "generator": "scripts/library_catalog.py build",
         "counts": counts,
+        "terrain_counts": terrain_counts,
         "tiers": {"1": "DEM only (FABDEM)", "2": "height prediction (Method 6)"},
         "items": items,
     }, indent=1))

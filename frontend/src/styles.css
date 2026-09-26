@@ -6162,3 +6162,21 @@ kbd {
     right: auto;
     left: 10px;
 }
+
+/* library terrain filter (second chip row) + terrain tag on each card */
+.iv-chips-terrain .iv-chip {
+    border-style: dashed;
+}
+
+.iv-chips-terrain .iv-chip[aria-pressed="true"] {
+    border-style: solid;
+}
+
+.iv-card-tags {
+    flex-wrap: wrap;
+    row-gap: 3px;
+}
+
+.iv-card-terrain {
+    text-transform: capitalize;
+}
