@@ -12,7 +12,10 @@ Sources (all real, produced by this project's earlier pipelines; nothing is esti
               EPSG:4326, reprojected here). Output ~30 m, the DEMs' native resolution.
               Darjeeling (the demo scene, scripts/library_catalog.py EXTRA_S2): FABDEM from
               data/library/extra/darjeeling_fabdem.npy (Earth Engine, tile grid); GLO-30 from
-              data/elevation/darjeeling/Darjeeling_Copernicus_GLO30_DSM_cropped.tif (N26+N27 mosaic).
+              data/library/extra/darjeeling_glo30.tif (backend/dem/glo30.py on the tile footprint;
+              the older data/elevation/darjeeling crop leaves 1.4% of the tile's edges empty).
+Remaining small gaps (NaN) are filled from neighbouring cells (rasterio fillnodata): the
+viewer drops NaN cells to the base, which draws walls. No-op for packs without gaps.
   Maxar VHR   terrain = FABDEM, surface = the VHR pipeline's DSM = FABDEM + Method 6
               above-ground height (data/vhr_dsm/<crop>_margin192/, scripts/vhr_dsm_pipeline.py).
               Output 512x512 (~1.2 m).
@@ -25,6 +28,7 @@ from pathlib import Path
 
 import numpy as np
 import rasterio
+from rasterio.fill import fillnodata
 from rasterio.transform import from_bounds
 from rasterio.warp import Resampling, reproject
 
@@ -68,7 +72,7 @@ for it in items:
         extra = t == "darjeeling"
         fab_path = ("data/library/extra/darjeeling_fabdem.npy" if extra
                     else f"data/sentinel2_benchmark/fabdem/{t}_fabdem.npy")
-        glo_path = ("data/elevation/darjeeling/Darjeeling_Copernicus_GLO30_DSM_cropped.tif" if extra
+        glo_path = ("data/library/extra/darjeeling_glo30.tif" if extra
                     else f"data/sentinel2_benchmark/copernicus_dem_raw/{t}_dem.tif")
         fab = np.load(ROOT / fab_path).astype(np.float32)
         assert fab.shape == tile_shape, (iid, fab.shape, tile_shape)
@@ -94,6 +98,8 @@ for it in items:
         continue
     for name, arr in (("terrain", terrain), ("surface", surface)):
         assert np.isfinite(arr).mean() > 0.95, f"{iid}: {name} only {np.isfinite(arr).mean():.0%} valid"
+        if not np.isfinite(arr).all():
+            arr[:] = fillnodata(arr, mask=np.isfinite(arr).astype(np.uint8), max_search_distance=100)
     write(out / f"{iid}.tif", terrain, surface, tf, crs, tags)
     n += 1
     print(f"{iid:28s} {terrain.shape}  terrain {np.nanmin(terrain):7.1f}..{np.nanmax(terrain):7.1f} m"

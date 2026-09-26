@@ -319,18 +319,28 @@ export function createTerrain(
 
     const referenceReliefRatio = 0.2;
 
+    const baseVerticalScale = 0.02;
+
+    // Low-relief scenes (cities, deltas, farmland: tens of metres over the
+    // tile) would still read as flat under the 10x ceiling, so the factor is
+    // also floored to give at least MIN_RELIEF_FRACTION of the tile's
+    // north-south extent as displayed relief, up to MAX_AUTO_EXAGGERATION.
+    // Steep scenes (Darjeeling ~1900 m) already exceed the floor: unchanged.
+    const MIN_RELIEF_FRACTION = 0.15;
+    const MAX_AUTO_EXAGGERATION = 60;
+    const reliefFloorFactor = elevationRange > 0
+        ? (MIN_RELIEF_FRACTION * terrainHeight) / (elevationRange * baseVerticalScale)
+        : 1;
+
     const exaggerationFactor =
         Math.min(
-            10,
+            MAX_AUTO_EXAGGERATION,
             Math.max(
                 1,
-                1 + 4 * Math.log10(
-                    referenceReliefRatio / reliefRatio
-                )
+                Math.min(10, 1 + 4 * Math.log10(referenceReliefRatio / reliefRatio)),
+                reliefFloorFactor
             )
         );
-
-    const baseVerticalScale = 0.02;
 
     const verticalExaggeration =
         baseVerticalScale * exaggerationFactor;
@@ -800,9 +810,9 @@ export function createTerrain(
     // of relief) can go far higher than an already-steep one.
     const DISPLAY_RELIEF_CAP = 0.8 * terrainHeight;
     const reliefUnitsPerFactor = Math.max(elevationRange * baseVerticalScale, 1e-6);
-    const maxDisplayExaggeration = Math.min(
-        50,
-        Math.max(exaggerationFactor * 1.5, DISPLAY_RELIEF_CAP / reliefUnitsPerFactor)
+    const maxDisplayExaggeration = Math.max(
+        exaggerationFactor * 1.5,
+        Math.min(50, DISPLAY_RELIEF_CAP / reliefUnitsPerFactor)
     );
     const minDisplayExaggeration = Math.min(0.25, exaggerationFactor);
     let displayExaggeration = exaggerationFactor;

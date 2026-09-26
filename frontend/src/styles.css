@@ -6180,3 +6180,39 @@ kbd {
 .iv-card-terrain {
     text-transform: capitalize;
 }
+
+/* Bright mode: the output screen brightens like the 3D viewer (theme background
+   + the same edge vignette) instead of staying black. */
+:root[data-theme="light"] .wb-screen {
+    --text-rgb: 58, 42, 26;
+    background: rgb(var(--bg-rgb));
+    box-shadow: 0 12px 40px rgba(90, 60, 30, 0.18);
+}
+
+:root[data-theme="light"] .wb-screen > .wb-cell {
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(90, 60, 30, 0.16) 100%);
+}
+
+:root[data-theme="light"] .wb-screen > .wb-cell:nth-child(odd) {
+    box-shadow: inset -1px 0 0 rgba(58, 42, 26, 0.1);
+}
+
+:root[data-theme="light"] .wb-screen > .wb-cell:nth-child(-n + 2) {
+    border-bottom-color: rgba(58, 42, 26, 0.1);
+}
+
+:root[data-theme="light"] .wb-cell .panel-title {
+    color: rgba(58, 42, 26, 0.8);
+}
+
+:root[data-theme="light"] .wb-cell .staged-line {
+    color: rgba(58, 42, 26, 0.6);
+}
+
+:root[data-theme="light"] .wb-cell .preview-empty {
+    color: rgba(58, 42, 26, 0.35);
+}
+
+:root[data-theme="light"] .wb-cell .mini3d-generating {
+    background: rgba(244, 233, 210, 0.6);
+}
