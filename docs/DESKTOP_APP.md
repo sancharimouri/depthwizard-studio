@@ -121,8 +121,8 @@ The backend here is 800 MB (the earlier 813 MB build also contained `requests` a
 
 | Collection | Bundled in full | On demand (thumbnail + overlay) | How chosen |
 |---|---|---|---|
-| DFC2019 | 10 | 40, from the **private** HF dataset | Method 6 per-tile results (`method6_finetune_twinhead/method6_results.json`, mean over the 4 quadrant folds), ranked by the mean of per-metric ranks (MAE, RMSE ↑; Pearson, Spearman ↓). OMA_315_020, OMA_212_033, JAX_161_001, OMA_269_035, OMA_364_043, OMA_315_019, OMA_364_003, OMA_225_001, JAX_072_015, OMA_248_029 |
-| Sentinel-2 | 10 | 22, from the **public** GitHub Release | Final post-QC actual (SCL) cloud + shadow + nodata = 0 (22/32 eligible; 2 with an unmeasured value excluded), real ICESat-2 photon + 20 m segment files on disk, 2 per category + 2 more by ICESat-2 ground-photon count (max 3 per category). Agricultural: bathinda, nizamabad, kota. Coastal: amalapuram, bhitarkanika. Hilly: manali, almora. Urban: jaipur, hyderabad, pune |
+| DFC2019 | 8 (2026-09-27: OMA_364_043, OMA_315_019 moved to on demand at the owner's request) | 42 | Method 6 per-tile results (`method6_finetune_twinhead/method6_results.json`, mean over the 4 quadrant folds), ranked by the mean of per-metric ranks (MAE, RMSE ↑; Pearson, Spearman ↓). OMA_315_020, OMA_212_033, JAX_161_001, OMA_269_035, OMA_364_043, OMA_315_019, OMA_364_003, OMA_225_001, JAX_072_015, OMA_248_029 |
+| Sentinel-2 | 11 (2026-09-27: + Darjeeling, the demo scene; FABDEM + GLO-30 pack) | 22, from the **public** GitHub Release | Final post-QC actual (SCL) cloud + shadow + nodata = 0 (22/32 eligible; 2 with an unmeasured value excluded), real ICESat-2 photon + 20 m segment files on disk, 2 per category + 2 more by ICESat-2 ground-photon count (max 3 per category). Agricultural: bathinda, nizamabad, kota. Coastal: amalapuram, bhitarkanika. Hilly: manali, almora. Urban: jaipur, hyderabad, pune |
 | Maxar | 6 | — | all |
 
 **Build:** `desktop/tiles/build_bundle.py OUT`.

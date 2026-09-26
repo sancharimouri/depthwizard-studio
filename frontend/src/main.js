@@ -806,10 +806,44 @@ function collapseFinalDemoInstantly() {
     requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
 }
 
+let finalDemoTour = null;
+
+// A new (or another) job opens the 3D viewer in its defaults, not in whatever
+// state the previous job left it: auto-rotation on, input unlocked, camera and
+// structure yaw reset, side panels back to their default open/collapsed state,
+// no scenario, flythrough, tour, measurement mode or selection, popovers closed.
+// (The layer and vertical exaggeration are reset by the terrain load itself.)
+function resetViewerForNewJob() {
+    finalDemoTour?.stop();
+    finalDemoFlythrough?.stop();
+    if (finalDemoFloodActive) {
+        setFinalDemoFloodActive(false);
+    }
+    if (finalDemoEarthquakeActive) {
+        setFinalDemoEarthquakeActive(false);
+    }
+    finalDemoMeasureTool?.setMode("normal");
+    finalDemoMeasureTool?.model.clear();
+    finalDemoChrome?.closeAll();
+    document.querySelectorAll("#final-demo-box .xp-box").forEach(box => {
+        box.xpSetOpen?.(box.hasAttribute("data-default-open"));
+    });
+    const controls = finalDemoViewer?.controls;
+    if (controls) {
+        controls.setAutoRotatePaused?.(false);
+        controls.setInputLocked?.(false);
+        controls.resetView?.();
+        finalDemoViewer.setStructureYaw?.(0, false);
+    }
+    finalDemoChrome?.syncPlay?.();
+    finalDemoHistory?.reset();
+}
+
 // Every box back to "Awaiting generation" so the next job's stages animate
 // in one by one, exactly like the first run.
 function resetGridForGeneration() {
     collapseFinalDemoInstantly();
+    resetViewerForNewJob();
     applyDepthBox(null);
     applyElevationBox(null);
     applyMiniBoxCaptions(null);
@@ -924,6 +958,9 @@ function selectJob(id) {
     const job = jobStore.get(id);
     if (!job || jobStore.generating()) {
         return;
+    }
+    if (jobStore.active() !== job) {
+        resetViewerForNewJob();
     }
     jobStore.setActive(id);
     showCompletedJob(job);
@@ -1750,11 +1787,11 @@ const CALC_LOG_LINES = [
     "Reprojecting Copernicus GLO-30 DEM → EPSG:32645 to align with Sentinel-2 grid",
     "Mesh grid — Darjeeling 361×325, Kolkata 367×330",
     "Mesh grid — Bardhaman 365×328, Sundarbans 368×332",
-    "verticalExaggeration = 0.02 × clamp(1 + 4·log10(0.2 / reliefRatio), 1, 10)",
-    "Darjeeling relief ratio 0.192 → exaggeration 1.07x",
-    "Kolkata relief ratio 0.0041 → exaggeration 7.74x",
-    "Bardhaman relief ratio 0.0031 → exaggeration 8.25x",
-    "Sundarbans relief ratio 0.0010 → exaggeration 10.00x (ceiling clamp)",
+    "verticalExaggeration = 0.02 × min(60, max(1, min(10, 1 + 4·log10(0.2 / reliefRatio)), 0.15 × 100 / (0.02 × relief m)))",
+    "Darjeeling relief ratio 0.192 → exaggeration 1.07x (steep: floor not needed)",
+    "Kolkata relief 42.8 m → exaggeration 17.5x (low-relief floor: 15% of the tile)",
+    "Bardhaman relief 31.7 m → exaggeration 23.7x (low-relief floor)",
+    "Sundarbans relief 10.1 m → exaggeration 60.00x (ceiling clamp)",
     "Edge erosion — Kolkata: seed 1337, noiseScale 5, amount 0.06",
     "Edge erosion — Sundarbans: seed 2701, noiseScale 7, amount 0.08",
     "Edge erosion — Bardhaman: seed 8161, noiseScale 4, amount 0.06",
@@ -2370,7 +2407,7 @@ function initFinalDemoViewer(job) {
     }
     // Side-panel boxes (collapsible) + the Explore Options product tour.
     initCollapsibleBoxes(document.getElementById("final-demo-box"));
-    initTour(document.getElementById("final-demo-box"));
+    finalDemoTour = initTour(document.getElementById("final-demo-box"));
     initFacts(() => jobStore.active());
     initExaggerationSlider();
     finalDemoFloodSim = createFloodSim({
