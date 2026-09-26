@@ -183,8 +183,8 @@ export function jobsExport(jobs, now = new Date()) {
         format: "depthwizard2.jobs/v1",
         exported_at: now.toISOString(),
         storage_note: "Exported from a browser session; Depth Wizard has no server-side job storage yet.",
-        placeholder_note: "Relative depth is computed for each job's own input (DAv2-Small); the later generation "
-            + "stages still show the Darjeeling reference outputs. The input, its ground resolution, tier routing and DEM below are real.",
+        generation_note: "Each job is generated from its own input: DAv2-Small relative depth, and elevation from a real "
+            + "elevation model for its footprint (bundled FABDEM/GLO-30, an attached DEM, or live GLO-30); none without a georeference.",
         jobs: jobs.map(job => ({
             job: job.n,
             name: jobLabel(job),

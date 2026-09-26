@@ -552,13 +552,13 @@
 
                         <img
                             class="preview-image"
-                            src="/data/darjeeling/relative_depth.png"
-                            alt="Darjeeling relative depth map"
+                            src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+                            alt=""
                         />
 
                         <div
                             class="staged-caption"
-                            data-lines='["Depth Anything V2 (ViT-Large)","Frozen weights · 1.17s inference"]'
+                            data-lines='["Awaiting generation"]'
                         ></div>
 
                     </div>
@@ -575,13 +575,13 @@
 
                         <img
                             class="preview-image"
-                            src="/data/darjeeling/elevation.png"
-                            alt="Darjeeling elevation map"
+                            src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+                            alt=""
                         />
 
                         <div
                             class="staged-caption"
-                            data-lines='["DEM elevation — the terrain source; no learned correction applied","Sentinel-2 height corrections were tested and not adopted — see Docs"]'
+                            data-lines='["Awaiting generation"]'
                         ></div>
 
                     </div>
@@ -611,7 +611,7 @@
 
                     <div
                         class="staged-caption"
-                        data-lines='["361×325 vertex grid · 10 m resolution","Elevation 557–2478 m (OpenTopography DSM)"]'
+                        data-lines='["Awaiting generation"]'
                     ></div>
                 </div>
                     <div
@@ -639,7 +639,7 @@
 
                     <div
                         class="staged-caption"
-                        data-lines='["Spatial-trend validation (Darjeeling)","Correlation +0.60 → −0.41 after detrending"]'
+                        data-lines='["Awaiting generation"]'
                     ></div>
                 </div>
                 </div>
@@ -749,10 +749,10 @@
                                     <hr class="xp-divider">
                                     <div class="xp-section-label">TERRAIN SOURCE</div>
                                     <dl class="xp-meta">
-                                        <dt>Source</dt><dd id="final-demo-terrain-source-value">OpenTopography DSM</dd>
-                                        <dt>CRS</dt><dd class="numeric-mono">EPSG:<span id="final-demo-stat-epsg">32645</span></dd>
-                                        <dt>Ref. image res</dt><dd id="final-demo-stat-resolution" class="numeric-mono">10m</dd>
-                                        <dt>DAv2 inference</dt><dd id="final-demo-stat-inference" class="numeric-mono">1.17s</dd>
+                                        <dt>Source</dt><dd id="final-demo-terrain-source-value">—</dd>
+                                        <dt>CRS</dt><dd class="numeric-mono">EPSG:<span id="final-demo-stat-epsg">—</span></dd>
+                                        <dt>Elevation grid</dt><dd id="final-demo-stat-resolution" class="numeric-mono">—</dd>
+                                        <dt>DAv2 inference</dt><dd id="final-demo-stat-inference" class="numeric-mono">—</dd>
                                     </dl>
                                     <p id="xp-terrain-note" class="xp-note"></p>
                                 </div>
@@ -1034,10 +1034,12 @@
                                 JSON and keeps a copy under <strong>Saved</strong> in this browser, where it can be
                                 reopened later. Unsaved jobs live only in this tab, and leaving with any asks first. The
                                 panel icon hides or shows the jobs panel.</li>
-                            <li><strong>Start generation</strong> plays the pipeline’s steps. It is a
-                                <strong>prototype</strong>: the relative-depth, elevation, DSM and 3D panels show the
-                                Darjeeling reference results whatever scene you picked or uploaded. It is not a live
-                                reconstruction of your scene.</li>
+                            <li><strong>Start generation</strong> generates from your scene: relative depth
+                                (Depth Anything V2 Small) from the image itself, and elevation, the DSM and the 3D terrain
+                                from a real elevation model for its footprint: FABDEM and Copernicus GLO-30 for library
+                                Sentinel-2 tiles, a DEM you attach, or GLO-30 fetched live. Height is never inferred
+                                from the image. A scene without a georeference (DFC2019 tiles, plain PNG/JPG) has no
+                                elevation, and the panels say so.</li>
                         </ul>
                     </div>
                     <div class="docs-card">
@@ -1117,7 +1119,8 @@
                             On 0.3 m imagery (the DFC2019 benchmark) a fine-tuned Depth Anything V2 does beat a strong
                             per-tile baseline (MAE 1.98 m, RMSE 3.49 m). An offline pipeline builds
                             DSM = FABDEM + predicted height above ground and was run on 6 Maxar crops in Sikkim and
-                            Darjeeling. It is <strong>not in the app</strong>. It under-states tall canopy (a ceiling
+                            Darjeeling. In the app it is used <strong>only</strong> as the surface model of those 6 Maxar
+                            library crops (precomputed, labelled as a research model). It under-states tall canopy (a ceiling
                             around 18–23 m), it did not generalise to US aerial imagery, and it has only been tested on
                             mountain terrain.
                         </p>

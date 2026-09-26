@@ -189,8 +189,16 @@ export function createTerrainViewer(canvas, options = {}) {
         terrain.material.dispose();
     }
 
-    async function loadRegion(regionKey) {
-        const terrainResponse = await fetch(`/data/${regionKey}/terrain.json`);
+    // `assets` ({terrain, satellite, depth, elevation} URLs) = a generated job's own files
+    // (backend/generation); without it, the demo region's files under /data/<region>/.
+    async function loadRegion(regionKey, assets = null) {
+        const url = assets ?? {
+            terrain: `/data/${regionKey}/terrain.json`,
+            satellite: `/data/${regionKey}/satellite.png`,
+            depth: `/data/${regionKey}/relative_depth.png`,
+            elevation: `/data/${regionKey}/elevation.png`,
+        };
+        const terrainResponse = await fetch(url.terrain);
 
         if (!terrainResponse.ok) {
             throw new Error(`Failed to load terrain: ${terrainResponse.status}`);
@@ -200,9 +208,9 @@ export function createTerrainViewer(canvas, options = {}) {
 
         const textureLoader = new THREE.TextureLoader();
 
-        const satelliteTexture = await textureLoader.loadAsync(`/data/${regionKey}/satellite.png`);
-        const depthTexture = await textureLoader.loadAsync(`/data/${regionKey}/relative_depth.png`);
-        const elevationTexture = await textureLoader.loadAsync(`/data/${regionKey}/elevation.png`);
+        const satelliteTexture = await textureLoader.loadAsync(url.satellite);
+        const depthTexture = await textureLoader.loadAsync(url.depth);
+        const elevationTexture = await textureLoader.loadAsync(url.elevation);
 
         disposeTerrain(currentTerrain);
 

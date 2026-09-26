@@ -76,10 +76,13 @@ export function renderSource(job) {
         : `<dt>Source</dt><dd>Reference scene (no job input)</dd>`;
     const note = document.getElementById("xp-terrain-note");
     if (note) {
-        note.textContent = job
-            ? "The 3D terrain and its statistics are the Darjeeling reference DSM, shown for every job (placeholder). "
-                + (job.input.dem ? "The job's own DEM range is listed under Image source." : "")
-            : "";
+        const m = job?.gen?.status === "ok" ? job.gen.meta : null;
+        note.textContent = !job ? ""
+            : !m ? "Terrain not generated for this job."
+            : m.has_elevation
+                ? `The 3D terrain and its statistics are this job's own: surface from ${m.surface_source}, `
+                    + `terrain from ${m.terrain_source}.`
+                : m.note;
     }
     renderInspection(job?.input);
 }
@@ -365,7 +368,7 @@ function renderFactsData(data) {
     const slide = factSection("LANDSLIDES", data.landslides);
     const volc = factSection("VOLCANOES", data.volcanoes);
     return place + elev + quake + flood + slide + volc
-        + `<p class="xp-note">Queried ${esc(data.queried_at)}. The 3D terrain shown is the Darjeeling reference (placeholder); these facts are for this job's location.</p>`;
+        + `<p class="xp-note">Queried ${esc(data.queried_at)}. These facts are for this job's location.</p>`;
 }
 
 async function loadFacts(job, geo) {
