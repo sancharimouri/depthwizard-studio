@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DepthWizard",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "identifier": "in.sih26175.depthwizard",
   "build": {
     "frontendDist": "../../../frontend/dist",
@@ -33,6 +33,15 @@
     "resources": {
       "sidecar/dw2-backend/": "dw2-backend/",
       "library_bundle/": "library/"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUwQjY5NDIyMjA2ODBGN0YKUldSL0QyZ2dJcFMyNEZqdTRKWFg4allJV016OGxRWDkzQ1MvTkN3QnNEZWxTVmtzeFd5N1NRM0YK",
+      "endpoints": [
+        "https://github.com/sancharimouri/depthwizard2-desktop/releases/latest/download/latest.json"
+      ]
     }
   }
 }

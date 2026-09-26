@@ -17,15 +17,67 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use tauri::webview::PageLoadEvent;
-use tauri::{Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_updater::UpdaterExt;
 
 const PORT: u16 = 8765;
 
 struct Sidecar(Mutex<Option<Child>>);
 
-fn backend_exe(app: &tauri::AppHandle) -> PathBuf {
-    let dir = app.path().resource_dir().expect("resource dir").join("dw2-backend");
-    dir.join(if cfg!(windows) { "dw2-backend.exe" } else { "dw2-backend" })
+fn backend_exe(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    // Tauri refuses to resolve paths when the app's own path contains a symlink (a macOS
+    // security check), e.g. an app run from /var/... instead of /private/var/... .
+    let res = app.path().resource_dir().map_err(|e| {
+        format!("can't locate the app's resources ({e}); run Depth Wizard from a normal folder such as /Applications (not a symlinked path)")
+    })?;
+    Ok(res.join("dw2-backend").join(if cfg!(windows) { "dw2-backend.exe" } else { "dw2-backend" }))
+}
+
+fn stop_sidecar(app: &AppHandle) {
+    if let Some(mut child) = app.state::<Sidecar>().0.lock().unwrap().take() {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+}
+
+/// Tauri's updater plugin: on launch, fetch the signed version manifest (plugins.updater
+/// in tauri.conf.json); if a newer version exists, ask; on yes, download, verify the
+/// signature against the bundled public key, install, stop the sidecar, restart.
+/// DW2_UPDATE_AUTO_ACCEPT=1 skips the prompt (tests only).
+async fn check_for_update(app: AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let current = app.package_info().version.to_string();
+    let Some(update) = app.updater()?.check().await? else {
+        eprintln!("update check: up to date ({current})");
+        return Ok(());
+    };
+    eprintln!("update check: {} available (current {current})", update.version);
+    let accept = if std::env::var("DW2_UPDATE_AUTO_ACCEPT").as_deref() == Ok("1") {
+        eprintln!("update check: auto-accepted (test)");
+        true
+    } else {
+        let dialog = app
+            .dialog()
+            .message(format!(
+                "Depth Wizard {} is available (you have {current}).\n\n{}\n\nUpdate now? The app restarts when it is installed.",
+                update.version,
+                update.body.clone().unwrap_or_default()
+            ))
+            .title("Update available")
+            .kind(MessageDialogKind::Info)
+            .buttons(MessageDialogButtons::OkCancelCustom("Update".into(), "Later".into()));
+        eprintln!("update check: prompting");
+        tauri::async_runtime::spawn_blocking(move || dialog.blocking_show()).await?
+    };
+    if !accept {
+        eprintln!("update check: postponed by the user");
+        return Ok(());
+    }
+    // download_and_install verifies the signature after the download and refuses to install on a mismatch
+    update.download_and_install(|_, _| {}, || eprintln!("update check: downloaded")).await?;
+    eprintln!("update check: installed {}; restarting", update.version);
+    stop_sidecar(&app);
+    app.restart();
 }
 
 #[tauri::command]
@@ -39,10 +91,13 @@ fn e2e_report(app: tauri::AppHandle, result: String) {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_process::init())
         .manage(Sidecar(Mutex::new(None)))
         .invoke_handler(tauri::generate_handler![e2e_report])
         .setup(|app| {
-            let exe = backend_exe(app.handle());
+            let exe = backend_exe(app.handle())?;
             // Never talk to a stale or foreign server that already holds the port.
             if TcpStream::connect(("127.0.0.1", PORT)).is_ok() {
                 return Err(format!("port {PORT} is already in use; is another Depth Wizard backend running?").into());
@@ -78,16 +133,22 @@ fn main() {
                     }
                 })
                 .build()?;
+            if std::env::var("DW2_E2E").is_err() {
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(e) = check_for_update(handle).await {
+                        eprintln!("update check failed: {e}");
+                    }
+                });
+            }
+            eprintln!("Depth Wizard {}", app.package_info().version);
             Ok(())
         })
         .build(tauri::generate_context!())
         .expect("error while building the app")
         .run(|app, event| {
             if let RunEvent::Exit = event {
-                if let Some(mut child) = app.state::<Sidecar>().0.lock().unwrap().take() {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                }
+                stop_sidecar(app);
             }
         });
 }
