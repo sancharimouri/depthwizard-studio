@@ -114,3 +114,82 @@ The backend here is 800 MB (the earlier 813 MB build also contained `requests` a
 - The round trip is still dominated by the per-request GitHub preview download (see Latency above), which local tile bundling removes.
 
 **CI:** `desktop/freeze_trial/freeze-trial.yml` now exports the ONNX model in a throwaway torch venv and builds without torch. Not run yet.
+
+## Tiered tile library (2026-09-26)
+
+**Selection** (`desktop/tiles/selection.json`, rules and numbers inside):
+
+| Collection | Bundled in full | On demand (thumbnail + overlay) | How chosen |
+|---|---|---|---|
+| DFC2019 | 10 | 40, from the **private** HF dataset | Method 6 per-tile results (`method6_finetune_twinhead/method6_results.json`, mean over the 4 quadrant folds), ranked by the mean of per-metric ranks (MAE, RMSE ↑; Pearson, Spearman ↓). OMA_315_020, OMA_212_033, JAX_161_001, OMA_269_035, OMA_364_043, OMA_315_019, OMA_364_003, OMA_225_001, JAX_072_015, OMA_248_029 |
+| Sentinel-2 | 10 | 22, from the **public** GitHub Release | Final post-QC actual (SCL) cloud + shadow + nodata = 0 (22/32 eligible; 2 with an unmeasured value excluded), real ICESat-2 photon + 20 m segment files on disk, 2 per category + 2 more by ICESat-2 ground-photon count (max 3 per category). Agricultural: bathinda, nizamabad, kota. Coastal: amalapuram, bhitarkanika. Hilly: manali, almora. Urban: jaipur, hyderabad, pune |
+| Maxar | 6 | — | all |
+
+**Build:** `desktop/tiles/build_bundle.py OUT`.
+- Bundled tiles are re-encoded losslessly (deflate, predictor 2, level 9; each verified pixel- and georeference-identical): 104.8 → 73.3 MB.
+- Bundle total: **81.9 MB** (tiles 73.3, previews 7.1, 88 thumbnails 1.5).
+
+**Runtime** (`DW2_LIBRARY=bundle`, `backend/storage/library_store.py`):
+- Bundled and already-downloaded files are served from disk.
+- `POST /api/library/{id}/download` writes on-demand items (atomic `.part` → rename) into the per-user cache.
+- The frontend shows a translucent overlay ("Download · 2.3 MB") on on-demand cards; clicking downloads, then selects.
+
+**DFC2019 on demand needs a token.** The private dataset returns 401 to anonymous requests (checked for manifest, tile, preview and thumbnail). The app refuses with "Needs a Hugging Face token" unless `HF_TOKEN` is in its environment. No token is embedded.
+
+**Bug fixed:** `load_dotenv()` searches upward from the install path. The packaged backend built inside the repo loaded the repo's `.env`, including `HF_TOKEN`. The desktop entry now sets `DW2_NO_DOTENV=1`.
+
+**Timing** (in-app E2E, shipped conditions: no token, fresh cache, production v1.0.0):
+- Depth by id for bundled Sentinel-2 / DFC2019 / Maxar: **0.22–0.26 s**. It was ~11 s when every request re-downloaded the preview from GitHub. The UI caption reads "0.3s round trip".
+- On-demand Sentinel-2 (bengaluru, 2.3 MB), download through the overlay: **1.4 s** in the final run, **79 s** in an earlier one. It is the same public GitHub download; the difference is the network. Afterwards its depth is 0.22 s like a bundled tile.
+
+## In-app updates: Tauri updater plugin (2026-09-26)
+
+**Pieces:**
+- `tauri-plugin-updater` 2.12 + `tauri-plugin-dialog` (prompt) + `tauri-plugin-process`.
+- `check_for_update` in `src-tauri/src/main.rs` runs on every launch (skipped in the E2E hook):
+  - fetches the manifest, and if a newer version exists shows **"Update available … Update / Later"**;
+  - on Update: download → **signature check against the public key built into the app** → install → stop the sidecar → restart.
+- `bundle.createUpdaterArtifacts: true`. Version **1.0.0** is this build (ONNX + tiered tiles).
+
+**Signing key (never in the repo):**
+- Private key: `~/.tauri/depthwizard2-updater.key` (minisign, mode 600, `~/.tauri` mode 700).
+- Its password: random, in the macOS Keychain, service `depthwizard2-updater-signing` (`security find-generic-password -s depthwizard2-updater-signing -w`).
+- Public key: `plugins.updater.pubkey` in `tauri.conf.json` (also `~/.tauri/depthwizard2-updater.key.pub`).
+- **Back up the private key and password somewhere safe. If they are lost, installed apps can never accept another update** (they only trust this public key).
+- Build signed: `desktop/tauri/build-signed.sh [tauri build args]`. It exports `TAURI_SIGNING_PRIVATE_KEY(_PASSWORD)` from those two places, runs `tauri build` + `postbundle-macos.sh`.
+  The post-bundle step rebuilds `DepthWizard.app.tar.gz` from the fixed .app and **re-signs** it, because Tauri signs before the symlink restore.
+
+**Publishing a release** (manifest format as tested):
+```json
+{"version": "1.0.1", "notes": "…", "pub_date": "2026-…Z",
+ "platforms": {"darwin-aarch64": {"signature": "<contents of DepthWizard.app.tar.gz.sig>",
+                                  "url": "https://…/DepthWizard_1.0.1.app.tar.gz"}}}
+```
+- Upload `latest.json` and the `.app.tar.gz` to the release; the configured endpoint is `…/releases/latest/download/latest.json`.
+- **`version` must equal the artifact's own version.** The test showed a mismatch re-offers the "new" version after every restart.
+
+**Verified** against a real signed test manifest (`updater-test.conf.json`: local HTTP endpoint, test builds only), installed v1.0.0 → served v1.0.1:
+- **Genuine artifact:** "1.0.1 available" → accepted → downloaded → installed → restarted. The relaunched app printed "Depth Wizard 1.0.1 · update check: up to date (1.0.1)", and the installed Info.plist says 1.0.1.
+- **Tampered artifact** (1 byte changed, genuine signature): "The signature verification failed", and the install stayed at 1.0.0.
+- **Prompt:** launched normally (LaunchServices), the dialog appears and **waits**: no action for 45+ s.
+  Clicking **Update** installs (done by hand by the user, three times, during the test). **Later** has not been clicked in a test yet.
+- **Production v1.0.0** checks its real endpoint on launch. Nothing is published yet, so it logs "Could not fetch a valid release JSON" and carries on normally.
+
+**Other findings:**
+- Tauri refuses to run from a path containing a symlink (macOS security check; e.g. `/var/…` instead of `/private/var/…`). The shell now reports that clearly instead of panicking with `resource dir: UnknownPath`.
+- **Hosting is NOT done: blocked on a decision.**
+  - The update artifact is the whole app, including 10 DFC2019 tiles and all 50 DFC2019 thumbnails.
+  - A public GitHub Release would publish DFC2019 data, which CLAUDE.md forbids.
+  - A private release would need a token inside the app.
+  - The endpoint in `tauri.conf.json` (`github.com/sancharimouri/depthwizard2-desktop/releases/latest/download/latest.json`) is a placeholder; that repo does not exist.
+
+## v1.0.0 size (production build, measured)
+
+| | Size |
+|---|---|
+| **DepthWizard.app installed** | **432.4 MB** |
+| · backend (ONNX Runtime) | 297.4 MB |
+| · bundled tile library | 78.4 MB |
+| · shell + frontend | 59.3 MB |
+| **DMG (installer)** | **316.2 MB** |
+| Update artifact (`.app.tar.gz`) | 305.6 MB |
