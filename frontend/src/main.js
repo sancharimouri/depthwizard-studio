@@ -728,7 +728,11 @@ async function computeJobGeneration(job) {
         }
         const g = await response.json();
         const assets = Object.fromEntries(Object.entries(g.assets).map(([k, v]) => [k, apiUrl(v)]));
-        job.gen = { status: "ok", key: jobRegionKey(job), assets, meta: g.meta, depth: g.depth,
+        // WebGL textures load as CORS images. WebKit (the desktop shell) can reuse the cached
+        // non-CORS response of the same URL shown in an <img> box and then fail the CORS check,
+        // so textures get their own URLs.
+        const textures = Object.fromEntries(Object.entries(assets).map(([k, v]) => [k, k === "terrain" ? v : `${v}?tex=1`]));
+        job.gen = { status: "ok", key: jobRegionKey(job), assets, textures, meta: g.meta, depth: g.depth,
                     roundTripS: (performance.now() - t0) / 1000 };
         registerJobRegion(job);
         const m = g.meta;
@@ -1841,12 +1845,12 @@ function loadMiniPreviewAssets(job) {
     }
     if (!miniAssetCache.has(gen.key)) {
         miniAssetCache.set(gen.key, (async () => {
-            const terrainData = await (await fetch(gen.assets.terrain)).json();
+            const terrainData = await (await fetch(gen.textures.terrain)).json();
             const textureLoader = new THREE.TextureLoader();
             const [satelliteTexture, depthTexture, elevationTexture] = await Promise.all([
-                textureLoader.loadAsync(gen.assets.satellite),
-                textureLoader.loadAsync(gen.assets.depth),
-                textureLoader.loadAsync(gen.assets.elevation),
+                textureLoader.loadAsync(gen.textures.satellite),
+                textureLoader.loadAsync(gen.textures.depth),
+                textureLoader.loadAsync(gen.textures.elevation),
             ]);
             return { key: gen.key, terrainData, satelliteTexture, depthTexture, elevationTexture };
         })());
@@ -1855,7 +1859,14 @@ function loadMiniPreviewAssets(job) {
 }
 
 async function showJobInMiniPreviews(job) {
-    const assets = await loadMiniPreviewAssets(job);
+    let assets = null;
+    try {
+        assets = await loadMiniPreviewAssets(job);
+    } catch (error) {
+        miniAssetCache.delete(job?.gen?.key);
+        appendCalcLogLine(document.getElementById("calc-log-scroll"),
+            `3D preview textures failed to load (${error?.message ?? error?.type ?? error})`, job);
+    }
     miniPreviews.forEach(preview => {
         preview.terrain?.mesh?.geometry?.dispose();
         preview.group.clear();
@@ -2159,7 +2170,14 @@ async function showJobInFinalDemo(job) {
     if (!finalDemoViewer || job?.gen?.status !== "ok") {
         return null;
     }
-    const terrain = await loadFinalDemoRegion(job.gen.key, job.gen.assets);
+    let terrain;
+    try {
+        terrain = await loadFinalDemoRegion(job.gen.key, job.gen.textures);
+    } catch (error) {
+        appendCalcLogLine(document.getElementById("calc-log-scroll"),
+            `Studio terrain failed to load (${error?.message ?? error?.type ?? error})`, job);
+        return null;
+    }
     finalDemoHistory?.reset();
     if (jobStore.active() === job) {
         renderSource(job);
@@ -2932,7 +2950,7 @@ async function generateMiniPreviewBox(boxId, canvasId, layer, steps, job) {
             steps,
             durationMs: BOX_GENERATE_MS,
         }),
-        loadMiniPreviewAssets(job),
+        loadMiniPreviewAssets(job).catch(() => null),
     ]);
     await showJobInMiniPreviews(job);
 

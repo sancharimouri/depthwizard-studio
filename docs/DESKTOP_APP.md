@@ -205,3 +205,38 @@ The backend here is 800 MB (the earlier 813 MB build also contained `requests` a
 | · shell + frontend | 59.3 MB |
 | **DMG (installer)** | **316.2 MB** |
 | Update artifact (`.app.tar.gz`) | 305.6 MB |
+
+## Real generation (2026-09-26): no more Darjeeling placeholders
+
+Every Workbench box and the Depth Wizard Studio now show the **job's own** result. The only request is `POST /api/generate/{library|input}/{id}` (`backend/generation/pipeline.py`).
+It runs DAv2-Small relative depth once, then writes the viewer's asset contract (`terrain.json`, `satellite.png`, `relative_depth.png`, `elevation.png`) plus `meta.json` with the sources used.
+
+**Elevation always comes from a real elevation model, never from the image** (CLAUDE.md framing):
+
+| Input | Terrain (DEM) | Surface (mesh) | How |
+|---|---|---|---|
+| Sentinel-2 library (32) | FABDEM | Copernicus GLO-30 | bundled elevation pack, ~30 m, on the tile's own grid |
+| Maxar library (6) | FABDEM | FABDEM + Method 6 above-ground height (research model, labelled; canopy ceiling ~18–23 m) | bundled pack, 1.2 m |
+| Upload / Search Online (georeferenced) | the attached DEM (user / FABDEM) | live GLO-30 | the attached DEM; or live GLO-30 for both when none is attached |
+| DFC2019, plain PNG/JPG | — | — | no georeference: flat plane, and every box says so |
+
+**Pieces:**
+- Elevation packs: `desktop/tiles/build_dem_pack.py` (38 packs, 22.6 MB, built from the benchmark's FABDEM/GLO-30 and the VHR pipeline outputs). They are bundled (`library/dem/`, item field `dem`).
+- Live GLO-30: `backend/dem/glo30.py`, public COGs on AWS, ranged reads, no account.
+  - Darjeeling across the 27°N tile boundary: 100% valid.
+  - Live vs bundled pack: Pearson 0.99998. Kohima upload: 852.0–2,372.2 m vs pack 851.8–2,372.5 m.
+- Frontend:
+  - the viewer's `loadRegion(key, assets)`; the job is registered as a region with its real sources, CRS, grid and inference time;
+  - captions, Studio stats, layer descriptions and the calculation log come from `meta`;
+  - no Darjeeling defaults are left in the generation path (Explore's demo regions are unchanged).
+- **WebKit quirk:** a CORS texture load can reuse the cached non-CORS `<img>` response of the same URL and then fail, so textures use their own URLs (`?tex=1`). A texture failure is logged instead of hanging the run.
+  Before the fix: 1 of 2 in-app runs stalled. After: 4 of 4 passed.
+
+**Verified:**
+- **Browser** (Chrome), full Workbench → Studio for Almora, Maxar forest and DFC2019: real per-job boxes and stats, 0 page errors.
+- **Desktop app, in-app E2E × 4** (no token, fresh cache):
+  - Almora → Studio in ~23 s (mostly the staged animation), showing 1,023–2,042 m · GLO-30 · EPSG:32644, with every image from `/api/generated/`;
+  - Maxar and DFC2019 generation 200;
+  - 0 page errors.
+- **Frozen backend:** a real GeoTIFF upload (Kohima) generated from live GLO-30 in 3.5 s.
+- **Sizes:** app 452.0 MB installed, DMG 324.6 MB (see the table below). Not yet published: that needs a v1.0.1 release.

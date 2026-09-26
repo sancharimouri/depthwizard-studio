@@ -35,8 +35,9 @@ assert len(bundled) == 26, len(bundled)
 
 if out.exists():
     shutil.rmtree(out)
-for d in ("thumbnails", "previews", "tiles"):
+for d in ("thumbnails", "previews", "tiles", "dem"):
     (out / d).mkdir(parents=True)
+DEM_PACKS = ROOT / "data" / "library" / "dem"  # desktop/tiles/build_dem_pack.py (all georeferenced items, ~23 MB)
 
 
 def recompress(src: Path, dst: Path) -> None:
@@ -86,8 +87,12 @@ for it in man["items"]:
         sizes["previews"] += (out / "previews" / names["preview"]).stat().st_size
         sizes["tiles"] += (out / "tiles" / names["tile"]).stat().st_size
         sizes["tiles_original"] += src_tile.stat().st_size
+    pack = DEM_PACKS / f"{iid}.tif"
+    if pack.is_file():  # elevation for real generation, bundled for every georeferenced item
+        shutil.copyfile(pack, out / "dem" / pack.name)
+        sizes["dem"] = sizes.get("dem", 0) + pack.stat().st_size
     it.update(thumbnail=names["thumbnail"], preview=names["preview"], tile=names["tile"],
-              bundled=iid in bundled, download=download)
+              dem=pack.name if pack.is_file() else None, bundled=iid in bundled, download=download)
     items.append(it)
 
 man_out = {**{k: v for k, v in man.items() if k != "items"}, "items": items,
