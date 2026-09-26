@@ -211,8 +211,8 @@ export function createInputView(root, { onStart }) {
     });
     const startNote = el("div", {
         class: "iv-placeholder-note",
-        text: "Relative depth is computed for this input. The later generation stages are still a placeholder "
-            + "showing the Darjeeling reference outputs. The input, its GSD, tier routing and DEM above are real.",
+        text: "Everything generated is this input's own: relative depth from the image, elevation and the 3D terrain "
+            + "from a real elevation model for its footprint (none if it has no georeference).",
     });
 
     const previewPane = el("section", { class: "iv-pane iv-preview-pane" },

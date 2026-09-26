@@ -14,7 +14,7 @@ import {
     STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobLabel, jobsExport, savedRecord, unsavedCopy,
 } from "./jobs.js";
 import { installCloseGuard } from "./desktop-close.js";
-import { depthToRgba, requestRelativeDepth } from "./depth-result.js";
+import { apiUrl } from "./api-base.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -49,23 +49,26 @@ function sleep(ms) {
 }
 
 function layerDescriptionText(layer, regionKey = currentRegionKey) {
-    const source = REGIONS[regionKey]?.elevationSource ?? "DSM";
+    const region = REGIONS[regionKey] ?? {};
+    const surface = region.elevationSource ?? "DSM";
+    const terrain = region.terrainSource ?? surface;
+    const imagery = region.imagery ?? "Sentinel-2 RGB imagery";
 
     switch (layer) {
         case "satellite-flat":
-            return "Sentinel-2 RGB imagery — flat";
+            return `${imagery} — flat`;
         case "depth-flat":
             return "DAv2 relative depth — flat, not absolute elevation";
         case "elevation-flat":
-            return `DEM elevation from ${source} — flat`;
+            return `Terrain elevation from ${terrain} — flat`;
         case "dsm-3d":
-            return "DAv2 relative depth draped on extruded terrain";
+            return `DAv2 relative depth draped on the ${surface} surface`;
         case "elevation-3d":
-            return `DEM elevation from ${source} — color-ramped by elevation`;
+            return `Terrain elevation from ${terrain} — colour-ramped, on the ${surface} surface`;
         case "satellite-3d":
-            return "Sentinel-2 RGB draped on extruded terrain";
+            return `${imagery} draped on the ${surface} surface`;
         default:
-            return "Sentinel-2 RGB imagery";
+            return imagery;
     }
 }
 
@@ -585,31 +588,53 @@ let unloadAllowed = false;
 
 const CAPTION_BOX_IDS = ["depth-preview-box", "elevation-preview-box"];
 
-// ---- Box 3 (Relative Depth): REAL output for the job's own input — DAv2-Small on
-// the inference host the backend points at (DAV2_INFERENCE_URL; src/depth-result.js).
-// If the host is down, the Darjeeling reference image comes back, labelled as such. ----
+// ---- Boxes 3-8: REAL generation for the job's own input (POST /api/generate/...;
+// backend/generation/pipeline.py). Relative depth is DAv2-Small on this input.
+// Elevation always comes from a real elevation model (the item's bundled FABDEM /
+// GLO-30 / VHR pack, the DEM attached to an upload, or live Copernicus GLO-30), never
+// from the image. An input without a georeference has no elevation, and the boxes say
+// so instead of showing someone else's terrain. ----
 
-const DEPTH_REFERENCE = {
-    src: "/data/darjeeling/relative_depth.png",
-    alt: "Darjeeling relative depth map (reference)",
-    lines: ["Depth Anything V2 (ViT-Large)", "Frozen weights · 1.17s inference"],
-};
+const EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
-function applyDepthBox(job) {
-    const box = document.getElementById("depth-preview-box");
+function jobRegionKey(job) {
+    return `job-${job.uid}`;
+}
+
+function shortSource(source) {
+    return String(source ?? "").replace(/\s*\(.*$/, "") || "—";
+}
+
+function rangeText(r) {
+    return r ? `${Math.round(r[0])}–${Math.round(r[1])} m` : "—";
+}
+
+// A generated job becomes a "region" of the shared viewer (stats, layer captions).
+function registerJobRegion(job) {
+    const m = job.gen.meta;
+    const imagery = job.input.source === "library"
+        ? (job.input.meta?.find(([k]) => k === "Source")?.[1] ?? "Input imagery")
+        : (job.input.sourceLabel === "upload" ? "Uploaded imagery" : "Sentinel-2 (Search Online)");
+    REGIONS[job.gen.key] = {
+        label: job.input.title,
+        hasElevation: m.has_elevation,
+        imagery: shortSource(imagery),
+        elevationSource: m.has_elevation ? shortSource(m.surface_source) : "No elevation model (no georeference)",
+        terrainSource: m.has_elevation ? shortSource(m.terrain_source) : null,
+        crsEpsg: m.crs ? m.crs.replace(/^EPSG:/, "") : "—",
+        resolution: m.resolution_m ? `${m.resolution_m >= 10 ? Math.round(m.resolution_m) : m.resolution_m} m` : "—",
+        inferenceTime: m.depth?.infer_s != null ? `${m.depth.infer_s}s` : "—",
+    };
+}
+
+function setBoxView(boxId, view) {
+    const box = document.getElementById(boxId);
     const img = box?.querySelector(".preview-image");
     const captionEl = box?.querySelector(".staged-caption");
-    const depth = job?.depth;
-    let view = DEPTH_REFERENCE;
-    if (depth?.status === "ok") {
-        view = { src: depth.url, alt: `Relative depth of ${job.input.title}`, lines: depth.lines };
-    } else if (depth?.status === "failed") {
-        view = { ...DEPTH_REFERENCE, lines: ["Inference host unavailable: Darjeeling reference shown", depth.error] };
-    }
-    if (img && img.getAttribute("src") !== view.src) {
+    if (img && view.src !== undefined && img.getAttribute("src") !== view.src) {
         img.src = view.src;
     }
-    if (img) {
+    if (img && view.alt !== undefined) {
         img.alt = view.alt;
     }
     if (captionEl) {
@@ -617,40 +642,111 @@ function applyDepthBox(job) {
     }
 }
 
-async function depthImageUrl(depth) {
-    const canvas = document.createElement("canvas");
-    canvas.width = depth.width;
-    canvas.height = depth.height;
-    canvas.getContext("2d").putImageData(new ImageData(depthToRgba(depth), depth.width, depth.height), 0, 0);
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-    return URL.createObjectURL(blob);
+function applyDepthBox(job) {
+    const gen = job?.gen;
+    if (gen?.status === "ok") {
+        const d = gen.depth ?? {};
+        const where = String(d.device ?? "?").toUpperCase();
+        setBoxView("depth-preview-box", {
+            src: gen.assets.depth,
+            alt: `Relative depth of ${job.input.title}`,
+            lines: [
+                d.fallback_used ? "Depth Anything V2 (ViT-Small) · this input · fallback host" : "Depth Anything V2 (ViT-Small) · this input",
+                `${where} ${d.infer_s}s inference · ${gen.roundTripS.toFixed(1)}s generation`,
+                "Relative depth (brighter = nearer), not elevation",
+            ],
+        });
+    } else {
+        setBoxView("depth-preview-box", {
+            src: EMPTY_IMAGE,
+            alt: "",
+            lines: gen?.status === "failed" ? ["Generation failed", gen.error] : ["Awaiting generation"],
+        });
+    }
+}
+
+function applyElevationBox(job) {
+    const gen = job?.gen;
+    const m = gen?.meta;
+    if (gen?.status === "ok" && m.has_elevation) {
+        setBoxView("elevation-preview-box", {
+            src: gen.assets.elevation,
+            alt: `Terrain elevation of ${job.input.title}`,
+            lines: [`Terrain: ${m.terrain_source}`, `${rangeText(m.terrain_range_m)} · ${m.crs} · ${m.resolution_m} m`],
+        });
+    } else if (gen?.status === "ok") {
+        setBoxView("elevation-preview-box", { src: EMPTY_IMAGE, alt: "", lines: [m.note] });
+    } else {
+        setBoxView("elevation-preview-box", {
+            src: EMPTY_IMAGE, alt: "",
+            lines: gen?.status === "failed" ? ["Generation failed", gen.error] : ["Awaiting generation"],
+        });
+    }
+}
+
+// The 3D boxes' captions come from the job's own metadata.
+function applyMiniBoxCaptions(job) {
+    const m = job?.gen?.meta;
+    const set = (id, lines) => {
+        const captionEl = document.getElementById(id)?.querySelector(".staged-caption");
+        if (captionEl) {
+            captionEl.dataset.lines = JSON.stringify(lines);
+        }
+    };
+    if (job?.gen?.status !== "ok") {
+        const lines = job?.gen?.status === "failed" ? ["Generation failed", job.gen.error] : ["Awaiting generation"];
+        set("dsm-3d-box", lines);
+        set("metric-elevation-3d-box", lines);
+    } else if (!m.has_elevation) {
+        set("dsm-3d-box", ["No surface model: no georeference", "Relative depth on a flat plane"]);
+        set("metric-elevation-3d-box", ["No DEM: no georeference", m.note]);
+    } else {
+        set("dsm-3d-box", [`${m.grid[0]}×${m.grid[1]} mesh · ${m.surface_source}`, `Surface ${rangeText(m.surface_range_m)} · relative depth draped`]);
+        set("metric-elevation-3d-box", [`Terrain: ${m.terrain_source}`, `${rangeText(m.terrain_range_m)} · ${m.crs}`]);
+    }
 }
 
 // Never throws: the outcome (real result or failure) is recorded on the job.
-async function computeJobDepth(job) {
+async function computeJobGeneration(job) {
     const scrollEl = document.getElementById("calc-log-scroll");
     const ref = job.input.inputRef;
+    const t0 = performance.now();
     try {
         if (!ref?.id) {
             throw new Error("this input has no id to send");
         }
-        const { resp, depth, roundTripS } = await requestRelativeDepth(ref);
-        const where = String(resp.device ?? "?").toUpperCase();
-        job.depth = {
-            status: "ok",
-            url: await depthImageUrl(depth),
-            lines: [
-                resp.fallback_used ? "Depth Anything V2 (ViT-Small) · this input · fallback host" : "Depth Anything V2 (ViT-Small) · this input",
-                `${where} ${resp.infer_s}s inference · ${roundTripS.toFixed(1)}s round trip`,
-                "Relative depth (brighter = nearer), not elevation",
-            ],
-        };
-        appendCalcLogLine(scrollEl, `Relative depth: DAv2-Small on ${where}, ${depth.width}×${depth.height}, `
-            + `${resp.infer_s}s inference, ${roundTripS.toFixed(1)}s round trip (${resp.encoding ?? "float32"}) `
-            + `via ${resp.host ?? "inference host"}${resp.fallback_used ? " (fallback: primary host failed)" : ""}`, job);
+        const kind = ref.source === "library" ? "library" : "input";
+        const response = await fetch(apiUrl(`/api/generate/${kind}/${encodeURIComponent(ref.id)}`), { method: "POST" });
+        if (!response.ok) {
+            let detail = `HTTP ${response.status}`;
+            try {
+                detail = (await response.json()).detail || detail;
+            } catch {
+                // not JSON
+            }
+            throw new Error(detail);
+        }
+        const g = await response.json();
+        const assets = Object.fromEntries(Object.entries(g.assets).map(([k, v]) => [k, apiUrl(v)]));
+        job.gen = { status: "ok", key: jobRegionKey(job), assets, meta: g.meta, depth: g.depth,
+                    roundTripS: (performance.now() - t0) / 1000 };
+        registerJobRegion(job);
+        const m = g.meta;
+        const d = g.depth ?? {};
+        appendCalcLogLine(scrollEl, `Relative depth: DAv2-Small on ${String(d.device ?? "?").toUpperCase()}, `
+            + `${(d.shape ?? []).join("×")}, ${d.infer_s}s inference (${d.encoding ?? "float32"}) via ${d.host ?? "inference host"}`
+            + `${d.fallback_used ? " (fallback: primary host failed)" : ""}`, job);
+        if (m.has_elevation) {
+            appendCalcLogLine(scrollEl, `Terrain: ${m.terrain_source}, ${rangeText(m.terrain_range_m)}`, job);
+            appendCalcLogLine(scrollEl, `Surface: ${m.surface_source}, ${rangeText(m.surface_range_m)}`, job);
+            appendCalcLogLine(scrollEl, `Elevation source: ${m.how} · ${m.crs} · ${m.resolution_m} m grid`, job);
+            appendCalcLogLine(scrollEl, `Mesh ${m.grid[0]}×${m.grid[1]} from the surface model · generated in ${job.gen.roundTripS.toFixed(1)}s`, job);
+        } else {
+            appendCalcLogLine(scrollEl, m.note, job);
+        }
     } catch (error) {
-        job.depth = { status: "failed", error: String(error.message ?? error).slice(0, 140) };
-        appendCalcLogLine(scrollEl, `Relative depth unavailable (${job.depth.error}); showing the Darjeeling reference`, job);
+        job.gen = { status: "failed", error: String(error.message ?? error).slice(0, 160) };
+        appendCalcLogLine(scrollEl, `Generation failed (${job.gen.error})`, job);
     }
 }
 const MINI_BOX_IDS = ["dsm-3d-box", "metric-elevation-3d-box"];
@@ -711,6 +807,8 @@ function collapseFinalDemoInstantly() {
 function resetGridForGeneration() {
     collapseFinalDemoInstantly();
     applyDepthBox(null);
+    applyElevationBox(null);
+    applyMiniBoxCaptions(null);
 
     CAPTION_BOX_IDS.forEach(id => {
         const box = document.getElementById(id);
@@ -752,6 +850,10 @@ function resetGridForGeneration() {
 function showCompletedJob(job) {
     applyJobInput(job);
     applyDepthBox(job);
+    applyElevationBox(job);
+    applyMiniBoxCaptions(job);
+    showJobInMiniPreviews(job);
+    showJobInFinalDemo(job);
 
     CAPTION_BOX_IDS.forEach(id => {
         const box = document.getElementById(id);
@@ -1694,7 +1796,10 @@ function buildCalcLogLines() {
 
     if (sceneSelectionSummary?.type === "input") {
         opening.push(...sceneSelectionSummary.logLines);
-        opening.push("Relative depth below is computed for this input; the later stages are a placeholder showing the Darjeeling reference outputs");
+        opening.push("Generating from this input's own data: relative depth, its elevation model and the 3D terrain");
+        opening.push("Handing off to the generation pipeline…");
+        // the real steps (sources, ranges, grid, timings) are appended by computeJobGeneration
+        return opening;
     }
 
     opening.push("Handing off to reconstruction pipeline…");
@@ -1723,28 +1828,49 @@ function runCalcLog(totalDurationMs, job) {
 }
 
 // ---- Mini 3D previews: DSM / Metric Elevation. Gently auto-rotating,
-// no OrbitControls attached (no drag/zoom), sharing one fetch of
-// Darjeeling's terrain data + textures across both. ----
+// no OrbitControls attached (no drag/zoom). They show the generated job's own
+// terrain (one fetch per job, shared by both boxes); nothing before that. ----
 
 const miniPreviews = [];
-let miniPreviewAssetsPromise = null;
+const miniAssetCache = new Map();
 
-function loadMiniPreviewAssets() {
-    if (!miniPreviewAssetsPromise) {
-        miniPreviewAssetsPromise = (async () => {
-            const terrainResponse = await fetch("/data/darjeeling/terrain.json");
-            const terrainData = await terrainResponse.json();
-
-            const textureLoader = new THREE.TextureLoader();
-            const satelliteTexture = await textureLoader.loadAsync("/data/darjeeling/satellite.png");
-            const depthTexture = await textureLoader.loadAsync("/data/darjeeling/relative_depth.png");
-            const elevationTexture = await textureLoader.loadAsync("/data/darjeeling/elevation.png");
-
-            return { terrainData, satelliteTexture, depthTexture, elevationTexture };
-        })();
+function loadMiniPreviewAssets(job) {
+    const gen = job?.gen;
+    if (gen?.status !== "ok") {
+        return Promise.resolve(null);
     }
+    if (!miniAssetCache.has(gen.key)) {
+        miniAssetCache.set(gen.key, (async () => {
+            const terrainData = await (await fetch(gen.assets.terrain)).json();
+            const textureLoader = new THREE.TextureLoader();
+            const [satelliteTexture, depthTexture, elevationTexture] = await Promise.all([
+                textureLoader.loadAsync(gen.assets.satellite),
+                textureLoader.loadAsync(gen.assets.depth),
+                textureLoader.loadAsync(gen.assets.elevation),
+            ]);
+            return { key: gen.key, terrainData, satelliteTexture, depthTexture, elevationTexture };
+        })());
+    }
+    return miniAssetCache.get(gen.key);
+}
 
-    return miniPreviewAssetsPromise;
+async function showJobInMiniPreviews(job) {
+    const assets = await loadMiniPreviewAssets(job);
+    miniPreviews.forEach(preview => {
+        preview.terrain?.mesh?.geometry?.dispose();
+        preview.group.clear();
+        preview.terrain = null;
+        preview.ready = false;
+        if (!assets) {
+            return;
+        }
+        const { key, terrainData, satelliteTexture, depthTexture, elevationTexture } = assets;
+        preview.terrain = createTerrain(preview.group, key, terrainData, satelliteTexture, depthTexture, elevationTexture);
+        preview.terrain.setLayer(preview.layer);
+        preview.ready = true;
+        preview.lastWidth = 0;
+        resizeMiniPreview(preview);
+    });
 }
 
 function resizeMiniPreview(preview) {
@@ -1800,17 +1926,12 @@ function createMiniPreview(canvas, layer) {
         camera: miniCamera,
         renderer: miniRenderer,
         group,
+        layer,
+        terrain: null,
         ready: false,
         lastWidth: 0,
         lastHeight: 0,
     };
-
-    loadMiniPreviewAssets().then(({ terrainData, satelliteTexture, depthTexture, elevationTexture }) => {
-        const terrain = createTerrain(group, "darjeeling", terrainData, satelliteTexture, depthTexture, elevationTexture);
-        terrain.setLayer(layer);
-        preview.ready = true;
-        resizeMiniPreview(preview);
-    });
 
     miniPreviews.push(preview);
 }
@@ -1868,7 +1989,9 @@ function updateFinalDemoStats(regionKey, terrain, terrainData) {
 
     const elevationElement = document.getElementById("final-demo-elevation-value");
     if (elevationElement) {
-        elevationElement.textContent = `${Math.round(terrain.elevationMin)}–${Math.round(terrain.elevationMax)} m`;
+        elevationElement.textContent = region?.hasElevation === false
+            ? "—"
+            : `${Math.round(terrain.elevationMin)}–${Math.round(terrain.elevationMax)} m`;
     }
 
     const sourceElement = document.getElementById("final-demo-terrain-source-value");
@@ -2031,8 +2154,21 @@ function resetFinalDemoRunState() {
     finalDemoFlythrough?.stop();
 }
 
-async function loadFinalDemoRegion(regionKey) {
-    const { terrain, terrainData } = await finalDemoViewer.loadRegion(regionKey);
+// The Studio shows the generated job's own terrain and textures (never a demo region).
+async function showJobInFinalDemo(job) {
+    if (!finalDemoViewer || job?.gen?.status !== "ok") {
+        return null;
+    }
+    const terrain = await loadFinalDemoRegion(job.gen.key, job.gen.assets);
+    finalDemoHistory?.reset();
+    if (jobStore.active() === job) {
+        renderSource(job);
+    }
+    return terrain;
+}
+
+async function loadFinalDemoRegion(regionKey, assets = null) {
+    const { terrain, terrainData } = await finalDemoViewer.loadRegion(regionKey, assets);
 
     finalDemoCurrentTerrain = terrain;
     finalDemoCurrentRegionKey = regionKey;
@@ -2165,9 +2301,9 @@ try {
 // Creates the viewer, wires every control, and loads Darjeeling. Returns
 // the loadFinalDemoRegion() promise so callers can await real asset load
 // alongside the box's minimum "generating" duration.
-function initFinalDemoViewer() {
+function initFinalDemoViewer(job) {
     if (finalDemoInitialized) {
-        return Promise.resolve();
+        return showJobInFinalDemo(job);
     }
     finalDemoInitialized = true;
 
@@ -2353,10 +2489,7 @@ function initFinalDemoViewer() {
         finalDemoViewer?.resizeToCanvas();
     });
 
-    return loadFinalDemoRegion("darjeeling").then(terrain => {
-        finalDemoHistory?.reset();
-        return terrain;
-    });
+    return showJobInFinalDemo(job);
 }
 
 // ---- Image Inspection ↔ 3D surface (src/surface-point.js) ----
@@ -2771,7 +2904,7 @@ async function generateCaptionPreviewBox(boxId, steps, work = null, onDone = nul
 // for at least BOX_GENERATE_MS *and* until the real (shared, memoized)
 // terrain asset fetch actually resolves, whichever is longer. ----
 
-async function generateMiniPreviewBox(boxId, canvasId, layer, steps) {
+async function generateMiniPreviewBox(boxId, canvasId, layer, steps, job) {
     const box = document.getElementById(boxId);
     const canvas = document.getElementById(canvasId);
 
@@ -2799,8 +2932,9 @@ async function generateMiniPreviewBox(boxId, canvasId, layer, steps) {
             steps,
             durationMs: BOX_GENERATE_MS,
         }),
-        loadMiniPreviewAssets(),
+        loadMiniPreviewAssets(job),
     ]);
+    await showJobInMiniPreviews(job);
 
     if (overlay) {
         overlay.hidden = true;
@@ -2817,7 +2951,7 @@ const miniPreviewCanvases = new Set();
 // (only once — initFinalDemoViewer() is itself idempotent) alongside the
 // generating animation, then reveals both. ----
 
-async function generateFinalDemoBox() {
+async function generateFinalDemoBox(job) {
     const overlay = document.getElementById("final-demo-generating");
     const controlsEl = document.getElementById("final-demo-controls");
     const fullscreenToggle = document.getElementById("final-demo-fullscreen");
@@ -2837,7 +2971,7 @@ async function generateFinalDemoBox() {
             ],
             durationMs: BOX_GENERATE_MS,
         }),
-        initFinalDemoViewer(),
+        initFinalDemoViewer(job),
     ]);
 
     if (overlay) {
@@ -2865,37 +2999,39 @@ async function runGenerationSequence(job) {
     // whichever box below is currently generating.
     runCalcLog(TOTAL_PIPELINE_MS, job);
     const stageDone = progress => jobStore.update(job.id, { progress });
-    const depthWork = computeJobDepth(job);
+    // One real generation request for this input; every box below waits on it.
+    const genWork = computeJobGeneration(job);
 
     await generateCaptionPreviewBox("depth-preview-box", [
         "Sending this input's preview to the inference host…",
         "Running Depth Anything V2 (ViT-Small)…",
         "Decoding 518×518 relative depth…",
-    ], depthWork, () => applyDepthBox(job));
+    ], genWork, () => applyDepthBox(job));
     stageDone(20);
 
     await generateCaptionPreviewBox("elevation-preview-box", [
-        "Loading terrain DEM (reference elevation)…",
-        "Learned Sentinel-2 corrections: tested, not adopted…",
-        "DEM elevation shown — no model correction applied…",
-    ]);
+        "Finding this input's elevation model…",
+        "Reprojecting the DEM onto the input's footprint…",
+        "Colour-ramping terrain elevation…",
+    ], genWork, () => applyElevationBox(job));
     stageDone(40);
+    applyMiniBoxCaptions(job);
 
     await generateMiniPreviewBox("dsm-3d-box", "dsm-3d-canvas", "dsm-3d", [
-        "Reprojecting DSM → EPSG:32645…",
-        "Extruding 361×325 vertex grid…",
-        "Applying vertical exaggeration 1.07x…",
-    ]);
+        "Loading the surface model (DSM)…",
+        "Building the terrain mesh…",
+        "Draping relative depth…",
+    ], job);
     stageDone(60);
 
     await generateMiniPreviewBox("metric-elevation-3d-box", "metric-elevation-3d-canvas", "elevation-3d", [
-        "Running spatial-trend validation…",
-        "Detrending elevation vs. position…",
-        "Correlation +0.60 → −0.41 after detrending…",
-    ]);
+        "Loading the terrain DEM…",
+        "Colour-ramping by elevation…",
+        "Scaling vertical relief…",
+    ], job);
     stageDone(80);
 
-    await generateFinalDemoBox();
+    await generateFinalDemoBox(job);
     jobStore.update(job.id, { status: "complete", progress: 100 });
 
     if (startGenerationButton) {
