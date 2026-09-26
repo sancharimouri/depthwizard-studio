@@ -1,6 +1,6 @@
 {
   "identifier": "default",
-  "description": "Main window",
+  "description": "Main window. allow-destroy: the frontend's close guard (frontend/src/desktop-close.js) intercepts the close request, and Tauri's onCloseRequested then closes the window with destroy(), which core:default does not grant; without it the window never closes.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "core:window:allow-destroy"]
 }

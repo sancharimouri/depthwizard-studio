@@ -19,14 +19,25 @@ export async function installCloseGuard({ hasUnsaved, confirmUnsaved, isUnloadAl
     if (tauriWindow?.getCurrentWindow) {
         const win = tauriWindow.getCurrentWindow();
         // Tauri v2 awaits this handler, then destroys the window unless the
-        // event was prevented.
+        // event was prevented. destroy() needs core:window:allow-destroy
+        // (desktop/tauri/src-tauri/capabilities/default.json); without it every
+        // close was silently denied. The window closes only on an explicit
+        // "cancel"; any error in the prompt closes rather than trapping it.
         await win.onCloseRequested(async event => {
-            if (!hasUnsaved()) {
-                return;
+            let choice = "discard";
+            try {
+                if (hasUnsaved()) {
+                    choice = await confirmUnsaved("quit");
+                }
+            } catch (error) {
+                console.error("close guard failed; closing anyway:", error);
             }
-            const choice = await confirmUnsaved("quit");
             if (choice === "cancel") {
                 event.preventDefault();
+            } else if (choice === "save") {
+                // saveJobs() starts the export download and the saved-store write
+                // without awaiting them; let both finish before the window goes.
+                await new Promise(resolve => setTimeout(resolve, 800));
             }
         });
         return "tauri";
