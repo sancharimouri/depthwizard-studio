@@ -664,7 +664,9 @@ to match.
 - **Updates:** Tauri updater, signed. The key is in `~/.tauri/depthwizard2-updater.key` and its password in the Keychain ("depthwizard2-updater-signing"). **Back them up.**
   The live release is `github.com/sancharimouri/depthwizard2-desktop` v1.0.0.
 - **DFC2019 is public temporarily, by owner decision** (see CLAUDE.md). The owner will replace it. Publish nothing more of it without asking.
-- **Open:**
-  - the "Later" button on the update prompt is not yet clicked in a test;
-  - Windows/Linux CI (`desktop/freeze_trial/freeze-trial.yml`) not run;
-  - the on-demand size shown on DFC2019 cards uses the original tile size (~2.9 MB vs 2.2 MB published).
+- **Closed afterwards:**
+  - the "Later" button is verified (postponed, nothing downloaded);
+  - on-demand card sizes now come from the published release (DFC2019 2.22 MB);
+  - downloadable tiles are listed first.
+  The last two ship in the next release (v1.0.1).
+- **Open:** Windows/Linux CI. Pushing the workflow needs the `workflow` scope on the gh token (`gh auth refresh -h github.com -s workflow`).
