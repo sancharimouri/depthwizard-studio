@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { formatGsd, isReady, quotaLines, startLabel, tierClass } from "../src/input-view.js";
+import { formatGsd, isReady, itemTerrain, orderLibraryItems, quotaLines, startLabel, tierClass } from "../src/input-view.js";
 
 test("tier colour classes: green T2, orange T1, neutral otherwise", () => {
     assert.equal(tierClass({ tier: 2 }), "tier-2");
@@ -44,4 +44,18 @@ test("quota lines never invent a remaining count", () => {
     assert.match(lines[1], /10,000 req\/month/);
     assert.match(lines[2], /4.04 PU/);
     assert.ok(lines.every(line => !/remaining/i.test(line)));
+});
+
+test("library order: Darjeeling, Almora, Manali first, then catalog order", () => {
+    const items = ["dfc2019-A", "sentinel2-manali", "sentinel2-kota", "sentinel2-almora", "sentinel2-darjeeling"]
+        .map(id => ({ id }));
+    assert.deepEqual(orderLibraryItems(items).map(i => i.id),
+        ["sentinel2-darjeeling", "sentinel2-almora", "sentinel2-manali", "dfc2019-A", "sentinel2-kota"]);
+});
+
+test("library terrain: manifest field, Sentinel-2 category, collection fallback", () => {
+    assert.equal(itemTerrain({ terrain: "coastal", collection: "sentinel2" }), "coastal");
+    assert.equal(itemTerrain({ category: "agricultural", collection: "sentinel2" }), "agricultural");
+    assert.equal(itemTerrain({ collection: "dfc2019" }), "urban");
+    assert.equal(itemTerrain({ collection: "vhr" }), "hilly");
 });
