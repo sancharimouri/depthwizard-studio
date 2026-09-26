@@ -16,6 +16,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -28,10 +29,14 @@ REPO, TAG = "sancharimouri/depthwizard2-assets", "library-v1"
 man = {i["id"]: i for i in json.loads((ROOT / "data/library/manifest.json").read_text())["items"]}
 bundled = set(json.loads((ROOT / "desktop/tiles/selection.json").read_text())["dfc2019"]["bundled"])
 ondemand = sorted(i for i, it in man.items() if it["collection"] == "dfc2019" and i not in bundled)
-assert len(ondemand) == 40, len(ondemand)
+# 42 since 2026-09-27: OMA_364_043 and OMA_315_019 unbundled at the owner's request (selection.json).
+assert len(ondemand) == 42, len(ondemand)
+# Optional item ids: upload only these (e.g. newly unbundled tiles), not all 42 again.
+only = sys.argv[1:]
+assert set(only) <= set(ondemand), set(only) - set(ondemand)
 
 stage = Path(tempfile.mkdtemp(prefix="dw2-dfc-"))
-for iid in ondemand:
+for iid in only or ondemand:
     shutil.copyfile(ROOT / "data/library/previews" / man[iid]["preview"], stage / f"{iid}__preview.jpg")
     with rasterio.open(os.path.realpath(ROOT / man[iid]["file"])) as r:
         prof, data, tags = r.profile, r.read(), r.tags()
@@ -55,15 +60,17 @@ print(f"uploaded {len(files)} assets to {REPO}@{TAG}")
 meta = json.loads(subprocess.run(["gh", "api", f"repos/{REPO}/contents/README.md"],
                                  capture_output=True, text=True, check=True).stdout)
 readme = base64.b64decode(meta["content"]).decode()
-new_section = """## DFC2019 (40 tiles, `dfc2019-*`): TEMPORARY
+new_section = f"""## DFC2019 ({len(ondemand)} tiles, `dfc2019-*`): TEMPORARY
 Source: 2019 IEEE GRSS Data Fusion Contest, Track 1 (WorldView-3 RGB, Jacksonville and Omaha;
 dataset by Johns Hopkins University Applied Physics Laboratory / IARPA CORE3D). Changes: tiles
 re-encoded losslessly (deflate), previews resized and contrast-stretched.
 **The DFC2019 contest terms restrict redistribution of this data. It is published here temporarily
 by the repository owner and will be removed; do not reuse or redistribute it.**
-Only the 40 tiles the Depth Wizard desktop app downloads on demand are here (no thumbnails).
+Only the {len(ondemand)} tiles the Depth Wizard desktop app downloads on demand are here (no thumbnails).
 """
-head, sep, _ = readme.partition("## Not included")
+# First run replaced "## Not included"; later runs replace the DFC2019 section itself.
+marker = "## DFC2019 (" if "## DFC2019 (" in readme else "## Not included"
+head, sep, _ = readme.partition(marker)
 readme = (head if sep else readme.rstrip() + "\n\n") + new_section
 subprocess.run(["gh", "api", "-X", "PUT", f"repos/{REPO}/contents/README.md",
                 "-f", "message=README: DFC2019 on-demand tiles (temporary, owner decision)",

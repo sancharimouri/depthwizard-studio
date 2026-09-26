@@ -376,8 +376,9 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
 - Method 6 checkpoints → PRIVATE HF repo (`backend/storage/hf_checkpoints.py`). R2 (`backend/storage/r2.py`) is dormant.
 - `DW2_LIBRARY=local` switches to `data/library/` (dev only).
 - **DFC2019 publication, owner decision 2026-09-26 (TEMPORARY).** The contest terms restrict redistribution; the owner accepts that and will replace the source soon.
-  - Public now: the 40 on-demand tiles + previews in `depthwizard2-assets@library-v1` (`desktop/tiles/publish_dfc_ondemand.py`, README marked temporary).
-  - Also public: the desktop installer/update artifact (10 bundled DFC2019 tiles, 50 thumbnails) in `sancharimouri/depthwizard2-desktop`.
+  - Public now: the 42 on-demand tiles + previews in `depthwizard2-assets@library-v1` (`desktop/tiles/publish_dfc_ondemand.py`, README marked temporary).
+    40 on 2026-09-26; OMA_364_043 + OMA_315_019 added 2026-09-27 with the owner's OK, when they were unbundled.
+  - Also public: the desktop installer/update artifact (8 bundled DFC2019 tiles since 2026-09-27, was 10; 50 thumbnails) in `sancharimouri/depthwizard2-desktop`.
   - The web backend still serves DFC2019 from the private HF dataset. No HF token is embedded anywhere (the owner's write token was deliberately NOT put in the app).
   - Publish nothing further of DFC2019 without asking.
 
