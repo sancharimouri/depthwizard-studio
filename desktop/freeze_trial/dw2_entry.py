@@ -41,6 +41,7 @@ def _user_cache() -> Path:
 
 USER_CACHE = Path(os.environ.get("DW2_USER_CACHE") or _user_cache())
 os.environ.setdefault("DW2_UPLOADS_DIR", str(USER_CACHE / "uploads"))
+os.environ.setdefault("DW2_GENERATED_DIR", str(USER_CACHE / "generated"))
 os.environ["DW2_NO_DOTENV"] = "1"  # config comes only from the environment the shell passes
 os.environ.setdefault("HF_HOME", str(USER_CACHE / "hf"))
 os.environ["DW2_DAV2_ONNX"] = str(BASE / "models" / "dav2_small.onnx")
