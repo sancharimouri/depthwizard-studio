@@ -10,7 +10,7 @@ Reads data/library/manifest.json and desktop/tiles/selection.json and writes:
                             each verified pixel- and georeference-identical
 Bundled: 10 DFC2019 + 10 Sentinel-2 (selection.json) + all 6 Maxar. The rest are
 thumbnail-only and downloaded on demand by POST /api/library/{id}/download:
-Sentinel-2 / Maxar from the public GitHub Release, DFC2019 from the private HF dataset.
+All from the public GitHub Release (DFC2019 too: temporary, publish_dfc_ondemand.py).
 """
 import json
 import os
@@ -59,13 +59,10 @@ for it in man["items"]:
     shutil.copyfile(lib / "thumbnails" / it["thumbnail"], out / "thumbnails" / names["thumbnail"])
     sizes["thumbnails"] += (out / "thumbnails" / names["thumbnail"]).stat().st_size
     src_tile = Path(os.path.realpath(ROOT / next(i for i in man["items"] if i["id"] == iid)["file"]))
-    remote = library_store.asset_names(it)
-    if library_store.is_public(it):
-        download = {"source": "github-release", "preview": library_store.release_url(remote["preview"]),
-                    "tile": library_store.release_url(remote["tile"])}
-    else:
-        download = {"source": "hf-private", "dataset": library_store.HF_DATASET,
-                    "preview": remote["preview"], "tile": remote["tile"]}
+    # Every on-demand item downloads from the public GitHub Release, DFC2019 included:
+    # TEMPORARY owner decision (2026-09-26), published by desktop/tiles/publish_dfc_ondemand.py.
+    download = {"source": "github-release", "preview": library_store.release_url(f"{iid}__preview.jpg"),
+                "tile": library_store.release_url(f"{iid}.tif")}
     download["bytes"] = (lib / "previews" / it["preview"]).stat().st_size + src_tile.stat().st_size
     if iid in bundled:
         shutil.copyfile(lib / "previews" / it["preview"], out / "previews" / names["preview"])

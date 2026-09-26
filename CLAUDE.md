@@ -374,7 +374,12 @@ with exact accounting (102 + 1,611 skipped + 1,148 to do = 2,861). The pattern:
 - Split by licence. Sentinel-2 + Maxar → PUBLIC GitHub Release (`sancharimouri/depthwizard2-assets@library-v1`).
   DFC2019 (redistribution forbidden by the contest terms) + `manifest.json` → PRIVATE HF dataset, served only through the backend (needs `HF_TOKEN`).
 - Method 6 checkpoints → PRIVATE HF repo (`backend/storage/hf_checkpoints.py`). R2 (`backend/storage/r2.py`) is dormant.
-- `DW2_LIBRARY=local` switches to `data/library/` (dev only). Never put DFC2019 data anywhere public.
+- `DW2_LIBRARY=local` switches to `data/library/` (dev only).
+- **DFC2019 publication, owner decision 2026-09-26 (TEMPORARY).** The contest terms restrict redistribution; the owner accepts that and will replace the source soon.
+  - Public now: the 40 on-demand tiles + previews in `depthwizard2-assets@library-v1` (`desktop/tiles/publish_dfc_ondemand.py`, README marked temporary).
+  - Also public: the desktop installer/update artifact (10 bundled DFC2019 tiles, 50 thumbnails) in `sancharimouri/depthwizard2-desktop`.
+  - The web backend still serves DFC2019 from the private HF dataset. No HF token is embedded anywhere (the owner's write token was deliberately NOT put in the app).
+  - Publish nothing further of DFC2019 without asking.
 
 ## SIH26175 brief — evaluation criteria (standing reference; full text `docs/SIH26175_problem_statement.md`)
 

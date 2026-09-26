@@ -657,3 +657,14 @@ to match.
   1. Push `desktop/freeze_trial/` to the private CI repo over HTTPS and run the Windows/Linux matrix. Report sizes and whether each fix is needed.
   2. Then the tiered tile bundling + update mechanism.
 - **Still untouched, on purpose:** the 4 modified Sentinel `.tif` files, the `earthengine-api` line in pyproject/uv.lock, and the deleted `last_session.md`.
+
+**Session footer: 2026-09-26, "desktop v1.0.0 published"** (record: `docs/DESKTOP_APP.md`)
+- **Desktop app:** Tauri 2 + frozen backend on ONNX Runtime (no torch) + a tiered tile library (26 bundled, 62 on demand from the public GitHub Release).
+  In-app E2E passes. Bundled-tile depth 0.22–0.26 s. Installer DMG 316.2 MB, app 432.4 MB.
+- **Updates:** Tauri updater, signed. The key is in `~/.tauri/depthwizard2-updater.key` and its password in the Keychain ("depthwizard2-updater-signing"). **Back them up.**
+  The live release is `github.com/sancharimouri/depthwizard2-desktop` v1.0.0.
+- **DFC2019 is public temporarily, by owner decision** (see CLAUDE.md). The owner will replace it. Publish nothing more of it without asking.
+- **Open:**
+  - the "Later" button on the update prompt is not yet clicked in a test;
+  - Windows/Linux CI (`desktop/freeze_trial/freeze-trial.yml`) not run;
+  - the on-demand size shown on DFC2019 cards uses the original tile size (~2.9 MB vs 2.2 MB published).

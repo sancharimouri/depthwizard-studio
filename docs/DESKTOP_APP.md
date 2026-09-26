@@ -134,7 +134,9 @@ The backend here is 800 MB (the earlier 813 MB build also contained `requests` a
 - `POST /api/library/{id}/download` writes on-demand items (atomic `.part` → rename) into the per-user cache.
 - The frontend shows a translucent overlay ("Download · 2.3 MB") on on-demand cards; clicking downloads, then selects.
 
-**DFC2019 on demand needs a token.** The private dataset returns 401 to anonymous requests (checked for manifest, tile, preview and thumbnail). The app refuses with "Needs a Hugging Face token" unless `HF_TOKEN` is in its environment. No token is embedded.
+**DFC2019 on demand:**
+- The private HF dataset returns 401 to anonymous requests (checked for manifest, tile, preview and thumbnail).
+- So the app first refused ("Needs a Hugging Face token"). Superseded the same day: the 40 tiles are now on the public GitHub Release, see Hosting below.
 
 **Bug fixed:** `load_dotenv()` searches upward from the install path. The packaged backend built inside the repo loaded the repo's `.env`, including `HF_TOKEN`. The desktop entry now sets `DW2_NO_DOTENV=1`.
 
@@ -177,11 +179,19 @@ The backend here is 800 MB (the earlier 813 MB build also contained `requests` a
 
 **Other findings:**
 - Tauri refuses to run from a path containing a symlink (macOS security check; e.g. `/var/…` instead of `/private/var/…`). The shell now reports that clearly instead of panicking with `resource dir: UnknownPath`.
-- **Hosting is NOT done: blocked on a decision.**
-  - The update artifact is the whole app, including 10 DFC2019 tiles and all 50 DFC2019 thumbnails.
-  - A public GitHub Release would publish DFC2019 data, which CLAUDE.md forbids.
-  - A private release would need a token inside the app.
-  - The endpoint in `tauri.conf.json` (`github.com/sancharimouri/depthwizard2-desktop/releases/latest/download/latest.json`) is a placeholder; that repo does not exist.
+- **Hosting (done 2026-09-26, owner decision: everything public on GitHub):**
+  - `sancharimouri/depthwizard2-desktop` (public; releases + README only; no source).
+  - Release **v1.0.0**: `DepthWizard_1.0.0_aarch64.dmg` (installer), `DepthWizard.app.tar.gz` + `.sig` (update artifact) and `latest.json`.
+  - Published with `desktop/tauri/publish-release.sh`, which creates the repo if needed and writes `latest.json` with the built app's own version.
+  - Verified:
+    - anonymous `latest.json` at the updater endpoint → HTTP 200, and its signature matches the built artifact;
+    - the artifact URL resolves (305.6 MB);
+    - the shipped v1.0.0 app logs "update check: up to date (1.0.0)" against the live release.
+- **DFC2019 on demand, now token-free.** The 40 on-demand DFC2019 tiles (+ previews) are in the **public** `depthwizard2-assets@library-v1` release (`desktop/tiles/publish_dfc_ondemand.py`; lossless re-encode verified, README marked TEMPORARY with the terms restriction). The bundle downloads every on-demand item from GitHub.
+  - In-app E2E with no token: the DFC2019 on-demand card **downloaded**.
+  - The owner's HF token was **not** embedded: it has write access to the whole account, so it would have been extractable from a public app.
+- **Releasing an update:** bump `version` in `tauri.conf.json` (and `Cargo.toml`), then `desktop/tauri/build-signed.sh`, then `desktop/tauri/publish-release.sh`.
+  Installed apps see it on their next launch.
 
 ## v1.0.0 size (production build, measured)
 
