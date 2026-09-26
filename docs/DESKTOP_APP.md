@@ -174,7 +174,9 @@ The backend here is 800 MB (the earlier 813 MB build also contained `requests` a
 - **Genuine artifact:** "1.0.1 available" → accepted → downloaded → installed → restarted. The relaunched app printed "Depth Wizard 1.0.1 · update check: up to date (1.0.1)", and the installed Info.plist says 1.0.1.
 - **Tampered artifact** (1 byte changed, genuine signature): "The signature verification failed", and the install stayed at 1.0.0.
 - **Prompt:** launched normally (LaunchServices), the dialog appears and **waits**: no action for 45+ s.
-  Clicking **Update** installs (done by hand by the user, three times, during the test). **Later** has not been clicked in a test yet.
+  Clicking **Update** installs (done by hand by the user, three times, during the test).
+  **Later** was clicked by hand (2026-09-26) and logged "postponed by the user". The server saw only the manifest request, with no artifact download.
+  The version stayed 1.0.0 and the app kept running (depth by id still 0.24 s).
 - **Production v1.0.0** checks its real endpoint on launch. Nothing is published yet, so it logs "Could not fetch a valid release JSON" and carries on normally.
 
 **Other findings:**
