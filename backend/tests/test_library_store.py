@@ -49,8 +49,12 @@ def test_remote_catalog_urls(remote):
     assert remote[0] == ls.MANIFEST_FILE  # the catalog comes from the private dataset
     items = {i["id"]: i for i in d["items"]}
     s2 = items["sentinel2-almora"]
-    assert s2["preview_url"] == ls.release_url("sentinel2-almora__preview.jpg")
-    assert s2["tile_url"] == ls.release_url("sentinel2-almora.tif")
+    # the client only ever gets this server's routes, never a storage URL
+    assert all(u.startswith("/api/library/") for i in d["items"]
+               for u in (i["thumbnail_url"], i["preview_url"], i.get("tile_url") or "/api/library/"))
+    assert not any("github.com" in str(i) or "huggingface" in str(i) for i in d["items"])
+    assert s2["preview_url"] == "/api/library/sentinel2-almora/preview"
+    assert s2["tile_url"] == "/api/library/sentinel2-almora/tile"
     dfc = [i for i in d["items"] if i["collection"] == "dfc2019"]
     assert dfc and all(i["preview_url"].startswith("/api/library/") and "tile_url" not in i for i in dfc)
     assert not any("dfc2019" in (i.get("tile_url") or "") for i in d["items"])
@@ -59,6 +63,9 @@ def test_remote_catalog_urls(remote):
 def test_remote_image_routes(remote):
     r = client.get("/api/library/vhr-a_forest/thumbnail", follow_redirects=False)
     assert r.status_code == 307 and r.headers["location"] == ls.release_url("vhr-a_forest__thumb.jpg")
+    r = client.get("/api/library/sentinel2-almora/tile", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == ls.release_url("sentinel2-almora.tif")
+    assert client.get("/api/library/dfc2019-JAX_004_006/tile").status_code == 404
     r = client.get("/api/library/dfc2019-JAX_004_006/preview")
     assert r.status_code == 200 and r.headers["content-type"] == "image/jpeg"
     assert "previews/dfc2019-JAX_004_006.jpg" in remote
