@@ -1,5 +1,22 @@
 # Deployment (Render backend + Vercel frontend) — status 2026-09-26
 
+## LIVE (2026-09-27)
+- **Frontend:** https://depthwizard-studio.vercel.app (primary; also https://depthwizard2.vercel.app) (Vercel project `sherry-c508/depthwizard2`, root `frontend/`,
+  deployed with `npx vercel deploy --prod` from `frontend/`; `VITE_API_BASE` is a Production env var).
+- **Backend:** https://depthwizard2-api.onrender.com (Render `srv-dasjfqvpn0mc738mbqcg`, free plan, Singapore).
+  - Source: PRIVATE repo `sancharimouri/depthwizard-studio` (`backend/` + `bridge/` + `requirements.txt`), autodeploy on push to `main`.
+    It is a copy, not this repo: after a backend change here, sync those folders there and push.
+  - Env (Render only, never committed): `HF_TOKEN`, `CDSE_CLIENT_ID/SECRET`, `DW2_NO_DOTENV=1`, `PYTHON_VERSION=3.11.9`,
+    `CORS_ORIGINS=https://depthwizard-studio.vercel.app,https://depthwizard2.vercel.app` (exact; no regex), `DW2_{CACHE,GENERATED,UPLOADS}_DIR` under `/tmp` (ephemeral).
+  - Depth: ZeroGPU Space `sancharimouri/DepthWizard2` (default host).
+  - Health check: `/openapi.json` (every ~5 s from Render; it was `/api/depth/status`, which queried the HF API on every probe).
+  - **Cold start: NOT measured yet.** Free instances spin down after 15 min without inbound traffic; the 2026-09-27 attempt
+    was invalid (real use of the site inside the idle window). Measure after a verified ≥15 min gap in the Render log.
+- **Permanent links:** `https://depthwizard-studio.vercel.app/#/docs`, `…/#demo-video` (`frontend/src/routes.js`). Desktop:
+  `https://github.com/sancharimouri/depthwizard2-desktop/releases/latest` (v1.0.1).
+- Verified live: `#demo-video` opens Docs and scrolls to it; Library (89) → Almora → START GENERATION → 200, ZeroGPU depth +
+  live GLO-30 terrain (1,024–2,042 m), 0 console errors; CORS allows only the production origin.
+
 ## Origins (done, commit 1277b8a)
 - Backend `CORS_ORIGINS` (comma-separated exact origins) + optional `CORS_ORIGIN_REGEX` (Vercel previews). Nothing hard-coded.
   - Local `.env`: `http://localhost:5173`.
