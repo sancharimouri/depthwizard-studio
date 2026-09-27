@@ -15,6 +15,7 @@ import {
 } from "./jobs.js";
 import { installCloseGuard } from "./desktop-close.js";
 import { apiUrl } from "./api-base.js";
+import { PAGE_ROUTES, resolveHash, hashMatchesPage } from "./routes.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -578,7 +579,7 @@ const jobStore = createJobStore();
 
 // The one global sidebar (src/sidebar.js). Created before the first
 // renderJobs() so the jobs-running line and the JOBS tab exist from the start.
-const sidebar = createSidebar({ onNavigate: pageId => setActivePage(pageId) });
+const sidebar = createSidebar({ onNavigate: pageId => navigateToPage(pageId) });
 
 // Image Inspection ↔ 3D surface markers (see initPointSelection). Declared up
 // here because the first renderJobs() below already clears the selection.
@@ -1703,8 +1704,45 @@ const pages = document.querySelectorAll(".page");
 // Page order (2026-09-24): 1 Workbench (default), 2 Explore, 3 Docs.
 let activePageId = "page-workbench";
 
+// The .page element that contains element `id`, or null (src/routes.js).
+function pageOfElement(id) {
+    const el = document.getElementById(id);
+    return el?.closest(".page")?.id ?? null;
+}
+
+// Keep the URL on the page being shown, without adding history entries for
+// programmatic switches (e.g. opening a job jumps to Workbench).
+function syncUrlToPage(pageId) {
+    if (hashMatchesPage(location.hash, pageId, pageOfElement)) {
+        return;
+    }
+    history.replaceState(null, "", PAGE_ROUTES[pageId] || location.pathname + location.search);
+}
+
+// User navigation (sidebar): a real history entry, so Back returns to the previous page.
+function navigateToPage(pageId) {
+    if (location.hash !== PAGE_ROUTES[pageId]) {
+        history.pushState(null, "", PAGE_ROUTES[pageId] || location.pathname + location.search);
+    }
+    setActivePage(pageId);
+}
+
+// URL -> page (+ scroll to an in-page anchor such as #demo-video).
+function applyUrlHash() {
+    const { pageId, anchorId } = resolveHash(location.hash, pageOfElement);
+    setActivePage(pageId);
+    if (anchorId) {
+        // the page was display:none until now; scroll once it has layout
+        requestAnimationFrame(() => document.getElementById(anchorId)?.scrollIntoView({ block: "start" }));
+    }
+}
+
+window.addEventListener("hashchange", applyUrlHash);
+window.addEventListener("popstate", applyUrlHash);
+
 function setActivePage(pageId) {
     activePageId = pageId;
+    syncUrlToPage(pageId);
 
     pages.forEach(page => {
         page.classList.toggle("active", page.id === pageId);
@@ -1730,8 +1768,9 @@ function syncSidebarDefault() {
     }
 }
 
-// Workbench is the landing page, so run its first-show init (grid entrance) on load too.
-setActivePage(activePageId);
+// Open the page the URL names (#/docs, #/demo, #demo-video); Workbench otherwise.
+// Workbench is the landing page, so its first-show init (grid entrance) runs on load too.
+applyUrlHash();
 
 document.getElementById("build-your-own-card")?.addEventListener("click", () => {
     setActivePage("page-workbench");

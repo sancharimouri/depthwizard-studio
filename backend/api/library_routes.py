@@ -15,8 +15,10 @@ router = APIRouter(prefix="/api/library")
 def _public(item: dict) -> dict:
     """Client view of an item (backend/storage/library_store.py).
 
-    Public items (Sentinel-2, Maxar): direct, stable GitHub Release URLs, incl. the tile.
-    Private items (DFC2019): this server's routes, which serve the image from the private
+    Every URL handed to the client is this server's own /api route; the client never
+    sees a storage URL, so moving storage (e.g. to Cloudflare R2) is a backend-only change.
+    Public items (Sentinel-2, Maxar): the routes 307-redirect to the GitHub Release asset,
+    incl. the tile. Private items (DFC2019): the routes serve the image from the private
     HF dataset; no tile URL (the DFC2019 terms forbid distributing the data).
     Local mode: this server's local-dev routes.
     """
@@ -31,14 +33,10 @@ def _public(item: dict) -> dict:
         out["download_bytes"] = (item.get("download") or {}).get("bytes")
         out["download_source"] = (item.get("download") or {}).get("source")
         return out
+    out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"
+    out["preview_url"] = f"/api/library/{item['id']}/preview"
     if library_store.mode() == "remote" and library_store.is_public(item):
-        names = item.get("assets") or library_store.asset_names(item)
-        out["thumbnail_url"] = library_store.release_url(names["thumbnail"])
-        out["preview_url"] = library_store.release_url(names["preview"])
-        out["tile_url"] = library_store.release_url(names["tile"])
-    else:
-        out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"
-        out["preview_url"] = f"/api/library/{item['id']}/preview"
+        out["tile_url"] = f"/api/library/{item['id']}/tile"
     return out
 
 
@@ -106,6 +104,16 @@ def thumbnail(item_id: str):
 @router.get("/{item_id}/preview")
 def preview(item_id: str):
     return _image(_item(item_id), "preview")
+
+
+@router.get("/{item_id}/tile")
+def tile(item_id: str):
+    """Public items only (remote mode): 307 to the GeoTIFF's current storage location."""
+    item = _item(item_id)
+    if library_store.mode() != "remote" or not library_store.is_public(item):
+        raise HTTPException(status_code=404, detail="No downloadable tile for this item.")
+    names = item.get("assets") or library_store.asset_names(item)
+    return RedirectResponse(library_store.release_url(names["tile"]), status_code=307)
 
 
 class SelectRequest(BaseModel):
