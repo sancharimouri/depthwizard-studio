@@ -10,8 +10,10 @@
     `CORS_ORIGINS=https://depthwizard-studio.vercel.app,https://depthwizard2.vercel.app` (exact; no regex), `DW2_{CACHE,GENERATED,UPLOADS}_DIR` under `/tmp` (ephemeral).
   - Depth: ZeroGPU Space `sancharimouri/DepthWizard2` (default host).
   - Health check: `/openapi.json` (every ~5 s from Render; it was `/api/depth/status`, which queried the HF API on every probe).
-  - **Cold start: NOT measured yet.** Free instances spin down after 15 min without inbound traffic; the 2026-09-27 attempt
-    was invalid (real use of the site inside the idle window). Measure after a verified ≥15 min gap in the Render log.
+  - **Cold start (measured 2026-09-27):** Free instances spin down 15 min after the last inbound request (log: last request
+    16:17:39Z, "Shutting down" 16:32:37Z; health checks do not keep it awake). A fresh load of the Vercel site then waited
+    **34.6 s** for the first `/api/library` (200); the Library cards appear only after that. Warm, the same call is ~0.8–2 s.
+    The first attempt the same evening was invalid (real use inside the idle window).
 - **Permanent links:** `https://depthwizard-studio.vercel.app/#/docs`, `…/#demo-video` (`frontend/src/routes.js`). Desktop:
   `https://github.com/sancharimouri/depthwizard2-desktop/releases/latest` (v1.0.1).
 - Verified live: `#demo-video` opens Docs and scrolls to it; Library (89) → Almora → START GENERATION → 200, ZeroGPU depth +
