@@ -16,7 +16,7 @@ import {
 import { installCloseGuard } from "./desktop-close.js";
 import { apiUrl } from "./api-base.js";
 import { PAGE_ROUTES, resolveHash, hashMatchesPage } from "./routes.js";
-import { flatTerrainWarning } from "./flat-warning.js";
+import { flatTerrainWarning, footprintKmFromBbox } from "./flat-warning.js";
 import { createDurationMemory, trackWork } from "./progress-sync.js";
 
 const canvas = document.getElementById("terrain-canvas");
@@ -675,7 +675,7 @@ function applyElevationBox(job) {
         setBoxView("elevation-preview-box", {
             src: gen.assets.elevation,
             alt: `Terrain elevation of ${job.input.title}`,
-            lines: [`Terrain: ${m.terrain_source}`, `${rangeText(m.terrain_range_m)} · ${m.crs} · ${m.resolution_m} m`],
+            lines: [`${rangeText(m.terrain_range_m)} · ${m.crs} · ${m.resolution_m} m`],
         });
     } else if (gen?.status === "ok") {
         setBoxView("elevation-preview-box", { src: EMPTY_IMAGE, alt: "", lines: [m.note] });
@@ -704,9 +704,31 @@ function applyMiniBoxCaptions(job) {
         set("dsm-3d-box", ["No surface model: no georeference", "Relative depth on a flat plane"]);
         set("metric-elevation-3d-box", ["No DEM: no georeference", m.note]);
     } else {
-        set("dsm-3d-box", [`${m.grid[0]}×${m.grid[1]} mesh · ${m.surface_source}`, `Surface ${rangeText(m.surface_range_m)} · relative depth draped`]);
-        set("metric-elevation-3d-box", [`Terrain: ${m.terrain_source}`, `${rangeText(m.terrain_range_m)} · ${m.crs}`]);
+        set("dsm-3d-box", [`${m.grid[0]}×${m.grid[1]} mesh`, `Surface ${rangeText(m.surface_range_m)} · relative depth draped`]);
+        set("metric-elevation-3d-box", [`${rangeText(m.terrain_range_m)} · ${m.crs}`]);
     }
+}
+
+// The calculation log's account of a generated elevation model: footprint,
+// ranges, relief, grid and mesh spacing, all from the job's own metadata.
+function generationLogLines(m, roundTripS) {
+    const lines = [];
+    const relief = r => (r ? `${Math.round(r[1] - r[0])} m` : "—");
+    if (m.bounds_lonlat) {
+        const [w, s, e, n] = m.bounds_lonlat;
+        const [x, y] = footprintKmFromBbox(m.bounds_lonlat);
+        lines.push(`Footprint: ${x.toFixed(1)} × ${y.toFixed(1)} km, centre ${((s + n) / 2).toFixed(4)}° N, ${((w + e) / 2).toFixed(4)}° E`);
+    }
+    lines.push(`Terrain: ${rangeText(m.terrain_range_m)} (relief ${relief(m.terrain_range_m)})`);
+    lines.push(`Surface: ${rangeText(m.surface_range_m)} (relief ${relief(m.surface_range_m)})`);
+    lines.push(`Elevation grid: ${m.crs} · ${m.resolution_m} m`);
+    if (m.grid && m.bounds_lonlat) {
+        const [x, y] = footprintKmFromBbox(m.bounds_lonlat);
+        const spacing = Math.round(((x / (m.grid[0] - 1)) + (y / (m.grid[1] - 1))) * 500);
+        lines.push(`Mesh ${m.grid[0]}×${m.grid[1]} from the surface model, ~${spacing} m between vertices`);
+    }
+    lines.push(`Generated in ${roundTripS.toFixed(1)}s`);
+    return lines;
 }
 
 // Never throws: the outcome (real result or failure) is recorded on the job.
@@ -744,10 +766,8 @@ async function computeJobGeneration(job) {
             + `${(d.shape ?? []).join("×")}, ${d.infer_s}s inference (${d.encoding ?? "float32"}) via ${d.host ?? "inference host"}`
             + `${d.fallback_used ? " (fallback: primary host failed)" : ""}`, job);
         if (m.has_elevation) {
-            appendCalcLogLine(scrollEl, `Terrain: ${m.terrain_source}, ${rangeText(m.terrain_range_m)}`, job);
-            appendCalcLogLine(scrollEl, `Surface: ${m.surface_source}, ${rangeText(m.surface_range_m)}`, job);
-            appendCalcLogLine(scrollEl, `Elevation source: ${m.how} · ${m.crs} · ${m.resolution_m} m grid`, job);
-            appendCalcLogLine(scrollEl, `Mesh ${m.grid[0]}×${m.grid[1]} from the surface model · generated in ${job.gen.roundTripS.toFixed(1)}s`, job);
+            // measured facts only; no tier or elevation-model names in the processing page
+            generationLogLines(m, job.gen.roundTripS).forEach(line => appendCalcLogLine(scrollEl, line, job));
         } else {
             appendCalcLogLine(scrollEl, m.note, job);
         }
@@ -793,7 +813,8 @@ function renderFlatWarning(job) {
 
 function applyJobInput(job) {
     renderFlatWarning(job);
-    pendingScenePreview = { src: job.input.previewUrl, meta: `${jobLabel(job)} · ${job.input.metaLine}` };
+    // no tier in the processing page: job, title and where the input came from
+    pendingScenePreview = { src: job.input.previewUrl, meta: [jobLabel(job), job.input.title, job.input.sourceLabel].filter(Boolean).join(" · ") };
     sceneSelectionSummary = { type: "input", ...job.input };
     markSceneSelected();
 }
