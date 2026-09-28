@@ -35,7 +35,11 @@
   (`docs/DESKTOP_APP.md` "In-app updates").
 - **Blocker first:** the DAv2 Space returns 502 on every upload (2026-09-28). See `docs/HANDOFF.md` §5z. Restart it, and
   consider `ssr_mode=False` in `space/app.py`.
-- Step-by-step prompt: `docs/NEXT_SESSION_DEPLOY.md`.
+- Step-by-step prompt: `docs/NEXT_SESSION_DEPLOY.md`. Full change record: `docs/CHANGES_2026-09-28_29.md`.
+- **SIH deck links (from `145604_SIH26175.pdf`) must keep working:**
+  - `https://depthwizard-studio.vercel.app/`, `…/#/demo`, `…/#demo-video`;
+  - `https://github.com/sancharimouri/depthwizard-studio` (also this repo's `origin`, so resolve that before pushing);
+  - `https://github.com/sancharimouri/depthwizard2-desktop/releases/latest`.
 
 ## Origins (done, commit 1277b8a)
 - Backend `CORS_ORIGINS` (comma-separated exact origins) + optional `CORS_ORIGIN_REGEX` (Vercel previews). Nothing hard-coded.
