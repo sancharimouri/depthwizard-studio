@@ -67,3 +67,10 @@ test("after the work settles, the readout ticks at its pace instead of spinning"
     // ~400 / 50 = 8 ticks (+ first and last); a busy loop would make thousands
     assert.ok(ticks < 20, `ticks=${ticks}`);
 });
+
+test("instant work closes right at the minimum time, without an extra sweep", async () => {
+    const t0 = Date.now();
+    await trackWork({ work: Promise.resolve(1), steps: ["a"], expectedMs: 100, minMs: 600, tickMs: 100, onTick: () => {} });
+    const took = Date.now() - t0;
+    assert.ok(took >= 600 && took < 600 + 100 + 80, `took ${took} ms`); // at most one tick late, no 280 ms sweep
+});

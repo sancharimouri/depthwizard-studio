@@ -3040,8 +3040,8 @@ const stageDurations = createDurationMemory({ depth: 12000, elevation: 400, dsm:
 
 // Calculation log pace: one line every CALC_LOG_LINE_MS. It's hurried only if
 // needed to finish within the DEM Elevation box's readout.
-const CALC_LOG_LINE_MS = 450;
-const CALC_LOG_FLUSH_MS = 1500;
+const CALC_LOG_LINE_MS = 280;
+const CALC_LOG_FLUSH_MS = 1000; // < the DEM Elevation box's 1.3 s minimum readout
 
 function generatingOverlayMarkup() {
     return `
