@@ -125,18 +125,38 @@ def _space_predict(sid: str, body: bytes, suffix: str) -> dict:
         return client.predict(handle_file(str(path)), api_name="/predict")
 
 
+# A Space that is restarting answers 502/503/504 for a short while (its Gradio SSR proxy is up
+# before the Python app behind it; seen 2026-09-28), and an upload can be cut off mid-stream. Such
+# blips are retried after these delays, each time with a fresh gradio Client (the cached one may
+# hold the old instance's config). Quota errors and timeouts are never retried.
+SPACE_RETRY_DELAYS_S = (2.0, 5.0)
+_TRANSIENT = re.compile(r"\b50[234]\b|bad gateway|service unavailable|gateway time-?out|clientdisconnect|"
+                        r"connection (?:reset|refused|aborted)|remote ?protocol|server disconnected", re.I)
+
+
+def _is_transient(msg: str) -> bool:
+    return "quota" not in msg.lower() and bool(_TRANSIENT.search(msg))
+
+
 async def _call_space(sid: str, filename: str, body: bytes) -> dict:
-    try:
-        return await asyncio.wait_for(asyncio.to_thread(_space_predict, sid, body, Path(filename).suffix or ".jpg"),
-                                      timeout=TIMEOUT_S)
-    except HTTPException:
-        raise
-    except asyncio.TimeoutError as exc:
-        raise HTTPException(status_code=504, detail=f"Space {sid} timed out after {TIMEOUT_S:.0f}s.") from exc
-    except Exception as exc:  # noqa: BLE001 - gradio AppError carries ZeroGPU quota messages
-        msg = str(exc).strip() or type(exc).__name__
-        code = 429 if "quota" in msg.lower() else 502
-        raise HTTPException(status_code=code, detail=f"Space {sid}: {msg[:300]}") from exc
+    for attempt in range(len(SPACE_RETRY_DELAYS_S) + 1):
+        try:
+            return await asyncio.wait_for(asyncio.to_thread(_space_predict, sid, body, Path(filename).suffix or ".jpg"),
+                                          timeout=TIMEOUT_S)
+        except HTTPException:
+            raise
+        except asyncio.TimeoutError as exc:
+            raise HTTPException(status_code=504, detail=f"Space {sid} timed out after {TIMEOUT_S:.0f}s.") from exc
+        except Exception as exc:  # noqa: BLE001 - gradio AppError carries ZeroGPU quota messages
+            msg = str(exc).strip() or type(exc).__name__
+            if attempt < len(SPACE_RETRY_DELAYS_S) and _is_transient(msg):
+                with _clients_lock:
+                    _clients.pop(sid, None)
+                await asyncio.sleep(SPACE_RETRY_DELAYS_S[attempt])
+                continue
+            code = 429 if "quota" in msg.lower() else 502
+            raise HTTPException(status_code=code, detail=f"Space {sid}: {msg[:300]}") from exc
+    raise AssertionError("unreachable")
 
 
 # ------------------------------------------------------------------ plain HTTP (Colab bridge)

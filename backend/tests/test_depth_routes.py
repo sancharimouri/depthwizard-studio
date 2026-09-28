@@ -132,3 +132,40 @@ def test_audit_counts_auth_on_hf_space_requests_only():
     depth_routes._record(httpx.Request("GET", "https://example.com/"))
     after = depth_routes.auth_audit()
     assert after["with_auth"] - before["with_auth"] == 1 and after["without_auth"] - before["without_auth"] == 1
+
+
+def test_transient_space_502_is_retried_with_a_fresh_client(monkeypatch):
+    # The Space's Gradio SSR proxy answers 502 while its Python app restarts
+    # (seen 2026-09-28): a blip must not fail the job.
+    made, calls = [], []
+
+    class FlakyClient:
+        def __init__(self, src, **kw):
+            made.append(src)
+
+        def predict(self, *a, **kw):
+            calls.append(1)
+            if len(calls) < 3:
+                raise RuntimeError("Server error '502 Bad Gateway' for url 'https://x.hf.space/gradio_api/upload'")
+            return DEPTH
+
+    import gradio_client
+    monkeypatch.setattr(gradio_client, "Client", FlakyClient)
+    monkeypatch.setattr(depth_routes, "hf_token", lambda: "hf_test")
+    monkeypatch.setattr(depth_routes, "SPACE_RETRY_DELAYS_S", (0, 0))
+    r = post()
+    assert r.status_code == 200 and len(calls) == 3
+    assert len(made) == 3  # the cached client is dropped before each retry
+
+
+def test_quota_is_not_retried(monkeypatch):
+    calls = []
+
+    def quota(*a):
+        calls.append(1)
+        raise RuntimeError("You have exceeded your GPU quota")
+
+    monkeypatch.setattr(depth_routes, "_space_predict", quota)
+    monkeypatch.setattr(depth_routes, "SPACE_RETRY_DELAYS_S", (0, 0))
+    r = post()
+    assert r.status_code == 429 and len(calls) == 1
