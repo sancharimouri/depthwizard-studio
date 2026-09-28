@@ -6627,3 +6627,100 @@ kbd {
 .final-demo-expanded-bar {
     left: 58px;
 }
+
+
+/* ============================================================
+   INPUT PAGE BACKGROUND ICONS (Prompt 9; icons/2.svg)
+   Only while the input view shows. The layer is clipped to the margins
+   around the boxes (the input view sits at inset 12.5%), so no icon ever
+   shows through the translucent boxes. Sizes follow the page (cqw/cqh), so
+   they fit the margins at any window or sidebar width. Each icon drifts
+   slowly on its own loop; the stars twinkle. Off under reduced motion.
+   ============================================================ */
+.input-bg-icons {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: none;
+    overflow: hidden;
+    container-type: size;
+    pointer-events: none;
+    color: rgb(var(--neon-rgb));
+    clip-path: polygon(evenodd,
+        0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+        12.5% 12.5%, 12.5% 87.5%, 87.5% 87.5%, 87.5% 12.5%, 12.5% 12.5%);
+}
+
+#page-workbench:has(#input-view:not([hidden])) .input-bg-icons {
+    display: block;
+}
+
+#page-workbench .input-view {
+    z-index: 1;
+}
+
+.bgi-defs {
+    position: absolute;
+}
+
+.bgi {
+    position: absolute;
+    display: block;
+    width: var(--s);
+    height: var(--s);
+    transform: translate(-50%, -50%) rotate(var(--r, 0deg));
+}
+
+.bgi svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+    overflow: visible;
+    animation: bgi-roam var(--dur, 24s) ease-in-out var(--dl, 0s) infinite alternate;
+}
+
+/* the star's shine marks are cut-outs: page background colour */
+.bgi .bgi-cut {
+    fill: rgb(var(--bg-rgb));
+}
+
+.bgi-big {
+    --s: min(132px, 10cqw, 17cqh);
+    opacity: 0.2;
+}
+
+.bgi-normal {
+    --s: min(70px, 7cqw, 12cqh);
+    opacity: 0.18;
+}
+
+.bgi-small-normal {
+    --s: min(52px, 5cqw, 9cqh);
+    opacity: 0.16;
+}
+
+.bgi-star {
+    opacity: 0.4;
+}
+
+.bgi-star svg {
+    animation: bgi-twinkle var(--dur, 4s) ease-in-out var(--dl, 0s) infinite alternate;
+}
+
+@keyframes bgi-roam {
+    from { transform: translate(0, 0) rotate(0deg); }
+    to { transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--dr, 0deg)); }
+}
+
+@keyframes bgi-twinkle {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0.35; transform: scale(0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bgi svg,
+    .bgi-star svg {
+        animation: none;
+    }
+}
