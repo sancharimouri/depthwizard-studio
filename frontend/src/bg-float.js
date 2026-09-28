@@ -161,9 +161,10 @@ export function separate(bodies, { gap = 8, iterations = 4 } = {}) {
 }
 
 // ---- Visibility: no icon may be more than MAX_HIDDEN of its area off the page or
-// behind a box (exact rectangle areas of its unrotated square).
+// behind a box (exact rectangle areas of its unrotated square). The page's left edge is a
+// fixed line at the collapsed sidebar's width (see src/bg-icons.js).
 
-export const MAX_HIDDEN = 0.6;
+export const MAX_HIDDEN = 0.3; // was 0.6 until 2026-09-29
 
 function overlapArea(ax0, ay0, ax1, ay1, r) {
     const w = Math.min(ax1, r.right) - Math.max(ax0, r.left);
@@ -274,7 +275,11 @@ export function marginStrips(page, boxes) {
 //   - every home is at most `maxHidden` hidden and keeps `gap` px from the others where the
 //     space allows.
 // Largest icons are placed first. Returns [{x, y}] in the order of `sizes`.
-export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.3, seed = 7, candidates = 300 } = {}) {
+//
+// `scaleFor(i, side)` (optional) makes icon i that much bigger if it lands on `side` (the very
+// small icons are 1.4x on the left); spacing and visibility use the scaled size. Each result
+// also carries its `side` and final `size`.
+export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.15, seed = 7, candidates = 300, scaleFor = () => 1 } = {}) {
     const rand = prng(seed);
     const strips = marginStrips(page, boxes);
     const sides = Object.keys(strips);
@@ -295,18 +300,13 @@ export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.3, see
     const order = sizes.map((size, i) => ({ size, i })).sort((a, b) => b.size - a.size);
     const placed = [];
     const out = new Array(sizes.length);
-    for (const { size, i } of order) {
-        // the side furthest below its quota (ties: the larger side)
-        const side = sides
-            .filter(k => used[k] < quota[k])
-            .sort((a, b) => (used[a] / quota[a]) - (used[b] / quota[b]) || area(strips[b]) - area(strips[a]))[0]
-            ?? sides[0];
+    const search = (side, size, limit) => {
         const r = strips[side];
         let best = null;
         let bestScore = -Infinity;
         for (let k = 0; k < candidates; k++) {
             const c = { x: r.left + rand() * (r.right - r.left), y: r.top + rand() * (r.bottom - r.top) };
-            if (hiddenFraction(c.x, c.y, size, page, boxes) > maxHidden) {
+            if (hiddenFraction(c.x, c.y, size, page, boxes) > limit) {
                 continue;
             }
             let score = Infinity;
@@ -318,17 +318,53 @@ export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.3, see
                 best = c;
             }
         }
-        best = best ?? { x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2 };
-        used[side] += 1;
-        placed.push({ ...best, size });
-        out[i] = { x: best.x, y: best.y };
+        return best;
+    };
+    for (const { size: baseSize, i } of order) {
+        // sides in order of need: furthest below quota first (ties: the larger side)
+        const byNeed = sides.slice().sort((a, b) => ((used[a] - quota[a]) / Math.max(1, quota[a]))
+            - ((used[b] - quota[b]) / Math.max(1, quota[b])) || area(strips[b]) - area(strips[a]));
+        // A spot that works: the neediest side at the strict limit, then any side at the strict
+        // limit, then any side at the runtime limit. (The big satellites only fit in corners.)
+        let found = null;
+        for (const limit of [maxHidden, MAX_HIDDEN]) {
+            for (const side of byNeed) {
+                const size = baseSize * scaleFor(i, side);
+                const c = search(side, size, limit);
+                if (c) {
+                    found = { ...c, side, size };
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+        if (!found) { // nowhere fits: the least hidden spot of any side
+            let least = Infinity;
+            for (const side of sides) {
+                const r = strips[side];
+                const size = baseSize * scaleFor(i, side);
+                for (let k = 0; k < candidates; k++) {
+                    const c = { x: r.left + rand() * (r.right - r.left), y: r.top + rand() * (r.bottom - r.top) };
+                    const h = hiddenFraction(c.x, c.y, size, page, boxes);
+                    if (h < least) {
+                        least = h;
+                        found = { ...c, side, size };
+                    }
+                }
+            }
+        }
+        used[found.side] += 1;
+        placed.push({ x: found.x, y: found.y, size: found.size });
+        out[i] = found;
     }
     return out;
 }
 
 // ---- Star field: very small dots spread evenly (jittered grid) over the page, never on
 // the boxes. Deterministic. Each star: {x, y, r (px), a (alpha), tw (twinkle phase or null)}.
-export function starField(page, boxes, { cell = 52, seed = 11 } = {}) {
+export function starField(page, boxes, { cell = 46, seed = 11 } = {}) {
     const rand = prng(seed);
     const stars = [];
     for (let y = page.top; y < page.bottom; y += cell) {
@@ -350,7 +386,9 @@ export function starField(page, boxes, { cell = 52, seed = 11 } = {}) {
             stars.push({
                 x: sx,
                 y: sy,
-                r: 0.45 + size * size * 0.75,          // mostly ~0.5 px, a few up to ~1.2 px
+                // cubed: the extra 30% density (cell 52 -> 46 px) goes mostly to small stars;
+                // the bigger ones (up to ~1.2 px) stay, just rarer
+                r: 0.45 + size * size * size * 0.75,
                 a: 0.4 + alpha * 0.45,
                 tw: twinkle < 0.25 ? twinkle * 40 : null, // a quarter of them twinkle
             });

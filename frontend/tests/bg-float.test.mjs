@@ -93,14 +93,14 @@ test("hidden fraction: fully visible, half behind a box, fully off the page", ()
     assert.equal(hiddenFraction(300, 300, 60, PAGE, BOXES), 1);
 });
 
-test("an icon pushed behind a box or off the page is held at <= 60% hidden", () => {
+test("an icon pushed behind a box or off the page is held at <= 30% hidden", () => {
     const anchor = { x: 80, y: 300 };
     for (const [x, y] of [[300, 300], [-200, 300], [80, -150], [200, 740]]) {
         const p = constrainVisible(x, y, anchor, 70, PAGE, BOXES);
         assert.ok(p.moved);
         assert.ok(hiddenFraction(p.x, p.y, 70, PAGE, BOXES) <= MAX_HIDDEN + 1e-9, `${x},${y}`);
         // it stops at the limit, not back at the anchor
-        assert.ok(hiddenFraction(p.x, p.y, 70, PAGE, BOXES) > 0.4, `${x},${y} pulled too far back`);
+        assert.ok(hiddenFraction(p.x, p.y, 70, PAGE, BOXES) > MAX_HIDDEN - 0.15, `${x},${y} pulled too far back`);
     }
 });
 
@@ -123,7 +123,9 @@ const SIZES = [224, 224, 70, 70, 70, 70, 70, 70, 52, 52, 52, 52, 52, 52, 52, 52,
 
 test("home layout: every icon visible enough, and at least 1 cm (38 px) apart edge to edge", () => {
     const homes = layoutHomes(SIZES, PG, BX, { gap: 38 });
-    homes.forEach((h, i) => assert.ok(hiddenFraction(h.x, h.y, SIZES[i], PG, BX) <= 0.3, `icon ${i}`));
+    // small/normal icons: strict 15%; the big satellites fit only in corners, within the 30% limit
+    homes.forEach((h, i) => assert.ok(hiddenFraction(h.x, h.y, SIZES[i], PG, BX) <= (SIZES[i] > 100 ? MAX_HIDDEN : 0.15),
+        `icon ${i} hidden ${hiddenFraction(h.x, h.y, SIZES[i], PG, BX).toFixed(2)}`));
     let minGap = Infinity;
     for (let i = 0; i < homes.length; i++) {
         for (let j = i + 1; j < homes.length; j++) {
@@ -166,4 +168,28 @@ test("star field: tiny, evenly spread, none on the boxes", () => {
         }
     });
     assert.ok(empty <= cells * 0.1, `${empty}/${cells} empty cells`);
+});
+
+test("home layout: very small icons that land on the left are 1.4x, and spacing uses that size", () => {
+    const small = i => SIZES[i] === 52;
+    const homes = layoutHomes(SIZES, PG, BX, { gap: 38, scaleFor: (i, side) => (small(i) && side === "left" ? 1.4 : 1) });
+    const leftSmall = homes.filter((h, i) => small(i) && h.side === "left");
+    assert.ok(leftSmall.length > 0 && leftSmall.every(h => Math.abs(h.size - 72.8) < 1e-9));
+    assert.ok(homes.every((h, i) => h.side === "left" || h.size === SIZES[i]));
+    for (let i = 0; i < homes.length; i++) {
+        for (let j = i + 1; j < homes.length; j++) {
+            const d = Math.hypot(homes[i].x - homes[j].x, homes[i].y - homes[j].y) - (homes[i].size + homes[j].size) / 2;
+            assert.ok(d >= 0, `pair ${i},${j} overlaps by ${-d}`);
+        }
+    }
+});
+
+test("stars: 30% denser than before, and most of them small", () => {
+    const now = starField(PG, BX);
+    const before = starField(PG, BX, { cell: 52 });
+    const ratio = now.length / before.length;
+    assert.ok(ratio > 1.15 && ratio < 1.45, `density ratio ${ratio.toFixed(2)}`);
+    const small = now.filter(s => s.r < 0.7).length / now.length;
+    assert.ok(small > 0.6, `small share ${small.toFixed(2)}`);
+    assert.ok(now.some(s => s.r > 1.0), "some big stars remain");
 });

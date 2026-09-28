@@ -7,6 +7,16 @@
 // star dots (a few twinkle), never on the boxes.
 
 const ICON_GAP_PX = CM_PX; // 1 cm between icons, edge to edge
+const LEFT_SMALL_SCALE = 1.4; // the very small icons are this much bigger on the left side
+
+// The page's left limit is a fixed line at the collapsed sidebar's width (from the window's left
+// edge), whatever the sidebar's actual width: icons may hide at most 30% past it. When the
+// sidebar is expanded it can cover some of them; that's accepted, and the line doesn't move.
+function collapsedSidebarWidth() {
+    const bar = document.getElementById("app-sidebar");
+    const v = bar ? parseFloat(getComputedStyle(bar).getPropertyValue("--sb-rail-w")) : NaN;
+    return Number.isFinite(v) ? v : 56;
+}
 const STAR_RGB = "84, 171, 115"; // the background green (--bg-green-rgb in styles.css)
 // Runs only while the icons are on screen; still under prefers-reduced-motion.
 
@@ -17,8 +27,11 @@ export function startBackgroundIcons(layer, page) {
         return;
     }
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+    const leftLimit = collapsedSidebarWidth(); // viewport x, fixed
     const icons = [...layer.querySelectorAll(".bgi")].map((el, i) => ({
         el,
+        small: el.classList.contains("bgi-small-normal"),
+        scale: 1, // LEFT_SMALL_SCALE when a very small icon's home is on the left
         rot: Number(el.dataset.rot ?? 0),
         floater: createFloater(i + 1, Number(el.dataset.radiusCm ?? 5) * CM_PX),
     }));
@@ -34,22 +47,31 @@ export function startBackgroundIcons(layer, page) {
     function relayout(box, boxes) {
         // the icons' own sizes are part of the key: on the first frames (layer just shown) they can
         // still measure 0, and a layout made then would put homes anywhere, even under the boxes
-        const sizes = icons.map(icon => icon.el.offsetWidth);
-        const key = [box.width, box.height, ...sizes, ...boxes.flatMap(b => [b.left - box.left, b.top - box.top, b.width, b.height])]
+        // base (unscaled) sizes, so scaling an icon never changes the key and triggers another layout
+        const sizes = icons.map(icon => icon.el.offsetWidth / icon.scale);
+        const key = [box.left, box.width, box.height, ...sizes, ...boxes.flatMap(b => [b.left - box.left, b.top - box.top, b.width, b.height])]
             .map(v => Math.round(v)).join(",");
         if (key === layoutKey || !boxes.length || !boxes.every(b => b.width > 0) || sizes.some(v => v <= 0)) {
             return;
         }
         layoutKey = key;
-        const page = { left: 0, top: 0, right: box.width, bottom: box.height };
+        const layerPage = { left: 0, top: 0, right: box.width, bottom: box.height };
+        const page = { ...layerPage, left: leftLimit - box.left };
         const rel = boxes.map(b => ({ left: b.left - box.left, top: b.top - box.top, right: b.right - box.left, bottom: b.bottom - box.top }));
-        homes = layoutHomes(sizes, page, rel, { gap: ICON_GAP_PX });
+        homes = layoutHomes(sizes, page, rel, {
+            gap: ICON_GAP_PX,
+            scaleFor: (i, side) => (icons[i].small && side === "left" ? LEFT_SMALL_SCALE : 1),
+        });
+        icons.forEach((icon, i) => {
+            icon.scale = homes[i].size / sizes[i];
+            icon.el.style.setProperty("--k", icon.scale.toFixed(3));
+        });
         // the element's own CSS anchor moves to its home: the per-frame transform is relative to it
         icons.forEach((icon, i) => {
             icon.el.style.left = `${homes[i].x.toFixed(1)}px`;
             icon.el.style.top = `${homes[i].y.toFixed(1)}px`;
         });
-        drawStars.stars = starField(page, rel);
+        drawStars.stars = starField(layerPage, rel);
         sizeStarCanvas(box);
     }
     const homeOf = (icon, box) => {
@@ -136,15 +158,15 @@ export function startBackgroundIcons(layer, page) {
             return { icon, home, w, x: home.x + w.x + p.x, y: home.y + w.y + p.y, r, mass: r * r, push: p };
         });
         // Icons repel each other (no overlap) and stay at least 40% visible: the part behind the
-        // boxes or past the page edge is <= 60%. Two rounds let the two rules settle together;
+        // boxes or past the page edge is <= 30%. Five rounds let the two rules settle together;
         // visibility is applied last, so it always holds.
-        const page = { left: box.left, top: box.top, right: box.right, bottom: box.bottom };
+        const page = { left: leftLimit, top: box.top, right: box.right, bottom: box.bottom };
         const boxes = boxesNow();
         bodies.forEach(b => {
             b.size = b.icon.el.offsetWidth;
             b.anchor = visibleAnchor(b.home.x, b.home.y, b.size, page, boxes);
         });
-        for (let round = 0; round < 2; round++) {
+        for (let round = 0; round < 5; round++) {
             separate(bodies, { gap: ICON_GAP_PX, iterations: 8 });
             bodies.forEach(b => {
                 const c = constrainVisible(b.x, b.y, b.anchor, b.size, page, boxes);
