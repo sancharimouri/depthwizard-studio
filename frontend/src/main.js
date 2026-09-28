@@ -654,9 +654,9 @@ function applyDepthBox(job) {
             src: gen.assets.depth,
             alt: `Relative depth of ${job.input.title}`,
             lines: [
-                d.fallback_used ? "Depth Anything V2 (ViT-Small) · this input · fallback host" : "Depth Anything V2 (ViT-Small) · this input",
-                `${where} ${d.infer_s}s inference · ${gen.roundTripS.toFixed(1)}s generation`,
-                "Relative depth (brighter = nearer), not elevation",
+                "Depth Anything V2 (ViT-Small)",
+                `Inference: ${d.infer_s}s (${where.replace(/[()]/g, "")})`,
+                `Generation: ${gen.roundTripS.toFixed(1)}s`,
             ],
         });
     } else {
