@@ -991,6 +991,7 @@ function startFromInput(selection) {
     if (jobStore.generating()) {
         return;
     }
+    rememberActiveJobView();
     const job = jobStore.add(selection);
     applyJobInput(job);
     resetGridForGeneration();
@@ -1007,6 +1008,7 @@ function selectJob(id) {
         return;
     }
     if (jobStore.active() !== job) {
+        rememberActiveJobView();
         resetViewerForNewJob();
     }
     jobStore.setActive(id);
@@ -1497,6 +1499,7 @@ async function openSavedWork(uid) {
         return;
     }
     await ensureGeneratedViews();
+    rememberActiveJobView();
     const job = jobStore.add(record.input, record);
     showCompletedJob(job);
     renderJobs();
@@ -2306,6 +2309,7 @@ async function showJobInFinalDemo(job) {
     }
     finalDemoHistory?.reset();
     renderSource(job);
+    applyViewerMemory(job.viewMemory); // the user's own edits for this job, if any
     return terrain;
 }
 
@@ -2717,6 +2721,59 @@ function initPointSelection(canvas) {
 // undo/redo step. The ground grid is never moved: Up/Down/Top/Side orbit the
 // camera; the rotate buttons turn the structure about the world vertical axis.
 let recordCameraChange = action => action(); // replaced once the history exists
+let viewerStateCapture = null; // the undoable viewer state (set by initViewerHistory)
+let viewerStateApply = null;
+
+// ---- Per-job viewer memory: each job keeps its own edits in the 3D viewer
+// (vertical exaggeration, layer, scenario, measurements, notes, camera and
+// structure rotation, auto-rotate pause / lock, which side panels are open).
+// Saved when the user leaves the job, restored when it's shown again; lost only
+// when the job is deleted or the tab closes (jobs live in this tab's memory).
+function captureViewerMemory() {
+    if (!finalDemoViewer || !viewerStateCapture || !finalDemoCurrentTerrain) {
+        return null;
+    }
+    const c = finalDemoViewer.controls;
+    const p = new THREE.Vector3();
+    const t = new THREE.Vector3();
+    c.getPosition(p, true);
+    c.getTarget(t, true);
+    return {
+        state: viewerStateCapture(),
+        camera: { p: p.toArray(), t: t.toArray(), yaw: finalDemoViewer.getStructureYaw() },
+        paused: Boolean(c.isAutoRotatePaused?.()),
+        locked: Boolean(c.isInputLocked?.()),
+        panels: [...document.querySelectorAll("#final-demo-box .xp-box")]
+            .map(box => box.querySelector(".xp-head")?.getAttribute("aria-expanded") === "true"),
+    };
+}
+
+function applyViewerMemory(memory) {
+    if (!memory || !finalDemoViewer || !viewerStateApply) {
+        return;
+    }
+    const c = finalDemoViewer.controls;
+    viewerStateApply(memory.state);
+    c.setLookAt(...memory.camera.p, ...memory.camera.t, false);
+    finalDemoViewer.setStructureYaw(memory.camera.yaw ?? 0, false);
+    c.setAutoRotatePaused?.(memory.paused);
+    c.setInputLocked?.(memory.locked);
+    document.querySelectorAll("#final-demo-box .xp-box").forEach((box, i) => {
+        if (memory.panels?.[i] !== undefined) {
+            box.xpSetOpen?.(memory.panels[i]);
+        }
+    });
+    finalDemoChrome?.syncPlay?.();
+    finalDemoHistory?.reset();
+}
+
+// Called before another job takes over the viewer.
+function rememberActiveJobView() {
+    const job = jobStore.active();
+    if (job?.status === "complete" && job.gen?.key && finalDemoCurrentRegionKey === job.gen.key) {
+        job.viewMemory = captureViewerMemory();
+    }
+}
 const NAV_ORBIT_STEP = THREE.MathUtils.degToRad(15);
 const NAV_TOP_POLAR = 0.001;
 const NAV_SIDE_POLAR = THREE.MathUtils.degToRad(80);
@@ -2783,7 +2840,7 @@ function initViewerHistory(canvas) {
     };
 
     finalDemoHistory = createViewerHistory({
-        capture: () => ({
+        capture: viewerStateCapture = () => ({
             // selection only: the model's internal "which sub-mode made it" (owner)
             // changes on a plain mode switch and must not become an undo step
             measure: (({ chains, active }) => ({ chains, active }))(finalDemoMeasureTool.model.snapshot()),
@@ -2794,7 +2851,7 @@ function initViewerHistory(canvas) {
             vex: Number((finalDemoCurrentTerrain?.displayExaggeration?.() ?? 1).toFixed(4)),
             scenario: finalDemoEarthquakeActive ? "earthquake" : finalDemoFloodActive ? "flood" : null,
         }),
-        apply: st => {
+        apply: viewerStateApply = st => {
             finalDemoMeasureTool.model.restore(st.measure);
             const notes = finalDemoChrome.notes;
             notes.length = 0;
@@ -3237,6 +3294,7 @@ function retryJob(job) {
     job.gen = null;
     job.run = null;
     job.log = [];
+    job.viewMemory = null;
     jobStore.update(job.id, { status: "generating", progress: 0 });
     jobStore.setActive(job.id);
     resetViewerForNewJob();
