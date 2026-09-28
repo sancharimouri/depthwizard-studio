@@ -1,9 +1,10 @@
 // Drives the input page's background icons (index.html .input-bg-icons): each
-// floats in its own neighbourhood, reacts to the pointer, and keeps clear of the
-// others: they repel, so no two ever overlap (src/bg-float.js).
+// floats in its own neighbourhood, reacts to the pointer, keeps clear of the others
+// (they repel, so no two overlap), and is never more than 60% hidden behind the
+// Scene Input / Preview boxes or past the page edge (src/bg-float.js).
 // Runs only while the icons are on screen; still under prefers-reduced-motion.
 
-import { CM_PX, createFloater, kick, separate, stepPush, wander } from "./bg-float.js";
+import { CM_PX, constrainVisible, createFloater, kick, separate, stepPush, visibleAnchor, wander } from "./bg-float.js";
 
 export function startBackgroundIcons(layer, page) {
     if (!layer || !page) {
@@ -67,8 +68,37 @@ export function startBackgroundIcons(layer, page) {
             const r = icon.el.offsetWidth / 2;
             return { icon, home, w, x: home.x + w.x + p.x, y: home.y + w.y + p.y, r, mass: r * r, push: p };
         });
-        // icons repel each other: no overlap, whatever the wander, the pointer or a click does
-        separate(bodies, { gap: 10, iterations: 6 });
+        // Icons repel each other (no overlap) and stay at least 40% visible: the part behind the
+        // boxes or past the page edge is <= 60%. Two rounds let the two rules settle together;
+        // visibility is applied last, so it always holds.
+        const page = { left: box.left, top: box.top, right: box.right, bottom: box.bottom };
+        const boxes = [...document.querySelectorAll("#input-view .iv-pane")].map(el => el.getBoundingClientRect());
+        bodies.forEach(b => {
+            b.size = b.icon.el.offsetWidth;
+            b.anchor = visibleAnchor(b.home.x, b.home.y, b.size, page, boxes);
+        });
+        for (let round = 0; round < 2; round++) {
+            separate(bodies, { gap: 10, iterations: 6 });
+            bodies.forEach(b => {
+                const c = constrainVisible(b.x, b.y, b.anchor, b.size, page, boxes);
+                if (!c.moved) {
+                    return;
+                }
+                const dx = c.x - b.x;
+                const dy = c.y - b.y;
+                b.x = c.x;
+                b.y = c.y;
+                b.push.x += dx;
+                b.push.y += dy;
+                // stop the part of its motion that heads back behind the box / off the page
+                const d = Math.hypot(dx, dy) || 1;
+                const vn = (b.push.vx * dx + b.push.vy * dy) / d;
+                if (vn < 0) {
+                    b.push.vx -= (dx / d) * vn;
+                    b.push.vy -= (dy / d) * vn;
+                }
+            });
+        }
         bodies.forEach(({ icon, home, w, x, y }) => {
             icon.el.style.transform = `translate(-50%, -50%) translate(${(x - home.x).toFixed(1)}px, ${(y - home.y).toFixed(1)}px) `
                 + `rotate(${(icon.rot + w.rot).toFixed(2)}deg)`;

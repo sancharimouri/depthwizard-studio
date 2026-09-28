@@ -80,3 +80,37 @@ test("icons exactly on top of each other still separate", () => {
     const pair = [body(50, 50, 20), body(50, 50, 20)];
     assert.equal(separate(pair, { gap: 4, iterations: 4 }), 0);
 });
+
+import { hiddenFraction, constrainVisible, visibleAnchor, MAX_HIDDEN } from "../src/bg-float.js";
+
+const PAGE = { left: 0, top: 0, right: 1000, bottom: 700 };
+const BOXES = [{ left: 150, top: 90, right: 480, bottom: 610 }, { left: 520, top: 90, right: 850, bottom: 610 }];
+
+test("hidden fraction: fully visible, half behind a box, fully off the page", () => {
+    assert.equal(hiddenFraction(80, 300, 60, PAGE, BOXES), 0);
+    assert.ok(Math.abs(hiddenFraction(150, 300, 60, PAGE, BOXES) - 0.5) < 0.07);
+    assert.equal(hiddenFraction(-100, 300, 60, PAGE, BOXES), 1);
+    assert.equal(hiddenFraction(300, 300, 60, PAGE, BOXES), 1);
+});
+
+test("an icon pushed behind a box or off the page is held at <= 60% hidden", () => {
+    const anchor = { x: 80, y: 300 };
+    for (const [x, y] of [[300, 300], [-200, 300], [80, -150], [200, 740]]) {
+        const p = constrainVisible(x, y, anchor, 70, PAGE, BOXES);
+        assert.ok(p.moved);
+        assert.ok(hiddenFraction(p.x, p.y, 70, PAGE, BOXES) <= MAX_HIDDEN + 1e-9, `${x},${y}`);
+        // it stops at the limit, not back at the anchor
+        assert.ok(hiddenFraction(p.x, p.y, 70, PAGE, BOXES) > 0.4, `${x},${y} pulled too far back`);
+    }
+});
+
+test("an allowed position is left exactly where it is", () => {
+    const p = constrainVisible(100, 300, { x: 80, y: 300 }, 70, PAGE, BOXES);
+    assert.deepEqual(p, { x: 100, y: 300, moved: false });
+});
+
+test("a home that is mostly hidden gets a visible anchor nearby", () => {
+    const a = visibleAnchor(320, 300, 70, PAGE, BOXES); // deep inside the left box
+    assert.ok(hiddenFraction(a.x, a.y, 70, PAGE, BOXES) <= MAX_HIDDEN);
+    assert.ok(Math.hypot(a.x - 320, a.y - 300) < 300);
+});
