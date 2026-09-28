@@ -688,3 +688,7 @@ to match.
   - Post-hoc (not used): 49/50 matches fall in the cloud tile their name indexes, and same-index tiles agree within 2–30 m. Most C3 rejections come from a low bias in the cloud-AGL layer.
   - Follow-up: a pre-registered v2 rule (index check + C1/C2) could upgrade about 34 more tiles.
   - Private locations: `data/dfc2019/terrain_packs/locate/locations.json`. The OMA clouds are in UTM 14N.
+- **Prompt 3, base ground (2026-09-28):** `scripts/dfc2019_base_ground.py`; record in `08-.../base.md`.
+  - 15 tiles are dem-located (USGS 3DEP 1 m, sampled in the tile frame); 35 are city-level (3DEP 1/3″ median over the cloud footprint union): JAX 6.01 m, OMA 299.91 m.
+  - Published check: Eppley Airfield 984 ft = 299.9 m; NAS JAX 23 ft = 7.0 m.
+  - **US3D Up is ellipsoidal.** DEM − cloud = +28 m; after GEOID18 the residual is −1.5 m (JAX) / −0.8 m (OMA). No datum bug; the NAVD88 DEM is what ships.
