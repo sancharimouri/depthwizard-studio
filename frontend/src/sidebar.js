@@ -5,7 +5,7 @@
 //   toggle  PanelLeft button just outside the bar, riding its right edge
 //   header  the "D" mark (faint white glow) + "Depth Wizard"
 //   tabs    PAGES | JOBS (equal width, muted green underline on the active one)
-//   PAGES   Workbench / Demo / Docs with icons + "N jobs running"
+//   PAGES   DW Studio (page-workbench) / Demo / Home (page-docs) with icons + "N jobs running"
 //   JOBS    the jobs list (rendered by main.js into the same element ids)
 //   footer  GitHub / email / LinkedIn / X links
 //   rail    drag to resize (SIDEBAR_MIN_W–SIDEBAR_MAX_W), click to collapse
