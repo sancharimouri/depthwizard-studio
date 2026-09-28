@@ -1,29 +1,23 @@
-// Input-page background icons: each floats in a circular neighbourhood of its home
-// position and reacts to the pointer. Pure motion maths (no DOM), unit-tested.
+// Input-page background icons and star dots: pure maths (no DOM), unit-tested. Driven by
+// src/bg-icons.js.
 //
-//   wander   a slow, smooth path inside a circle of `radius` px around home: a sum
-//            of two sines per axis with per-icon speeds and phases, scaled so the
-//            path never leaves the circle. Rotation sways a few degrees.
-//   pointer  a spring-damped offset on top of the wander. The cursor pushes icons
-//            away while it's near; a click gives nearby icons an outward kick. The
-//            spring brings them back, so they settle into their wander again.
+//   cruise    each icon moves at a steady cruise speed, its heading drifting, steering back
+//             toward its home spot when it strays (createCruiser / steerCruiser); the cursor
+//             pushes it and a click kicks it, then it eases back to cruise speed
+//   limits    icons stay 1 cm apart (separate), bounce off each other and off their limits
+//             (reflect, bounceImpulse), are at most 30% hidden (constrainVisible), and the two
+//             big satellites are locked to their quadrants (clampToZone)
+//   layout    home spots spread evenly around the boxes (layoutHomes), and a star field
+//             (starField)
 
 export const CM_PX = 37.8; // CSS px per cm
 
-// Wander speed relative to the original (1.0). 2026-09-29: halved (0.5), then the user asked for
-// 1.4x the resulting on-screen drift. Measured with the 1 cm spacing and the 60%-visibility limit in
-// force (which hold icons back), that needs about 0.85: mean drift 7.9 -> ~11 px/s.
-export const WANDER_SPEED = 0.85;
-
+// Pointer reaction (halved on 2026-09-29 for more inertia): the cursor pushes icons away while
+// it's near; a click kicks nearby icons outward.
 const HOVER_RANGE_PX = 200;
-// Motion was halved on 2026-09-29 (wander speed, hover push, click kick and the spring's pull
-// back): the icons drift and scatter at half the old speed, with more inertia.
 const HOVER_FORCE = 1300;     // px/s² at the cursor, falling off to 0 at HOVER_RANGE_PX
 const CLICK_RANGE_PX = 520;
 const CLICK_IMPULSE = 450;    // px/s at the click point, falling off with distance
-const SPRING = 0.8;           // 1/s², pulls the pointer offset back to 0 (half the old natural speed)
-const DAMPING = 1.2;          // 1/s  (same damping ratio as before)
-const MAX_PUSH_PX = 170;
 
 // Deterministic per-icon randomness (the layout looks the same on every load).
 function rand(seed) {
@@ -31,73 +25,9 @@ function rand(seed) {
     return x - Math.floor(x);
 }
 
-export function createFloater(index, radiusPx) {
-    const r = k => rand(index * 17 + k);
-    return {
-        radius: radiusPx,
-        // angular speeds (rad/s), scaled by WANDER_SPEED
-        w: [0.08 + r(1) * 0.1, 0.05 + r(2) * 0.07, 0.07 + r(3) * 0.09, 0.04 + r(4) * 0.06, 0.05 + r(5) * 0.05]
-            .map(v => v * WANDER_SPEED),
-        p: [r(6), r(7), r(8), r(9), r(10)].map(v => v * Math.PI * 2),
-        push: { x: 0, y: 0, vx: 0, vy: 0 },
-    };
-}
 
-// Wander offset (px) and sway (deg) at time t (s). |offset| <= radius.
-export function wander(f, t) {
-    const x = 0.62 * Math.sin(t * f.w[0] + f.p[0]) + 0.38 * Math.sin(t * f.w[1] + f.p[1]);
-    const y = 0.62 * Math.cos(t * f.w[2] + f.p[2]) + 0.38 * Math.sin(t * f.w[3] + f.p[3]);
-    const len = Math.hypot(x, y);
-    const k = len > 1 ? 1 / len : 1;
-    return { x: x * k * f.radius, y: y * k * f.radius, rot: 7 * Math.sin(t * f.w[4] + f.p[4]) };
-}
 
-// One physics step for the pointer offset. `at` is the icon's current centre,
-// `pointer` {x, y} or null (not over the page).
-export function stepPush(f, dt, at, pointer) {
-    const s = f.push;
-    let ax = -SPRING * s.x - DAMPING * s.vx;
-    let ay = -SPRING * s.y - DAMPING * s.vy;
-    if (pointer) {
-        const dx = at.x - pointer.x;
-        const dy = at.y - pointer.y;
-        const d = Math.hypot(dx, dy) || 1;
-        if (d < HOVER_RANGE_PX) {
-            const a = HOVER_FORCE * (1 - d / HOVER_RANGE_PX);
-            ax += (dx / d) * a;
-            ay += (dy / d) * a;
-        }
-    }
-    s.vx += ax * dt;
-    s.vy += ay * dt;
-    s.x += s.vx * dt;
-    s.y += s.vy * dt;
-    const len = Math.hypot(s.x, s.y);
-    if (len > MAX_PUSH_PX) {
-        s.x *= MAX_PUSH_PX / len;
-        s.y *= MAX_PUSH_PX / len;
-        // don't keep pushing outward against the limit
-        const out = (s.vx * s.x + s.vy * s.y) / MAX_PUSH_PX;
-        if (out > 0) {
-            s.vx -= (out * s.x) / MAX_PUSH_PX;
-            s.vy -= (out * s.y) / MAX_PUSH_PX;
-        }
-    }
-    return s;
-}
 
-// A click at `click` kicks the icon at `at` outward.
-export function kick(f, at, click) {
-    const dx = at.x - click.x;
-    const dy = at.y - click.y;
-    const d = Math.hypot(dx, dy) || 1;
-    if (d > CLICK_RANGE_PX) {
-        return;
-    }
-    const v = CLICK_IMPULSE * (1 - d / CLICK_RANGE_PX);
-    f.push.vx += (dx / d) * v;
-    f.push.vy += (dy / d) * v;
-}
 
 // Keeps icons from overlapping. `bodies`: [{ x, y, r, mass, push }] where (x, y) is the icon's current
 // centre, r the radius of its footprint circle and push its floater's push state. Each overlapping
@@ -121,7 +51,8 @@ export function bounceImpulse(closing, restitution = RESTITUTION, minBounce = MI
     return Math.min(MAX_BOUNCE, Math.max(minBounce, (1 + restitution) * Math.max(0, closing)));
 }
 
-export function separate(bodies, { gap = 8, iterations = 4, contacts = null, restitution = RESTITUTION, minBounce = MIN_BOUNCE } = {}) {
+// `gapFor(a, b)` (optional) overrides the gap per pair (same-artwork icons keep further apart).
+export function separate(bodies, { gap = 8, iterations = 4, contacts = null, restitution = RESTITUTION, minBounce = MIN_BOUNCE, gapFor = null } = {}) {
     for (let pass = 0; pass < iterations; pass++) {
         for (let i = 0; i < bodies.length; i++) {
             for (let j = i + 1; j < bodies.length; j++) {
@@ -130,7 +61,7 @@ export function separate(bodies, { gap = 8, iterations = 4, contacts = null, res
                 let dx = b.x - a.x;
                 let dy = b.y - a.y;
                 let d = Math.hypot(dx, dy);
-                const min = a.r + b.r + gap;
+                const min = a.r + b.r + (gapFor ? gapFor(a, b) : gap);
                 const key = `${i}:${j}`;
                 if (contacts && pass === 0 && d < min + CONTACT_SLACK) {
                     contacts.next.add(key);
@@ -315,7 +246,15 @@ export function marginStrips(page, boxes) {
 // `scaleFor(i, side)` (optional) makes icon i that much bigger if it lands on `side` (the very
 // small icons are 1.4x on the left); spacing and visibility use the scaled size. Each result
 // also carries its `side` and final `size`.
-export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.15, seed = 7, candidates = 300, scaleFor = () => 1 } = {}) {
+//
+// `zoneFor(i)` (optional) confines icon i's home to a rect (the big satellites' quadrants);
+// zoned icons are placed first. `typeOf(i)` (optional) names each icon's artwork: an icon's
+// nearest neighbour is never the same artwork, and same-artwork icons keep `sameTypeGap` px
+// apart, edge to edge (relaxed only if nothing else fits).
+export function layoutHomes(sizes, page, boxes, {
+    gap = 38, maxHidden = 0.15, seed = 7, candidates = 300, scaleFor = () => 1,
+    zoneFor = () => null, typeOf = () => null, sameTypeGap = 190,
+} = {}) {
     const rand = prng(seed);
     const strips = marginStrips(page, boxes);
     const sides = Object.keys(strips);
@@ -333,16 +272,48 @@ export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.15, se
     });
     const used = Object.fromEntries(sides.map(k => [k, 0]));
 
-    const order = sizes.map((size, i) => ({ size, i })).sort((a, b) => b.size - a.size);
+    // zoned icons first, then largest first
+    const order = sizes.map((size, i) => ({ size, i }))
+        .sort((a, b) => Number(Boolean(zoneFor(b.i))) - Number(Boolean(zoneFor(a.i))) || b.size - a.size);
     const placed = [];
     const out = new Array(sizes.length);
-    const search = (side, size, limit) => {
-        const r = strips[side];
+    const intersect = (a, b) => ({
+        left: Math.max(a.left, b.left), top: Math.max(a.top, b.top),
+        right: Math.min(a.right, b.right), bottom: Math.min(a.bottom, b.bottom),
+    });
+    // which side a point belongs to (the side strips own the corners)
+    const sideOf = c => (c.x < strips.left.right ? "left" : c.x > strips.right.left ? "right" : c.y < strips.top.bottom ? "top" : "bottom");
+    // the same-artwork rule, both ways: the new icon's nearest neighbour is a different artwork,
+    // it doesn't become the nearest neighbour of an icon with its own artwork, and none of its
+    // artwork is within sameTypeGap
+    const typeOk = (c, size, type) => {
+        if (type == null || !placed.length) {
+            return true;
+        }
+        let nearest = null;
+        let nearestD = Infinity;
+        for (const p of placed) {
+            const d = Math.hypot(c.x - p.x, c.y - p.y) - (size + p.size) / 2;
+            if (p.type === type && (d < sameTypeGap || d < p.nearestD)) {
+                return false;
+            }
+            if (d < nearestD) {
+                nearestD = d;
+                nearest = p;
+            }
+        }
+        return nearest.type !== type;
+    };
+    const search = (region, size, limit, type, strictType) => {
+        const r = region;
+        if (!(r.right > r.left && r.bottom > r.top)) {
+            return null;
+        }
         let best = null;
         let bestScore = -Infinity;
         for (let k = 0; k < candidates; k++) {
             const c = { x: r.left + rand() * (r.right - r.left), y: r.top + rand() * (r.bottom - r.top) };
-            if (hiddenFraction(c.x, c.y, size, page, boxes) > limit) {
+            if (hiddenFraction(c.x, c.y, size, page, boxes) > limit || (strictType && !typeOk(c, size, type))) {
                 continue;
             }
             let score = Infinity;
@@ -357,18 +328,34 @@ export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.15, se
         return best;
     };
     for (const { size: baseSize, i } of order) {
+        const type = typeOf(i);
+        const zone = zoneFor(i);
         // sides in order of need: furthest below quota first (ties: the larger side)
         const byNeed = sides.slice().sort((a, b) => ((used[a] - quota[a]) / Math.max(1, quota[a]))
             - ((used[b] - quota[b]) / Math.max(1, quota[b])) || area(strips[b]) - area(strips[a]));
         // A spot that works: the neediest side at the strict limit, then any side at the strict
-        // limit, then any side at the runtime limit. (The big satellites only fit in corners.)
+        // limit, then any side at the runtime limit (the big satellites only fit in corners); first
+        // with the same-artwork rule, then without it. A zoned icon searches only its zone.
         let found = null;
-        for (const limit of [maxHidden, MAX_HIDDEN]) {
-            for (const side of byNeed) {
-                const size = baseSize * scaleFor(i, side);
-                const c = search(side, size, limit);
-                if (c) {
-                    found = { ...c, side, size };
+        for (const strictType of [true, false]) {
+            for (const limit of [maxHidden, MAX_HIDDEN]) {
+                if (zone) {
+                    const size = baseSize;
+                    const c = search(intersect(zone, page), size, limit, type, strictType);
+                    if (c) {
+                        found = { ...c, side: sideOf(c), size };
+                    }
+                } else {
+                    for (const side of byNeed) {
+                        const size = baseSize * scaleFor(i, side);
+                        const c = search(strips[side], size, limit, type, strictType);
+                        if (c) {
+                            found = { ...c, side, size };
+                            break;
+                        }
+                    }
+                }
+                if (found) {
                     break;
                 }
             }
@@ -376,23 +363,30 @@ export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.15, se
                 break;
             }
         }
-        if (!found) { // nowhere fits: the least hidden spot of any side
+        if (!found) { // nowhere fits: the least hidden spot of any side (or of its zone)
             let least = Infinity;
-            for (const side of sides) {
-                const r = strips[side];
+            for (const side of zone ? ["zone"] : sides) {
+                const r = zone ? intersect(zone, page) : strips[side];
                 const size = baseSize * scaleFor(i, side);
                 for (let k = 0; k < candidates; k++) {
                     const c = { x: r.left + rand() * (r.right - r.left), y: r.top + rand() * (r.bottom - r.top) };
                     const h = hiddenFraction(c.x, c.y, size, page, boxes);
                     if (h < least) {
                         least = h;
-                        found = { ...c, side, size };
+                        found = { ...c, side: zone ? sideOf(c) : side, size };
                     }
                 }
             }
         }
         used[found.side] += 1;
-        placed.push({ x: found.x, y: found.y, size: found.size });
+        // keep every placed icon's nearest-neighbour distance up to date (for the same-artwork rule)
+        let own = Infinity;
+        for (const p of placed) {
+            const d = Math.hypot(found.x - p.x, found.y - p.y) - (found.size + p.size) / 2;
+            p.nearestD = Math.min(p.nearestD, d);
+            own = Math.min(own, d);
+        }
+        placed.push({ x: found.x, y: found.y, size: found.size, type, nearestD: own });
         out[i] = found;
     }
     return out;
@@ -431,4 +425,109 @@ export function starField(page, boxes, { cell = 46, seed = 11 } = {}) {
         }
     }
     return stars;
+}
+
+// ---- Cruise motion (2026-09-29). Replaces the fixed wander path, which parked icons against
+// their limits: the path ran outside the allowed area, so the icon sat still at the boundary
+// until its path came back. Now each icon always moves at its own cruise speed:
+//   - its heading drifts smoothly (two slow sines), and it turns back toward its home when it
+//     strays past ~55% of its radius, so it roams its own neighbourhood;
+//   - the cursor pushes it (acceleration) and a click kicks it (impulse);
+//   - a speed controller eases it back to cruise speed (~1 s): no friction, no halting;
+//   - limits and other icons reflect its velocity (a bounce), so it keeps moving.
+
+export const SPEED_RELAX = 1.6;   // 1/s: how fast speed returns to cruise (a click settles in ~2-3 s)
+const TURN_NOISE = [0.32, 0.18];  // rad/s amplitudes of the heading drift
+const HOME_TURN_MAX = 1.6;        // rad/s
+
+export function createCruiser(index, { radius, speed }) {
+    const r = k => rand(index * 31 + k);
+    const a = r(1) * Math.PI * 2;
+    return {
+        radius,
+        speed,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed,
+        w: [0.21 + r(2) * 0.2, 0.09 + r(3) * 0.12, 0.05 + r(4) * 0.05],
+        p: [r(5), r(6), r(7)].map(v => v * Math.PI * 2),
+    };
+}
+
+function rotate(c, angle) {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const vx = c.vx * cos - c.vy * sin;
+    c.vy = c.vx * sin + c.vy * cos;
+    c.vx = vx;
+}
+
+// One steering step. `offset` = position - home (px); `pointer` = { x, y } relative to the
+// icon's centre (or null). Returns the sway angle (deg) for drawing.
+export function steerCruiser(c, dt, t, offset, pointer = null) {
+    // 1. heading drift
+    let turn = TURN_NOISE[0] * Math.sin(t * c.w[0] + c.p[0]) + TURN_NOISE[1] * Math.sin(t * c.w[1] + c.p[1]);
+    // 2. turn back toward home once past ~55% of the radius (signed by which side home is on)
+    const dist = Math.hypot(offset.x, offset.y);
+    if (dist > 0.55 * c.radius) {
+        const cross = c.vx * -offset.y - c.vy * -offset.x; // v x (home - pos)
+        const rate = Math.min(HOME_TURN_MAX, 2.4 * (dist / c.radius - 0.55));
+        turn += Math.sign(cross || 1) * rate;
+    }
+    rotate(c, turn * dt);
+    // 3. cursor push
+    if (pointer) {
+        const d = Math.hypot(pointer.x, pointer.y) || 1;
+        if (d < HOVER_RANGE_PX) {
+            const a = HOVER_FORCE * (1 - d / HOVER_RANGE_PX);
+            c.vx -= (pointer.x / d) * a * dt;
+            c.vy -= (pointer.y / d) * a * dt;
+        }
+    }
+    // 4. back to cruise speed (never zero)
+    const sp = Math.hypot(c.vx, c.vy);
+    if (sp < 1e-3) {
+        const a = t * c.w[2] + c.p[2];
+        c.vx = Math.cos(a) * c.speed;
+        c.vy = Math.sin(a) * c.speed;
+    } else {
+        const k = 1 + ((c.speed - sp) / sp) * Math.min(1, dt * SPEED_RELAX);
+        c.vx *= k;
+        c.vy *= k;
+    }
+    return 7 * Math.sin(t * c.w[2] + c.p[2]);
+}
+
+// A click at `click` kicks the cruiser whose centre is `at` outward.
+export function kickCruiser(c, at, click) {
+    const dx = at.x - click.x;
+    const dy = at.y - click.y;
+    const d = Math.hypot(dx, dy) || 1;
+    if (d <= CLICK_RANGE_PX) {
+        const v = CLICK_IMPULSE * (1 - d / CLICK_RANGE_PX);
+        c.vx += (dx / d) * v;
+        c.vy += (dy / d) * v;
+    }
+}
+
+// Bounce off a limit: `n` = unit normal pointing back into the allowed area. Only the part of
+// the velocity going into the limit is reflected (with restitution e). Returns true if it bounced.
+export function reflect(c, n, e = 0.85) {
+    const vn = c.vx * n.x + c.vy * n.y;
+    if (vn >= 0) {
+        return false;
+    }
+    c.vx -= (1 + e) * vn * n.x;
+    c.vy -= (1 + e) * vn * n.y;
+    return true;
+}
+
+// Keeps a centre inside `zone`; returns { x, y, nx, ny } (the normal, 0 if not clamped).
+export function clampToZone(x, y, zone) {
+    let nx = 0;
+    let ny = 0;
+    if (x < zone.left) { x = zone.left; nx = 1; }
+    if (x > zone.right) { x = zone.right; nx = -1; }
+    if (y < zone.top) { y = zone.top; ny = 1; }
+    if (y > zone.bottom) { y = zone.bottom; ny = -1; }
+    return { x, y, nx, ny };
 }

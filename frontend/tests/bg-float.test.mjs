@@ -1,56 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createFloater, wander, stepPush, kick, CM_PX } from "../src/bg-float.js";
-
-test("the wander path stays inside its circle", () => {
-    const f = createFloater(3, 5 * CM_PX);
-    for (let t = 0; t < 600; t += 0.37) {
-        const w = wander(f, t);
-        assert.ok(Math.hypot(w.x, w.y) <= f.radius + 1e-9);
-        assert.ok(Math.abs(w.rot) <= 7);
-    }
-});
-
-test("the wander path actually covers its neighbourhood (not a tiny jitter)", () => {
-    const f = createFloater(1, 4 * CM_PX);
-    let far = 0;
-    for (let t = 0; t < 300; t += 0.5) {
-        far = Math.max(far, Math.hypot(wander(f, t).x, wander(f, t).y));
-    }
-    assert.ok(far > 0.6 * f.radius, `max reach ${far}`);
-});
-
-test("a nearby cursor pushes the icon away, and it springs back when the cursor leaves", () => {
-    const f = createFloater(2, 150);
-    const at = { x: 500, y: 300 };
-    for (let i = 0; i < 60; i++) {
-        stepPush(f, 1 / 60, { x: at.x + f.push.x, y: at.y + f.push.y }, { x: 450, y: 300 });
-    }
-    assert.ok(f.push.x > 10, `pushed right by ${f.push.x}`);
-    for (let i = 0; i < 60 * 8; i++) {
-        stepPush(f, 1 / 60, at, null);
-    }
-    assert.ok(Math.hypot(f.push.x, f.push.y) < 2, "settles back");
-});
-
-test("a click kicks nearby icons outward and leaves far ones alone", () => {
-    const near = createFloater(4, 150);
-    const far = createFloater(5, 150);
-    kick(near, { x: 100, y: 0 }, { x: 0, y: 0 });
-    kick(far, { x: 2000, y: 0 }, { x: 0, y: 0 });
-    assert.ok(near.push.vx > 0 && Math.abs(near.push.vy) < 1e-9);
-    assert.equal(far.push.vx, 0);
-});
-
-test("the push never exceeds its limit", () => {
-    const f = createFloater(6, 150);
-    for (let i = 0; i < 30; i++) {
-        kick(f, { x: 1, y: 0 }, { x: 0, y: 0 });
-        stepPush(f, 1 / 60, { x: 1, y: 0 }, { x: 0, y: 0 });
-    }
-    assert.ok(Math.hypot(f.push.x, f.push.y) <= 170 + 1e-6);
-});
-
 import { separate } from "../src/bg-float.js";
 
 const body = (x, y, r, mass = r * r) => ({ x, y, r, mass, push: { x: 0, y: 0, vx: 0, vy: 0 } });
@@ -218,4 +167,85 @@ test("bounce impulse: at least the minimum, reflected with restitution, capped",
     assert.equal(bounceImpulse(-50), MIN_BOUNCE);
     assert.ok(Math.abs(bounceImpulse(100) - 175) < 1e-9);
     assert.equal(bounceImpulse(10000), MAX_BOUNCE);
+});
+
+import { createCruiser, steerCruiser, kickCruiser, reflect, clampToZone } from "../src/bg-float.js";
+
+test("cruise: an icon never slows to a halt, even boxed in by walls", () => {
+    const c = createCruiser(3, { radius: 150, speed: 11 });
+    const home = { x: 0, y: 0 };
+    let pos = { x: 0, y: 0 };
+    const wall = { left: -60, top: -40, right: 60, bottom: 40 }; // tighter than its radius
+    let minSpeed = Infinity;
+    for (let f = 0; f < 60 * 120; f++) {
+        const t = f / 60;
+        steerCruiser(c, 1 / 60, t, { x: pos.x - home.x, y: pos.y - home.y });
+        pos = { x: pos.x + c.vx / 60, y: pos.y + c.vy / 60 };
+        const z = clampToZone(pos.x, pos.y, wall);
+        if (z.nx || z.ny) {
+            pos = { x: z.x, y: z.y };
+            if (z.nx) reflect(c, { x: z.nx, y: 0 });
+            if (z.ny) reflect(c, { x: 0, y: z.ny });
+        }
+        if (t > 1) minSpeed = Math.min(minSpeed, Math.hypot(c.vx, c.vy));
+    }
+    assert.ok(minSpeed > 0.8 * 11, `min speed ${minSpeed.toFixed(2)} px/s`);
+});
+
+test("cruise: it roams its own neighbourhood and returns to cruise speed after a kick", () => {
+    const c = createCruiser(5, { radius: 150, speed: 11 });
+    let pos = { x: 0, y: 0 };
+    let far = 0;
+    for (let f = 0; f < 60 * 120; f++) {
+        steerCruiser(c, 1 / 60, f / 60, pos);
+        pos = { x: pos.x + c.vx / 60, y: pos.y + c.vy / 60 };
+        far = Math.max(far, Math.hypot(pos.x, pos.y));
+    }
+    assert.ok(far > 60 && far < 1.4 * 150, `max distance from home ${far.toFixed(0)}`);
+    kickCruiser(c, { x: 10, y: 0 }, { x: 0, y: 0 });
+    assert.ok(Math.hypot(c.vx, c.vy) > 100);
+    for (let f = 0; f < 60 * 4; f++) {
+        steerCruiser(c, 1 / 60, 200 + f / 60, pos);
+    }
+    assert.ok(Math.abs(Math.hypot(c.vx, c.vy) - 11) < 1, "back to cruise within 4 s");
+});
+
+test("reflect: only the part going into the wall is bounced back", () => {
+    const c = { vx: -10, vy: 5 };
+    assert.equal(reflect(c, { x: 1, y: 0 }, 1), true);
+    assert.deepEqual([c.vx, c.vy], [10, 5]);
+    assert.equal(reflect(c, { x: 1, y: 0 }, 1), false);
+});
+
+test("layout: the big satellites stay in their quadrants; no icon's nearest neighbour is the same artwork", () => {
+    const TYPES = ["satellite", "earthsat", "dish", "image", "terrain", "terrain", "globe", "image", "dish", "globe", "terrain", "image"];
+    const S2 = [224, 224, 70, 70, 70, 52, 52, 52, 52, 52, 52, 52];
+    const mid = { x: (PG.left + PG.right) / 2, y: (PG.top + PG.bottom) / 2 };
+    const Q2 = { left: PG.left, top: PG.top, right: mid.x, bottom: mid.y };
+    const Q4 = { left: mid.x, top: mid.y, right: PG.right, bottom: PG.bottom };
+    const homes = layoutHomes(S2, PG, BX, { gap: 38, typeOf: i => TYPES[i], zoneFor: i => (i === 0 ? Q2 : i === 1 ? Q4 : null) });
+    const inside = (h, z) => h.x >= z.left && h.x <= z.right && h.y >= z.top && h.y <= z.bottom;
+    assert.ok(inside(homes[0], Q2), `satellite at ${homes[0].x},${homes[0].y}`);
+    assert.ok(inside(homes[1], Q4), `earth-satellite at ${homes[1].x},${homes[1].y}`);
+    homes.forEach((h, i) => {
+        let nearest = -1;
+        let nd = Infinity;
+        homes.forEach((o, j) => {
+            if (j !== i) {
+                const d = Math.hypot(h.x - o.x, h.y - o.y) - (h.size + o.size) / 2;
+                if (d < nd) { nd = d; nearest = j; }
+            }
+        });
+        assert.notEqual(TYPES[nearest], TYPES[i], `icon ${i} (${TYPES[i]}) is beside another ${TYPES[i]}`);
+    });
+});
+
+test("per-pair gap: same-artwork icons are held further apart than others", () => {
+    const a = body(0, 0, 30); a.type = "globe";
+    const b = body(100, 0, 30); b.type = "globe";
+    const c = body(0, 100, 30); c.type = "dish";
+    const gapFor = (p, q) => (p.type === q.type ? 190 : 38);
+    assert.equal(separate([a, b, c], { gapFor, iterations: 12 }), 0);
+    assert.ok(Math.hypot(b.x - a.x, b.y - a.y) - 60 >= 189.5);
+    assert.ok(Math.hypot(c.x - a.x, c.y - a.y) - 60 >= 37.5);
 });
