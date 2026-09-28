@@ -61,7 +61,7 @@ setup. Work through the phases in order. Commit after each phase.
 - If it's still broken, the backend's `DAV2_FALLBACK_URL` plus `bridge/dav2_server.py` is the documented fallback.
 
 ## Phase 2: tests
-- `cd frontend && npm test` (expect 88/88) and `npx vite build`.
+- `cd frontend && npm test` (expect 90/90) and `npx vite build`.
 - `uv run python -m pytest -q backend/tests` from the repo root (expect 45 passed, 1 skipped).
 - Stop on any failure.
 
@@ -99,7 +99,7 @@ setup. Work through the phases in order. Commit after each phase.
     - drag to resize, and past the minimum to collapse;
     - the D opens Home;
     - the footer links work.
-  - Background icons (17) float, react to the pointer, keep 1 cm apart, spread over all four sides, and are never
+  - Background icons (12) float, bounce off each other and their limits, react to the pointer, keep 1 cm apart, spread over all four sides, and are never
     more than 30% hidden (left limit: the collapsed sidebar's width). Faint star dots appear in the margins, never on the boxes.
   - Library terrain dropdown: pick Hilly, then press DFC2019. A notice should explain there are none, the tiles stay,
     and the notice closes itself after 4 s.

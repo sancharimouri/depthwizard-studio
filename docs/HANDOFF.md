@@ -486,7 +486,7 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
 - Studio: flat-terrain warning for flat Sentinel-2 tiles (`src/flat-warning.js`). Outliers stop growing with vertical
   exaggeration (`src/outlier-relief.js`, used in `src/terrain.js`).
 - Input page: cold-start / loading messages (`LOADING_COPY` in `src/input-view.js`). Floating, pointer-reactive
-  background icons: 17, and they repel each other so none overlaps (`separate` in `src/bg-float.js`, `src/bg-icons.js`,
+  background icons: 12, and they bounce off each other and their limits (`bounceImpulse`, contacts in `separate`); they repel so none overlaps (`separate` in `src/bg-float.js`, `src/bg-icons.js`,
   symbols in `index.html`, from `icons/2.svg`). None is ever more than 30% hidden behind the boxes or off the page. The
   left limit is a fixed line at the collapsed sidebar's width, 56 px. Very small icons are 1.4x on the left
   (`hiddenFraction`, `constrainVisible`). They keep 1 cm apart. Their homes are spread evenly on all four sides
@@ -502,7 +502,7 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
   - Footer links: GitHub, email, LinkedIn; X is a placeholder.
 - Page names: **Workbench → DW Studio, Docs → Home**, display text only. Page ids and the permanent routes in
   `src/routes.js` are unchanged (`#/docs`, `#/demo`, `#demo-video`, bare URL all verified).
-- Tests: `npm test` in `frontend/` → 88/88.
+- Tests: `npm test` in `frontend/` → 90/90.
 
 **Backend (`backend/`)** (must reach the Render copy and the desktop sidecar)
 - `backend/api/depth_routes.py`: transient Space errors (502/503/504, ClientDisconnect, resets) are retried twice
