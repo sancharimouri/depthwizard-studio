@@ -488,7 +488,9 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
 - Input page: cold-start / loading messages (`LOADING_COPY` in `src/input-view.js`). Floating, pointer-reactive
   background icons: 17, and they repel each other so none overlaps (`separate` in `src/bg-float.js`, `src/bg-icons.js`,
   symbols in `index.html`, from `icons/2.svg`). None is ever more than 60% hidden behind the boxes or off the page
-  (`hiddenFraction`, `constrainVisible`). Motion speed was halved on 2026-09-29.
+  (`hiddenFraction`, `constrainVisible`). They keep 1 cm apart. Their homes are spread evenly on all four sides
+  (`layoutHomes`). Very small star dots sit behind them (`starField`, canvas). The green is more vibrant
+  (`--bg-green-rgb`). Floating speed: `WANDER_SPEED` 0.85.
 - Library filter: the terrain filter is a dropdown on the right under the collection chips (`filterLibrary`,
   `noMatchMessage`, `applyFilter` in `src/input-view.js`). A choice with no tiles keeps the last results and shows a
   notice that closes itself after 4 s.
@@ -499,7 +501,7 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
   - Footer links: GitHub, email, LinkedIn; X is a placeholder.
 - Page names: **Workbench → DW Studio, Docs → Home**, display text only. Page ids and the permanent routes in
   `src/routes.js` are unchanged (`#/docs`, `#/demo`, `#demo-video`, bare URL all verified).
-- Tests: `npm test` in `frontend/` → 83/83.
+- Tests: `npm test` in `frontend/` → 86/86.
 
 **Backend (`backend/`)** (must reach the Render copy and the desktop sidecar)
 - `backend/api/depth_routes.py`: transient Space errors (502/503/504, ClientDisconnect, resets) are retried twice
