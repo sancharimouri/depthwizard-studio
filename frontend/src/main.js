@@ -16,6 +16,7 @@ import {
 import { installCloseGuard } from "./desktop-close.js";
 import { apiUrl } from "./api-base.js";
 import { PAGE_ROUTES, resolveHash, hashMatchesPage } from "./routes.js";
+import { flatTerrainWarning } from "./flat-warning.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -774,7 +775,23 @@ function showGrid() {
     renderJobs();
 }
 
+// The flat-terrain warning follows the on-screen job: shown from the moment its
+// generation starts (library tiles know their terrain class up front; a searched
+// scene only once its relief is known).
+function renderFlatWarning(job) {
+    const range = job?.gen?.meta?.surface_range_m;
+    const warning = flatTerrainWarning(job?.input.landscape, range ? range[1] - range[0] : null);
+    document.querySelectorAll(".flat-warning").forEach(el => {
+        el.hidden = !warning;
+        if (warning) {
+            el.querySelector(".flat-warning-title").textContent = warning.title;
+            el.querySelector(".flat-warning-body").textContent = warning.body;
+        }
+    });
+}
+
 function applyJobInput(job) {
+    renderFlatWarning(job);
     pendingScenePreview = { src: job.input.previewUrl, meta: `${jobLabel(job)} · ${job.input.metaLine}` };
     sceneSelectionSummary = { type: "input", ...job.input };
     markSceneSelected();
@@ -3154,6 +3171,7 @@ async function runGenerationSequence(job) {
         job.run = { stage: index + 1, percent: 0, text: GEN_STAGES[index + 1]?.steps[0] ?? "" };
         if (isOnScreen(job)) {
             paintStageDone(GEN_STAGES[index], job);
+            renderFlatWarning(job); // a searched scene's relief is known from here on
         }
         jobStore.update(job.id, { progress });
     };
