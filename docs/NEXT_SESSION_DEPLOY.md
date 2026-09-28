@@ -103,7 +103,8 @@ setup. Work through the phases in order. Commit after each phase.
     - the D opens Home;
     - the footer links work.
   - Upload a plain PNG: the GSD card appears and Start stays disabled until a GSD is entered; generation works.
-  - Box outlines glow faintly, and a patch travels round them now and then; the stars are sparse.
+  - Box outlines glow (no moving patch); the stars are sparse.
+  - Bright mode: everything green is orange (except the Tier 2 'T2' badges), outlines crisp, the wireframe orange.
   - Background icons (12) cruise without halting, bounce off each other and their limits, react to the pointer,
     keep 1 cm apart (5 cm for the same artwork); the big satellite stays top-left and the earth + satellite bottom-right; spread over all four sides, and are never
     more than 30% hidden (left limit: the collapsed sidebar's width). Faint star dots appear in the margins, never on the boxes.

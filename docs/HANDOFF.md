@@ -506,8 +506,11 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
 - Page names: **Workbench → DW Studio, Docs → Home**, display text only. Page ids and the permanent routes in
   `src/routes.js` are unchanged (`#/docs`, `#/demo`, `#demo-video`, bare URL all verified).
 - Tests: `npm test` in `frontend/` → 91/91.
-- Input boxes: a faint thin green outline glow, and a small patch travels round each outline every ~14 s (CSS,
-  `dw-outline-patch`). Stars: half the density, big ones 6%.
+- Input boxes: a thin green outline glow (2x brighter; the travelling patch was removed). Stars: half the density, big
+  ones 6%.
+- Bright mode: every green is the site orange (`--neon-rgb` 196, 120, 58; background icons, stars and outlines 223,
+  118, 32). The wireframe recolours live. The text base is crisper (40, 24, 10). Only Tier 2's green stays (status
+  colour).
 - Upload without a geotransform: a card asks for the GSD. It's set with `POST /api/input/{id}/gsd`
   (`store.set_manual_gsd`), and the flat plane is sized from it in `pipeline.generate`.
 
