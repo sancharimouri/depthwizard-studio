@@ -3,7 +3,7 @@
 // after shadcn/ui's sidebar-07 block:
 //
 //   toggle  PanelLeft button just outside the bar, riding its right edge
-//   header  the "D" mark (faint white glow) + "Depth Wizard"
+//   header  the "D" mark (opens Home) + "Depth Wizard"
 //   tabs    PAGES | JOBS (equal width, muted green underline on the active one)
 //   PAGES   DW Studio (page-workbench) / Demo / Home (page-docs) with icons + "N jobs running"
 //   JOBS    the jobs list (rendered by main.js into the same element ids)
@@ -176,6 +176,8 @@ export function createSidebar({ onNavigate }) {
         next.focus();
     });
     links.forEach(link => link.addEventListener("click", () => onNavigate(link.dataset.page)));
+    // the "D" mark opens the Home page
+    root.querySelector(".sb-logo")?.addEventListener("click", event => onNavigate(event.currentTarget.dataset.page));
 
     let collapsed = false;
     try {

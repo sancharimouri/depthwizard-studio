@@ -5272,32 +5272,30 @@ kbd {
     overflow: hidden;
 }
 
+/* the "D" mark: a button that opens the Home page */
 .sb-logo {
-    position: relative;
     display: grid;
     flex-shrink: 0;
     place-items: center;
     width: 32px;
     height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
 }
 
-/* a faint white glow behind the D, so its dark bands don't vanish into the bar */
-.sb-logo::before {
-    content: "";
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.1) 45%, transparent 72%);
-    filter: blur(3px);
+.sb-logo:focus-visible {
+    outline: 2px solid var(--sb-green);
+    outline-offset: 2px;
 }
 
 .sb-logo img {
-    position: relative;
     display: block;
     width: 30px;
     height: 30px;
     object-fit: contain;
-    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35));
 }
 
 .sb-brand-text {
@@ -5308,15 +5306,12 @@ kbd {
     transition: opacity 0.15s ease;
 }
 
+/* one line now (no subtitle), so the name is larger */
 .sb-brand {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
     color: rgb(var(--text-rgb));
-}
-
-.sb-brand-sub {
-    font-size: 11px;
-    color: rgba(var(--text-rgb), 0.5);
 }
 
 .sb-body {
