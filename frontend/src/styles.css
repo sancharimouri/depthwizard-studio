@@ -6919,3 +6919,186 @@ kbd {
         animation: none;
     }
 }
+
+
+/* ============================================================
+   MANUAL GSD (src/input-view.js renderGsd): an upload with no geotransform
+   says so and asks for its GSD before START GENERATION.
+   ============================================================ */
+.iv-gsd {
+    padding: 12px 14px;
+    border: 1px solid rgba(var(--tier1-rgb), 0.45);
+    border-left-width: 3px;
+    border-radius: 8px;
+    background: rgba(var(--tier1-rgb), 0.06);
+}
+
+.iv-gsd[hidden] {
+    display: none;
+}
+
+.iv-gsd.is-set {
+    border-color: rgba(var(--text-rgb), 0.14);
+    border-left-color: rgba(var(--accent-rgb), 0.7);
+    background: none;
+}
+
+.iv-gsd-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgb(var(--text-rgb));
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.iv-gsd-icon {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgb(var(--tier1-rgb));
+    color: #1a1208;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.iv-gsd.is-set .iv-gsd-icon {
+    background: rgba(var(--accent-rgb), 0.8);
+}
+
+.iv-gsd-text {
+    margin: 6px 0 10px;
+    color: rgba(var(--text-rgb), 0.7);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.iv-gsd-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.iv-gsd-input {
+    width: 110px;
+    padding: 7px 10px;
+    border: 1px solid rgba(var(--text-rgb), 0.2);
+    border-radius: 7px;
+    background: rgba(var(--bg-rgb), 0.6);
+    color: rgb(var(--text-rgb));
+    font-size: 13px;
+}
+
+.iv-gsd-input:focus-visible {
+    outline: 2px solid rgba(var(--accent-rgb), 0.7);
+    outline-offset: 1px;
+}
+
+.iv-gsd-unit {
+    color: rgba(var(--text-rgb), 0.55);
+    font-size: 12px;
+}
+
+.iv-gsd-apply {
+    margin-left: auto;
+    padding: 7px 12px;
+    cursor: pointer;
+}
+
+.iv-gsd .iv-status {
+    margin-top: 8px;
+}
+
+
+/* ============================================================
+   INPUT PAGE BOX OUTLINES (2026-09-29): a faint, thin green glow on the Scene
+   Input and Preview outlines (not a radiating halo), and now and then a small
+   bright patch that travels once around each outline. The patch is a ring
+   (conic gradient masked to a 2 px border) drawn by the input view's own
+   ::before / ::after, one over each box's grid cell, because the boxes scroll
+   their contents. A lap takes ~5 s, then it rests ~9 s; the two boxes are offset.
+   ============================================================ */
+@property --dw-glow-angle {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+}
+
+#page-workbench .input-view {
+    --glow-rgb: 84, 171, 115; /* the background green (--bg-green-rgb) */
+}
+
+#page-workbench .input-view > .iv-input-pane {
+    grid-area: 1 / 1;
+}
+
+#page-workbench .input-view > .iv-preview-pane {
+    grid-area: 1 / 2;
+}
+
+/* the faint, thin outline glow */
+#page-workbench .iv-pane {
+    border-color: rgba(var(--glow-rgb), 0.24);
+    box-shadow: 0 0 3px rgba(var(--glow-rgb), 0.16);
+}
+
+/* the travelling patch */
+#page-workbench .input-view::before,
+#page-workbench .input-view::after {
+    content: "";
+    position: relative;
+    z-index: 2;
+    grid-row: 1;
+    padding: 2px; /* ring thickness */
+    border-radius: 12px;
+    pointer-events: none;
+    opacity: 0;
+    background: conic-gradient(from var(--dw-glow-angle),
+        transparent 0deg 300deg,
+        rgba(var(--glow-rgb), 0) 312deg,
+        rgba(var(--glow-rgb), 0.85) 336deg,
+        rgba(190, 245, 205, 0.95) 342deg,
+        rgba(var(--glow-rgb), 0.85) 348deg,
+        rgba(var(--glow-rgb), 0) 358deg,
+        transparent 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: dw-outline-patch 14s linear infinite;
+}
+
+#page-workbench .input-view::before {
+    grid-column: 1;
+    animation-delay: 1.5s;
+}
+
+#page-workbench .input-view::after {
+    grid-column: 2;
+    animation-delay: 8.5s;
+}
+
+@keyframes dw-outline-patch {
+    0% { --dw-glow-angle: 0deg; opacity: 0; }
+    3% { opacity: 1; }
+    34% { opacity: 1; }
+    37% { --dw-glow-angle: 360deg; opacity: 0; }
+    100% { --dw-glow-angle: 360deg; opacity: 0; }
+}
+
+/* one column (narrow windows): the boxes stack, and so do their patches */
+@media (max-width: 900px) {
+    #page-workbench .input-view > .iv-preview-pane,
+    #page-workbench .input-view::after {
+        grid-area: 2 / 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #page-workbench .input-view::before,
+    #page-workbench .input-view::after {
+        display: none;
+    }
+}
