@@ -5572,6 +5572,11 @@ kbd {
     padding: 0 9px;
 }
 
+/* the icon rail's page icons get more room between them than the labelled list */
+.app-sidebar.is-collapsed .sb-pages {
+    gap: 12px;
+}
+
 .app-sidebar.is-collapsed .sb-foot {
     flex-direction: column;
     gap: 4px;
