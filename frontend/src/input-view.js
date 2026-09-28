@@ -406,17 +406,18 @@ export function createInputView(root, { onStart }) {
 
     // ---------- hand-off to the generation page
     function buildHandoff(sel) {
+        // the processing page's calculation log: no tier or elevation-model names
         const log = [`Input: ${sel.title} (${sel.sourceLabel})`];
         sel.meta.forEach(([key, value]) => log.push(`${key}: ${value}`));
-        log.push(`Routing: ${sel.routing.label}${sel.routing.locked ? " (locked)" : ""}`);
         if (sel.dem) {
-            log.push(`DEM: ${sel.dem.source} · ${sel.dem.min_m}–${sel.dem.max_m} m`);
+            log.push(`Attached DEM: ${sel.dem.min_m}–${sel.dem.max_m} m`);
         }
         return {
             source: sel.source,
             title: sel.title,
             previewUrl: sel.previewUrl,
             metaLine: `${sel.title} · ${sel.sourceLabel} · ${sel.routing.label}`,
+            sourceLabel: sel.sourceLabel,
             meta: sel.meta,
             routing: sel.routing,
             dem: sel.dem ?? null,
