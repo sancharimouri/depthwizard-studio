@@ -692,3 +692,8 @@ to match.
   - 15 tiles are dem-located (USGS 3DEP 1 m, sampled in the tile frame); 35 are city-level (3DEP 1/3″ median over the cloud footprint union): JAX 6.01 m, OMA 299.91 m.
   - Published check: Eppley Airfield 984 ft = 299.9 m; NAS JAX 23 ft = 7.0 m.
   - **US3D Up is ellipsoidal.** DEM − cloud = +28 m; after GEOID18 the residual is −1.5 m (JAX) / −0.8 m (OMA). No datum bug; the NAVD88 DEM is what ships.
+- **Prompt 4, heights (2026-09-28):** `scripts/dfc2019_heights.py`; record in `08-.../heights.md`.
+  - Held-out fold-q-on-quadrant-q predictions for 50/50 tiles (margin 192, feather ±16 px).
+  - Seam ratio: median 0.95; JAX_165_015 and OMA_248_030 are at 1.96 (the reference AGL shows the same, so it is real structure).
+  - **Cap 12 m, margin 3 m** (pre-registered rule). The median prediction plateaus at ~18–21 m (slope 0.28).
+  - Parity with `vhr_dsm_pipeline`: 0.0 m.
