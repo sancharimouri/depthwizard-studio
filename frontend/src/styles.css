@@ -6724,3 +6724,14 @@ kbd {
         animation: none;
     }
 }
+
+/* a job whose generation failed (e.g. the inference host was down) */
+.job-status.is-failed {
+    color: rgb(226, 104, 88);
+}
+
+.start-generation-button.is-retry:not(:disabled) {
+    border-color: rgba(226, 104, 88, 0.6);
+    color: rgb(255, 196, 188);
+    cursor: pointer;
+}

@@ -981,10 +981,7 @@ function showCompletedJob(job) {
         job.log.forEach(line => renderCalcLogLine(scrollEl, line.t, line.text));
     }
 
-    if (startGenerationButton) {
-        startGenerationButton.disabled = true;
-        startGenerationButton.textContent = "✓ GENERATION COMPLETE";
-    }
+    syncStartButton(job);
 
     showGrid();
     requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
@@ -1169,8 +1166,8 @@ function jobItem(job, { running, active, choosing }, section = "recent") {
     num.className = "job-num";
     num.textContent = jobLabel(job);
     const status = document.createElement("span");
-    status.className = `job-status${job.status === "generating" ? " is-running" : ""}`;
-    status.textContent = job.status === "generating" ? `Generating ${job.progress}%` : "Complete";
+    status.className = `job-status${job.status === "generating" ? " is-running" : job.status === "failed" ? " is-failed" : ""}`;
+    status.textContent = job.status === "generating" ? `Generating ${job.progress}%` : job.status === "failed" ? "Failed" : "Complete";
     head.append(num, status);
 
     // only the (editable) job name identifies the job: no tile id, no tier line
@@ -1214,9 +1211,12 @@ function jobItem(job, { running, active, choosing }, section = "recent") {
 
 function renderJobs() {
     syncStudioButton();
+    if (!choosingNewInput()) {
+        syncStartButton(jobStore.active());
+    }
     const hasJobs = jobStore.count() > 0;
     const savedCount = savedStore.list().length;
-    sidebar.setJobsRunning(jobStore.count());
+    sidebar.setJobsRunning(jobStore.generating() ? 1 : 0); // only one job generates at a time
     if (savedCountEl) {
         savedCountEl.textContent = savedCount ? String(savedCount) : "";
     }
@@ -3101,10 +3101,7 @@ function showRunningJob(job) {
     resetGridForGeneration();
     const scrollEl = document.getElementById("calc-log-scroll");
     job.log.forEach(line => renderCalcLogLine(scrollEl, line.t, line.text));
-    if (startGenerationButton) {
-        startGenerationButton.disabled = true;
-        startGenerationButton.textContent = "▶ GENERATING…";
-    }
+    syncStartButton(job);
     const run = job.run ?? { stage: 0, percent: 0, text: GEN_STAGES[0].steps[0] };
     if (run.stage >= 2) {
         applyMiniBoxCaptions(job);
@@ -3151,10 +3148,7 @@ async function runStage(job, index, work) {
 // One job's run through the staged boxes. Only one job generates at a time,
 // but the others stay viewable meanwhile (see GEN_STAGES above).
 async function runGenerationSequence(job) {
-    if (startGenerationButton) {
-        startGenerationButton.disabled = true;
-        startGenerationButton.textContent = "▶ GENERATING…";
-    }
+    syncStartButton(job);
 
     // Starts filling immediately and keeps appending in parallel with
     // whichever box below is currently generating.
@@ -3199,16 +3193,60 @@ async function runGenerationSequence(job) {
     if (onScreen) {
         paintStageDone(GEN_STAGES[4], job);
     }
-    jobStore.update(job.id, { status: "complete", progress: 100 });
+    // A failed generation (e.g. the inference host was down) is marked as such, not
+    // "Complete", and can be retried from its processing page.
+    const failed = job.gen?.status !== "ok";
+    jobStore.update(job.id, { status: failed ? "failed" : "complete", progress: failed ? 0 : 100 });
 
     if (onScreen) {
-        if (startGenerationButton) {
-            startGenerationButton.textContent = "✓ GENERATION COMPLETE";
+        syncStartButton(job);
+        if (!failed) {
+            // Whole pipeline done: pop the final 3D view out to fill the window.
+            expandFinalDemo();
         }
-        // Whole pipeline done: pop the final 3D view out to fill the window.
-        expandFinalDemo();
     }
 }
+
+// The processing page's status button follows the job on screen: generating,
+// complete, or (failed) a Retry that re-runs this job's generation.
+function syncStartButton(job) {
+    if (!startGenerationButton || !job) {
+        return;
+    }
+    const other = jobStore.generating();
+    if (job.status === "generating") {
+        startGenerationButton.disabled = true;
+        startGenerationButton.textContent = "▶ GENERATING…";
+        startGenerationButton.title = "";
+    } else if (job.status === "failed") {
+        startGenerationButton.disabled = Boolean(other);
+        startGenerationButton.textContent = "↻ RETRY GENERATION";
+        startGenerationButton.title = other ? "Available when the current generation finishes" : "Run this job's generation again";
+    } else {
+        startGenerationButton.disabled = true;
+        startGenerationButton.textContent = "✓ GENERATION COMPLETE";
+        startGenerationButton.title = "";
+    }
+    startGenerationButton.classList.toggle("is-retry", job.status === "failed");
+}
+
+function retryJob(job) {
+    if (!job || job.status !== "failed" || jobStore.generating()) {
+        return;
+    }
+    job.gen = null;
+    job.run = null;
+    job.log = [];
+    jobStore.update(job.id, { status: "generating", progress: 0 });
+    jobStore.setActive(job.id);
+    resetViewerForNewJob();
+    applyJobInput(job);
+    resetGridForGeneration();
+    showGrid();
+    runGenerationSequence(job);
+}
+
+startGenerationButton?.addEventListener("click", () => retryJob(jobStore.active()));
 
 // ============================================================
 // FINAL DEMO — EXPANDED VIEW (Back / Close) + CLOSE CONFIRMATION
