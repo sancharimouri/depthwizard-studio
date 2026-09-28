@@ -670,3 +670,15 @@ to match.
   - downloadable tiles are listed first.
   The last two ship in the next release (v1.0.1).
 - **Open:** Windows/Linux CI. Pushing the workflow needs the `workflow` scope on the gh token (`gh auth refresh -h github.com -s workflow`).
+
+**Session footer: 2026-09-28, "DFC2019 terrain packs — Prompt 1 preflight"** (record: `docs/method-audit/08-dfc2019-terrain-packs/plan.md`)
+- **Why:** DFC2019 tiles render as a flat plane because they have no georeference, so no DEM pack exists and `generate()` writes a zero mesh.
+  The 5-prompt series builds a private curated pack per tile: ground + Method 6 held-out heights + AGL correction of tall objects.
+- **Preflight facts:**
+  - 50 tiles (26 JAX / 24 OMA); every AGL ≥ 99.9999 % valid (JAX_004_016 has 1 NaN).
+  - All 50 RGB tiles are already public: 42 on library-v1, 8 inside the desktop installer. Packs stay private anyway.
+  - Fold q holds out quadrant q; all checkpoints match the private HF repo by SHA-256.
+- **Point clouds:** `~/Downloads/{JAX,OMA}_PointClouds.zip` are present and intact. They carry **per-point classes** (class 2 = ground), and Up looks ellipsoidal.
+- **3DEP 1 m:** reads programmatically in both cities (JAX FL_Peninsular_2018, NAVD88; OMA NE Eastern UA 2016).
+- **Web gap:** remote mode has no pack lookup; Prompt 5 adds `private_file(item, "dem")`.
+- **Scratch:** `data/dfc2019/terrain_packs/` (self-gitignored).
