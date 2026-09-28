@@ -683,6 +683,9 @@ export function createTerrain(
         if (isWire && !wireframe) {
             wireframe = buildWireframe();
         }
+        if (isWire) {
+            wireframe.material.color.copy(neonColor()); // the theme may have changed since it was built
+        }
         if (wireframe) {
             wireframe.visible = isWire;
         }
@@ -853,9 +856,17 @@ export function createTerrain(
         return displayExaggeration;
     }
 
+    // The wireframe's colour is the theme colour (--neon-rgb: green in dark mode, orange in
+    // bright mode): called when the theme switches.
+    function refreshThemeColors() {
+        wireframe?.material.color.copy(neonColor());
+    }
+
     return {
 
         mesh: terrain,
+
+        refreshThemeColors,
 
         setDisplayExaggeration,
 
