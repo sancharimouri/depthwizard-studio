@@ -18,6 +18,7 @@ import { apiUrl } from "./api-base.js";
 import { PAGE_ROUTES, resolveHash, hashMatchesPage } from "./routes.js";
 import { flatTerrainWarning, footprintKmFromBbox } from "./flat-warning.js";
 import { createDurationMemory, trackWork } from "./progress-sync.js";
+import { startBackgroundIcons } from "./bg-icons.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -1736,6 +1737,7 @@ if (import.meta.env.DEV) {
 
 if (inputViewEl) {
     inputView = createInputView(inputViewEl, { onStart: startFromInput });
+    startBackgroundIcons(document.querySelector("#page-workbench .input-bg-icons"), workbenchPageEl);
 }
 
 renderJobs(); // shows the panel on load if there is saved work to reopen

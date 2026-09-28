@@ -6630,12 +6630,11 @@ kbd {
 
 
 /* ============================================================
-   INPUT PAGE BACKGROUND ICONS (Prompt 9; icons/2.svg)
-   Only while the input view shows. The layer is clipped to the margins
-   around the boxes (the input view sits at inset 12.5%), so no icon ever
-   shows through the translucent boxes. Sizes follow the page (cqw/cqh), so
-   they fit the margins at any window or sidebar width. Each icon drifts
-   slowly on its own loop; the stars twinkle. Off under reduced motion.
+   INPUT PAGE BACKGROUND ICONS (icons/2.svg; motion in src/bg-icons.js)
+   Only while the input view shows. The icons sit BEHIND the two boxes (the
+   boxes are opaque, so an icon drifting under one is hidden there) and may run
+   past the page edge. Sizes follow the page (cqw/cqh). The position/rotation
+   transform is written by JS every frame.
    ============================================================ */
 .input-bg-icons {
     position: absolute;
@@ -6646,9 +6645,6 @@ kbd {
     container-type: size;
     pointer-events: none;
     color: rgb(var(--neon-rgb));
-    clip-path: polygon(evenodd,
-        0 0, 100% 0, 100% 100%, 0 100%, 0 0,
-        12.5% 12.5%, 12.5% 87.5%, 87.5% 87.5%, 87.5% 12.5%, 12.5% 12.5%);
 }
 
 #page-workbench:has(#input-view:not([hidden])) .input-bg-icons {
@@ -6657,6 +6653,11 @@ kbd {
 
 #page-workbench .input-view {
     z-index: 1;
+}
+
+/* opaque (same colour as before over the page background), so icons hide behind them */
+#page-workbench .iv-pane {
+    background: rgb(var(--bg-alt-rgb));
 }
 
 .bgi-defs {
@@ -6668,7 +6669,8 @@ kbd {
     display: block;
     width: var(--s);
     height: var(--s);
-    transform: translate(-50%, -50%) rotate(var(--r, 0deg));
+    transform: translate(-50%, -50%);
+    will-change: transform;
 }
 
 .bgi svg {
@@ -6677,16 +6679,11 @@ kbd {
     height: 100%;
     fill: currentColor;
     overflow: visible;
-    animation: bgi-roam var(--dur, 24s) ease-in-out var(--dl, 0s) infinite alternate;
 }
 
-/* the star's shine marks are cut-outs: page background colour */
-.bgi .bgi-cut {
-    fill: rgb(var(--bg-rgb));
-}
-
+/* satellite and earth + satellite: 1.7x their earlier size */
 .bgi-big {
-    --s: min(132px, 10cqw, 17cqh);
+    --s: min(224px, 17cqw, 29cqh);
     opacity: 0.2;
 }
 
@@ -6698,31 +6695,6 @@ kbd {
 .bgi-small-normal {
     --s: min(52px, 5cqw, 9cqh);
     opacity: 0.16;
-}
-
-.bgi-star {
-    opacity: 0.4;
-}
-
-.bgi-star svg {
-    animation: bgi-twinkle var(--dur, 4s) ease-in-out var(--dl, 0s) infinite alternate;
-}
-
-@keyframes bgi-roam {
-    from { transform: translate(0, 0) rotate(0deg); }
-    to { transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--dr, 0deg)); }
-}
-
-@keyframes bgi-twinkle {
-    from { opacity: 1; transform: scale(1); }
-    to { opacity: 0.35; transform: scale(0.8); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .bgi svg,
-    .bgi-star svg {
-        animation: none;
-    }
 }
 
 /* a job whose generation failed (e.g. the inference host was down) */
