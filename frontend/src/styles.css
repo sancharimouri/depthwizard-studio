@@ -6630,6 +6630,9 @@ kbd {
    transform is written by JS every frame.
    ============================================================ */
 .input-bg-icons {
+    /* a more vibrant version of the site green (--neon-rgb 94,152,114): ~40% more
+       saturation, same hue, for the background icons and star dots only (2026-09-29) */
+    --bg-green-rgb: 84, 171, 115;
     position: absolute;
     inset: 0;
     z-index: 0;
@@ -6637,7 +6640,13 @@ kbd {
     overflow: hidden;
     container-type: size;
     pointer-events: none;
-    color: rgb(var(--neon-rgb));
+    color: rgb(var(--bg-green-rgb));
+}
+
+.bgi-stars {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 #page-workbench:has(#input-view:not([hidden])) .input-bg-icons {
@@ -6677,17 +6686,17 @@ kbd {
 /* satellite and earth + satellite: 1.7x their earlier size */
 .bgi-big {
     --s: min(224px, 17cqw, 29cqh);
-    opacity: 0.2;
+    opacity: 0.25;
 }
 
 .bgi-normal {
     --s: min(70px, 7cqw, 12cqh);
-    opacity: 0.18;
+    opacity: 0.23;
 }
 
 .bgi-small-normal {
     --s: min(52px, 5cqw, 9cqh);
-    opacity: 0.16;
+    opacity: 0.21;
 }
 
 /* a job whose generation failed (e.g. the inference host was down) */

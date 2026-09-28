@@ -114,3 +114,56 @@ test("a home that is mostly hidden gets a visible anchor nearby", () => {
     assert.ok(hiddenFraction(a.x, a.y, 70, PAGE, BOXES) <= MAX_HIDDEN);
     assert.ok(Math.hypot(a.x - 320, a.y - 300) < 300);
 });
+
+import { layoutHomes, marginStrips, starField } from "../src/bg-float.js";
+
+const PG = { left: 0, top: 0, right: 1214, bottom: 713 };
+const BX = [{ left: 152, top: 89, right: 594, bottom: 624 }, { left: 620, top: 89, right: 1062, bottom: 624 }];
+const SIZES = [224, 224, 70, 70, 70, 70, 70, 70, 52, 52, 52, 52, 52, 52, 52, 52, 52];
+
+test("home layout: every icon visible enough, and at least 1 cm (38 px) apart edge to edge", () => {
+    const homes = layoutHomes(SIZES, PG, BX, { gap: 38 });
+    homes.forEach((h, i) => assert.ok(hiddenFraction(h.x, h.y, SIZES[i], PG, BX) <= 0.3, `icon ${i}`));
+    let minGap = Infinity;
+    for (let i = 0; i < homes.length; i++) {
+        for (let j = i + 1; j < homes.length; j++) {
+            minGap = Math.min(minGap, Math.hypot(homes[i].x - homes[j].x, homes[i].y - homes[j].y) - (SIZES[i] + SIZES[j]) / 2);
+        }
+    }
+    assert.ok(minGap >= 0, `closest pair overlaps (${minGap})`);
+});
+
+test("home layout: icons spread over all four sides roughly by each side's area", () => {
+    const homes = layoutHomes(SIZES, PG, BX);
+    const strips = marginStrips(PG, BX);
+    const side = h => (h.x < strips.left.right ? "left" : h.x > strips.right.left ? "right" : h.y < strips.top.bottom ? "top" : "bottom");
+    const counts = { top: 0, bottom: 0, left: 0, right: 0 };
+    homes.forEach(h => { counts[side(h)] += 1; });
+    const area = r => (r.right - r.left) * (r.bottom - r.top);
+    const total = Object.values(strips).reduce((a, r) => a + area(r), 0);
+    Object.entries(counts).forEach(([k, n]) => {
+        const expected = (area(strips[k]) / total) * SIZES.length;
+        assert.ok(Math.abs(n - expected) <= 1, `${k}: ${n} vs ${expected.toFixed(1)} (${JSON.stringify(counts)})`);
+    });
+});
+
+test("star field: tiny, evenly spread, none on the boxes", () => {
+    const stars = starField(PG, BX);
+    assert.ok(stars.length > 60 && stars.length < 250, `${stars.length} stars`);
+    stars.forEach(s => {
+        assert.ok(s.r <= 1.25);
+        assert.ok(!BX.some(b => s.x > b.left && s.x < b.right && s.y > b.top && s.y < b.bottom));
+    });
+    // no big empty holes: every 150x150 px cell of the margins has a star
+    const strips = Object.values(marginStrips(PG, BX));
+    let empty = 0; let cells = 0;
+    strips.forEach(r => {
+        for (let y = r.top; y + 150 <= r.bottom; y += 150) {
+            for (let x = r.left; x + 150 <= r.right; x += 150) {
+                cells += 1;
+                if (!stars.some(s => s.x >= x && s.x < x + 150 && s.y >= y && s.y < y + 150)) empty += 1;
+            }
+        }
+    });
+    assert.ok(empty <= cells * 0.1, `${empty}/${cells} empty cells`);
+});

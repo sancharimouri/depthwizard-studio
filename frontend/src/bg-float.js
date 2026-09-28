@@ -10,6 +10,11 @@
 
 export const CM_PX = 37.8; // CSS px per cm
 
+// Wander speed relative to the original (1.0). 2026-09-29: halved (0.5), then the user asked for
+// 1.4x the resulting on-screen drift. Measured with the 1 cm spacing and the 60%-visibility limit in
+// force (which hold icons back), that needs about 0.85: mean drift 7.9 -> ~11 px/s.
+export const WANDER_SPEED = 0.85;
+
 const HOVER_RANGE_PX = 200;
 // Motion was halved on 2026-09-29 (wander speed, hover push, click kick and the spring's pull
 // back): the icons drift and scatter at half the old speed, with more inertia.
@@ -30,8 +35,9 @@ export function createFloater(index, radiusPx) {
     const r = k => rand(index * 17 + k);
     return {
         radius: radiusPx,
-        // angular speeds (rad/s): one loop every ~70–160 s (half the old speed)
-        w: [0.04 + r(1) * 0.05, 0.025 + r(2) * 0.035, 0.035 + r(3) * 0.045, 0.02 + r(4) * 0.03, 0.025 + r(5) * 0.025],
+        // angular speeds (rad/s), scaled by WANDER_SPEED
+        w: [0.08 + r(1) * 0.1, 0.05 + r(2) * 0.07, 0.07 + r(3) * 0.09, 0.04 + r(4) * 0.06, 0.05 + r(5) * 0.05]
+            .map(v => v * WANDER_SPEED),
         p: [r(6), r(7), r(8), r(9), r(10)].map(v => v * Math.PI * 2),
         push: { x: 0, y: 0, vx: 0, vy: 0 },
     };
@@ -174,6 +180,10 @@ export function hiddenFraction(x, y, size, page, obstacles) {
     const x1 = x + size / 2;
     const y1 = y + size / 2;
     const total = size * size;
+    if (!(total > 0)) { // a point: hidden if off the page or on a box
+        const on = (r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+        return !on(page) || obstacles.some(on) ? 1 : 0;
+    }
     const onPage = overlapArea(x0, y0, x1, y1, page);
     let behind = 0;
     for (const o of obstacles) {
@@ -183,7 +193,7 @@ export function hiddenFraction(x, y, size, page, obstacles) {
         };
         behind += overlapArea(x0, y0, x1, y1, clipped);
     }
-    return total > 0 ? Math.min(1, (total - onPage + behind) / total) : 0;
+    return Math.min(1, (total - onPage + behind) / total);
 }
 
 // A visible spot near (x, y): (x, y) itself when it's allowed; otherwise the nearest point
@@ -225,4 +235,126 @@ export function constrainVisible(x, y, anchor, size, page, obstacles, limit = MA
         }
     }
     return { x: anchor.x + (x - anchor.x) * lo, y: anchor.y + (y - anchor.y) * lo, moved: true };
+}
+
+// ---- Even layout: home spots spread evenly over the free space around the boxes ----
+
+// Small deterministic PRNG (mulberry32), so the layout is the same on every load.
+export function prng(seed) {
+    let a = seed >>> 0;
+    return () => {
+        a = (a + 0x6d2b79f5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+// The four margin strips around the boxes. The narrow left/right strips run the full page
+// height (they own the corners); top/bottom span between them.
+export function marginStrips(page, boxes) {
+    const top = Math.min(...boxes.map(b => b.top));
+    const bottom = Math.max(...boxes.map(b => b.bottom));
+    const left = Math.min(...boxes.map(b => b.left));
+    const right = Math.max(...boxes.map(b => b.right));
+    return {
+        top: { left, top: page.top, right, bottom: top },
+        bottom: { left, top: bottom, right, bottom: page.bottom },
+        left: { left: page.left, top: page.top, right: left, bottom: page.bottom },
+        right: { left: right, top: page.top, right: page.right, bottom: page.bottom },
+    };
+}
+
+// Home centres for icons of the given sizes (px), spread evenly around all four sides:
+//   - each side gets a share of the icons in proportion to its area (largest remainder), so
+//     the density is the same on every side;
+//   - within its side, each icon takes the best of many random candidates: the spot farthest
+//     (edge to edge) from every icon placed so far, which spreads them without clumps;
+//   - every home is at most `maxHidden` hidden and keeps `gap` px from the others where the
+//     space allows.
+// Largest icons are placed first. Returns [{x, y}] in the order of `sizes`.
+export function layoutHomes(sizes, page, boxes, { gap = 38, maxHidden = 0.3, seed = 7, candidates = 300 } = {}) {
+    const rand = prng(seed);
+    const strips = marginStrips(page, boxes);
+    const sides = Object.keys(strips);
+    const area = r => Math.max(0, r.right - r.left) * Math.max(0, r.bottom - r.top);
+    const totalArea = sides.reduce((a, k) => a + area(strips[k]), 0) || 1;
+    // quotas by area, largest remainder
+    const exact = Object.fromEntries(sides.map(k => [k, (area(strips[k]) / totalArea) * sizes.length]));
+    const quota = Object.fromEntries(sides.map(k => [k, Math.floor(exact[k])]));
+    let left = sizes.length - sides.reduce((a, k) => a + quota[k], 0);
+    sides.slice().sort((a, b) => (exact[b] - quota[b]) - (exact[a] - quota[a])).forEach(k => {
+        if (left > 0) {
+            quota[k] += 1;
+            left -= 1;
+        }
+    });
+    const used = Object.fromEntries(sides.map(k => [k, 0]));
+
+    const order = sizes.map((size, i) => ({ size, i })).sort((a, b) => b.size - a.size);
+    const placed = [];
+    const out = new Array(sizes.length);
+    for (const { size, i } of order) {
+        // the side furthest below its quota (ties: the larger side)
+        const side = sides
+            .filter(k => used[k] < quota[k])
+            .sort((a, b) => (used[a] / quota[a]) - (used[b] / quota[b]) || area(strips[b]) - area(strips[a]))[0]
+            ?? sides[0];
+        const r = strips[side];
+        let best = null;
+        let bestScore = -Infinity;
+        for (let k = 0; k < candidates; k++) {
+            const c = { x: r.left + rand() * (r.right - r.left), y: r.top + rand() * (r.bottom - r.top) };
+            if (hiddenFraction(c.x, c.y, size, page, boxes) > maxHidden) {
+                continue;
+            }
+            let score = Infinity;
+            for (const p of placed) {
+                score = Math.min(score, Math.hypot(c.x - p.x, c.y - p.y) - (size + p.size) / 2);
+            }
+            if (score > bestScore) {
+                bestScore = score;
+                best = c;
+            }
+        }
+        best = best ?? { x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2 };
+        used[side] += 1;
+        placed.push({ ...best, size });
+        out[i] = { x: best.x, y: best.y };
+    }
+    return out;
+}
+
+// ---- Star field: very small dots spread evenly (jittered grid) over the page, never on
+// the boxes. Deterministic. Each star: {x, y, r (px), a (alpha), tw (twinkle phase or null)}.
+export function starField(page, boxes, { cell = 52, seed = 11 } = {}) {
+    const rand = prng(seed);
+    const stars = [];
+    for (let y = page.top; y < page.bottom; y += cell) {
+        for (let x = page.left; x < page.right; x += cell) {
+            if (rand() < 0.22) { // leave some cells empty, so it doesn't read as a grid
+                rand(); rand(); rand(); rand(); rand();
+                continue;
+            }
+            const sx = x + rand() * cell;
+            const sy = y + rand() * cell;
+            const size = rand();
+            const alpha = rand();
+            const twinkle = rand();
+            const pad = 4;
+            if (sx > page.right || sy > page.bottom
+                || boxes.some(b => sx > b.left - pad && sx < b.right + pad && sy > b.top - pad && sy < b.bottom + pad)) {
+                continue;
+            }
+            stars.push({
+                x: sx,
+                y: sy,
+                r: 0.45 + size * size * 0.75,          // mostly ~0.5 px, a few up to ~1.2 px
+                a: 0.4 + alpha * 0.45,
+                tw: twinkle < 0.25 ? twinkle * 40 : null, // a quarter of them twinkle
+            });
+        }
+    }
+    return stars;
 }
