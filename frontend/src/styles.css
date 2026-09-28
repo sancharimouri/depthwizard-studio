@@ -6345,3 +6345,69 @@ kbd {
 .flat-warning-panel {
     flex-shrink: 0;
 }
+
+
+/* ============================================================
+   LOADING / COLD-START MESSAGES (input view)
+   Thumbnails show a quiet label until they arrive ("Waking the server…" when
+   the backend is cold). The preview shows what it's fetching, plus a
+   keep-this-window-open note, over the stage until the image loads.
+   ============================================================ */
+.iv-card-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+
+    color: rgba(var(--text-rgb), 0.45);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-align: center;
+    pointer-events: none;
+}
+
+.iv-card-media.is-loading .iv-card-thumb {
+    animation: iv-thumb-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes iv-thumb-shimmer {
+    50% { background: rgba(var(--text-rgb), 0.11); }
+}
+
+.iv-preview-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+
+    background: rgba(var(--bg-rgb), 0.72);
+    text-align: center;
+}
+
+.iv-preview-loading[hidden] {
+    display: none;
+}
+
+.iv-preview-loading-text {
+    color: rgba(var(--text-rgb), 0.8);
+    font-size: 12px;
+}
+
+.iv-preview-loading-note {
+    max-width: 30ch;
+    color: rgba(var(--text-rgb), 0.5);
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .iv-card-media.is-loading .iv-card-thumb {
+        animation: none;
+    }
+}
