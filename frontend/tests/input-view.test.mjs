@@ -59,3 +59,26 @@ test("library terrain: manifest field, Sentinel-2 category, collection fallback"
     assert.equal(itemTerrain({ collection: "dfc2019" }), "urban");
     assert.equal(itemTerrain({ collection: "vhr" }), "hilly");
 });
+
+import { filterLibrary, noMatchMessage } from "../src/input-view.js";
+
+const LIB = [
+    { collection: "sentinel2", terrain: "hilly" }, { collection: "sentinel2", terrain: "coastal" },
+    { collection: "sentinel2", terrain: "agricultural" }, { collection: "sentinel2", terrain: "urban" },
+    { collection: "vhr", terrain: "hilly" }, { collection: "dfc2019", terrain: "urban" },
+];
+
+test("library filter: collection and terrain combine", () => {
+    assert.equal(filterLibrary(LIB, "all", "all").length, 6);
+    assert.equal(filterLibrary(LIB, "sentinel2", "all").length, 4);
+    assert.equal(filterLibrary(LIB, "all", "hilly").length, 2);
+    assert.equal(filterLibrary(LIB, "dfc2019", "hilly").length, 0);
+});
+
+test("no-match message names the imagery that has that terrain", () => {
+    assert.equal(noMatchMessage(LIB, "sentinel2", "hilly"), null);
+    assert.equal(noMatchMessage(LIB, "dfc2019", "hilly"),
+        "No hilly tiles in DFC2019 imagery. Try the Hilly filter with Maxar VHR or Sentinel-2 imagery.");
+    assert.equal(noMatchMessage(LIB, "vhr", "coastal"),
+        "No coastal tiles in Maxar VHR imagery. Try the Coastal filter with Sentinel-2 imagery.");
+});

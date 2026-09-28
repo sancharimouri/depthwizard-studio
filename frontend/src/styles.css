@@ -6392,14 +6392,7 @@ kbd {
     left: 10px;
 }
 
-/* library terrain filter (second chip row) + terrain tag on each card */
-.iv-chips-terrain .iv-chip {
-    border-style: dashed;
-}
-
-.iv-chips-terrain .iv-chip[aria-pressed="true"] {
-    border-style: solid;
-}
+/* terrain tag on each card */
 
 .iv-card-tags {
     flex-wrap: wrap;
@@ -6706,4 +6699,213 @@ kbd {
     border-color: rgba(226, 104, 88, 0.6);
     color: rgb(255, 196, 188);
     cursor: pointer;
+}
+
+
+/* ============================================================
+   LIBRARY TERRAIN FILTER (src/input-view.js): a dropdown on the right of a
+   slim bar under the collection chips, with the scene count on the left; and
+   the "no tiles for this choice" notice, a translucent strip that floats over
+   the top of the tiles (sticky while the list scrolls).
+   ============================================================ */
+.iv-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: -4px;
+}
+
+.iv-filter-count {
+    color: rgba(var(--text-rgb), 0.5);
+    font-size: 11px;
+}
+
+.iv-filter {
+    position: relative;
+}
+
+.iv-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px 6px 10px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.16);
+    border-radius: 999px;
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.75);
+
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.iv-filter-btn:hover,
+.iv-filter-btn[aria-expanded="true"] {
+    border-color: rgba(var(--accent-rgb), 0.45);
+    color: rgb(var(--text-rgb));
+}
+
+.iv-filter-btn.is-active {
+    border-color: rgba(var(--accent-rgb), 0.6);
+    background: rgba(var(--accent-rgb), 0.12);
+    color: rgb(var(--text-rgb));
+}
+
+.iv-filter-icon {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linejoin: round;
+}
+
+.iv-filter-chevron {
+    width: 6px;
+    height: 6px;
+    margin-left: 1px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.15s ease;
+}
+
+.iv-filter-btn[aria-expanded="true"] .iv-filter-chevron {
+    transform: translateY(1px) rotate(-135deg);
+}
+
+.iv-filter-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    min-width: 176px;
+    padding: 5px;
+
+    border: 1px solid rgba(var(--text-rgb), 0.14);
+    border-radius: 10px;
+    background: rgb(var(--bg-strong-rgb));
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.iv-filter-menu[hidden] {
+    display: none;
+}
+
+.iv-filter-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 7px 10px;
+
+    border: 0;
+    border-radius: 7px;
+    background: none;
+    color: rgba(var(--text-rgb), 0.8);
+
+    font-family: inherit;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.iv-filter-option:hover,
+.iv-filter-option:focus-visible {
+    background: rgba(var(--accent-rgb), 0.12);
+    color: rgb(var(--text-rgb));
+    outline: none;
+}
+
+.iv-filter-option[aria-selected="true"] {
+    color: rgb(var(--accent-rgb));
+    font-weight: 600;
+}
+
+.iv-filter-option-count {
+    color: rgba(var(--text-rgb), 0.45);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* a terrain with no tiles in this collection: still clickable (it explains why) */
+.iv-filter-option.is-empty .iv-filter-option-label {
+    color: rgba(var(--text-rgb), 0.4);
+}
+
+.iv-cards-wrap {
+    position: relative;
+}
+
+/* zero-height sticky anchor: the notice floats over the tiles instead of pushing them down */
+.iv-filter-notice-anchor {
+    position: sticky;
+    top: 6px;
+    z-index: 5;
+    height: 0;
+}
+
+.iv-filter-notice {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    left: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 36px 11px 14px;
+
+    border: 1px solid rgba(var(--accent-rgb), 0.4);
+    border-radius: 10px;
+    background: rgba(var(--bg-strong-rgb), 0.78);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3);
+    color: rgb(var(--text-rgb));
+
+    font-size: 12px;
+    line-height: 1.5;
+    animation: iv-notice-in 0.18s ease-out;
+}
+
+.iv-filter-notice[hidden] {
+    display: none;
+}
+
+.iv-filter-notice-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: rgba(var(--text-rgb), 0.65);
+
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.iv-filter-notice-close:hover {
+    background: rgba(var(--text-rgb), 0.08);
+    color: rgb(var(--text-rgb));
+}
+
+@keyframes iv-notice-in {
+    from { opacity: 0; transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .iv-filter-notice {
+        animation: none;
+    }
 }
