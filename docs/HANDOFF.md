@@ -682,3 +682,9 @@ to match.
 - **3DEP 1 m:** reads programmatically in both cities (JAX FL_Peninsular_2018, NAVD88; OMA NE Eastern UA 2016).
 - **Web gap:** remote mode has no pack lookup; Prompt 5 adds `private_file(item, "dem")`.
 - **Scratch:** `data/dfc2019/terrain_packs/` (self-gitignored).
+- **Prompt 2, locate (2026-09-28):** `scripts/dfc2019_locate_tiles.py`; record in `08-dfc2019-terrain-packs/locate.md`.
+  - Validity: V1 self-test 16/16, V2 negative control 0/50.
+  - **15/50 confident** (JAX 8, OMA 7) under the pre-registered rule.
+  - Post-hoc (not used): 49/50 matches fall in the cloud tile their name indexes, and same-index tiles agree within 2–30 m. Most C3 rejections come from a low bias in the cloud-AGL layer.
+  - Follow-up: a pre-registered v2 rule (index check + C1/C2) could upgrade about 34 more tiles.
+  - Private locations: `data/dfc2019/terrain_packs/locate/locations.json`. The OMA clouds are in UTM 14N.

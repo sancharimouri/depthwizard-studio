@@ -51,3 +51,46 @@ Anything else is reported as unmatched, with the failing criterion. No best gues
 
 ## Results
 *(filled in after the runs; the sections above are not edited)*
+
+Run 2026-09-28. Wall time: parse 36 s (806 cloud tiles), mosaics 64 s, then 40–180 s per tile match
+(slower while Prompt 4 inference shared the machine).
+
+### Validity
+- **V1 self-test: PASS, 16/16.** Position error ≤ 0.4 m, GSD within 0.7 %, orientation exact, height
+  scale recovered within ~3 %. Synthetic peaks 0.79–0.94 NCC; runner-ups 0.27–0.65.
+- **V2 negative control: PASS, 0/50 confident.** The best wrong-city scores are high (fine NCC up to 0.706,
+  coarse up to 0.735), so **C1 alone would not have separated them**; the joint rule did (C2 and/or C3
+  failed on every one).
+
+### Confident matches (pre-registered rule): **15 / 50: JAX 8 / 26, OMA 7 / 24**
+Confident: JAX_004_006, JAX_031_006, JAX_118_012, JAX_165_015, JAX_175_002, JAX_214_023, JAX_416_022,
+JAX_505_018; OMA_084_038, OMA_134_027, OMA_230_036, OMA_269_035, OMA_315_020, OMA_332_037, OMA_364_003.
+Their locations are in the private `locate/locations.json` only.
+
+Why each of the other 35 is unmatched (failing criteria):
+| Failing criteria | Tiles |
+|---|---|
+| C3 only (height scale 0.58–0.80) | JAX_004_014, 004_016, 018_012, 022_009, 072_015, 118_015, 149_006, 161_001, 166_006, 204_005, 214_015, 269_009, 416_009, 505_016; OMA_211_032, 225_001, 315_019 |
+| C2 only (runner-up too close) | OMA_248_029, 248_030, 376_023, 376_038 |
+| C2 + C3 | JAX_149_025, 164_008, 224_025, 264_013; OMA_212_033, 221_034, 281_002, 281_030, 364_043 |
+| C1 only | OMA_198_002 (fine NCC 0.397) |
+| C1 + C3 | OMA_042_011 |
+| C1 + C2 + C3 | OMA_211_039, OMA_258_020, OMA_144_030 (AGL max 1.1 m: nothing to match on) |
+
+### Post-hoc observations (after seeing results; NOT used for any pack)
+- **The index check is nearly perfect.** 49/50 matched centres (all but the flat OMA_144_030) fall in
+  the cloud tile named by the tile's own index. Each city has ~400 cloud tiles, so chance agreement is
+  ~1/400 per tile. The 14 groups of tiles sharing an index land 2–30 m apart. Most unmatched tiles
+  are therefore very probably located correctly; **the 0/50 of the earlier study was the scale error.**
+- **C3 fails for a systematic reason, not because the locations are wrong.** The fitted height scale is biased low
+  (median 0.77 over all 50; 0.80–0.91 on the confident ones). This points to this matcher's cloud-AGL
+  layer: the reduced cloud (~1.8 pts/m²), per-cell max, and a smoothed 4.8 m ground surface that
+  rides up under dense blocks. The DFC2019 AGL is built from the full-density lidar. The pre-registered
+  [0.80, 1.25] did not anticipate that bias.
+- **Measured GSD:** 0.308–0.367 m (median ≈ 0.336) on the index-consistent matches. That is consistent
+  with the 0.30–0.34 hand measurement.
+- **Orientation:** 0 (north-up, as delivered) on 46/49 index-consistent tiles; 1 on JAX_161_001 and
+  JAX_175_002, 4 on OMA_212_033.
+- **Suggested follow-up (needs its own pre-registration; not done here):** a revised rule that gates on
+  the index check plus C1/C2 and drops or re-centres C3. Validate it on the same negative control, then
+  upgrade tiles from city-level to DEM-located with `dfc2019_base_ground.py located`.
