@@ -82,3 +82,9 @@ test("no-match message names the imagery that has that terrain", () => {
     assert.equal(noMatchMessage(LIB, "vhr", "coastal"),
         "No coastal tiles in Maxar VHR imagery. Try the Coastal filter with Sentinel-2 imagery.");
 });
+
+test("readiness: an upload with no geotransform waits for its GSD", () => {
+    const upload = { source: "upload", routing: { tier: null }, gsdRequired: true };
+    assert.equal(isReady(upload), false);
+    assert.equal(isReady({ ...upload, gsdRequired: false }), true);
+});

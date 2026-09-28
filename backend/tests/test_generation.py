@@ -121,3 +121,17 @@ def test_private_pack_is_remote_only_and_never_for_public_items(monkeypatch):
 def test_generated_assets_are_path_safe(env):
     assert client.get("/api/generated/abc/../../etc/passwd").status_code == 404
     assert client.get("/api/generated/abc123/secrets.txt").status_code == 404
+
+
+def test_manual_gsd_gives_the_flat_plane_its_real_size(env, tmp_path):
+    # an upload with no geotransform whose GSD the user typed in: still no elevation, but the
+    # plane is 400 x 300 px x 0.5 m = 200 x 150 m, so measurements come out in real metres
+    meta = {"id": "a" * 32, "kind": "upload", "georeferenced": False, "size_px": [400, 300],
+            "gsd_m": 0.5, "gsd_manual": True}
+    m = pipeline.generate("input", meta["id"], jpeg(400, 300), depth_resp(), input_meta=meta, input_dir=tmp_path)
+    assert m["has_elevation"] is False and m["resolution_m"] == 0.5 and "0.5 m/pixel" in m["note"]
+    t = json.loads((pipeline.generated_dir() / m["job"] / "terrain.json").read_text())
+    b = t["bounds"]
+    width_m = (b["east"] - b["west"]) * 111320
+    height_m = (b["north"] - b["south"]) * 110574
+    assert abs(width_m - 200) < 1 and abs(height_m - 150) < 1, (width_m, height_m)

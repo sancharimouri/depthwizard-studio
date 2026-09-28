@@ -42,6 +42,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # install (the desktop app, desktop/freeze_trial/dw2_entry.py); default for dev.
 UPLOADS = Path(os.environ["DW2_UPLOADS_DIR"]) if os.environ.get("DW2_UPLOADS_DIR") else ROOT / "data" / "uploads"
 TIER2_MAX_GSD_M = 2.4
+MANUAL_GSD_RANGE_M = (0.01, 1000.0)  # a GSD typed in by the user (images with no geotransform)
 MIN_DEM_OVERLAP = 0.9
 ALLOWED_EXT = {".tif", ".tiff", ".png", ".jpg", ".jpeg"}
 _ID_RE = re.compile(r"^[0-9a-f]{32}$")
@@ -113,6 +114,16 @@ def _footprint_wgs84(crs, bounds) -> list[float]:
 
 
 def routing_for(meta: dict) -> dict:
+    if not meta.get("georeferenced") and meta.get("gsd_manual"):
+        return {
+            "tier": None,
+            "label": "Relative preview only",
+            "placeholder": True,
+            "dem_required": False,
+            "summary": f"No georeference. {meta['gsd_m']:.2f} m/pixel (entered manually) sets the image's scale, but "
+                       "there is no location to fetch a DEM for, so only relative depth can run, on a flat plane at "
+                       "that scale. Upload a GeoTIFF for DEM-based or height-predicted output.",
+        }
     if not meta.get("georeferenced"):
         return {
             "tier": None,
@@ -215,10 +226,30 @@ def _inspect(d: Path, path: Path, filename: str) -> dict:
                 footprint_wgs84=_footprint_wgs84(src.crs, src.bounds),
             )
         else:
-            meta.update(gsd_m=None, gsd_source="unknown — no geotransform in this file")
+            # the UI asks the user to type the GSD in (set_manual_gsd)
+            meta.update(gsd_m=None, gsd_source="unknown — no geotransform in this file", gsd_required=True)
     Image.fromarray(_stretch(arr)).save(d / "preview.jpg", quality=88)
     meta["routing"] = routing_for(meta)
     meta["dem"] = None
+    return _save_meta(d, meta)
+
+
+def set_manual_gsd(input_id: str, gsd_m) -> dict:
+    """The GSD (m/pixel) of an uploaded image that has no geotransform, typed in by the user."""
+    d = _dir(input_id)
+    meta = load_meta(input_id)
+    if meta.get("georeferenced"):
+        raise InputError("This image has a geotransform, so its GSD is read from it and can't be entered manually.")
+    try:
+        gsd = float(gsd_m)
+    except (TypeError, ValueError) as exc:
+        raise InputError("The GSD must be a number of metres per pixel.") from exc
+    lo, hi = MANUAL_GSD_RANGE_M
+    if not (math.isfinite(gsd) and lo <= gsd <= hi):
+        raise InputError(f"The GSD must be between {lo} and {hi:g} m per pixel.")
+    meta.update(gsd_m=round(gsd, 4), gsd_source="entered manually; no geotransform in this file",
+                gsd_manual=True, gsd_required=False)
+    meta["routing"] = routing_for(meta)
     return _save_meta(d, meta)
 
 
