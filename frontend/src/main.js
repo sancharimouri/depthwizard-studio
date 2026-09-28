@@ -912,12 +912,20 @@ function showCompletedJob(job) {
     MINI_BOX_IDS.forEach(id => {
         const box = document.getElementById(id);
         box?.classList.remove("is-pending");
+        const overlay = box?.querySelector(".mini3d-generating");
+        if (overlay) {
+            overlay.hidden = true; // another job may be mid-generation behind it
+        }
         const captionEl = box?.querySelector(".staged-caption");
         resetCaption(captionEl);
         revealStagedCaption(captionEl);
     });
 
     finalDemoBoxEl?.classList.remove("is-pending");
+    const finalOverlay = document.getElementById("final-demo-generating");
+    if (finalOverlay) {
+        finalOverlay.hidden = true;
+    }
     const controlsEl = document.getElementById("final-demo-controls");
     if (controlsEl) {
         controlsEl.hidden = false;
@@ -955,16 +963,22 @@ function startFromInput(selection) {
     runGenerationSequence(job);
 }
 
+// Any job can be opened at any time, including while another one generates
+// (that run carries on off screen; opening it again shows where it has got to).
 function selectJob(id) {
     const job = jobStore.get(id);
-    if (!job || jobStore.generating()) {
+    if (!job) {
         return;
     }
     if (jobStore.active() !== job) {
         resetViewerForNewJob();
     }
     jobStore.setActive(id);
-    showCompletedJob(job);
+    if (job.status === "generating") {
+        showRunningJob(job);
+    } else {
+        showCompletedJob(job);
+    }
     renderJobs();
 }
 
@@ -1063,7 +1077,11 @@ function deleteJob(id) {
         return;
     }
     if (wasActive && !choosingNewInput()) {
-        showCompletedJob(next);
+        if (next.status === "generating") {
+            showRunningJob(next);
+        } else {
+            showCompletedJob(next);
+        }
     }
     renderJobs();
 }
@@ -1088,10 +1106,6 @@ function jobItem(job, { running, active, choosing }, section = "recent") {
     button.dataset.jobId = job.id;
     if (job === active && !choosing) {
         button.setAttribute("aria-current", "true");
-    }
-    button.disabled = Boolean(running) && job !== running;
-    if (button.disabled) {
-        button.title = "Available when the current generation finishes";
     }
     // open-in-viewer: from any page, a finished job opens in the 3D viewer window
     button.addEventListener("click", () => {
@@ -1339,7 +1353,6 @@ function renderJobTabs() {
         return;
     }
     const active = jobStore.active();
-    const running = jobStore.generating();
 
     jobTabsEl.replaceChildren(...jobStore.creationOrder().map(job => {
         const tab = document.createElement("button");
@@ -1348,7 +1361,6 @@ function renderJobTabs() {
         tab.setAttribute("role", "tab");
         tab.setAttribute("aria-selected", String(job === active));
         tab.dataset.jobId = job.id;
-        tab.disabled = Boolean(running) && job !== running;
         tab.title = jobLabel(job);
 
         const dot = document.createElement("span");
@@ -1435,9 +1447,6 @@ async function ensureGeneratedViews() {
 }
 
 async function openSavedWork(uid) {
-    if (jobStore.generating()) {
-        return;
-    }
     const record = savedStore.get(uid);
     if (!record) {
         return;
@@ -1466,7 +1475,6 @@ function renderSaved() {
         savedListEl.replaceChildren(empty);
         return;
     }
-    const running = jobStore.generating();
 
     savedListEl.replaceChildren(...records.map(record => {
         const card = document.createElement("article");
@@ -1507,10 +1515,6 @@ function renderSaved() {
         open.type = "button";
         open.className = "confirm-button confirm-primary";
         open.textContent = jobStore.findByUid(record.uid) ? "Go to job" : "Open";
-        open.disabled = Boolean(running);
-        if (running) {
-            open.title = "Available when the current generation finishes";
-        }
         open.addEventListener("click", () => openSavedWork(record.uid));
 
         const download = document.createElement("button");
@@ -1943,6 +1947,10 @@ async function showJobInMiniPreviews(job) {
         appendCalcLogLine(document.getElementById("calc-log-scroll"),
             `3D preview textures failed to load (${error?.message ?? error?.type ?? error})`, job);
     }
+    // the user switched jobs while these loaded: the on-screen job owns the previews
+    if (job && jobStore.active() !== job) {
+        return;
+    }
     miniPreviews.forEach(preview => {
         preview.terrain?.mesh?.geometry?.dispose();
         preview.group.clear();
@@ -2254,10 +2262,13 @@ async function showJobInFinalDemo(job) {
             `Studio terrain failed to load (${error?.message ?? error?.type ?? error})`, job);
         return null;
     }
-    finalDemoHistory?.reset();
-    if (jobStore.active() === job) {
-        renderSource(job);
+    // the user switched jobs while this loaded: the on-screen job owns the Studio
+    const active = jobStore.active();
+    if (active && active !== job) {
+        return active.gen?.status === "ok" && active.status === "complete" ? showJobInFinalDemo(active) : null;
     }
+    finalDemoHistory?.reset();
+    renderSource(job);
     return terrain;
 }
 
@@ -2911,8 +2922,10 @@ function generatingOverlayMarkup() {
 
 // Ticks a percent counter and steps a status line through `steps`,
 // evenly spaced across durationMs — the actual visual of "something is
-// being calculated." Resolves once durationMs has elapsed.
-async function animateGenerating({ percentEl, statusEl, steps, durationMs }) {
+// being calculated." Resolves once durationMs has elapsed. It never touches
+// the DOM itself: onTick(percent, stepText) decides whether (and where) to
+// paint, because the job it belongs to may not be the one on screen.
+async function animateGenerating({ steps, durationMs, onTick }) {
     const tickMs = 120;
     const stepIntervalMs = durationMs / Math.max(1, steps.length);
 
@@ -2923,166 +2936,211 @@ async function animateGenerating({ percentEl, statusEl, steps, durationMs }) {
     // longer in wall-clock time than durationMs in that case.
     const startTime = performance.now();
     let elapsed = 0;
-    let stepIndex = -1;
 
-    function setStep(index) {
-        if (index === stepIndex) {
-            return;
-        }
-        stepIndex = index;
-        if (statusEl && steps[index] !== undefined) {
-            statusEl.textContent = steps[index];
-        }
-    }
-
-    setStep(0);
+    onTick(0, steps[0] ?? "");
 
     while (elapsed < durationMs) {
         await sleep(tickMs);
         elapsed = performance.now() - startTime;
-
-        if (percentEl) {
-            percentEl.textContent = `${Math.min(100, Math.round((elapsed / durationMs) * 100))}%`;
-        }
-
-        setStep(Math.min(steps.length - 1, Math.floor(elapsed / stepIntervalMs)));
+        const step = steps[Math.min(steps.length - 1, Math.floor(elapsed / stepIntervalMs))] ?? "";
+        onTick(Math.min(100, Math.round((elapsed / durationMs) * 100)), step);
     }
 }
 
 // ---- Box 2 (Preview) reveals at selection time now (see
 // revealScenePreview() above), not as part of the generation sequence. ----
 
-// ---- Boxes 3 (Relative Depth) / 4 (Elevation): the image + caption
-// were already in the DOM, just held behind .preview-empty — swap that
-// for a real-feeling generating readout, then reveal both. ----
+// ---- The staged boxes, in run order. A generating job keeps its own
+// progress (job.run: current stage, percent, status line), and the shared grid
+// only paints the job that is on screen (jobStore.active()). So while one job
+// generates, any other job can be opened from the jobs panel, and coming back
+// repaints the running job exactly where it has got to. ----
 
-async function generateCaptionPreviewBox(boxId, steps, work = null, onDone = null) {
-    const box = document.getElementById(boxId);
-
-    if (!box) {
-        return;
-    }
-
-    const emptyEl = box.querySelector(".preview-empty");
-    const contentEl = box.querySelector(".preview-content");
-    const captionEl = box.querySelector(".staged-caption");
-
-    if (emptyEl) {
-        emptyEl.innerHTML = generatingOverlayMarkup();
-    }
-
-    // Runs at least BOX_GENERATE_MS and until the real work (if any) resolves.
-    await Promise.all([
-        animateGenerating({
-            percentEl: emptyEl?.querySelector(".generating-percent"),
-            statusEl: emptyEl?.querySelector(".generating-status"),
-            steps,
-            durationMs: BOX_GENERATE_MS,
-        }),
-        work,
-    ]);
-    onDone?.();
-
-    if (emptyEl) {
-        emptyEl.hidden = true;
-    }
-    if (contentEl) {
-        contentEl.hidden = false;
-    }
-    if (captionEl) {
-        revealStagedCaption(captionEl);
-    }
-}
-
-// ---- Boxes 5 (DSM) / 6 (Metric Elevation): the generating overlay runs
-// for at least BOX_GENERATE_MS *and* until the real (shared, memoized)
-// terrain asset fetch actually resolves, whichever is longer. ----
-
-async function generateMiniPreviewBox(boxId, canvasId, layer, steps, job) {
-    const box = document.getElementById(boxId);
-    const canvas = document.getElementById(canvasId);
-
-    if (!box || !canvas) {
-        return;
-    }
-
-    const overlay = box.querySelector(".mini3d-generating");
-    const captionEl = box.querySelector(".staged-caption");
-
-    if (overlay) {
-        overlay.hidden = false;
-    }
-
-    // One renderer per canvas: later jobs re-run the stage over the same view.
-    if (!miniPreviewCanvases.has(canvas)) {
-        miniPreviewCanvases.add(canvas);
-        createMiniPreview(canvas, layer);
-    }
-
-    await Promise.all([
-        animateGenerating({
-            percentEl: overlay?.querySelector(".generating-percent"),
-            statusEl: overlay?.querySelector(".generating-status"),
-            steps,
-            durationMs: BOX_GENERATE_MS,
-        }),
-        loadMiniPreviewAssets(job).catch(() => null),
-    ]);
-    await showJobInMiniPreviews(job);
-
-    if (overlay) {
-        overlay.hidden = true;
-    }
-    box.classList.remove("is-pending");
-    if (captionEl) {
-        revealStagedCaption(captionEl);
-    }
-}
+const GEN_STAGES = [
+    {
+        id: "depth", kind: "caption", boxId: "depth-preview-box",
+        steps: [
+            "Sending this input's preview to the inference host…",
+            "Running Depth Anything V2 (ViT-Small)…",
+            "Decoding 518×518 relative depth…",
+        ],
+    },
+    {
+        id: "elevation", kind: "caption", boxId: "elevation-preview-box",
+        steps: [
+            "Finding this input's elevation model…",
+            "Reprojecting the DEM onto the input's footprint…",
+            "Colour-ramping terrain elevation…",
+        ],
+    },
+    {
+        id: "dsm", kind: "mini", boxId: "dsm-3d-box", canvasId: "dsm-3d-canvas", layer: "dsm-3d",
+        steps: [
+            "Loading the surface model (DSM)…",
+            "Building the terrain mesh…",
+            "Draping relative depth…",
+        ],
+    },
+    {
+        id: "metric", kind: "mini", boxId: "metric-elevation-3d-box", canvasId: "metric-elevation-3d-canvas", layer: "elevation-3d",
+        steps: [
+            "Loading the terrain DEM…",
+            "Colour-ramping by elevation…",
+            "Scaling vertical relief…",
+        ],
+    },
+    {
+        id: "final", kind: "final", boxId: "final-demo-box",
+        steps: [
+            "Compiling interactive viewer…",
+            "Wiring OrbitControls + layer shaders…",
+            "Loading RUN RECONSTRUCTION, FLYTHROUGH, DANGER ZONES…",
+        ],
+    },
+];
 
 const miniPreviewCanvases = new Set();
 
-// ---- Box 8 (Final Demo): builds the full interactive viewer + controls
-// (only once — initFinalDemoViewer() is itself idempotent) alongside the
-// generating animation, then reveals both. ----
+function isOnScreen(job) {
+    return jobStore.active() === job;
+}
 
-async function generateFinalDemoBox(job) {
-    const overlay = document.getElementById("final-demo-generating");
-    const controlsEl = document.getElementById("final-demo-controls");
-    const fullscreenToggle = document.getElementById("final-demo-fullscreen");
-
-    if (overlay) {
-        overlay.hidden = false;
+// One renderer per canvas: later jobs re-run the stage over the same view.
+function ensureMiniPreview(stage) {
+    const canvas = document.getElementById(stage.canvasId);
+    if (canvas && !miniPreviewCanvases.has(canvas)) {
+        miniPreviewCanvases.add(canvas);
+        createMiniPreview(canvas, stage.layer);
     }
+}
 
-    await Promise.all([
-        animateGenerating({
-            percentEl: overlay?.querySelector(".generating-percent"),
-            statusEl: overlay?.querySelector(".generating-status"),
-            steps: [
-                "Compiling interactive viewer…",
-                "Wiring OrbitControls + layer shaders…",
-                "Loading RUN RECONSTRUCTION, FLYTHROUGH, DANGER ZONES…",
-            ],
-            durationMs: BOX_GENERATE_MS,
-        }),
-        initFinalDemoViewer(job),
-    ]);
+// The element holding a stage's generating readout (percent + status line).
+function stageOverlay(stage) {
+    if (stage.kind === "caption") {
+        const emptyEl = document.getElementById(stage.boxId)?.querySelector(".preview-empty");
+        if (emptyEl && !emptyEl.querySelector(".generating-overlay")) {
+            emptyEl.innerHTML = generatingOverlayMarkup();
+        }
+        return emptyEl;
+    }
+    if (stage.kind === "mini") {
+        return document.getElementById(stage.boxId)?.querySelector(".mini3d-generating");
+    }
+    return document.getElementById("final-demo-generating");
+}
 
+function paintStageRunning(stage, percent, text) {
+    const overlay = stageOverlay(stage);
+    if (!overlay) {
+        return;
+    }
+    overlay.hidden = false;
+    const percentEl = overlay.querySelector(".generating-percent");
+    const statusEl = overlay.querySelector(".generating-status");
+    if (percentEl) {
+        percentEl.textContent = `${percent}%`;
+    }
+    if (statusEl && statusEl.textContent !== text) {
+        statusEl.textContent = text;
+    }
+}
+
+// A finished stage, painted for `job`. The 3D content itself (mini previews,
+// Studio terrain) is loaded by the caller, which knows whether it's needed.
+function paintStageDone(stage, job) {
+    const box = document.getElementById(stage.boxId);
+    if (stage.kind === "caption") {
+        (stage.id === "depth" ? applyDepthBox : applyElevationBox)(job);
+        const emptyEl = box?.querySelector(".preview-empty");
+        const contentEl = box?.querySelector(".preview-content");
+        if (emptyEl) {
+            emptyEl.hidden = true;
+        }
+        if (contentEl) {
+            contentEl.hidden = false;
+        }
+        revealStagedCaption(box?.querySelector(".staged-caption"));
+        return;
+    }
+    if (stage.kind === "mini") {
+        const overlay = box?.querySelector(".mini3d-generating");
+        if (overlay) {
+            overlay.hidden = true;
+        }
+        box?.classList.remove("is-pending");
+        revealStagedCaption(box?.querySelector(".staged-caption"));
+        return;
+    }
+    const overlay = document.getElementById("final-demo-generating");
     if (overlay) {
         overlay.hidden = true;
     }
-    document.getElementById("final-demo-box")?.classList.remove("is-pending");
-    if (controlsEl) {
-        controlsEl.hidden = false;
-    }
-    if (fullscreenToggle) {
-        fullscreenToggle.hidden = false;
-    }
+    box?.classList.remove("is-pending");
+    ["final-demo-controls", "final-demo-fullscreen"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.hidden = false;
+        }
+    });
     syncStudioButton();
 }
 
-// One job's run through the staged boxes. Only one job generates at a time
-// (the boxes are shared); switching jobs and Generate New wait until it ends.
+// Repaints the grid for a job that is still generating (the user came back to
+// it from another job): finished stages done, the current one mid-readout,
+// the rest awaiting generation, and its own calculation log so far.
+function showRunningJob(job) {
+    applyJobInput(job);
+    resetGridForGeneration();
+    const scrollEl = document.getElementById("calc-log-scroll");
+    job.log.forEach(line => renderCalcLogLine(scrollEl, line.t, line.text));
+    if (startGenerationButton) {
+        startGenerationButton.disabled = true;
+        startGenerationButton.textContent = "▶ GENERATING…";
+    }
+    const run = job.run ?? { stage: 0, percent: 0, text: GEN_STAGES[0].steps[0] };
+    if (run.stage >= 2) {
+        applyMiniBoxCaptions(job);
+    }
+    GEN_STAGES.forEach((stage, index) => {
+        if (index < run.stage) {
+            paintStageDone(stage, job);
+        } else if (index === run.stage) {
+            paintStageRunning(stage, run.percent, run.text);
+        }
+    });
+    if (run.stage > 2) {
+        showJobInMiniPreviews(job);
+    }
+    if (run.stage >= 4) {
+        initFinalDemoViewer(job);
+    }
+    showGrid();
+    requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
+}
+
+// One stage of one job: the readout runs for at least BOX_GENERATE_MS and until
+// the stage's real work resolves, painting only while the job is on screen.
+async function runStage(job, index, work) {
+    const stage = GEN_STAGES[index];
+    job.run = { stage: index, percent: 0, text: stage.steps[0] };
+    const [, result] = await Promise.all([
+        animateGenerating({
+            steps: stage.steps,
+            durationMs: BOX_GENERATE_MS,
+            onTick: (percent, text) => {
+                job.run = { stage: index, percent, text };
+                if (isOnScreen(job)) {
+                    paintStageRunning(stage, percent, text);
+                }
+            },
+        }),
+        work,
+    ]);
+    return result;
+}
+
+// One job's run through the staged boxes. Only one job generates at a time,
+// but the others stay viewable meanwhile (see GEN_STAGES above).
 async function runGenerationSequence(job) {
     if (startGenerationButton) {
         startGenerationButton.disabled = true;
@@ -3092,50 +3150,52 @@ async function runGenerationSequence(job) {
     // Starts filling immediately and keeps appending in parallel with
     // whichever box below is currently generating.
     runCalcLog(TOTAL_PIPELINE_MS, job);
-    const stageDone = progress => jobStore.update(job.id, { progress });
+    const finishStage = (index, progress) => {
+        job.run = { stage: index + 1, percent: 0, text: GEN_STAGES[index + 1]?.steps[0] ?? "" };
+        if (isOnScreen(job)) {
+            paintStageDone(GEN_STAGES[index], job);
+        }
+        jobStore.update(job.id, { progress });
+    };
     // One real generation request for this input; every box below waits on it.
     const genWork = computeJobGeneration(job);
 
-    await generateCaptionPreviewBox("depth-preview-box", [
-        "Sending this input's preview to the inference host…",
-        "Running Depth Anything V2 (ViT-Small)…",
-        "Decoding 518×518 relative depth…",
-    ], genWork, () => applyDepthBox(job));
-    stageDone(20);
+    await runStage(job, 0, genWork);
+    finishStage(0, 20);
 
-    await generateCaptionPreviewBox("elevation-preview-box", [
-        "Finding this input's elevation model…",
-        "Reprojecting the DEM onto the input's footprint…",
-        "Colour-ramping terrain elevation…",
-    ], genWork, () => applyElevationBox(job));
-    stageDone(40);
-    applyMiniBoxCaptions(job);
-
-    await generateMiniPreviewBox("dsm-3d-box", "dsm-3d-canvas", "dsm-3d", [
-        "Loading the surface model (DSM)…",
-        "Building the terrain mesh…",
-        "Draping relative depth…",
-    ], job);
-    stageDone(60);
-
-    await generateMiniPreviewBox("metric-elevation-3d-box", "metric-elevation-3d-canvas", "elevation-3d", [
-        "Loading the terrain DEM…",
-        "Colour-ramping by elevation…",
-        "Scaling vertical relief…",
-    ], job);
-    stageDone(80);
-
-    await generateFinalDemoBox(job);
-    jobStore.update(job.id, { status: "complete", progress: 100 });
-
-    if (startGenerationButton) {
-        startGenerationButton.textContent = "✓ GENERATION COMPLETE";
+    await runStage(job, 1, genWork);
+    finishStage(1, 40);
+    if (isOnScreen(job)) {
+        applyMiniBoxCaptions(job);
     }
 
-    // Whole pipeline done: pop the final 3D view out to fill the window.
-    expandFinalDemo();
-}
+    for (const index of [2, 3]) {
+        ensureMiniPreview(GEN_STAGES[index]);
+        await runStage(job, index, loadMiniPreviewAssets(job).catch(() => null));
+        if (isOnScreen(job)) {
+            await showJobInMiniPreviews(job);
+        }
+        finishStage(index, index === 2 ? 60 : 80);
+    }
 
+    // The Studio viewer is shared: load this job's terrain into it only while
+    // the job is on screen (showRunningJob / showCompletedJob load it otherwise).
+    await runStage(job, 4, isOnScreen(job) ? initFinalDemoViewer(job) : null);
+    job.run = null;
+    const onScreen = isOnScreen(job);
+    if (onScreen) {
+        paintStageDone(GEN_STAGES[4], job);
+    }
+    jobStore.update(job.id, { status: "complete", progress: 100 });
+
+    if (onScreen) {
+        if (startGenerationButton) {
+            startGenerationButton.textContent = "✓ GENERATION COMPLETE";
+        }
+        // Whole pipeline done: pop the final 3D view out to fill the window.
+        expandFinalDemo();
+    }
+}
 
 // ============================================================
 // FINAL DEMO — EXPANDED VIEW (Back / Close) + CLOSE CONFIRMATION
