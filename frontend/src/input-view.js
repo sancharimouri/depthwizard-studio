@@ -23,13 +23,39 @@ const COLLECTIONS = [
     { key: "sentinel2", label: "Sentinel-2" },
 ];
 
+// The terrain filter's dropdown, in menu order.
 const TERRAINS = [
     { key: "all", label: "Any terrain" },
     { key: "hilly", label: "Hilly" },
+    { key: "coastal", label: "Coastal" },
     { key: "agricultural", label: "Agricultural" },
     { key: "urban", label: "Urban" },
-    { key: "coastal", label: "Coastal" },
 ];
+
+// Library items for a collection ("all" or a key) and a terrain ("all" or a class).
+export function filterLibrary(items, collection, terrain) {
+    return items
+        .filter(item => collection === "all" || item.collection === collection)
+        .filter(item => terrain === "all" || itemTerrain(item) === terrain);
+}
+
+// The message shown when a collection + terrain choice has no tiles (null when it has some):
+// it says so and names the imagery that does have that terrain.
+export function noMatchMessage(items, collection, terrain) {
+    if (filterLibrary(items, collection, terrain).length) {
+        return null;
+    }
+    const t = TERRAINS.find(x => x.key === terrain)?.label ?? terrain;
+    const c = COLLECTIONS.find(x => x.key === collection)?.label ?? collection;
+    const others = COLLECTIONS
+        .filter(x => x.key !== "all" && x.key !== collection && filterLibrary(items, x.key, terrain).length)
+        .map(x => x.label);
+    const where = collection === "all" ? "in the library" : `in ${c} imagery`;
+    const tail = others.length
+        ? `Try the ${t} filter with ${others.length > 1 ? `${others.slice(0, -1).join(", ")} or ${others.at(-1)}` : others[0]} imagery.`
+        : "Try another terrain.";
+    return `No ${t.toLowerCase()} tiles ${where}. ${tail}`;
+}
 
 // Always first in the library, in this order; everything else keeps the catalog's
 // (deliberately mixed) order from scripts/library_catalog.py.
@@ -431,29 +457,143 @@ export function createInputView(root, { onStart }) {
 
     // ================================================================ LIBRARY
     const chipRow = el("div", { class: "iv-chips", role: "group", "aria-label": "Filter by collection" });
-    const terrainRow = el("div", { class: "iv-chips iv-chips-terrain", role: "group", "aria-label": "Filter by terrain" });
     const cardGrid = el("div", { class: "iv-cards" });
     const libraryStatus = el("div", { class: "iv-status", hidden: true });
+
+    // Terrain filter: a dropdown on the right of a small bar between the collection chips and
+    // the tiles (the collection chips stay as they are). A choice with no tiles for the current
+    // collection is not applied: the last results stay, and a notice says why and where that
+    // terrain can be found. It closes itself after NOTICE_MS, or with its x.
+    const NOTICE_MS = 4000;
+    const filterCount = el("span", { class: "iv-filter-count" });
+    const filterLabel = el("span", { class: "iv-filter-label" });
+    const filterButton = el("button", {
+        class: "iv-filter-btn", type: "button", "aria-haspopup": "listbox", "aria-expanded": "false",
+        "aria-controls": "iv-terrain-menu",
+    }, filterIcon(), filterLabel, el("span", { class: "iv-filter-chevron", "aria-hidden": "true" }));
+    const filterMenu = el("div", {
+        id: "iv-terrain-menu", class: "iv-filter-menu", role: "listbox", "aria-label": "Terrain", hidden: true,
+    });
+    const filterOptions = TERRAINS.map(t => el("button", {
+        class: "iv-filter-option", type: "button", role: "option", "data-key": t.key,
+        onclick: () => {
+            closeFilterMenu(true);
+            applyFilter(state.filter, t.key);
+        },
+    }, el("span", { class: "iv-filter-option-label", text: t.label }), el("span", { class: "iv-filter-option-count" })));
+    filterMenu.append(...filterOptions);
+    const filterBar = el("div", { class: "iv-filter-bar" },
+        filterCount, el("div", { class: "iv-filter" }, filterButton, filterMenu));
+
+    const noticeText = el("span", { class: "iv-filter-notice-text" });
+    const notice = el("div", { class: "iv-filter-notice", role: "status", "aria-live": "polite", hidden: true },
+        noticeText,
+        el("button", {
+            class: "iv-filter-notice-close", type: "button", "aria-label": "Close message", text: "×",
+            onclick: () => hideNotice(),
+        }));
+    const cardsWrap = el("div", { class: "iv-cards-wrap" },
+        el("div", { class: "iv-filter-notice-anchor" }, notice), cardGrid);
+
     panels.library.append(
         el("p", { class: "iv-hint", text: "Curated scenes with real imagery. Selecting one loads it into the preview." }),
-        chipRow, terrainRow, libraryStatus, cardGrid);
+        chipRow, filterBar, libraryStatus, cardsWrap);
 
-    TERRAINS.forEach(t => {
-        terrainRow.append(el("button", {
-            class: "iv-chip",
-            type: "button",
-            "data-key": t.key,
-            "aria-pressed": String(t.key === state.terrain),
-            text: t.label,
-            onclick: () => {
-                state.terrain = t.key;
-                terrainRow.querySelectorAll(".iv-chip").forEach(chip => {
-                    chip.setAttribute("aria-pressed", String(chip.dataset.key === t.key));
-                });
-                renderCards();
-            },
-        }));
+    function filterIcon() {
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("aria-hidden", "true");
+        svg.classList.add("iv-filter-icon");
+        const path = document.createElementNS(ns, "path");
+        path.setAttribute("d", "M22 3H2l8 9.46V19l4 2v-8.54L22 3z");
+        svg.append(path);
+        return svg;
+    }
+
+    let noticeTimer = 0;
+    function showNotice(message) {
+        noticeText.textContent = message;
+        notice.hidden = false;
+        clearTimeout(noticeTimer);
+        noticeTimer = setTimeout(hideNotice, NOTICE_MS);
+    }
+    function hideNotice() {
+        clearTimeout(noticeTimer);
+        notice.hidden = true;
+    }
+
+    function openFilterMenu() {
+        filterMenu.hidden = false;
+        filterButton.setAttribute("aria-expanded", "true");
+        (filterOptions.find(o => o.dataset.key === state.terrain) ?? filterOptions[0]).focus();
+    }
+    function closeFilterMenu(returnFocus = false) {
+        if (filterMenu.hidden) {
+            return;
+        }
+        filterMenu.hidden = true;
+        filterButton.setAttribute("aria-expanded", "false");
+        if (returnFocus) {
+            filterButton.focus();
+        }
+    }
+    filterButton.addEventListener("click", () => (filterMenu.hidden ? openFilterMenu() : closeFilterMenu()));
+    filterMenu.addEventListener("keydown", event => {
+        const i = filterOptions.indexOf(document.activeElement);
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            const step = event.key === "ArrowDown" ? 1 : -1;
+            filterOptions[(i + step + filterOptions.length) % filterOptions.length].focus();
+        } else if (event.key === "Escape") {
+            event.preventDefault();
+            closeFilterMenu(true);
+        } else if (event.key === "Tab") {
+            closeFilterMenu();
+        }
     });
+    document.addEventListener("pointerdown", event => {
+        if (!filterMenu.hidden && !event.target.closest?.(".iv-filter")) {
+            closeFilterMenu();
+        }
+    });
+
+    // Button label, per-terrain counts for the current collection, selection marks.
+    function syncFilterUi() {
+        const items = state.library?.items ?? [];
+        const t = TERRAINS.find(x => x.key === state.terrain);
+        filterLabel.textContent = state.terrain === "all" ? "Terrain" : `Terrain: ${t.label}`;
+        filterButton.classList.toggle("is-active", state.terrain !== "all");
+        filterOptions.forEach(option => {
+            const key = option.dataset.key;
+            const n = filterLibrary(items, state.filter, key).length;
+            option.setAttribute("aria-selected", String(key === state.terrain));
+            option.classList.toggle("is-empty", state.library != null && n === 0);
+            option.querySelector(".iv-filter-option-count").textContent = state.library ? String(n) : "";
+        });
+        chipRow.querySelectorAll(".iv-chip").forEach(chip => {
+            chip.setAttribute("aria-pressed", String(chip.dataset.key === state.filter));
+        });
+        const shown = state.library ? filterLibrary(items, state.filter, state.terrain).length : null;
+        filterCount.textContent = shown == null ? "" : `${shown} scene${shown === 1 ? "" : "s"}`;
+    }
+
+    // Applies a collection + terrain choice, unless it has no tiles: then the current results
+    // stay on screen and the notice explains. Returns whether it was applied.
+    function applyFilter(collection, terrain) {
+        const message = state.library ? noMatchMessage(state.library.items, collection, terrain) : null;
+        if (message) {
+            showNotice(message);
+            syncFilterUi();
+            return false;
+        }
+        state.filter = collection;
+        state.terrain = terrain;
+        hideNotice();
+        syncFilterUi();
+        renderCards();
+        return true;
+    }
 
     COLLECTIONS.forEach(col => {
         chipRow.append(el("button", {
@@ -462,15 +602,10 @@ export function createInputView(root, { onStart }) {
             "data-key": col.key,
             "aria-pressed": String(col.key === state.filter),
             text: col.label,
-            onclick: () => {
-                state.filter = col.key;
-                chipRow.querySelectorAll(".iv-chip").forEach(chip => {
-                    chip.setAttribute("aria-pressed", String(chip.dataset.key === col.key));
-                });
-                renderCards();
-            },
+            onclick: () => applyFilter(col.key, state.terrain),
         }));
     });
+    syncFilterUi();
 
     async function loadLibrary() {
         libraryStatus.hidden = false;
@@ -488,12 +623,7 @@ export function createInputView(root, { onStart }) {
                 const count = key === "all" ? state.library.total : state.library.counts[key];
                 chip.textContent = `${COLLECTIONS.find(c => c.key === key).label} ${count}`;
             });
-            terrainRow.querySelectorAll(".iv-chip").forEach(chip => {
-                const key = chip.dataset.key;
-                const count = key === "all" ? state.library.items.length
-                    : state.library.items.filter(item => itemTerrain(item) === key).length;
-                chip.textContent = `${TERRAINS.find(t => t.key === key).label} ${count}`;
-            });
+            syncFilterUi();
             renderCards();
         } catch (error) {
             clearTimeout(coldTimer);
@@ -508,9 +638,7 @@ export function createInputView(root, { onStart }) {
         }
         // Same order in the web and desktop apps (pinned hill scenes, then the catalog's mixed
         // order); on-demand desktop tiles stay in place with their download overlay.
-        const items = orderLibraryItems(state.library.items
-            .filter(item => state.filter === "all" || item.collection === state.filter)
-            .filter(item => state.terrain === "all" || itemTerrain(item) === state.terrain));
+        const items = orderLibraryItems(filterLibrary(state.library.items, state.filter, state.terrain));
         cardGrid.replaceChildren(...items.map(item => el("button", {
             class: `iv-card ${tierClass(item.routing)}${item.available === false ? " is-remote" : ""}`,
             type: "button",
