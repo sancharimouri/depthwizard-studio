@@ -2,6 +2,9 @@
 // floats in its own neighbourhood, reacts to the pointer, keeps clear of the others
 // (they repel: never closer than 1 cm edge to edge), and is never more than 60% hidden
 // behind the Scene Input / Preview boxes or past the page edge (src/bg-float.js).
+// They bounce off each other and off their limits (the boxes, the page edges, the sidebar line):
+// on the first frame of a contact they get a kick apart (restitution + a small minimum), and their
+// spring brings them back into their float.
 // Their home spots are spread evenly over the margins on all four sides, recomputed
 // whenever the page or the boxes change size. Behind them, a canvas of very small
 // star dots (a few twinkle), never on the boxes.
@@ -20,7 +23,11 @@ function collapsedSidebarWidth() {
 const STAR_RGB = "84, 171, 115"; // the background green (--bg-green-rgb in styles.css)
 // Runs only while the icons are on screen; still under prefers-reduced-motion.
 
-import { CM_PX, constrainVisible, createFloater, kick, layoutHomes, separate, starField, stepPush, visibleAnchor, wander } from "./bg-float.js";
+import { bounceImpulse, CM_PX, constrainVisible, hiddenFraction, createFloater, kick, layoutHomes, MAX_HIDDEN, separate, starField, stepPush, visibleAnchor, wander } from "./bg-float.js";
+
+function hiddenFractionOf(b, page, boxes) {
+    return hiddenFraction(b.x, b.y, b.size, page, boxes);
+}
 
 export function startBackgroundIcons(layer, page) {
     if (!layer || !page) {
@@ -38,6 +45,8 @@ export function startBackgroundIcons(layer, page) {
     let pointer = null;
     let raf = 0;
     let last = 0;
+    let contacts = { prev: new Set(), next: new Set() };
+    let bounces = 0; // exposed as data-bounces on the layer (for checks)
 
     // Home spots, relative to the layer: laid out evenly over the margins (layoutHomes),
     // redone when the layout changes. Until then, the CSS left/top from index.html.
@@ -56,7 +65,9 @@ export function startBackgroundIcons(layer, page) {
         }
         layoutKey = key;
         const layerPage = { left: 0, top: 0, right: box.width, bottom: box.height };
-        const page = { ...layerPage, left: leftLimit - box.left };
+        // Homes are planned in the visible page (right of the sidebar, whatever its width), so the
+        // spread you see stays even; the fixed left line only limits how far they may float.
+        const page = { ...layerPage, left: Math.max(leftLimit - box.left, 0) };
         const rel = boxes.map(b => ({ left: b.left - box.left, top: b.top - box.top, right: b.right - box.left, bottom: b.bottom - box.top }));
         homes = layoutHomes(sizes, page, rel, {
             gap: ICON_GAP_PX,
@@ -153,10 +164,15 @@ export function startBackgroundIcons(layer, page) {
             const home = homeOf(icon, box);
             const at = { x: home.x + w.x + icon.floater.push.x, y: home.y + w.y + icon.floater.push.y };
             const p = reduced.matches ? icon.floater.push : stepPush(icon.floater, dt, at, pointer);
+            // total velocity (wander + push), so a bounce reflects how fast it really came in
+            const wv = icon.prevW && dt > 0 ? { x: (w.x - icon.prevW.x) / dt, y: (w.y - icon.prevW.y) / dt } : { x: 0, y: 0 };
+            icon.prevW = w;
             // footprint: a circle around the icon's (unrotated) square; the artwork sits inside it
             const r = icon.el.offsetWidth / 2;
-            return { icon, home, w, x: home.x + w.x + p.x, y: home.y + w.y + p.y, r, mass: r * r, push: p };
+            return { icon, home, w, x: home.x + w.x + p.x, y: home.y + w.y + p.y, r, mass: r * r, push: p,
+                vx: wv.x + p.vx, vy: wv.y + p.vy };
         });
+        const bounce = !reduced.matches;
         // Icons repel each other (no overlap) and stay at least 40% visible: the part behind the
         // boxes or past the page edge is <= 30%. Five rounds let the two rules settle together;
         // visibility is applied last, so it always holds.
@@ -166,8 +182,13 @@ export function startBackgroundIcons(layer, page) {
             b.size = b.icon.el.offsetWidth;
             b.anchor = visibleAnchor(b.home.x, b.home.y, b.size, page, boxes);
         });
+        contacts.next = new Set();
+        contacts.onBounce = () => {
+            bounces += 1;
+        };
         for (let round = 0; round < 5; round++) {
-            separate(bodies, { gap: ICON_GAP_PX, iterations: 8 });
+            // icon-icon bounces are detected in the first round only
+            separate(bodies, { gap: ICON_GAP_PX, iterations: 8, contacts: bounce && round === 0 ? contacts : null });
             bodies.forEach(b => {
                 const c = constrainVisible(b.x, b.y, b.anchor, b.size, page, boxes);
                 if (!c.moved) {
@@ -186,8 +207,28 @@ export function startBackgroundIcons(layer, page) {
                     b.push.vx -= (dx / d) * vn;
                     b.push.vy -= (dy / d) * vn;
                 }
+                // first frame at a wall (a box, the page edge, the sidebar line): bounce off it
+                b.atWall = true;
+                if (bounce && !b.icon.wallContact) {
+                    const nx = dx / d;
+                    const ny = dy / d;
+                    const J = bounceImpulse(-(b.vx * nx + b.vy * ny));
+                    b.push.vx += nx * J;
+                    b.push.vy += ny * J;
+                    b.icon.wallContact = true;
+                    bounces += 1;
+                }
             });
         }
+        contacts.prev = contacts.next;
+        // a wall contact ends once the icon is clearly back inside its limit (hysteresis)
+        bodies.forEach(b => {
+            if (!b.atWall && b.icon.wallContact
+                && hiddenFractionOf(b, page, boxes) < MAX_HIDDEN - 0.05) {
+                b.icon.wallContact = false;
+            }
+        });
+        layer.dataset.bounces = String(bounces);
         bodies.forEach(({ icon, home, w, x, y }) => {
             icon.el.style.transform = `translate(-50%, -50%) translate(${(x - home.x).toFixed(1)}px, ${(y - home.y).toFixed(1)}px) `
                 + `rotate(${(icon.rot + w.rot).toFixed(2)}deg)`;

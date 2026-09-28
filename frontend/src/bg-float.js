@@ -105,7 +105,23 @@ export function kick(f, at, click) {
 // lighter icon moves more), and the part of their velocity that closes the gap is cancelled.
 // A few relaxation passes resolve chains of contacts. Mutates x, y and push; returns the number
 // of pairs that still overlap by more than 0.5 px.
-export function separate(bodies, { gap = 8, iterations = 4 } = {}) {
+//
+// Bounce (optional): pass `contacts` = { prev: Set, next: Set } (pair keys "i:j") to have a pair
+// that has just come into contact bounce apart. Its closing speed (from each body's total
+// velocity vx/vy, default its push velocity) is reflected with `restitution`, at least `minBounce`
+// px/s and at most MAX_BOUNCE, split by mass. A pair within CONTACT_SLACK px of touching stays
+// "in contact", so resting against each other doesn't bounce every frame.
+export const RESTITUTION = 0.75;
+export const MIN_BOUNCE = 28;   // px/s: even a slow drift gives a visible bounce
+export const MAX_BOUNCE = 220;  // px/s
+export const CONTACT_SLACK = 4;  // px
+
+// Impulse size for a contact with closing speed `closing` (px/s, > 0 when approaching).
+export function bounceImpulse(closing, restitution = RESTITUTION, minBounce = MIN_BOUNCE) {
+    return Math.min(MAX_BOUNCE, Math.max(minBounce, (1 + restitution) * Math.max(0, closing)));
+}
+
+export function separate(bodies, { gap = 8, iterations = 4, contacts = null, restitution = RESTITUTION, minBounce = MIN_BOUNCE } = {}) {
     for (let pass = 0; pass < iterations; pass++) {
         for (let i = 0; i < bodies.length; i++) {
             for (let j = i + 1; j < bodies.length; j++) {
@@ -115,6 +131,10 @@ export function separate(bodies, { gap = 8, iterations = 4 } = {}) {
                 let dy = b.y - a.y;
                 let d = Math.hypot(dx, dy);
                 const min = a.r + b.r + gap;
+                const key = `${i}:${j}`;
+                if (contacts && pass === 0 && d < min + CONTACT_SLACK) {
+                    contacts.next.add(key);
+                }
                 if (d >= min) {
                     continue;
                 }
@@ -143,6 +163,22 @@ export function separate(bodies, { gap = 8, iterations = 4 } = {}) {
                     a.push.vy += ny * closing * wa;
                     b.push.vx -= nx * closing * wb;
                     b.push.vy -= ny * closing * wb;
+                }
+                // a fresh contact bounces them apart
+                if (contacts && pass === 0 && !contacts.prev.has(key)) {
+                    const vax = a.vx ?? a.push.vx;
+                    const vay = a.vy ?? a.push.vy;
+                    const vbx = b.vx ?? b.push.vx;
+                    const vby = b.vy ?? b.push.vy;
+                    const approach = -((vbx - vax) * nx + (vby - vay) * ny);
+                    const J = bounceImpulse(approach, restitution, minBounce);
+                    a.push.vx -= nx * J * wa;
+                    a.push.vy -= ny * J * wa;
+                    b.push.vx += nx * J * wb;
+                    b.push.vy += ny * J * wb;
+                    if (contacts.onBounce) {
+                        contacts.onBounce(i, j, J);
+                    }
                 }
             }
         }

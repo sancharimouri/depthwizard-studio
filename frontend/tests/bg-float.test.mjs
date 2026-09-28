@@ -193,3 +193,29 @@ test("stars: 30% denser than before, and most of them small", () => {
     assert.ok(small > 0.6, `small share ${small.toFixed(2)}`);
     assert.ok(now.some(s => s.r > 1.0), "some big stars remain");
 });
+
+import { bounceImpulse, MIN_BOUNCE, MAX_BOUNCE } from "../src/bg-float.js";
+
+test("bounce: a fresh contact sends the pair apart; resting contact doesn't bounce again", () => {
+    const a = body(100, 100, 30);
+    const b = body(160, 100, 30);          // 60 apart, needs 60 + 10 gap: touching
+    a.vx = 40; a.vy = 0; b.vx = -40; b.vy = 0; // closing at 80 px/s
+    const contacts = { prev: new Set(), next: new Set() };
+    separate([a, b], { gap: 10, iterations: 2, contacts });
+    assert.ok(a.push.vx < 0 && b.push.vx > 0, "they move apart");
+    const kick = b.push.vx - a.push.vx;
+    assert.ok(Math.abs(kick - bounceImpulse(80)) < 1e-6, `relative kick ${kick}`);
+    // next frame, still touching: no second bounce
+    contacts.prev = contacts.next; contacts.next = new Set();
+    const before = b.push.vx - a.push.vx;
+    a.x = 100; b.x = 169; // just inside the gap again
+    separate([a, b], { gap: 10, iterations: 2, contacts });
+    assert.ok(Math.abs((b.push.vx - a.push.vx) - before) < 1e-6, "no repeat bounce while in contact");
+});
+
+test("bounce impulse: at least the minimum, reflected with restitution, capped", () => {
+    assert.equal(bounceImpulse(0), MIN_BOUNCE);
+    assert.equal(bounceImpulse(-50), MIN_BOUNCE);
+    assert.ok(Math.abs(bounceImpulse(100) - 175) < 1e-9);
+    assert.equal(bounceImpulse(10000), MAX_BOUNCE);
+});
