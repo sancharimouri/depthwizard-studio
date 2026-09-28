@@ -486,7 +486,10 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
 - Studio: flat-terrain warning for flat Sentinel-2 tiles (`src/flat-warning.js`). Outliers stop growing with vertical
   exaggeration (`src/outlier-relief.js`, used in `src/terrain.js`).
 - Input page: cold-start / loading messages (`LOADING_COPY` in `src/input-view.js`). Floating, pointer-reactive
-  background icons: 12, and they bounce off each other and their limits (`bounceImpulse`, contacts in `separate`); they repel so none overlaps (`separate` in `src/bg-float.js`, `src/bg-icons.js`,
+  background icons: 12. They cruise at a steady speed and never halt (`createCruiser` / `steerCruiser`). They bounce
+  off each other and their limits (`reflect`, `bounceImpulse`, contacts in `separate`) and repel so none overlaps. The
+  big satellite is locked to the top-left quadrant and the earth + satellite to the bottom-right (`clampToZone`).
+  Same-artwork icons keep 5 cm apart (`separate` in `src/bg-float.js`, `src/bg-icons.js`,
   symbols in `index.html`, from `icons/2.svg`). None is ever more than 30% hidden behind the boxes or off the page. The
   left limit is a fixed line at the collapsed sidebar's width, 56 px. Very small icons are 1.4x on the left
   (`hiddenFraction`, `constrainVisible`). They keep 1 cm apart. Their homes are spread evenly on all four sides

@@ -99,7 +99,8 @@ setup. Work through the phases in order. Commit after each phase.
     - drag to resize, and past the minimum to collapse;
     - the D opens Home;
     - the footer links work.
-  - Background icons (12) float, bounce off each other and their limits, react to the pointer, keep 1 cm apart, spread over all four sides, and are never
+  - Background icons (12) cruise without halting, bounce off each other and their limits, react to the pointer,
+    keep 1 cm apart (5 cm for the same artwork); the big satellite stays top-left and the earth + satellite bottom-right; spread over all four sides, and are never
     more than 30% hidden (left limit: the collapsed sidebar's width). Faint star dots appear in the margins, never on the boxes.
   - Library terrain dropdown: pick Hilly, then press DFC2019. A notice should explain there are none, the tiles stay,
     and the notice closes itself after 4 s.
