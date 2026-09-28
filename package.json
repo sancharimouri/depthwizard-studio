@@ -8,6 +8,7 @@
     "dev:frontend": "npm run dev --prefix frontend"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "shadcn": "^4.21.0"
   }
 }
