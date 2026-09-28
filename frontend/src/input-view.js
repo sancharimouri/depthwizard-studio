@@ -35,6 +35,25 @@ const TERRAINS = [
 // (deliberately mixed) order from scripts/library_catalog.py.
 const PINNED_FIRST = ["sentinel2-darjeeling", "sentinel2-almora", "sentinel2-manali"];
 
+// Loading copy. A hosted backend that has been idle is frozen, and its first
+// requests (catalog, thumbnails, previews) take much longer than usual. After
+// COLD_AFTER_MS without an answer the UI says why, instead of sitting empty.
+export const COLD_AFTER_MS = 2500;
+export const LOADING_COPY = {
+    coldStart: "The server is waking up after being idle, so this first load takes a few seconds longer. "
+        + "It only happens once. Please don't close this window.",
+    thumb: "Loading…",
+    thumbCold: "Waking the server…",
+    thumbError: "Preview unavailable",
+    preview: {
+        library: "Retrieving the image from the library…",
+        upload: "Loading your image…",
+        search: "Loading the Sentinel-2 scene…",
+    },
+    previewCold: "The server is waking up, so this takes a little longer the first time.",
+    keepOpen: "Don't close this window.",
+};
+
 // The catalog's terrain class; older manifests carry only Sentinel-2's `category`.
 export function itemTerrain(item) {
     return item.terrain ?? item.category ?? (item.collection === "dfc2019" ? "urban" : "hilly");
@@ -220,7 +239,27 @@ export function createInputView(root, { onStart }) {
     // preview pane
     const previewImg = el("img", { class: "iv-preview-img", alt: "" });
     const previewEmpty = el("div", { class: "iv-preview-empty", text: "Nothing selected yet — pick a scene on the left." });
-    const previewStage = el("div", { class: "iv-preview-stage" }, previewEmpty, previewImg);
+    const previewLoadingText = el("div", { class: "iv-preview-loading-text" });
+    const previewLoadingNote = el("div", { class: "iv-preview-loading-note" });
+    const previewLoading = el("div", { class: "iv-preview-loading", role: "status", hidden: true },
+        el("span", { class: "scene-search-spinner" }), previewLoadingText, previewLoadingNote);
+    const previewStage = el("div", { class: "iv-preview-stage" }, previewEmpty, previewImg, previewLoading);
+    let previewColdTimer = null;
+    function hidePreviewLoading() {
+        clearTimeout(previewColdTimer);
+        previewLoading.hidden = true;
+    }
+    previewImg.addEventListener("load", hidePreviewLoading);
+    previewImg.addEventListener("error", hidePreviewLoading);
+    function showPreviewLoading(sel) {
+        previewLoadingText.textContent = LOADING_COPY.preview[sel.source] ?? LOADING_COPY.preview.library;
+        previewLoadingNote.textContent = LOADING_COPY.keepOpen;
+        previewLoading.hidden = false;
+        clearTimeout(previewColdTimer);
+        previewColdTimer = setTimeout(() => {
+            previewLoadingNote.textContent = `${LOADING_COPY.previewCold} ${LOADING_COPY.keepOpen}`;
+        }, COLD_AFTER_MS);
+    }
     // same magnifying-glass inspector as the 3D viewer's Image Inspection box
     const previewReadout = el("div", { class: "xp-inspect-readout iv-preview-readout numeric-mono" });
     attachMagnifier({ stage: previewStage, img: previewImg, readout: previewReadout, zoom: 3 });
@@ -273,6 +312,9 @@ export function createInputView(root, { onStart }) {
         const sel = state.selection;
         previewEmpty.hidden = Boolean(sel);
         previewImg.hidden = !sel;
+        if (!sel) {
+            hidePreviewLoading();
+        }
         metaList.replaceChildren();
         routingCard.hidden = !sel;
         demCard.hidden = true;
@@ -286,6 +328,9 @@ export function createInputView(root, { onStart }) {
 
         if (previewImg.getAttribute("src") !== sel.previewUrl) {
             previewImg.src = sel.previewUrl;
+            if (!previewImg.complete) {
+                showPreviewLoading(sel);
+            }
         }
         previewImg.alt = `${sel.title} preview`;
 
@@ -430,8 +475,12 @@ export function createInputView(root, { onStart }) {
         libraryStatus.hidden = false;
         libraryStatus.className = "iv-status";
         libraryStatus.replaceChildren(el("span", { class: "scene-search-spinner" }), "Loading catalog…");
+        const coldTimer = setTimeout(() => {
+            libraryStatus.replaceChildren(el("span", { class: "scene-search-spinner" }), LOADING_COPY.coldStart);
+        }, COLD_AFTER_MS);
         try {
             state.library = await (await api("/api/library")).json();
+            clearTimeout(coldTimer);
             libraryStatus.hidden = true;
             chipRow.querySelectorAll(".iv-chip").forEach(chip => {
                 const key = chip.dataset.key;
@@ -446,6 +495,7 @@ export function createInputView(root, { onStart }) {
             });
             renderCards();
         } catch (error) {
+            clearTimeout(coldTimer);
             libraryStatus.className = "iv-status is-error";
             libraryStatus.textContent = `Catalog unavailable: ${error.message}`;
         }
@@ -468,9 +518,7 @@ export function createInputView(root, { onStart }) {
             "aria-label": item.available === false ? `${item.title}: not downloaded yet, download` : null,
             onclick: event => (item.available === false ? downloadLibraryItem(item, event.currentTarget) : selectLibraryItem(item)),
         },
-        el("div", { class: "iv-card-media" },
-            el("img", { class: "iv-card-thumb", src: apiUrl(item.thumbnail_url), alt: "", loading: "lazy" }),
-            item.available === false ? downloadOverlay(item) : null),
+        thumbMedia(item),
         el("div", { class: "iv-card-body" },
             el("div", { class: "iv-card-title", text: item.title }),
             el("div", { class: "iv-card-sub", text: item.location }),
@@ -480,6 +528,69 @@ export function createInputView(root, { onStart }) {
                 el("span", { class: "iv-card-terrain", text: itemTerrain(item) }),
                 el("span", { class: "iv-card-tier", text: `T${item.routing.tier}` })),
         ))));
+        watchForColdThumbs();
+    }
+
+    // A card's thumbnail with a message in its place until it arrives. If no
+    // thumbnail has arrived COLD_AFTER_MS after the cards first render, the
+    // server is cold: the cards say so and the status line explains.
+    let thumbsWarm = false;
+    let thumbColdTimer = null;
+
+    function thumbMedia(item) {
+        const media = el("div", { class: `iv-card-media${thumbsWarm ? "" : " is-loading"}` });
+        const label = el("div", { class: "iv-card-loading", text: LOADING_COPY.thumb });
+        const img = el("img", { class: "iv-card-thumb", src: apiUrl(item.thumbnail_url), alt: "", loading: "lazy" });
+        img.addEventListener("load", () => {
+            media.classList.remove("is-loading");
+            label.remove();
+            markThumbsWarm();
+        });
+        img.addEventListener("error", () => {
+            label.textContent = LOADING_COPY.thumbError;
+            img.style.visibility = "hidden"; // no broken-image icon under the label
+        });
+        media.append(label, img);
+        if (item.available === false) {
+            media.append(downloadOverlay(item));
+        }
+        if (img.complete && img.naturalWidth) {
+            media.classList.remove("is-loading");
+            label.remove();
+        }
+        return media;
+    }
+
+    function markThumbsWarm() {
+        if (thumbsWarm) {
+            return;
+        }
+        thumbsWarm = true;
+        clearTimeout(thumbColdTimer);
+        if (libraryStatus.dataset.cold === "thumbs") {
+            libraryStatus.hidden = true;
+            delete libraryStatus.dataset.cold;
+        }
+    }
+
+    function watchForColdThumbs() {
+        if (thumbsWarm || thumbColdTimer) {
+            return;
+        }
+        thumbColdTimer = setTimeout(() => {
+            if (thumbsWarm) {
+                return;
+            }
+            libraryStatus.hidden = false;
+            libraryStatus.className = "iv-status";
+            libraryStatus.dataset.cold = "thumbs";
+            libraryStatus.replaceChildren(el("span", { class: "scene-search-spinner" }), LOADING_COPY.coldStart);
+            cardGrid.querySelectorAll(".iv-card-loading").forEach(label => {
+                if (label.textContent === LOADING_COPY.thumb) {
+                    label.textContent = LOADING_COPY.thumbCold;
+                }
+            });
+        }, COLD_AFTER_MS);
     }
 
     // Desktop app only (the backend's bundle mode): an item that isn't bundled shows its
