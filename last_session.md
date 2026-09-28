@@ -9,7 +9,7 @@ Full record, with the pre-registration, every phase log and the full matrix:
   153.6 m. The true-GSD pixel counts are therefore 2 m → 77 px, 3 m → 51 px, 5 m → 31 px, 8 m → 19 px.
   After padding that means **6×6 / 4×4 / 3×3 / 2×2 token grids**, much coarser than the prompt's "about 7×7 at 5 m".
 - **Two protocols were run, both pre-registered before any training:**
-  - **P** (primary, as you specified): the image is physically resized to the smaller pixel count.
+  - **P** (primary as you specified): the image is physically resized to the smaller pixel count.
   - **R** (secondary): the same area-averaged content is resampled back to 512 px, so 37×37 tokens are kept. This matches
     the existing 0.795 → 0.708 sweep and separates "not enough information" from "not enough tokens".
 - Evaluation GSDs are 0.3 / 1.2 / 2 / 2.4 / 3 / 5 m (+8 m). Every model was evaluated at every GSD, and the oracle was
