@@ -17,6 +17,7 @@ import { installCloseGuard } from "./desktop-close.js";
 import { apiUrl } from "./api-base.js";
 import { PAGE_ROUTES, resolveHash, hashMatchesPage } from "./routes.js";
 import { flatTerrainWarning } from "./flat-warning.js";
+import { createDurationMemory, trackWork } from "./progress-sync.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -1908,10 +1909,9 @@ function buildCalcLogLines() {
     return [...opening, ...CALC_LOG_LINES];
 }
 
-// totalDurationMs paces the log to span roughly the same window as the
-// box-by-box sequence driving it, so it reads as running alongside that
-// work rather than being dumped out ahead of or behind it.
-function runCalcLog(totalDurationMs, job) {
+// The opening lines go out one every CALC_LOG_LINE_MS; the real steps
+// (sources, ranges, grid, timings) follow as they happen.
+function runCalcLog(job) {
     const scrollEl = document.getElementById("calc-log-scroll");
 
     if (!scrollEl) {
@@ -1921,10 +1921,9 @@ function runCalcLog(totalDurationMs, job) {
     calcLogStartTime = Date.now();
 
     const lines = buildCalcLogLines();
-    const interval = totalDurationMs / lines.length;
 
     lines.forEach((text, index) => {
-        setTimeout(() => appendCalcLogLine(scrollEl, text, job), 200 + index * interval);
+        setTimeout(() => appendCalcLogLine(scrollEl, text, job), 200 + index * CALC_LOG_LINE_MS);
     });
 }
 
@@ -2911,21 +2910,19 @@ function updateFinalDemoViewer() {
 // START GENERATION SEQUENCE
 // Drives boxes 2-8 one at a time (grid/box-number order) after the
 // button in box 1 is clicked — nothing in them renders before that.
-// Each box gets a real-feeling "generating" animation (a live percent
-// counter and a status line stepping through what's actually happening,
-// grounded in this project's real facts) for a minimum of ~4.5s before
-// settling into its final state. Box 7 (Calculation Logs) isn't part of
-// this one-at-a-time queue — it starts filling immediately alongside it
-// and keeps appending lines, paced to span the same total window.
+// Each box's "generating" readout (a percent counter and a status line) lasts
+// exactly as long as that box's real work (src/progress-sync.js). It crawls if
+// the work is slow and sweeps through if it's fast. Work that's done almost at
+// once shows no readout at all. Box 7 (Calculation Logs) isn't part of this
+// one-at-a-time queue: it starts filling immediately alongside it, and the real
+// steps are appended as they happen.
 // ============================================================
 
-const BOX_GENERATE_MS = 4500;
+// How long each stage's work usually takes, until this browser has measured it.
+const stageDurations = createDurationMemory({ depth: 12000, elevation: 400, dsm: 1500, metric: 800, final: 1500 });
 
-// Sequential box count (excludes box 2, which now reveals at selection
-// time, and box 7, which runs continuously in parallel instead) — used
-// to pace Calculation Logs to the same span.
-const SEQUENTIAL_BOX_COUNT = 5;
-const TOTAL_PIPELINE_MS = BOX_GENERATE_MS * SEQUENTIAL_BOX_COUNT;
+// The input's own opening log lines, one every CALC_LOG_LINE_MS.
+const CALC_LOG_LINE_MS = 300;
 
 function generatingOverlayMarkup() {
     return `
@@ -2935,33 +2932,6 @@ function generatingOverlayMarkup() {
             <div class="generating-scanbar"></div>
         </div>
     `;
-}
-
-// Ticks a percent counter and steps a status line through `steps`,
-// evenly spaced across durationMs — the actual visual of "something is
-// being calculated." Resolves once durationMs has elapsed. It never touches
-// the DOM itself: onTick(percent, stepText) decides whether (and where) to
-// paint, because the job it belongs to may not be the one on screen.
-async function animateGenerating({ steps, durationMs, onTick }) {
-    const tickMs = 120;
-    const stepIntervalMs = durationMs / Math.max(1, steps.length);
-
-    // Tracks real elapsed time (performance.now()) rather than assuming
-    // each tick took exactly tickMs — a backgrounded/throttled tab can
-    // delay individual setTimeout ticks well past 120ms, and accumulating
-    // a fixed increment per tick would make the whole animation run far
-    // longer in wall-clock time than durationMs in that case.
-    const startTime = performance.now();
-    let elapsed = 0;
-
-    onTick(0, steps[0] ?? "");
-
-    while (elapsed < durationMs) {
-        await sleep(tickMs);
-        elapsed = performance.now() - startTime;
-        const step = steps[Math.min(steps.length - 1, Math.floor(elapsed / stepIntervalMs))] ?? "";
-        onTick(Math.min(100, Math.round((elapsed / durationMs) * 100)), step);
-    }
 }
 
 // ---- Box 2 (Preview) reveals at selection time now (see
@@ -3121,7 +3091,7 @@ function showRunningJob(job) {
     GEN_STAGES.forEach((stage, index) => {
         if (index < run.stage) {
             paintStageDone(stage, job);
-        } else if (index === run.stage) {
+        } else if (index === run.stage && run.shown) {
             paintStageRunning(stage, run.percent, run.text);
         }
     });
@@ -3135,24 +3105,25 @@ function showRunningJob(job) {
     requestAnimationFrame(() => finalDemoViewer?.resizeToCanvas());
 }
 
-// One stage of one job: the readout runs for at least BOX_GENERATE_MS and until
-// the stage's real work resolves, painting only while the job is on screen.
+// One stage of one job: its readout lasts as long as the stage's real work (none
+// if the work is already done), painting only while the job is on screen.
 async function runStage(job, index, work) {
     const stage = GEN_STAGES[index];
-    job.run = { stage: index, percent: 0, text: stage.steps[0] };
-    const [, result] = await Promise.all([
-        animateGenerating({
-            steps: stage.steps,
-            durationMs: BOX_GENERATE_MS,
-            onTick: (percent, text) => {
-                job.run = { stage: index, percent, text };
-                if (isOnScreen(job)) {
-                    paintStageRunning(stage, percent, text);
-                }
-            },
-        }),
+    job.run = { stage: index, percent: 0, text: stage.steps[0], shown: false };
+    const { result, ms, shown } = await trackWork({
         work,
-    ]);
+        steps: stage.steps,
+        expectedMs: stageDurations.expected(stage.id),
+        onTick: (percent, text) => {
+            job.run = { stage: index, percent, text, shown: true };
+            if (isOnScreen(job)) {
+                paintStageRunning(stage, percent, text);
+            }
+        },
+    });
+    if (shown) {
+        stageDurations.record(stage.id, ms);
+    }
     return result;
 }
 
@@ -3166,7 +3137,7 @@ async function runGenerationSequence(job) {
 
     // Starts filling immediately and keeps appending in parallel with
     // whichever box below is currently generating.
-    runCalcLog(TOTAL_PIPELINE_MS, job);
+    runCalcLog(job);
     const finishStage = (index, progress) => {
         job.run = { stage: index + 1, percent: 0, text: GEN_STAGES[index + 1]?.steps[0] ?? "" };
         if (isOnScreen(job)) {
@@ -3189,10 +3160,13 @@ async function runGenerationSequence(job) {
 
     for (const index of [2, 3]) {
         ensureMiniPreview(GEN_STAGES[index]);
-        await runStage(job, index, loadMiniPreviewAssets(job).catch(() => null));
-        if (isOnScreen(job)) {
-            await showJobInMiniPreviews(job);
-        }
+        // the real work: fetch this job's terrain + textures, then build the preview meshes
+        await runStage(job, index, (async () => {
+            await loadMiniPreviewAssets(job).catch(() => null);
+            if (isOnScreen(job)) {
+                await showJobInMiniPreviews(job);
+            }
+        })());
         finishStage(index, index === 2 ? 60 : 80);
     }
 
