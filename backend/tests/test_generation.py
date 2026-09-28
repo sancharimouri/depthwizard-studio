@@ -75,8 +75,47 @@ def test_no_georeference_means_no_elevation_and_says_so(env, monkeypatch):
     from backend.library import catalog
     monkeypatch.setattr(catalog, "get", lambda i: {"id": "dfc2019-x", "collection": "dfc2019", "geo": None})
     monkeypatch.setattr(library_store, "local_asset", lambda it, kind: None)
+    monkeypatch.setattr(library_store, "private_pack", lambda it: None)
     m = client.post("/api/generate/library/dfc2019-x").json()["meta"]
     assert m["has_elevation"] is False and m["terrain_source"] is None and "no DEM" in m["note"]
+
+
+def test_dfc2019_tile_uses_its_private_curated_pack(env, monkeypatch):
+    """A DFC2019 pack: local metric frame (no real location), surface-ramped elevation.png,
+    labels from the pack's tags, no accuracy numbers anywhere in meta."""
+    from rasterio.crs import CRS
+    pack = env / "dfc.tif"
+    local = CRS.from_proj4("+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84")
+    tf = from_bounds(0, 0, 307.2, 307.2, 16, 16)
+    terrain = np.full((16, 16), 300.0, np.float32)
+    surface = terrain + np.linspace(0, 20, 256, dtype=np.float32).reshape(16, 16)
+    with rasterio.open(pack, "w", driver="GTiff", width=16, height=16, count=2, dtype="float32",
+                       crs=local, transform=tf) as w:
+        w.write(terrain, 1)
+        w.write(surface, 2)
+        w.update_tags(TERRAIN_SOURCE="approximate city-level ground elevation", SURFACE_SOURCE="model heights",
+                      CRS_LABEL="local frame (no georeference)", RAMP_BAND="SURFACE", NOTE="provenance note")
+    from backend.library import catalog
+    monkeypatch.setattr(catalog, "get", lambda i: {"id": "dfc2019-x", "collection": "dfc2019", "geo": None})
+    monkeypatch.setattr(library_store, "local_asset", lambda it, kind: None)
+    monkeypatch.setattr(library_store, "private_pack", lambda it: pack)
+    body = client.post("/api/generate/library/dfc2019-x").json()
+    m = body["meta"]
+    assert m["has_elevation"] and m["crs"] == "local frame (no georeference)" and m["note"] == "provenance note"
+    assert m["how"] == "curated elevation pack" and m["terrain_range_m"] == [300.0, 300.0]
+    w_, s_, e_, n_ = m["bounds_lonlat"]
+    assert abs(w_) < 1e-9 and abs(s_) < 1e-9 and e_ == pytest.approx(307.2 / 111320, rel=0.01)
+    t = client.get(body["assets"]["terrain"]).json()
+    assert t["elevationMin"] == pytest.approx(300, abs=0.5) and t["elevationMax"] > 315
+    elev = np.asarray(Image.open(io.BytesIO(client.get(body["assets"]["elevation"]).content)))
+    assert elev.reshape(-1, 3).std(0).max() > 10   # ramped from the surface, not a flat terrain colour
+
+
+def test_private_pack_is_remote_only_and_never_for_public_items(monkeypatch):
+    monkeypatch.setenv("DW2_LIBRARY", "local")
+    assert library_store.private_pack({"id": "dfc2019-x", "collection": "dfc2019"}) is None
+    monkeypatch.setenv("DW2_LIBRARY", "remote")
+    assert library_store.private_pack({"id": "sentinel2-x", "collection": "sentinel2"}) is None
 
 
 def test_generated_assets_are_path_safe(env):

@@ -12,7 +12,8 @@ Elevation always comes from a real elevation model, never from the image (CLAUDE
   library item with a bundled pack (desktop/tiles/build_dem_pack.py): its FABDEM + GLO-30 / VHR DSM
   upload / Search Online scene: its attached DEM (user DEM or FABDEM) + live GLO-30 surface;
                                 no attached DEM -> live GLO-30 for both
-  no georeference (DFC2019, plain PNG/JPG): no elevation; a flat plane, said so in meta/UI
+  DFC2019 library tile: its curated private pack (docs/method-audit/08-dfc2019-terrain-packs/)
+  no georeference and no pack (plain PNG/JPG): no elevation; a flat plane, said so in meta/UI
 """
 from __future__ import annotations
 
@@ -69,13 +70,20 @@ def _library_elevation(item: dict) -> dict | None:
     from backend.storage import library_store
     import rasterio
     pack = library_store.local_asset(item, "dem")
+    how = "bundled elevation pack"
+    if pack is None:
+        pack = library_store.private_pack(item)  # DFC2019: curated pack in the private dataset (web)
+        how = "curated elevation pack"
     if pack is not None:
         with rasterio.open(pack) as r:
             tags = r.tags()
+            # optional tags (DFC2019 packs): CRS_LABEL for a local frame with no real location,
+            # RAMP_BAND=SURFACE when the terrain band is a constant, NOTE = provenance for the UI
             return {"terrain": r.read(1), "surface": r.read(2), "crs": r.crs, "transform": r.transform,
                     "bounds": tuple(r.bounds), "res_m": abs(r.transform.a),
                     "terrain_source": tags.get("TERRAIN_SOURCE"), "surface_source": tags.get("SURFACE_SOURCE"),
-                    "how": "bundled elevation pack"}
+                    "how": tags.get("HOW", how), "crs_label": tags.get("CRS_LABEL"),
+                    "ramp": tags.get("RAMP_BAND", "TERRAIN"), "note": tags.get("NOTE")}
     geo = item.get("geo")
     if not geo:
         return None
@@ -177,10 +185,12 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
         from rasterio.warp import transform_bounds
         terrain = np.asarray(elev["terrain"], np.float32)
         surface = np.asarray(elev["surface"], np.float32)
-        _colour_ramp(terrain).save(out / "elevation.png", optimize=True)
+        _colour_ramp(surface if elev.get("ramp") == "SURFACE" else terrain).save(out / "elevation.png", optimize=True)
         lonlat = transform_bounds(elev["crs"], "EPSG:4326", *elev["bounds"], densify_pts=21)
         mesh = write_terrain_json(out / "terrain.json", surface, lonlat, _mesh_hw(surface.shape))
-        crs = str(elev["crs"])
+        crs = elev.get("crs_label") or str(elev["crs"])
+        if elev.get("note"):
+            meta["note"] = elev["note"]
         meta.update(terrain_source=elev["terrain_source"], surface_source=elev["surface_source"], how=elev["how"],
                     crs=crs, resolution_m=round(float(elev["res_m"]), 3), grid=[mesh["width"], mesh["height"]],
                     mesh_from="surface", bounds_lonlat=list(lonlat),

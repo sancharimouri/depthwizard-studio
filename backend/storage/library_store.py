@@ -121,6 +121,21 @@ def local_asset(item: dict, kind: str) -> Path | None:
     return None
 
 
+def private_pack(item: dict) -> Path | None:
+    """A private (DFC2019) item's curated elevation pack from the private HF dataset,
+    dem/<item id>.tif (docs/method-audit/08-dfc2019-terrain-packs/), remote mode only. Served to
+    generation server-side; the browser never gets the pack. None when the item has no pack or the
+    hub is unreachable, so generation falls back exactly as before."""
+    if is_public(item) or mode() != "remote":
+        return None
+    try:
+        return _hub_file(f"{FOLDERS['dem']}/{item['id']}.tif")
+    except Exception as exc:  # noqa: BLE001 - no pack for this item, no token, or offline
+        import logging
+        logging.getLogger(__name__).warning("no elevation pack for %s (%s)", item.get("id"), type(exc).__name__)
+        return None
+
+
 def is_available(item: dict) -> bool:
     return local_asset(item, "preview") is not None and local_asset(item, "tile") is not None
 

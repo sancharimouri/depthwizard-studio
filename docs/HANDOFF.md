@@ -697,3 +697,15 @@ to match.
   - Seam ratio: median 0.95; JAX_165_015 and OMA_248_030 are at 1.96 (the reference AGL shows the same, so it is real structure).
   - **Cap 12 m, margin 3 m** (pre-registered rule). The median prediction plateaus at ~18–21 m (slope 0.28).
   - Parity with `vhr_dsm_pipeline`: 0.0 m.
+- **Prompt 5, packs + integration (2026-09-28):** `scripts/dfc2019_build_packs.py`, `scripts/dfc2019_packs_qa.py`; record in `08-.../packs.md` (per-tile table).
+  - Correction per the pre-registered rule (cap 12 m, margin 3 m): median 5.1 % of pixels replaced, max 30 %.
+  - 50 packs are in the **private** HF dataset `dem/`.
+  - Web path: `library_store.private_pack` + tag labels in `pipeline.generate`.
+  - **QA: 50/50 DFC2019 jobs render 3D;** 6 screenshots in `data/dfc2019/terrain_packs/qa_screens/`. Tests: backend 41 passed + 1 skipped, frontend 53/53.
+  - **Not deployed:** the Render backend needs this commit pushed and redeployed before the live site changes.
+  - Follow-ups (packs.md list):
+    1. OMA_281_002/030 show a ~120 m unclassified reference blob (artifact).
+    2. A v2 location rule for 34 tiles.
+    3. Stale manifest routing text and "GSD 30 cm".
+    4. The elevation caption shows the terrain range.
+    5. Desktop bundle mode is still flat.
