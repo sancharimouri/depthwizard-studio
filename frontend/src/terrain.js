@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { outlierFences, limitOutliers } from "./outlier-relief.js";
 
 
 // ============================================================
@@ -402,12 +403,18 @@ export function createTerrain(
         );
     }
 
+    // What the mesh actually shows: extrudedZ with extreme outliers limited for
+    // the current display exaggeration (src/outlier-relief.js). Identical to
+    // extrudedZ on tiles without extreme outliers.
+    const outlierLimits = outlierFences(extrudedZ);
+    const shownZ = limitOutliers(extrudedZ, new Float32Array(extrudedZ.length), outlierLimits, 1);
+
     for (
         let index = 0;
         index < positions.count;
         index++
     ) {
-        positions.setZ(index, extrudedZ[index]);
+        positions.setZ(index, shownZ[index]);
     }
 
 
@@ -597,8 +604,8 @@ export function createTerrain(
                 const x0 = Math.floor(sx);
                 const x1 = Math.min(x0 + 1, width - 1);
                 const fx = sx - x0;
-                const top = extrudedZ[y0 * width + x0] + (extrudedZ[y0 * width + x1] - extrudedZ[y0 * width + x0]) * fx;
-                const bottom = extrudedZ[y1 * width + x0] + (extrudedZ[y1 * width + x1] - extrudedZ[y1 * width + x0]) * fx;
+                const top = shownZ[y0 * width + x0] + (shownZ[y0 * width + x1] - shownZ[y0 * width + x0]) * fx;
+                const bottom = shownZ[y1 * width + x0] + (shownZ[y1 * width + x1] - shownZ[y1 * width + x0]) * fx;
                 const i = (y * meshW + x) * 3;
                 positionsOut[i] = (x / (meshW - 1) - 0.5) * terrainWidth; // same local frame as the PlaneGeometry
                 positionsOut[i + 1] = (0.5 - y / (meshH - 1)) * terrainHeight;
@@ -644,7 +651,7 @@ export function createTerrain(
 
             positions.setZ(
                 index,
-                extruded ? extrudedZ[index] : 0
+                extruded ? shownZ[index] : 0
             );
         }
 
@@ -819,7 +826,29 @@ export function createTerrain(
 
     function setDisplayExaggeration(factor) {
         displayExaggeration = Math.min(maxDisplayExaggeration, Math.max(minDisplayExaggeration, factor));
-        terrain.scale.z = displayExaggeration / exaggerationFactor;
+        const scale = displayExaggeration / exaggerationFactor;
+        terrain.scale.z = scale;
+        // Extreme outliers stop growing with the slider (src/outlier-relief.js).
+        // Baked into the vertices, so picking/Measure (which read them) stay exact.
+        if (outlierLimits) {
+            limitOutliers(extrudedZ, shownZ, outlierLimits, scale);
+            if (isExtrudedNow) {
+                for (let index = 0; index < positions.count; index++) {
+                    positions.setZ(index, shownZ[index]);
+                }
+                positions.needsUpdate = true;
+                geometry.computeVertexNormals();
+                geometry.computeBoundingSphere();
+            }
+            if (wireframe) {
+                const wasVisible = wireframe.visible;
+                wireframe.geometry.dispose();
+                wireframe.material.dispose();
+                terrain.remove(wireframe);
+                wireframe = buildWireframe();
+                wireframe.visible = wasVisible;
+            }
+        }
         terrain.updateMatrixWorld(true);
         return displayExaggeration;
     }
