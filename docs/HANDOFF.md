@@ -479,14 +479,15 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
   `showRunningJob`, `GEN_STAGES` in `src/main.js`). Each job keeps its own viewer edits (`captureViewerMemory` /
   `applyViewerMemory` / `rememberActiveJobView`). Failed generations are marked **Failed** with **↻ RETRY GENERATION**
   (`syncStartButton`, `retryJob`).
-- Processing page: box readouts follow the real work, with a 2 s minimum each (`src/progress-sync.js`, `trackWork`). The
+- Processing page: box readouts follow the real work, with a 1.3 s minimum each (`src/progress-sync.js`, `trackWork`; was 2 s until 2026-09-29). The
   calculation log is queued and paced, and finishes before the DEM Elevation box (`runCalcLog`, `queueCalcLogLine`,
   `flushCalcLog`). Captions: depth box is 3 lines; no tier or DEM names anywhere in the processing page
   (`generationLogLines`).
 - Studio: flat-terrain warning for flat Sentinel-2 tiles (`src/flat-warning.js`). Outliers stop growing with vertical
   exaggeration (`src/outlier-relief.js`, used in `src/terrain.js`).
 - Input page: cold-start / loading messages (`LOADING_COPY` in `src/input-view.js`). Floating, pointer-reactive
-  background icons (`src/bg-float.js`, `src/bg-icons.js`, symbols in `index.html`, from `icons/2.svg`).
+  background icons: 17, and they repel each other so none overlaps (`separate` in `src/bg-float.js`, `src/bg-icons.js`,
+  symbols in `index.html`, from `icons/2.svg`).
 - Sidebar: rebuilt after shadcn `sidebar-07` (`index.html` `#app-sidebar`, `src/sidebar.js`, CSS "GLOBAL SIDEBAR").
   - D mark `public/brand-d.png` (cropped from `icon.png`) opens Home.
   - Page icons are option 1 of `icons/1.svg`.
@@ -494,7 +495,7 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
   - Footer links: GitHub, email, LinkedIn; X is a placeholder.
 - Page names: **Workbench → DW Studio, Docs → Home**, display text only. Page ids and the permanent routes in
   `src/routes.js` are unchanged (`#/docs`, `#/demo`, `#demo-video`, bare URL all verified).
-- Tests: `npm test` in `frontend/` → 73/73.
+- Tests: `npm test` in `frontend/` → 77/77.
 
 **Backend (`backend/`)** (must reach the Render copy and the desktop sidecar)
 - `backend/api/depth_routes.py`: transient Space errors (502/503/504, ClientDisconnect, resets) are retried twice

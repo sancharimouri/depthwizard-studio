@@ -61,7 +61,7 @@ setup. Work through the phases in order. Commit after each phase.
 - If it's still broken, the backend's `DAV2_FALLBACK_URL` plus `bridge/dav2_server.py` is the documented fallback.
 
 ## Phase 2: tests
-- `cd frontend && npm test` (expect 73/73) and `npx vite build`.
+- `cd frontend && npm test` (expect 77/77) and `npx vite build`.
 - `uv run python -m pytest -q backend/tests` from the repo root (expect 45 passed, 1 skipped).
 - Stop on any failure.
 
@@ -90,7 +90,7 @@ setup. Work through the phases in order. Commit after each phase.
 - Verify on `https://depthwizard-studio.vercel.app` in a real browser, with 0 console errors:
   - Routes: bare URL → DW Studio; `#/docs` → Home; `#demo-video` → its section; `#/demo` → Demo.
   - Cold start: Library thumbnails show the "server is waking up" message after 2.5 s. Render sleeps after 15 min.
-  - A full generation: each box's readout lasts ≥ 2 s; the log finishes before the DEM Elevation box; the view
+  - A full generation: each box's readout lasts ≥ 1.3 s; the log finishes before the DEM Elevation box; the view
     expands.
   - Open another job mid-generation; switch jobs and back (vertical exaggeration and rotation are kept).
   - Flat-terrain warning on an agricultural tile.
@@ -99,7 +99,7 @@ setup. Work through the phases in order. Commit after each phase.
     - drag to resize, and past the minimum to collapse;
     - the D opens Home;
     - the footer links work.
-  - Background icons float and react to the pointer.
+  - Background icons (17) float, react to the pointer and never overlap each other.
 - Update `docs/DEPLOY.md` "LIVE" with the date and what you verified.
 
 ## Phase 5: desktop app → v1.0.2 (`docs/DESKTOP_APP.md`)
