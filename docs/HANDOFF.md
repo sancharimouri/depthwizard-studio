@@ -487,7 +487,11 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
   exaggeration (`src/outlier-relief.js`, used in `src/terrain.js`).
 - Input page: cold-start / loading messages (`LOADING_COPY` in `src/input-view.js`). Floating, pointer-reactive
   background icons: 17, and they repel each other so none overlaps (`separate` in `src/bg-float.js`, `src/bg-icons.js`,
-  symbols in `index.html`, from `icons/2.svg`).
+  symbols in `index.html`, from `icons/2.svg`). None is ever more than 60% hidden behind the boxes or off the page
+  (`hiddenFraction`, `constrainVisible`). Motion speed was halved on 2026-09-29.
+- Library filter: the terrain filter is a dropdown on the right under the collection chips (`filterLibrary`,
+  `noMatchMessage`, `applyFilter` in `src/input-view.js`). A choice with no tiles keeps the last results and shows a
+  notice that closes itself after 4 s.
 - Sidebar: rebuilt after shadcn `sidebar-07` (`index.html` `#app-sidebar`, `src/sidebar.js`, CSS "GLOBAL SIDEBAR").
   - D mark `public/brand-d.png` (cropped from `icon.png`) opens Home.
   - Page icons are option 1 of `icons/1.svg`.
@@ -495,7 +499,7 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
   - Footer links: GitHub, email, LinkedIn; X is a placeholder.
 - Page names: **Workbench → DW Studio, Docs → Home**, display text only. Page ids and the permanent routes in
   `src/routes.js` are unchanged (`#/docs`, `#/demo`, `#demo-video`, bare URL all verified).
-- Tests: `npm test` in `frontend/` → 77/77.
+- Tests: `npm test` in `frontend/` → 83/83.
 
 **Backend (`backend/`)** (must reach the Render copy and the desktop sidecar)
 - `backend/api/depth_routes.py`: transient Space errors (502/503/504, ClientDisconnect, resets) are retried twice
