@@ -50,3 +50,33 @@ test("the push never exceeds its limit", () => {
     }
     assert.ok(Math.hypot(f.push.x, f.push.y) <= 170 + 1e-6);
 });
+
+import { separate } from "../src/bg-float.js";
+
+const body = (x, y, r, mass = r * r) => ({ x, y, r, mass, push: { x: 0, y: 0, vx: 0, vy: 0 } });
+
+test("overlapping icons are pushed apart until their footprints don't touch", () => {
+    const bodies = [body(100, 100, 35), body(120, 105, 35), body(110, 130, 26)];
+    const left = separate(bodies, { gap: 8, iterations: 8 });
+    assert.equal(left, 0);
+    for (let i = 0; i < bodies.length; i++) {
+        for (let j = i + 1; j < bodies.length; j++) {
+            const d = Math.hypot(bodies[j].x - bodies[i].x, bodies[j].y - bodies[i].y);
+            assert.ok(d >= bodies[i].r + bodies[j].r + 8 - 0.5, `pair ${i},${j} at ${d}`);
+        }
+    }
+});
+
+test("icons that don't touch are left alone; the lighter one moves more", () => {
+    const far = [body(0, 0, 30), body(500, 0, 30)];
+    separate(far);
+    assert.deepEqual([far[0].x, far[1].x], [0, 500]);
+    const pair = [body(0, 0, 112), body(130, 0, 26)];
+    separate(pair, { gap: 8 });
+    assert.ok(Math.abs(pair[1].push.x) > 5 * Math.abs(pair[0].push.x), "the small icon gives way");
+});
+
+test("icons exactly on top of each other still separate", () => {
+    const pair = [body(50, 50, 20), body(50, 50, 20)];
+    assert.equal(separate(pair, { gap: 4, iterations: 4 }), 0);
+});

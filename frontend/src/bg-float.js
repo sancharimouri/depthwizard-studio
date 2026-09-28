@@ -90,3 +90,64 @@ export function kick(f, at, click) {
     f.push.vx += (dx / d) * v;
     f.push.vy += (dy / d) * v;
 }
+
+// Keeps icons from overlapping. `bodies`: [{ x, y, r, mass, push }] where (x, y) is the icon's current
+// centre, r the radius of its footprint circle and push its floater's push state. Each overlapping
+// pair is moved apart along the line between them until `gap` px separate their circles (the
+// lighter icon moves more), and the part of their velocity that closes the gap is cancelled.
+// A few relaxation passes resolve chains of contacts. Mutates x, y and push; returns the number
+// of pairs that still overlap by more than 0.5 px.
+export function separate(bodies, { gap = 8, iterations = 4 } = {}) {
+    for (let pass = 0; pass < iterations; pass++) {
+        for (let i = 0; i < bodies.length; i++) {
+            for (let j = i + 1; j < bodies.length; j++) {
+                const a = bodies[i];
+                const b = bodies[j];
+                let dx = b.x - a.x;
+                let dy = b.y - a.y;
+                let d = Math.hypot(dx, dy);
+                const min = a.r + b.r + gap;
+                if (d >= min) {
+                    continue;
+                }
+                if (d < 1e-6) { // exactly on top of each other: pick a direction
+                    dx = 1;
+                    dy = 0;
+                    d = 1;
+                }
+                const nx = dx / d;
+                const ny = dy / d;
+                const overlap = min - d;
+                const wa = b.mass / (a.mass + b.mass); // the lighter one moves more
+                const wb = a.mass / (a.mass + b.mass);
+                a.x -= nx * overlap * wa;
+                a.y -= ny * overlap * wa;
+                b.x += nx * overlap * wb;
+                b.y += ny * overlap * wb;
+                a.push.x -= nx * overlap * wa;
+                a.push.y -= ny * overlap * wa;
+                b.push.x += nx * overlap * wb;
+                b.push.y += ny * overlap * wb;
+                // cancel the closing part of their relative velocity
+                const closing = (b.push.vx - a.push.vx) * nx + (b.push.vy - a.push.vy) * ny;
+                if (closing < 0) {
+                    a.push.vx += nx * closing * wa;
+                    a.push.vy += ny * closing * wa;
+                    b.push.vx -= nx * closing * wb;
+                    b.push.vy -= ny * closing * wb;
+                }
+            }
+        }
+    }
+    let left = 0;
+    for (let i = 0; i < bodies.length; i++) {
+        for (let j = i + 1; j < bodies.length; j++) {
+            const a = bodies[i];
+            const b = bodies[j];
+            if (Math.hypot(b.x - a.x, b.y - a.y) < a.r + b.r + gap - 0.5) {
+                left += 1;
+            }
+        }
+    }
+    return left;
+}

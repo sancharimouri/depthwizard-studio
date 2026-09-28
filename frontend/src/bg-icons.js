@@ -1,8 +1,9 @@
 // Drives the input page's background icons (index.html .input-bg-icons): each
-// floats in its own neighbourhood and reacts to the pointer (src/bg-float.js).
+// floats in its own neighbourhood, reacts to the pointer, and keeps clear of the
+// others: they repel, so no two ever overlap (src/bg-float.js).
 // Runs only while the icons are on screen; still under prefers-reduced-motion.
 
-import { CM_PX, createFloater, kick, stepPush, wander } from "./bg-float.js";
+import { CM_PX, createFloater, kick, separate, stepPush, wander } from "./bg-float.js";
 
 export function startBackgroundIcons(layer, page) {
     if (!layer || !page) {
@@ -57,12 +58,19 @@ export function startBackgroundIcons(layer, page) {
         const dt = Math.min(0.05, last ? (now - last) / 1000 : 1 / 60);
         last = now;
         const box = layer.getBoundingClientRect();
-        icons.forEach(icon => {
+        const bodies = icons.map(icon => {
             const w = reduced.matches ? { x: 0, y: 0, rot: 0 } : wander(icon.floater, t);
             const home = homeOf(icon, box);
             const at = { x: home.x + w.x + icon.floater.push.x, y: home.y + w.y + icon.floater.push.y };
             const p = reduced.matches ? icon.floater.push : stepPush(icon.floater, dt, at, pointer);
-            icon.el.style.transform = `translate(-50%, -50%) translate(${(w.x + p.x).toFixed(1)}px, ${(w.y + p.y).toFixed(1)}px) `
+            // footprint: a circle around the icon's (unrotated) square; the artwork sits inside it
+            const r = icon.el.offsetWidth / 2;
+            return { icon, home, w, x: home.x + w.x + p.x, y: home.y + w.y + p.y, r, mass: r * r, push: p };
+        });
+        // icons repel each other: no overlap, whatever the wander, the pointer or a click does
+        separate(bodies, { gap: 10, iterations: 6 });
+        bodies.forEach(({ icon, home, w, x, y }) => {
+            icon.el.style.transform = `translate(-50%, -50%) translate(${(x - home.x).toFixed(1)}px, ${(y - home.y).toFixed(1)}px) `
                 + `rotate(${(icon.rot + w.rot).toFixed(2)}deg)`;
         });
         schedule();

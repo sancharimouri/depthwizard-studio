@@ -4,13 +4,13 @@
 // progress of its own, so the percent is an estimate that tracks elapsed time
 // against how long that stage took before (remembered per browser):
 //   - every readout lasts at least MIN_VISIBLE_MS. Work that is done sooner
-//     (even instantly) still gets a smooth 0 -> 100% over those 2 s, so the
+//     (even instantly) still gets a smooth 0 -> 100% over those 1.3 s, so the
 //     boxes never pop in too fast to read;
 //   - while longer work runs, the percent eases toward 95% (86% at the expected
 //     time), so a stage that takes 30 s crawls for 30 s instead of sitting at 100%;
 //   - when longer work finishes, the readout sweeps to 100% in FINISH_MS and closes.
 
-export const MIN_VISIBLE_MS = 2000;
+export const MIN_VISIBLE_MS = 1300;
 export const FINISH_MS = 280;
 const CEILING = 95;
 
@@ -82,8 +82,9 @@ export async function trackWork({ work, steps, expectedMs, onShow, onTick, tickM
     }
     const ms = settledAt - t0;
 
-    // work that outlasted minMs: sweep the rest of the way to 100% quickly, then close
-    if (percent < 99) {
+    // work that outlasted minMs: sweep the rest of the way to 100% quickly, then close.
+    // (Work done sooner has already run evenly to ~100% over minMs: no extra sweep.)
+    if (ms >= minMs && percent < 99) {
         const from = percent;
         const s0 = performance.now();
         for (let t = 0; t < FINISH_MS; t = performance.now() - s0) {
