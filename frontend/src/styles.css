@@ -5175,16 +5175,18 @@ kbd {
 }
 
 .app-sidebar {
-    --sb-open-w: 248px;
-    --sb-rail-w: 52px;
+    /* open width is user-resizable (drag the rail): src/sidebar.js sets it */
+    --sb-open-w: 256px;          /* shadcn SIDEBAR_WIDTH 16rem */
+    --sb-rail-w: 56px;           /* icon rail: 32 px buttons + padding */
+    --sb-green: rgb(var(--neon-rgb)); /* THE green, in both themes */
 
+    position: relative;
     display: flex;
     flex: 0 0 var(--sb-open-w);
     flex-direction: column;
     width: var(--sb-open-w);
     min-width: 0;
     height: 100%;
-    overflow: hidden;
     z-index: 5;
 
     border-right: 1px solid rgba(var(--text-rgb), 0.1);
@@ -5199,6 +5201,12 @@ kbd {
     width: var(--sb-rail-w);
 }
 
+/* while dragging the rail the width follows the pointer, un-animated */
+.app-sidebar.is-resizing,
+.app-sidebar.is-resizing * {
+    transition: none !important;
+}
+
 .app-main {
     position: relative;
     flex: 1 1 auto;
@@ -5208,50 +5216,107 @@ kbd {
     contain: layout;
 }
 
-.sb-head {
+.sb-inner {
     display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 10px;
-    height: 56px;
-    padding: 0 10px;
-    border-bottom: 1px solid rgba(var(--text-rgb), 0.08);
-    white-space: nowrap;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
+/* ---- toggle: outside the bar, riding its right edge ---- */
 .sb-toggle {
+    position: absolute;
+    top: 14px;
+    left: calc(100% + 10px);
+    z-index: 30;
+
     display: grid;
-    flex-shrink: 0;
     place-items: center;
     width: 32px;
     height: 32px;
 
-    border: 1px solid transparent;
+    border: 1px solid rgba(var(--text-rgb), 0.12);
     border-radius: 8px;
-    background: none;
-    color: rgba(var(--text-rgb), 0.65);
+    background: rgba(var(--bg-rgb), 0.72);
+    backdrop-filter: blur(8px);
+    color: rgba(var(--text-rgb), 0.7);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
 }
 
 .sb-toggle:hover {
-    background: rgba(var(--text-rgb), 0.07);
+    background: rgba(var(--bg-strong-hover-rgb), 0.9);
     color: rgb(var(--text-rgb));
 }
 
 .sb-toggle:focus-visible,
 .sb-tab:focus-visible,
-.sb-page-link:focus-visible {
-    outline: 2px solid var(--accent-solid);
+.sb-page-link:focus-visible,
+.sb-social:focus-visible,
+.sb-rail:focus-visible {
+    outline: 2px solid var(--sb-green);
     outline-offset: -2px;
 }
 
-.sb-brand {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2.4px;
-    color: rgba(var(--text-rgb), 0.85);
+/* ---- header: the "D" mark + name (shadcn TeamSwitcher row) ---- */
+.sb-head {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+    height: 60px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(var(--text-rgb), 0.08);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sb-logo {
+    position: relative;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+}
+
+/* a faint white glow behind the D, so its dark bands don't vanish into the bar */
+.sb-logo::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.1) 45%, transparent 72%);
+    filter: blur(3px);
+}
+
+.sb-logo img {
+    position: relative;
+    display: block;
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35));
+}
+
+.sb-brand-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
     transition: opacity 0.15s ease;
+}
+
+.sb-brand {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--text-rgb));
+}
+
+.sb-brand-sub {
+    font-size: 11px;
+    color: rgba(var(--text-rgb), 0.5);
 }
 
 .sb-body {
@@ -5259,16 +5324,6 @@ kbd {
     flex: 1 1 auto;
     min-height: 0;
     flex-direction: column;
-    width: var(--sb-open-w);
-    transition: opacity 0.15s ease;
-}
-
-/* collapsed: a slim rail with just the toggle */
-.app-sidebar.is-collapsed .sb-brand,
-.app-sidebar.is-collapsed .sb-body {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
 }
 
 .sb-tabs {
@@ -5311,14 +5366,15 @@ kbd {
     left: 18%;
     height: 2px;
     border-radius: 2px;
-    background: rgba(var(--accent-rgb), 0.6);
+    background: rgba(var(--neon-rgb), 0.6);
 }
 
 .sb-panel {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    padding: 14px 12px;
+    overflow-x: hidden;
+    padding: 12px 12px;
     scrollbar-width: thin;
 }
 
@@ -5326,44 +5382,84 @@ kbd {
     display: none;
 }
 
+/* ---- page links: icon + label (shadcn SidebarMenuButton) ---- */
 .sb-pages {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
 }
 
 .sb-page-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     height: 36px;
-    padding: 0 12px;
+    padding: 0 9px;
+    overflow: hidden;
 
-    border: 1px solid transparent;
+    border: 0;
     border-radius: 8px;
     background: none;
-    color: rgba(var(--text-rgb), 0.6);
+    color: rgba(var(--text-rgb), 0.72);
 
     font-family: inherit;
     font-size: 13px;
     font-weight: 500;
     text-align: left;
+    white-space: nowrap;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, padding 0.2s ease;
 }
 
 .sb-page-link:hover {
-    background: rgba(var(--text-rgb), 0.05);
+    background: rgba(var(--neon-rgb), 0.1);
     color: rgb(var(--text-rgb));
 }
 
+/* the selected page: a green bar with a white icon and label */
 .sb-page-link.active {
-    background: rgba(var(--accent-rgb), 0.12);
-    border-color: rgba(var(--accent-rgb), 0.28);
-    color: var(--accent-text);
+    background: var(--sb-green);
+    color: #fff;
+}
+
+.sb-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    color: var(--sb-green);
+    overflow: visible;
+}
+
+/* outline icons: drawn as strokes, never filled */
+.sb-icon-outline {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7px;
+    stroke-linejoin: round;
+}
+
+.sb-icon-outline path {
+    vector-effect: non-scaling-stroke;
+}
+
+/* line-art icons (already outlines in the source): filled with the line colour */
+.sb-icon-line {
+    fill: currentColor;
+}
+
+.sb-page-link.active .sb-icon {
+    color: #fff;
+}
+
+.sb-label {
+    transition: opacity 0.15s ease;
 }
 
 .sb-muted {
-    margin: 14px 12px 0;
+    margin: 14px 10px 0;
     font-size: 11px;
     color: rgba(var(--text-rgb), 0.45);
+    white-space: nowrap;
 }
 
 .sb-jobs-head {
@@ -5383,10 +5479,115 @@ kbd {
     gap: 10px;
 }
 
+/* ---- footer: GitHub / email / LinkedIn / X ---- */
+.sb-foot {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px 14px;
+    border-top: 1px solid rgba(var(--text-rgb), 0.08);
+}
+
+.sb-social {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--sb-green);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sb-social:hover {
+    background: rgba(var(--neon-rgb), 0.12);
+}
+
+.sb-social[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.sb-social svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ---- drag rail on the right edge (shadcn SidebarRail) ---- */
+.sb-rail {
+    position: absolute;
+    top: 0;
+    right: -5px;
+    bottom: 0;
+    z-index: 20;
+    width: 10px;
+    cursor: col-resize;
+}
+
+.sb-rail::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 4px;
+    width: 2px;
+    background: transparent;
+    transition: background 0.15s ease;
+}
+
+.sb-rail:hover::after,
+.app-sidebar.is-resizing .sb-rail::after {
+    background: rgba(var(--neon-rgb), 0.55);
+}
+
+.app-sidebar.is-collapsed .sb-rail {
+    cursor: e-resize;
+}
+
+/* ---- collapsed: an icon rail (logo, page icons, social icons) ---- */
+.app-sidebar.is-collapsed .sb-head {
+    padding: 0 12px;
+}
+
+.app-sidebar.is-collapsed .sb-brand-text,
+.app-sidebar.is-collapsed .sb-label,
+.app-sidebar.is-collapsed .sb-muted {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.app-sidebar.is-collapsed .sb-tabs,
+.app-sidebar.is-collapsed .sb-panel-jobs {
+    display: none;
+}
+
+/* the page icons stay reachable whichever tab was open */
+.app-sidebar.is-collapsed #sb-panel-pages {
+    display: block;
+    padding: 12px 10px;
+}
+
+.app-sidebar.is-collapsed .sb-page-link {
+    padding: 0 9px;
+}
+
+.app-sidebar.is-collapsed .sb-foot {
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0 14px;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .app-sidebar,
-    .sb-body,
-    .sb-brand {
+    .sb-brand-text,
+    .sb-label,
+    .sb-page-link {
         transition: none;
     }
 }
@@ -6410,4 +6611,19 @@ kbd {
     .iv-card-media.is-loading .iv-card-thumb {
         animation: none;
     }
+}
+
+
+/* Room for the sidebar toggle, which floats just outside the bar at the
+   main area's top-left (32 px wide, 10 px in, 14 px down). */
+.topbar {
+    padding-left: 72px;
+}
+
+.workbench-grid {
+    padding-left: 60px;
+}
+
+.final-demo-expanded-bar {
+    left: 58px;
 }
