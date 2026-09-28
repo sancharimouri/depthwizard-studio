@@ -8,7 +8,8 @@
 //   PAGES   DW Studio (page-workbench) / Demo / Home (page-docs) with icons + "N jobs running"
 //   JOBS    the jobs list (rendered by main.js into the same element ids)
 //   footer  GitHub / email / LinkedIn / X links
-//   rail    drag to resize (SIDEBAR_MIN_W–SIDEBAR_MAX_W), click to collapse
+//   rail    drag to resize (SIDEBAR_MIN_W–SIDEBAR_MAX_W); dragging well below the
+//           minimum collapses it, dragging back out opens it; click to collapse
 //
 // Collapsed, it is an icon rail: the D, the page icons and the link icons.
 //
@@ -24,10 +25,19 @@ const COLLAPSED_KEY = "dw2.sidebarCollapsed";
 const WIDTH_KEY = "dw2.sidebarWidth";
 export const SIDEBAR_MIN_W = 208;
 export const SIDEBAR_MAX_W = 360;
+// Dragging the rail this far below the minimum width collapses the bar to its
+// icon rail (and dragging back out past it opens it again).
+export const SIDEBAR_COLLAPSE_BELOW_W = SIDEBAR_MIN_W - 48;
 const DRAG_THRESHOLD_PX = 4;
 
 export function clampSidebarWidth(px) {
     return Math.round(Math.min(SIDEBAR_MAX_W, Math.max(SIDEBAR_MIN_W, px)));
+}
+
+// What a rail drag to `px` (the pointer's distance from the bar's left edge) means:
+// collapse, or open at the clamped width.
+export function railDragTarget(px) {
+    return px < SIDEBAR_COLLAPSE_BELOW_W ? { collapsed: true } : { collapsed: false, width: clampSidebarWidth(px) };
 }
 
 export function createSidebar({ onNavigate }) {
@@ -124,11 +134,15 @@ export function createSidebar({ onNavigate }) {
             if (!drag.moved) {
                 drag.moved = true;
                 root.classList.add("is-resizing");
-                if (root.classList.contains("is-collapsed")) {
-                    setCollapsed(false);
-                }
             }
-            setWidth(event.clientX - drag.left);
+            // past the minimum by a margin -> collapse; back out -> open at that width
+            const target = railDragTarget(event.clientX - drag.left);
+            if (target.collapsed !== root.classList.contains("is-collapsed")) {
+                setCollapsed(target.collapsed);
+            }
+            if (!target.collapsed) {
+                setWidth(target.width);
+            }
         });
         const endDrag = event => {
             if (!drag) {
@@ -151,8 +165,13 @@ export function createSidebar({ onNavigate }) {
             const current = root.getBoundingClientRect().width;
             if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
                 event.preventDefault();
+                const collapsed = root.classList.contains("is-collapsed");
+                if (event.key === "ArrowLeft" && (collapsed || current <= SIDEBAR_MIN_W)) {
+                    setCollapsed(true); // already at the minimum: one more step collapses
+                    return;
+                }
                 setCollapsed(false);
-                setWidth(current + (event.key === "ArrowRight" ? 16 : -16));
+                setWidth(collapsed ? SIDEBAR_MIN_W : current + (event.key === "ArrowRight" ? 16 : -16));
             } else if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
                 setCollapsed(!root.classList.contains("is-collapsed"));
