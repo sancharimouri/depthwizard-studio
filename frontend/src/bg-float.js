@@ -394,7 +394,8 @@ export function layoutHomes(sizes, page, boxes, {
 
 // ---- Star field: very small dots spread evenly (jittered grid) over the page, never on
 // the boxes. Deterministic. Each star: {x, y, r (px), a (alpha), tw (twinkle phase or null)}.
-export function starField(page, boxes, { cell = 46, seed = 11 } = {}) {
+// (seed 18: a typical draw for this density: ~75 stars on a 1214 x 713 page, 5 of them big)
+export function starField(page, boxes, { cell = 65, seed = 18, bigShare = 0.06 } = {}) {
     const rand = prng(seed);
     const stars = [];
     for (let y = page.top; y < page.bottom; y += cell) {
@@ -416,9 +417,12 @@ export function starField(page, boxes, { cell = 46, seed = 11 } = {}) {
             stars.push({
                 x: sx,
                 y: sy,
-                // cubed: the extra 30% density (cell 52 -> 46 px) goes mostly to small stars;
-                // the bigger ones (up to ~1.2 px) stay, just rarer
-                r: 0.45 + size * size * size * 0.75,
+                // 2026-09-29: half the density (cell 46 -> 65 px), and only `bigShare` of the stars
+                // are big (0.8-1.15 px; was ~15%), so the cut falls mostly on them. The rest are
+                // small (0.45-0.75 px).
+                r: size > 1 - bigShare
+                    ? 0.8 + ((size - (1 - bigShare)) / bigShare) * 0.35
+                    : 0.45 + (size / (1 - bigShare)) * 0.3,
                 a: 0.4 + alpha * 0.45,
                 tw: twinkle < 0.25 ? twinkle * 40 : null, // a quarter of them twinkle
             });

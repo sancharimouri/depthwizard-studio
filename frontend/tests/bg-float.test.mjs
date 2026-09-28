@@ -133,14 +133,19 @@ test("home layout: very small icons that land on the left are 1.4x, and spacing 
     }
 });
 
-test("stars: 30% denser than before, and most of them small", () => {
-    const now = starField(PG, BX);
-    const before = starField(PG, BX, { cell: 52 });
-    const ratio = now.length / before.length;
-    assert.ok(ratio > 1.15 && ratio < 1.45, `density ratio ${ratio.toFixed(2)}`);
-    const small = now.filter(s => s.r < 0.7).length / now.length;
-    assert.ok(small > 0.6, `small share ${small.toFixed(2)}`);
-    assert.ok(now.some(s => s.r > 1.0), "some big stars remain");
+test("stars: half the previous density, with the big ones cut most (averaged over 100 layouts)", () => {
+    let now = 0; let nowBig = 0; let before = 0; let beforeBig = 0;
+    for (let seed = 1; seed <= 100; seed++) {
+        const a = starField(PG, BX, { seed });
+        const b = starField(PG, BX, { seed, cell: 46, bigShare: 0.15 }); // the old density and big share
+        now += a.length; before += b.length;
+        nowBig += a.filter(s => s.r > 0.8).length; beforeBig += b.filter(s => s.r > 0.8).length;
+    }
+    const ratio = now / before;
+    const bigRatio = nowBig / beforeBig;
+    assert.ok(ratio > 0.45 && ratio < 0.55, `density ratio ${ratio.toFixed(2)}`);
+    assert.ok(bigRatio < 0.3, `big stars ratio ${bigRatio.toFixed(2)} (all stars ${ratio.toFixed(2)})`);
+    assert.ok(starField(PG, BX).some(s => s.r > 0.8), "a few bigger stars remain in the default layout");
 });
 
 import { bounceImpulse, MIN_BOUNCE, MAX_BOUNCE } from "../src/bg-float.js";
