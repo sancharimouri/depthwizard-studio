@@ -6669,8 +6669,9 @@ kbd {
 .bgi {
     position: absolute;
     display: block;
-    width: var(--s);
-    height: var(--s);
+    /* --k: per-icon scale set by src/bg-icons.js (1.4 for the very small icons on the left) */
+    width: calc(var(--s) * var(--k, 1));
+    height: calc(var(--s) * var(--k, 1));
     transform: translate(-50%, -50%);
     will-change: transform;
 }
