@@ -2465,6 +2465,9 @@ function applyWorkbenchTheme(theme) {
     }
 
     exploreViewer?.setBackground(WORKBENCH_THEME_BG_HEX[theme]);
+    // colours drawn in WebGL follow the theme too (the wireframe: green / orange)
+    currentTerrain?.refreshThemeColors?.();
+    finalDemoCurrentTerrain?.refreshThemeColors?.();
     finalDemoViewer?.setBackground(finalDemoCurrentLayer === "wireframe-3d" ? 0x000000 : WORKBENCH_THEME_BG_HEX[theme]);
     try {
         localStorage.setItem(THEME_KEY, theme);

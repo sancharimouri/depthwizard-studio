@@ -23,7 +23,9 @@ import {
 const ICON_GAP_PX = CM_PX; // 1 cm between icons, edge to edge
 const SAME_ARTWORK_GAP_PX = 5 * CM_PX; // two icons of the same artwork are never beside each other
 const LEFT_SMALL_SCALE = 1.4; // the very small icons are this much bigger on the left side
-const STAR_RGB = "84, 171, 115"; // the background green (--bg-green-rgb in styles.css)
+// Star colour: the layer's --bg-green-rgb (green in dark mode, orange in bright mode), read on
+// each redraw so a theme switch recolours them; bright mode makes them a little stronger.
+const STAR_LIGHT_BOOST = 1.3;
 const WALL_RESTITUTION = 0.85;
 // Cruise speeds (px/s). With the bounces they average ~11 px/s on screen, the 1.4x drift asked
 // for on 2026-09-29; the big icons a little slower.
@@ -134,12 +136,14 @@ export function startBackgroundIcons(layer, page) {
             return;
         }
         drawStars.lastT = t;
+        const rgb = getComputedStyle(layer).getPropertyValue("--bg-green-rgb").trim() || "84, 171, 115";
+        const boost = document.documentElement.dataset.theme === "light" ? STAR_LIGHT_BOOST : 1;
         const dpr = window.devicePixelRatio || 1;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, starCanvas.width, starCanvas.height);
         for (const star of drawStars.stars) {
             const tw = star.tw == null || reduced.matches ? 1 : 0.55 + 0.45 * Math.sin(t * 1.3 + star.tw);
-            ctx.fillStyle = `rgba(${STAR_RGB}, ${(star.a * tw).toFixed(3)})`;
+            ctx.fillStyle = `rgba(${rgb}, ${Math.min(1, star.a * tw * boost).toFixed(3)})`;
             ctx.beginPath();
             ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
             ctx.fill();
