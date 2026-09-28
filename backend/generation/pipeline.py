@@ -177,10 +177,20 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
         w, h = img.size
         aspect = w / h
         flat = np.zeros((64, max(8, round(64 * aspect))), np.float32)
-        write_terrain_json(out / "terrain.json", flat, (0.0, 0.0, 0.01 * aspect, 0.01), flat.shape)
+        gsd = (input_meta or {}).get("gsd_m") if (input_meta or {}).get("gsd_manual") else None
+        if gsd:
+            # a GSD the user typed in: the plane gets the image's real size (pixels x GSD), laid out
+            # at the equator in degrees (the viewer's native unit), so measurements are in real metres
+            pw, ph = (input_meta.get("size_px") or [w, h])
+            bounds = (0.0, 0.0, pw * gsd / 111_320, ph * gsd / 110_574)
+            note = (f"No georeference, so there is no DEM for this input: relative depth only, on a flat plane "
+                    f"sized from the {gsd:g} m/pixel GSD entered for it.")
+        else:
+            bounds = (0.0, 0.0, 0.01 * aspect, 0.01)
+            note = "No georeference, so there is no DEM for this input: relative depth only, on a flat plane."
+        write_terrain_json(out / "terrain.json", flat, bounds, flat.shape)
         Image.new("RGB", (64, 64), (46, 46, 46)).save(out / "elevation.png")
-        meta.update(terrain_source=None, surface_source=None, crs=None, resolution_m=None,
-                    note="No georeference, so there is no DEM for this input: relative depth only, on a flat plane.")
+        meta.update(terrain_source=None, surface_source=None, crs=None, resolution_m=gsd, note=note)
     else:
         from rasterio.warp import transform_bounds
         terrain = np.asarray(elev["terrain"], np.float32)

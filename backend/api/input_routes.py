@@ -87,3 +87,13 @@ def fabdem(input_id: str) -> dict:
 @router.post("/{input_id}/dem")
 def user_dem(input_id: str, file: UploadFile = File(...)) -> dict:
     return _public(_run(store.attach_user_dem, input_id, file.filename, file.file))
+
+
+class ManualGsd(BaseModel):
+    gsd_m: float
+
+
+@router.post("/{input_id}/gsd")
+def manual_gsd(input_id: str, body: ManualGsd) -> dict:
+    """Set the GSD of an uploaded image that has no geotransform (typed in by the user)."""
+    return _public(_run(store.set_manual_gsd, input_id, body.gsd_m))

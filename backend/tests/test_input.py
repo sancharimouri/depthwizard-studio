@@ -95,3 +95,31 @@ def test_user_dem_refused_for_tier1():
     r = client.post(f"/api/input/{m['id']}/dem",
                     files={"file": ("dem.tif", _tif(10, bands=1, dtype="float32"))})
     assert r.status_code == 400
+
+
+def _png():
+    buf = io.BytesIO()
+    Image.new("RGB", (400, 300), (90, 120, 60)).save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def test_manual_gsd_for_an_image_without_a_geotransform():
+    m = _upload("photo.png", _png()).json()
+    assert m["gsd_m"] is None and m["gsd_required"] is True
+    r = client.post(f"/api/input/{m['id']}/gsd", json={"gsd_m": 0.5})
+    assert r.status_code == 200, r.text
+    g = r.json()
+    assert g["gsd_m"] == 0.5 and g["gsd_manual"] is True and g["gsd_required"] is False
+    assert g["gsd_source"].startswith("entered manually")
+    # still no location: relative output only, and the summary says so with the GSD
+    assert g["routing"]["tier"] is None and "0.50 m/pixel" in g["routing"]["summary"]
+    assert client.get(f"/api/input/{m['id']}").json()["gsd_m"] == 0.5
+
+
+def test_manual_gsd_is_validated_and_refused_when_the_file_has_a_geotransform():
+    m = _upload("photo.png", _png()).json()
+    for bad in (0, -1, 5000, "abc"):
+        assert client.post(f"/api/input/{m['id']}/gsd", json={"gsd_m": bad}).status_code in (400, 422)
+    geo = _upload("vhr.tif", _tif(0.5)).json()
+    r = client.post(f"/api/input/{geo['id']}/gsd", json={"gsd_m": 1.0})
+    assert r.status_code == 400 and "geotransform" in r.json()["detail"]

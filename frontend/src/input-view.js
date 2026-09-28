@@ -121,13 +121,16 @@ export function formatGsd(gsd) {
 
 // Is the selection ready to generate? Georeferenced inputs need their DEM
 // (user upload or FABDEM) first; non-georeferenced ones can only run the
-// relative preview, which needs nothing more.
+// relative preview, which needs only their GSD, typed in by the user.
 export function isReady(selection) {
     if (!selection) {
         return false;
     }
     if (selection.source === "library") {
         return true;
+    }
+    if (selection.gsdRequired) {
+        return false;
     }
     const routing = selection.routing;
     if (!routing || routing.tier == null) {
@@ -292,6 +295,8 @@ export function createInputView(root, { onStart }) {
     const metaList = el("dl", { class: "iv-meta" });
     const routingCard = el("div", { class: "iv-routing", hidden: true });
     const demCard = el("div", { class: "iv-dem", hidden: true });
+    // An upload with no geotransform: say so and ask for its GSD (metres per pixel).
+    const gsdCard = el("div", { class: "iv-gsd", hidden: true });
     const startButton = el("button", {
         class: "run-reconstruction-button iv-start tier-none",
         type: "button",
@@ -312,7 +317,7 @@ export function createInputView(root, { onStart }) {
     const previewPane = el("section", { class: "iv-pane iv-preview-pane" },
         el("div", { class: "panel-title", text: "PREVIEW" }),
         // image first, then START GENERATION, then everything else
-        previewStage, previewReadout, startButton, metaList, routingCard, demCard, startNote);
+        previewStage, previewReadout, gsdCard, startButton, metaList, routingCard, demCard, startNote);
 
     root.replaceChildren(inputPane, previewPane);
 
@@ -344,6 +349,7 @@ export function createInputView(root, { onStart }) {
         metaList.replaceChildren();
         routingCard.hidden = !sel;
         demCard.hidden = true;
+        gsdCard.hidden = true;
 
         if (!sel) {
             startButton.disabled = true;
@@ -375,10 +381,69 @@ export function createInputView(root, { onStart }) {
         );
 
         renderDem(sel);
+        renderGsd(sel);
 
         startButton.className = `run-reconstruction-button iv-start ${tierClass(routing)}`;
         startButton.textContent = startLabel(routing);
         startButton.disabled = !isReady(sel);
+        startButton.title = sel.gsdRequired ? "Enter the image's GSD first" : "";
+    }
+
+    function renderGsd(sel) {
+        if (sel.source !== "upload" || !(sel.gsdRequired || sel.gsdManual)) {
+            return;
+        }
+        gsdCard.hidden = false;
+        gsdCard.classList.toggle("is-set", !sel.gsdRequired);
+        const input = el("input", {
+            class: "iv-gsd-input numeric-mono", type: "number", inputmode: "decimal", min: "0.01", max: "1000", step: "any",
+            placeholder: "e.g. 0.5", "aria-label": "Ground sample distance in metres per pixel",
+            value: sel.gsdManual && sel.gsdM != null ? String(sel.gsdM) : null,
+        });
+        const apply = el("button", { class: "secondary-button iv-gsd-apply", type: "button", text: sel.gsdManual ? "Update" : "Set GSD" });
+        const submit = () => applyManualGsd(sel, input.value);
+        apply.addEventListener("click", submit);
+        input.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                submit();
+            }
+        });
+        gsdCard.replaceChildren(...[
+            el("div", { class: "iv-gsd-title" },
+                el("span", { class: "iv-gsd-icon", "aria-hidden": "true", text: sel.gsdRequired ? "!" : "✓" }),
+                sel.gsdRequired ? "No geotransform in this image" : "GSD entered manually"),
+            el("p", { class: "iv-gsd-text", text: sel.gsdRequired
+                ? "Its ground resolution can't be read from the file. Enter the GSD (ground distance per pixel) manually to continue."
+                : `Set to ${formatGsd(sel.gsdM)} per pixel. You can change it below.` }),
+            el("div", { class: "iv-gsd-row" }, input, el("span", { class: "iv-gsd-unit", text: "m / pixel" }), apply),
+            sel.gsdError ? el("div", { class: "iv-status is-error", text: sel.gsdError }) : null,
+        ].filter(Boolean)); // (replaceChildren would print a null as "null")
+        if (sel.gsdRequired && !sel.gsdError) {
+            requestAnimationFrame(() => input.focus({ preventScroll: true }));
+        }
+    }
+
+    async function applyManualGsd(sel, raw) {
+        const value = Number(String(raw).trim());
+        if (!(value >= 0.01 && value <= 1000)) {
+            state.selection = { ...sel, gsdError: "Enter a number of metres per pixel between 0.01 and 1000." };
+            renderSelection();
+            return;
+        }
+        try {
+            const meta = await (await api(`/api/input/${sel.id}/gsd`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ gsd_m: value }),
+            })).json();
+            if (state.selection?.id === sel.id) {
+                select({ ...selectionFromInput(meta, "upload"), gsdError: null });
+            }
+        } catch (error) {
+            state.selection = { ...sel, gsdError: `Couldn't set the GSD: ${error.message}` };
+            renderSelection();
+        }
     }
 
     function renderDem(sel) {
@@ -893,6 +958,10 @@ export function createInputView(root, { onStart }) {
                 : null,
             dem: m.dem,
             demPreviewUrl: apiUrl(m.dem_preview_url),
+            // no geotransform: the GSD is asked for (gsdCard) and set with POST /api/input/<id>/gsd
+            gsdRequired: Boolean(m.gsd_required),
+            gsdManual: Boolean(m.gsd_manual),
+            gsdM: m.gsd_m,
         };
     }
 
