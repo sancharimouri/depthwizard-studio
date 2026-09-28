@@ -19,6 +19,22 @@
 - Verified live: `#demo-video` opens Docs and scrolls to it; Library (89) → Almora → START GENERATION → 200, ZeroGPU depth +
   live GLO-30 terrain (1,024–2,042 m), 0 console errors; CORS allows only the production origin.
 
+## PENDING DEPLOY (2026-09-28): nothing below has reached the live site or the desktop app
+- **25 local commits** on `main` are not pushed (`git log origin/main..main`): frontend UX series, backend fixes, and the
+  DFC2019 terrain packs.
+- **Live site today** = the 2026-09-27 state above.
+- **Backend changes that must go to Render** (via the private copy, see "Source" above) **and into the desktop sidecar:**
+  - `backend/api/depth_routes.py` (Space retry);
+  - `backend/dem/glo30.py` (tile-seam mosaic);
+  - `backend/terrain/mesh_export.py` (hole fill);
+  - the DFC2019 pack integration (`backend/storage/library_store.py` `private_pack`, `backend/generation/pipeline.py`).
+- **Frontend changes that must go to Vercel:** all of `frontend/` (`npx vercel deploy --prod` from `frontend/`).
+- **Desktop:** bump 1.0.1 → 1.0.2, then `desktop/tauri/build-signed.sh`, then `desktop/tauri/publish-release.sh`
+  (`docs/DESKTOP_APP.md` "In-app updates").
+- **Blocker first:** the DAv2 Space returns 502 on every upload (2026-09-28). See `docs/HANDOFF.md` §5z. Restart it, and
+  consider `ssr_mode=False` in `space/app.py`.
+- Step-by-step prompt: `docs/NEXT_SESSION_DEPLOY.md`.
+
 ## Origins (done, commit 1277b8a)
 - Backend `CORS_ORIGINS` (comma-separated exact origins) + optional `CORS_ORIGIN_REGEX` (Vercel previews). Nothing hard-coded.
   - Local `.env`: `http://localhost:5173`.

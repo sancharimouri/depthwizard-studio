@@ -469,6 +469,57 @@ terrain.** None of the research-track work is deployed into it.
   outcomes — confirm with a fresh `npm run dev` + visual check before relying on this,
   don't assume it's still green without checking.
 
+### 5z. 2026-09-28 UI/UX sessions (17 prompts): committed locally, NOT pushed, NOT deployed
+
+Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc3536`–`e3b0d9a`; series B: 8 prompts,
+`15d18e0`–`9d0174d`). Every commit message has the detail and the verification; this is the map.
+
+**Frontend (`frontend/`)**
+- Jobs: any job can be opened while another generates. The grid paints only the on-screen job (`job.run` stage state,
+  `showRunningJob`, `GEN_STAGES` in `src/main.js`). Each job keeps its own viewer edits (`captureViewerMemory` /
+  `applyViewerMemory` / `rememberActiveJobView`). Failed generations are marked **Failed** with **↻ RETRY GENERATION**
+  (`syncStartButton`, `retryJob`).
+- Processing page: box readouts follow the real work, with a 2 s minimum each (`src/progress-sync.js`, `trackWork`). The
+  calculation log is queued and paced, and finishes before the DEM Elevation box (`runCalcLog`, `queueCalcLogLine`,
+  `flushCalcLog`). Captions: depth box is 3 lines; no tier or DEM names anywhere in the processing page
+  (`generationLogLines`).
+- Studio: flat-terrain warning for flat Sentinel-2 tiles (`src/flat-warning.js`). Outliers stop growing with vertical
+  exaggeration (`src/outlier-relief.js`, used in `src/terrain.js`).
+- Input page: cold-start / loading messages (`LOADING_COPY` in `src/input-view.js`). Floating, pointer-reactive
+  background icons (`src/bg-float.js`, `src/bg-icons.js`, symbols in `index.html`, from `icons/2.svg`).
+- Sidebar: rebuilt after shadcn `sidebar-07` (`index.html` `#app-sidebar`, `src/sidebar.js`, CSS "GLOBAL SIDEBAR").
+  - D mark `public/brand-d.png` (cropped from `icon.png`) opens Home.
+  - Page icons are option 1 of `icons/1.svg`.
+  - The rail drags between 208 and 360 px; below 160 px it collapses.
+  - Footer links: GitHub, email, LinkedIn; X is a placeholder.
+- Page names: **Workbench → DW Studio, Docs → Home**, display text only. Page ids and the permanent routes in
+  `src/routes.js` are unchanged (`#/docs`, `#/demo`, `#demo-video`, bare URL all verified).
+- Tests: `npm test` in `frontend/` → 73/73.
+
+**Backend (`backend/`)** (must reach the Render copy and the desktop sidecar)
+- `backend/api/depth_routes.py`: transient Space errors (502/503/504, ClientDisconnect, resets) are retried twice
+  (2 s, 5 s) with a fresh gradio Client (`SPACE_RETRY_DELAYS_S`, `_is_transient`).
+- `backend/dem/glo30.py`: `mosaic_to_grid` merges GLO-30 tiles before a single reproject. The old per-tile reproject
+  left NaNs on tile seams: Darjeeling's south edge is on 27°N, 6 px.
+- `backend/terrain/mesh_export.py`: `fill_nan_nearest`. Holes are filled from neighbours, never the tile minimum. That
+  minimum fill drew the 554 m "downward spikes".
+- Tests: `uv run python -m pytest -q backend/tests` → 45 passed, 1 skipped.
+
+**Open issues found 2026-09-28**
+- **DAv2 Space down.** `sancharimouri/DepthWizard2` reports RUNNING, but every `/gradio_api/upload` returns 502.
+  - Gradio runs in SSR mode (Node :7860 → Python :7861), and the Python app behind the proxy is not answering.
+  - Its run log has no Python output since the 2026-09-25 start. Every live/local generation fails until it's restarted.
+  - Option: `ssr_mode=False` in `space/app.py` `launch()` to drop the Node proxy layer.
+  - `space/README.md` still says "CPU-only" although the hardware is `zero-a10g`.
+- The generated Darjeeling seam bug affected only the live-GLO-30 path (web). The desktop pack
+  `data/library/dem/sentinel2-darjeeling.tif` is clean.
+- Local-only testing recipe (no Space needed): `uv run python -m uvicorn bridge.dav2_server:app --port 8766`, then a
+  backend with `DAV2_INFERENCE_URL=http://localhost:8766` on another port, then a Vite with its proxy pointed there.
+- Unpushed: 25 commits on `main` (`git log origin/main..main`). They include the DFC2019 terrain-pack series
+  (`619d1d7`–`7c8cbec`), whose web integration was also never deployed.
+
+The next-session deployment prompt is `docs/NEXT_SESSION_DEPLOY.md`.
+
 ## 6. Credentials/access inventory (`.env`)
 
 | Key | Status |
