@@ -3,13 +3,14 @@
 // A box's work (one HTTP request, a texture fetch, building a mesh) reports no
 // progress of its own, so the percent is an estimate that tracks elapsed time
 // against how long that stage took before (remembered per browser):
-//   - work that finishes within IMMEDIATE_MS shows no readout at all;
-//   - while it runs, the percent eases toward 95% (86% at the expected time),
-//     so a stage that takes 30 s crawls for 30 s instead of sitting at 100%;
-//   - when it finishes, the readout sweeps to 100% in FINISH_MS and closes,
-//     so a fast stage is a fast animation.
+//   - every readout lasts at least MIN_VISIBLE_MS. Work that is done sooner
+//     (even instantly) still gets a smooth 0 -> 100% over those 2 s, so the
+//     boxes never pop in too fast to read;
+//   - while longer work runs, the percent eases toward 95% (86% at the expected
+//     time), so a stage that takes 30 s crawls for 30 s instead of sitting at 100%;
+//   - when longer work finishes, the readout sweeps to 100% in FINISH_MS and closes.
 
-export const IMMEDIATE_MS = 250;
+export const MIN_VISIBLE_MS = 2000;
 export const FINISH_MS = 280;
 const CEILING = 95;
 
@@ -45,43 +46,51 @@ export function createDurationMemory(defaults, storage = globalThis.localStorage
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-// Runs the readout for `work` (a promise or value). onShow() is called once, only
-// if the work outlasts IMMEDIATE_MS; onTick(percent, stepText) while it runs.
-// Resolves to { result, ms, shown } after the work settles (a rejection counts as
-// settled, with result undefined).
-export async function trackWork({ work, steps, expectedMs, onShow, onTick, tickMs = 100 }) {
+// Runs the readout for `work` (a promise or value). onShow() is called once, at
+// the start; onTick(percent, stepText) while it runs. Resolves to
+// { result, ms, shown } once the work has settled AND the readout has lasted
+// minMs; `ms` is how long the work itself took. A rejection counts as settled,
+// with result undefined.
+export async function trackWork({ work, steps, expectedMs, onShow, onTick, tickMs = 100, minMs = MIN_VISIBLE_MS }) {
     const t0 = performance.now();
-    let settled = false;
+    let settledAt = null;
     let result;
     const done = Promise.resolve(work).then(value => {
         result = value;
     }, () => {}).finally(() => {
-        settled = true;
+        settledAt = performance.now();
     });
-
-    await Promise.race([done, sleep(IMMEDIATE_MS)]);
-    if (settled) {
-        return { result, ms: performance.now() - t0, shown: false };
-    }
 
     const stepFor = percent => steps[Math.min(steps.length - 1, Math.floor((percent / 100) * steps.length))] ?? "";
     onShow?.();
     let percent = 0;
     onTick(percent, stepFor(percent));
-    while (!settled) {
-        await Promise.race([done, sleep(tickMs)]);
-        percent = syncedPercent(performance.now() - t0, expectedMs);
+    for (;;) {
+        // race the work only while it's pending: a settled promise would win every
+        // race at once and turn this into a busy loop that blocks the page
+        await (settledAt === null ? Promise.race([done, sleep(tickMs)]) : sleep(tickMs));
+        const elapsed = performance.now() - t0;
+        if (settledAt !== null && elapsed >= minMs) {
+            break;
+        }
+        const target = settledAt !== null
+            // done early: run evenly to 100% at minMs
+            ? Math.round(Math.min(1, elapsed / minMs) * 100)
+            : syncedPercent(elapsed, Math.max(expectedMs, minMs));
+        percent = Math.min(99, Math.max(percent, target));
         onTick(percent, stepFor(percent));
     }
-    const ms = performance.now() - t0;
+    const ms = settledAt - t0;
 
-    // sweep the rest of the way to 100% quickly, then close
-    const from = percent;
-    const s0 = performance.now();
-    for (let t = 0; t < FINISH_MS; t = performance.now() - s0) {
-        const p = Math.round(from + (100 - from) * (t / FINISH_MS));
-        onTick(p, stepFor(p));
-        await sleep(40);
+    // work that outlasted minMs: sweep the rest of the way to 100% quickly, then close
+    if (percent < 99) {
+        const from = percent;
+        const s0 = performance.now();
+        for (let t = 0; t < FINISH_MS; t = performance.now() - s0) {
+            const p = Math.round(from + (100 - from) * (t / FINISH_MS));
+            onTick(p, stepFor(p));
+            await sleep(40);
+        }
     }
     onTick(100, steps[steps.length - 1] ?? "");
     return { result, ms, shown: true };

@@ -762,18 +762,18 @@ async function computeJobGeneration(job) {
         registerJobRegion(job);
         const m = g.meta;
         const d = g.depth ?? {};
-        appendCalcLogLine(scrollEl, `Relative depth: DAv2-Small on ${String(d.device ?? "?").toUpperCase()}, `
+        queueCalcLogLine(job, `Relative depth: DAv2-Small on ${String(d.device ?? "?").toUpperCase()}, `
             + `${(d.shape ?? []).join("×")}, ${d.infer_s}s inference (${d.encoding ?? "float32"}) via ${d.host ?? "inference host"}`
-            + `${d.fallback_used ? " (fallback: primary host failed)" : ""}`, job);
+            + `${d.fallback_used ? " (fallback: primary host failed)" : ""}`);
         if (m.has_elevation) {
             // measured facts only; no tier or elevation-model names in the processing page
-            generationLogLines(m, job.gen.roundTripS).forEach(line => appendCalcLogLine(scrollEl, line, job));
+            generationLogLines(m, job.gen.roundTripS).forEach(line => queueCalcLogLine(job, line));
         } else {
-            appendCalcLogLine(scrollEl, m.note, job);
+            queueCalcLogLine(job, m.note);
         }
     } catch (error) {
         job.gen = { status: "failed", error: String(error.message ?? error).slice(0, 160) };
-        appendCalcLogLine(scrollEl, `Generation failed (${job.gen.error})`, job);
+        queueCalcLogLine(job, `Generation failed (${job.gen.error})`);
     }
 }
 const MINI_BOX_IDS = ["dsm-3d-box", "metric-elevation-3d-box"];
@@ -1935,20 +1935,57 @@ function buildCalcLogLines() {
 
 // The opening lines go out one every CALC_LOG_LINE_MS; the real steps
 // (sources, ranges, grid, timings) follow as they happen.
+// Every line of a generating job's log goes through its queue and appears one
+// per CALC_LOG_LINE_MS, so the log reads as it runs instead of arriving in bursts.
+// flushCalcLog() speeds the rest up so the log has finished before the DEM
+// Elevation box does; stopCalcLog() writes anything left at once.
 function runCalcLog(job) {
-    const scrollEl = document.getElementById("calc-log-scroll");
-
-    if (!scrollEl) {
-        return;
-    }
-
     calcLogStartTime = Date.now();
+    job.logQueue = buildCalcLogLines();
+    job.logIntervalMs = CALC_LOG_LINE_MS;
+    const tick = () => {
+        if (!job.logQueue) {
+            return;
+        }
+        const text = job.logQueue.shift();
+        if (text !== undefined) {
+            appendCalcLogLine(document.getElementById("calc-log-scroll"), text, job);
+        }
+        if (!job.logQueue.length && job.logFlushed) {
+            job.logFlushed();
+            job.logFlushed = null;
+        }
+        job.logTimer = setTimeout(tick, job.logIntervalMs);
+    };
+    job.logTimer = setTimeout(tick, 200);
+}
 
-    const lines = buildCalcLogLines();
+function queueCalcLogLine(job, text) {
+    if (job.logQueue) {
+        job.logQueue.push(text);
+    } else {
+        appendCalcLogLine(document.getElementById("calc-log-scroll"), text, job);
+    }
+}
 
-    lines.forEach((text, index) => {
-        setTimeout(() => appendCalcLogLine(scrollEl, text, job), 200 + index * CALC_LOG_LINE_MS);
+// Resolves once the queue is empty, pacing what's left to finish within withinMs.
+function flushCalcLog(job, withinMs) {
+    if (!job.logQueue?.length) {
+        return Promise.resolve();
+    }
+    job.logIntervalMs = Math.min(job.logIntervalMs, withinMs / job.logQueue.length);
+    return new Promise(resolve => {
+        job.logFlushed = resolve;
     });
+}
+
+function stopCalcLog(job) {
+    clearTimeout(job.logTimer);
+    const rest = job.logQueue ?? [];
+    job.logQueue = null;
+    rest.forEach(text => appendCalcLogLine(document.getElementById("calc-log-scroll"), text, job));
+    job.logFlushed?.();
+    job.logFlushed = null;
 }
 
 // ---- Mini 3D previews: DSM / Metric Elevation. Gently auto-rotating,
@@ -2999,8 +3036,10 @@ function updateFinalDemoViewer() {
 // How long each stage's work usually takes, until this browser has measured it.
 const stageDurations = createDurationMemory({ depth: 12000, elevation: 400, dsm: 1500, metric: 800, final: 1500 });
 
-// The input's own opening log lines, one every CALC_LOG_LINE_MS.
-const CALC_LOG_LINE_MS = 300;
+// Calculation log pace: one line every CALC_LOG_LINE_MS. It's hurried only if
+// needed to finish within the DEM Elevation box's readout.
+const CALC_LOG_LINE_MS = 450;
+const CALC_LOG_FLUSH_MS = 1500;
 
 function generatingOverlayMarkup() {
     return `
@@ -3233,18 +3272,23 @@ async function runGenerationSequence(job) {
     for (const index of [2, 3]) {
         ensureMiniPreview(GEN_STAGES[index]);
         // the real work: fetch this job's terrain + textures, then build the preview meshes
-        await runStage(job, index, (async () => {
-            await loadMiniPreviewAssets(job).catch(() => null);
-            if (isOnScreen(job)) {
-                await showJobInMiniPreviews(job);
-            }
-        })());
+        await runStage(job, index, Promise.all([
+            (async () => {
+                await loadMiniPreviewAssets(job).catch(() => null);
+                if (isOnScreen(job)) {
+                    await showJobInMiniPreviews(job);
+                }
+            })(),
+            // the log has finished before the DEM Elevation box does
+            index === 3 ? flushCalcLog(job, CALC_LOG_FLUSH_MS) : null,
+        ]));
         finishStage(index, index === 2 ? 60 : 80);
     }
 
     // The Studio viewer is shared: load this job's terrain into it only while
     // the job is on screen (showRunningJob / showCompletedJob load it otherwise).
     await runStage(job, 4, isOnScreen(job) ? initFinalDemoViewer(job) : null);
+    stopCalcLog(job);
     job.run = null;
     const onScreen = isOnScreen(job);
     if (onScreen) {
