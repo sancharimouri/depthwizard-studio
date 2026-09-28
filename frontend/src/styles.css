@@ -6244,3 +6244,104 @@ kbd {
 :root[data-theme="light"] .wb-cell .mini3d-generating {
     background: rgba(244, 233, 210, 0.6);
 }
+
+
+/* ============================================================
+   FLAT-TERRAIN WARNING (src/flat-warning.js)
+   A compact red card for flat 10 m Sentinel-2 tiles. Minimised box: it floats
+   above the 3D structure from the moment generation starts. Expanded view: it
+   sits under EXPLORE OPTIONS in the right rail (and moves back on minimise).
+   The icon blinks like a warning light; the card itself only pulses gently,
+   so the text stays readable. Red is semantic here (as with the danger box),
+   so it is the same in both themes.
+   ============================================================ */
+.flat-warning {
+    --warn-rgb: 235, 72, 60;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    padding: 9px 11px;
+
+    border: 1px solid rgba(var(--warn-rgb), 0.55);
+    border-radius: 10px;
+    background: rgba(40, 8, 7, 0.78);
+    backdrop-filter: blur(10px);
+    color: rgb(255, 196, 188);
+
+    font-size: 10.5px;
+    font-weight: 400;
+    line-height: 1.45;
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: none;
+    pointer-events: none;
+
+    animation: flat-warning-pulse 1.6s ease-in-out infinite;
+}
+
+.flat-warning[hidden] {
+    display: none;
+}
+
+.flat-warning-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: rgb(var(--warn-rgb));
+    animation: flat-warning-blink 1s steps(1, end) infinite;
+}
+
+.flat-warning-title {
+    color: rgb(var(--warn-rgb));
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+}
+
+.flat-warning-body {
+    margin-top: 2px;
+}
+
+@keyframes flat-warning-blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.15; }
+}
+
+@keyframes flat-warning-pulse {
+    0%, 100% {
+        border-color: rgba(var(--warn-rgb), 0.55);
+        box-shadow: 0 0 0 rgba(var(--warn-rgb), 0);
+    }
+    50% {
+        border-color: rgba(var(--warn-rgb), 0.95);
+        box-shadow: 0 0 14px rgba(var(--warn-rgb), 0.35);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flat-warning,
+    .flat-warning-icon {
+        animation: none;
+    }
+}
+
+/* minimised box: floating a little above the structure */
+.flat-warning-float {
+    position: absolute;
+    top: 9%;
+    left: 50%;
+    z-index: 4;
+    width: min(86%, 260px);
+    transform: translateX(-50%);
+}
+
+.final-demo-box.is-expanded .flat-warning-float,
+.final-demo-box:not(.is-expanded) .flat-warning-panel {
+    display: none;
+}
+
+/* expanded view: a sibling of the xp-boxes, under EXPLORE OPTIONS */
+.flat-warning-panel {
+    flex-shrink: 0;
+}

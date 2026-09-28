@@ -12,6 +12,7 @@
 
 import { apiUrl } from "./api-base.js";
 import { attachMagnifier } from "./magnifier.js";
+import { footprintKmFromBbox } from "./flat-warning.js";
 
 const TIER2_MAX_GSD_M = 2.4;
 
@@ -375,6 +376,7 @@ export function createInputView(root, { onStart }) {
             routing: sel.routing,
             dem: sel.dem ?? null,
             geo: sel.geo ?? null,
+            landscape: sel.landscape ?? null,
             // what the backend needs to run relative depth on this exact input (src/depth-result.js)
             inputRef: sel.id ? { source: sel.source, id: sel.id } : null,
             logLines: log,
@@ -551,6 +553,13 @@ export function createInputView(root, { onStart }) {
             routing: item.routing,
             // centre from the tile's own geotransform (scripts/library_catalog.py _geo); none for DFC2019
             geo: item.geo ? { lat: item.geo.lat, lon: item.geo.lon, origin: "the file's geotransform (tile centre)" } : null,
+            // for the flat-terrain warning (src/flat-warning.js)
+            landscape: {
+                collection: item.collection,
+                terrain: itemTerrain(item),
+                footprintKm: item.geo?.footprint_km ?? null,
+                gsdM: item.gsd_m,
+            },
         });
         // Server-side routing is authoritative (Sentinel-2 is locked to Tier 1 there).
         try {
@@ -638,6 +647,10 @@ export function createInputView(root, { onStart }) {
             meta: inputMeta(m),
             routing: m.routing,
             geo: inputGeo(m, source),
+            // a searched scene has no terrain class: the warning judges it by its generated relief
+            landscape: m.kind === "sentinel2-scene" && m.footprint_wgs84
+                ? { collection: "sentinel2", terrain: null, footprintKm: footprintKmFromBbox(m.footprint_wgs84), gsdM: m.gsd_m }
+                : null,
             dem: m.dem,
             demPreviewUrl: apiUrl(m.dem_preview_url),
         };
