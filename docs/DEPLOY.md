@@ -27,6 +27,8 @@
   - `backend/api/depth_routes.py` (Space retry);
   - `backend/dem/glo30.py` (tile-seam mosaic);
   - `backend/terrain/mesh_export.py` (hole fill);
+  - `backend/input/store.py` + `backend/api/input_routes.py` + `backend/generation/pipeline.py` (manual GSD for uploads
+    with no geotransform, new endpoint `POST /api/input/{id}/gsd`);
   - the DFC2019 pack integration (`backend/storage/library_store.py` `private_pack`, `backend/generation/pipeline.py`).
 - **Frontend changes that must go to Vercel:** all of `frontend/` (`npx vercel deploy --prod` from `frontend/`).
 - **Desktop:** bump 1.0.1 → 1.0.2, then `desktop/tauri/build-signed.sh`, then `desktop/tauri/publish-release.sh`

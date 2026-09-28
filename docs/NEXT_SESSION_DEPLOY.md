@@ -62,7 +62,7 @@ setup. Work through the phases in order. Commit after each phase.
 
 ## Phase 2: tests
 - `cd frontend && npm test` (expect 90/90) and `npx vite build`.
-- `uv run python -m pytest -q backend/tests` from the repo root (expect 45 passed, 1 skipped).
+- `uv run python -m pytest -q backend/tests` from the repo root (expect 48 passed, 1 skipped).
 - Stop on any failure.
 
 ## Phase 3: backend → Render (`docs/DEPLOY.md` "LIVE")
@@ -70,6 +70,9 @@ setup. Work through the phases in order. Commit after each phase.
   - `backend/api/depth_routes.py`: Space retry, `SPACE_RETRY_DELAYS_S`, `_is_transient`;
   - `backend/dem/glo30.py`: `mosaic_to_grid`, the GLO-30 tile-seam fix;
   - `backend/terrain/mesh_export.py`: `fill_nan_nearest`;
+  - the manual GSD for uploads without a geotransform: `backend/input/store.py` `set_manual_gsd`,
+    `backend/api/input_routes.py` `POST /api/input/{id}/gsd`, and `backend/generation/pipeline.py` (flat plane sized
+    from it);
   - the DFC2019 terrain-pack web path: `backend/storage/library_store.py` `private_pack`, and
     `backend/generation/pipeline.py` `_library_elevation`;
   - plus anything else in `git diff <last-deployed-commit>..main -- backend bridge requirements.txt`.
@@ -99,6 +102,8 @@ setup. Work through the phases in order. Commit after each phase.
     - drag to resize, and past the minimum to collapse;
     - the D opens Home;
     - the footer links work.
+  - Upload a plain PNG: the GSD card appears and Start stays disabled until a GSD is entered; generation works.
+  - Box outlines glow faintly, and a patch travels round them now and then; the stars are sparse.
   - Background icons (12) cruise without halting, bounce off each other and their limits, react to the pointer,
     keep 1 cm apart (5 cm for the same artwork); the big satellite stays top-left and the earth + satellite bottom-right; spread over all four sides, and are never
     more than 30% hidden (left limit: the collapsed sidebar's width). Faint star dots appear in the margins, never on the boxes.

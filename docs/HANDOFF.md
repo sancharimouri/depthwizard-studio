@@ -505,7 +505,11 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
   - Footer links: GitHub, email, LinkedIn; X is a placeholder.
 - Page names: **Workbench → DW Studio, Docs → Home**, display text only. Page ids and the permanent routes in
   `src/routes.js` are unchanged (`#/docs`, `#/demo`, `#demo-video`, bare URL all verified).
-- Tests: `npm test` in `frontend/` → 90/90.
+- Tests: `npm test` in `frontend/` → 91/91.
+- Input boxes: a faint thin green outline glow, and a small patch travels round each outline every ~14 s (CSS,
+  `dw-outline-patch`). Stars: half the density, big ones 6%.
+- Upload without a geotransform: a card asks for the GSD. It's set with `POST /api/input/{id}/gsd`
+  (`store.set_manual_gsd`), and the flat plane is sized from it in `pipeline.generate`.
 
 **Backend (`backend/`)** (must reach the Render copy and the desktop sidecar)
 - `backend/api/depth_routes.py`: transient Space errors (502/503/504, ClientDisconnect, resets) are retried twice
@@ -514,7 +518,7 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
   left NaNs on tile seams: Darjeeling's south edge is on 27°N, 6 px.
 - `backend/terrain/mesh_export.py`: `fill_nan_nearest`. Holes are filled from neighbours, never the tile minimum. That
   minimum fill drew the 554 m "downward spikes".
-- Tests: `uv run python -m pytest -q backend/tests` → 45 passed, 1 skipped.
+- Tests: `uv run python -m pytest -q backend/tests` → 48 passed, 1 skipped.
 
 **Open issues found 2026-09-28**
 - **DAv2 Space down.** `sancharimouri/DepthWizard2` reports RUNNING, but every `/gradio_api/upload` returns 502.
