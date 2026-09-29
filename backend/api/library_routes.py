@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
-from backend.library import catalog
+from backend.library import catalog, tile_manifest
 from backend.storage import library_store
 
 router = APIRouter(prefix="/api/library")
@@ -24,6 +24,9 @@ def _public(item: dict) -> dict:
     """
     out = {k: v for k, v in item.items() if k not in ("thumbnail", "preview", "file", "r2", "assets", "store")}
     out.pop("download", None)
+    cur = tile_manifest.entry(item["id"])  # curated tile manifest (DW2_TILE_MANIFEST), if configured
+    if cur is not None:
+        out.update(order_index=cur["order_index"], stars=cur["stars"], default_exaggeration=cur["default_exaggeration"])
     if library_store.mode() == "bundle":
         out["thumbnail_url"] = f"/api/library/{item['id']}/thumbnail"
         out["preview_url"] = f"/api/library/{item['id']}/preview"
@@ -79,12 +82,15 @@ def list_items(
     tier: int | None = Query(None, ge=1, le=2),
 ):
     data = _load()
-    sel = [i for i in data["items"]
+    listed = tile_manifest.curate(data["items"])  # unchanged catalog unless DW2_TILE_MANIFEST is set
+    sel = [i for i in listed
            if (collection is None or i["collection"] == collection)
            and (tier is None or i["routing"]["tier"] == tier)]
+    counts = data["counts"] if listed is data["items"] else {
+        c: sum(i["collection"] == c for i in listed) for c in data["counts"]}
     return {
         "generated_at": data["generated_at"],
-        "counts": data["counts"],
+        "counts": counts,
         "tiers": data["tiers"],
         "total": len(sel),
         "items": [_public(i) for i in sel],
