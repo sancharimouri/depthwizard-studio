@@ -1,9 +1,5 @@
 # Next session: ship everything to the website and the desktop app, sort out storage/GPU, report sizes and load times
 
-Paste the prompt below into a fresh Claude Code session in the repo root. Written 2026-09-29, replacing the 2026-09-28 version.
-
----
-
 Ship every committed-but-undeployed change to the live website (Vercel frontend + Render backend) and the desktop app,
 make storage and GPU work reliably, and finish with a measured report. Work through the phases in order and commit after
 each one. The full list of what changed, with file references, is `docs/CHANGES_2026-09-28_29.md`: read it first.
