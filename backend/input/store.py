@@ -29,11 +29,9 @@ import os
 from pathlib import Path
 
 import numpy as np
-import rasterio
-from PIL import Image
-from pyproj import CRS, Transformer
-from rasterio.transform import Affine
-from rasterio.warp import transform_bounds
+
+# rasterio / PIL are imported inside the functions that use them (not at module import): the web backend's idle
+# memory and start-up stay low until an input actually needs GDAL (docs/container-measurements.md).
 
 from backend.dem import fabdem
 
@@ -109,6 +107,7 @@ def _gsd_m(src) -> tuple[float, float]:
 
 
 def _footprint_wgs84(crs, bounds) -> list[float]:
+    from rasterio.warp import transform_bounds
     w, s, e, n = transform_bounds(crs, "EPSG:4326", *bounds, densify_pts=21)
     return [round(w, 6), round(s, 6), round(e, 6), round(n, 6)]
 
@@ -162,6 +161,7 @@ def _hillshade_png(elev: np.ndarray, px_m: float) -> bytes:
     hs = np.sin(alt) * np.cos(slope) + np.cos(alt) * np.sin(slope) * np.cos(az - aspect)
     img = (np.clip(hs, 0, 1) * 255).astype(np.uint8)
     img[~np.isfinite(elev)] = 0
+    from PIL import Image
     pil = Image.fromarray(img)
     pil.thumbnail((1024, 1024))
     buf = io.BytesIO()
@@ -209,6 +209,8 @@ def create_upload(filename: str, stream, max_bytes: int = 1024 ** 3) -> dict:
 
 def _inspect(d: Path, path: Path, filename: str) -> dict:
     meta = {"id": d.name, "kind": "upload", "filename": filename, "format": path.suffix.lower().lstrip(".")}
+    import rasterio
+    from PIL import Image
     with rasterio.open(path) as src:
         georef = src.crs is not None and not src.transform.is_identity
         scale = max(src.width, src.height) / 1024
@@ -289,11 +291,13 @@ def create_scene(scene: dict) -> dict:
 
 def save_scene_preview(input_id: str, png: bytes) -> None:
     d = _dir(input_id)
+    from PIL import Image
     Image.open(io.BytesIO(png)).convert("RGB").save(d / "preview.jpg", quality=88)
 
 
 # --------------------------------------------------------------------------- DEM sourcing
 def _write_dem(d: Path, elev: np.ndarray, transform: Affine, crs: str, source: str, px_m: float) -> dict:
+    import rasterio
     with rasterio.open(d / "dem.tif", "w", driver="GTiff", width=elev.shape[1], height=elev.shape[0], count=1,
                        dtype="float32", crs=crs, transform=transform, nodata=np.nan, compress="deflate") as dst:
         dst.write(elev.astype(np.float32), 1)
@@ -306,6 +310,8 @@ def fetch_fabdem(input_id: str) -> dict:
     meta = load_meta(input_id)
     if not meta.get("georeferenced"):
         raise InputError("This input has no georeference, so there is no footprint to fetch FABDEM for.")
+    from rasterio.crs import CRS  # was pyproj.CRS: only .is_geographic is used, identical in rasterio
+    from rasterio.transform import Affine
     crs = CRS.from_user_input(meta["crs"])
     res = fabdem.native_res_for(crs.is_geographic)
     left, bottom, right, top = meta["bounds"]
@@ -326,6 +332,7 @@ def attach_user_dem(input_id: str, filename: str, stream, max_bytes: int = 512 *
         raise InputError("A user DEM is only used for Tier 2 (≤ 2.4 m) images; this one uses FABDEM.")
     if Path(filename or "").suffix.lower() not in {".tif", ".tiff"}:
         raise InputError("The DEM must be a GeoTIFF (.tif/.tiff).")
+    import rasterio
     tmp = d / "user_dem_upload.tif"
     written = 0
     with tmp.open("wb") as fh:

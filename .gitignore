@@ -62,3 +62,6 @@ data/dfc2019/experiments/dav2_calibration/calibration_samples.csv
 
 # Curated tile library v2 (2026-09-29): packs, DFC2019 previews/packs, analysis tables. Private: never commit.
 data/library_v2_*/
+
+# Local build/measurement output (container work, 2026-09-30)
+build/

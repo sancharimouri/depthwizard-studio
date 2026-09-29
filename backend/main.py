@@ -62,3 +62,9 @@ app.include_router(input_router)
 app.include_router(facts_router)
 app.include_router(depth_router)
 app.include_router(generation_router)
+
+
+@app.get("/health")
+def health() -> dict:
+    """Liveness for container platforms (Cloud Run, docker HEALTHCHECK): no I/O, no network, no heavy imports."""
+    return {"ok": True}

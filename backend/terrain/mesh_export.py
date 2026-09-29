@@ -24,13 +24,33 @@ def block_mean(a: np.ndarray, out_hw: tuple[int, int]) -> np.ndarray:
 
 
 def fill_nan_nearest(grid: np.ndarray) -> np.ndarray:
-    """NaN cells take the value of the nearest valid cell (no-op without NaN)."""
+    """NaN cells take the value of the nearest valid cell (Euclidean; no-op without NaN).
+
+    numpy only (was scipy.ndimage.distance_transform_edt; parity in docs/container-measurements.md). The nearest
+    valid cell of any NaN cell is always a valid cell with a non-valid 8-neighbour: from any other valid cell, the
+    step towards the NaN cell lands on a valid cell that is strictly closer. So only those boundary cells are
+    searched, in blocks, which keeps it small (the mesh grids are at most 400 x 400)."""
     bad = ~np.isfinite(grid)
     if not bad.any() or bad.all():
         return grid
-    from scipy.ndimage import distance_transform_edt
-    _, (iy, ix) = distance_transform_edt(bad, return_distances=True, return_indices=True)
-    return grid[iy, ix]
+    good = ~bad
+    pad = np.pad(bad, 1, constant_values=False)
+    near_bad = np.zeros_like(bad)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if dy or dx:
+                near_bad |= pad[1 + dy: 1 + dy + bad.shape[0], 1 + dx: 1 + dx + bad.shape[1]]
+    # column-major order: argmin keeps the first of equal distances, so ties go to the smallest column, then the
+    # smallest row, which is scipy's choice (matched on 17,647 of 17,647 tied cells, 2026-09-30)
+    bx, by = np.nonzero((good & near_bad).T)
+    qy, qx = np.nonzero(bad)
+    out = grid.copy()
+    step = max(1, 4_000_000 // max(1, len(by)))  # bound the distance block at ~4 M entries
+    for i in range(0, len(qy), step):
+        y, x = qy[i:i + step, None], qx[i:i + step, None]
+        k = np.argmin((y - by) ** 2 + (x - bx) ** 2, axis=1)
+        out[qy[i:i + step], qx[i:i + step]] = grid[by[k], bx[k]]
+    return out
 
 
 def write_terrain_json(path: Path, surface: np.ndarray, bounds_lonlat: tuple[float, float, float, float],

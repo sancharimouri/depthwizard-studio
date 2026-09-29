@@ -1,0 +1,11 @@
+# Whitelist (2026-09-30): the backend image gets ONLY requirements.txt and backend/ (minus tests and caches).
+# So everything on the HANDOFF §4 hide list stays out: data/ (incl. dfc2019/experiments), external/, desktop/ (incl.
+# desktop/tauri build artifacts), docs/ (incl. design-reference), frontend/ (incl. dist/, .vercel/), AWSCLIV2.pkg,
+# configs/, models/, space/, notebooks, scripts, tests. The image never carries tile data, checkpoints or secrets.
+*
+!requirements.txt
+!backend/
+!docker/
+backend/tests/
+backend/**/__pycache__
+backend/**/*.pyc

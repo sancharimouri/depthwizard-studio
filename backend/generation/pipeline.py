@@ -26,7 +26,6 @@ import zlib
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
 
 from backend.terrain.mesh_export import write_terrain_json
 
@@ -95,8 +94,8 @@ def _library_elevation(item: dict) -> dict | None:
     if not geo:
         return None
     # no pack available (e.g. the web backend): live GLO-30 on the item's footprint
-    from pyproj import Transformer
-    x, y = Transformer.from_crs("EPSG:4326", geo["crs"], always_xy=True).transform(geo["lon"], geo["lat"])
+    from rasterio.warp import transform  # was pyproj's Transformer (always_xy); parity in docs/container-measurements.md
+    (x,), (y,) = transform("EPSG:4326", geo["crs"], [geo["lon"]], [geo["lat"]])
     hw, hh = geo["footprint_km"][0] * 500, geo["footprint_km"][1] * 500
     return _glo30_only(geo["crs"], (x - hw, y - hh, x + hw, y + hh), "live GLO-30 (no bundled pack)")
 
@@ -173,6 +172,7 @@ def baked_depth(item: dict | None, preview: bytes) -> dict | None:
 
 # ----------------------------------------------------------------------------- textures
 def _colour_ramp(z: np.ndarray) -> Image.Image:
+    from PIL import Image
     lo, hi = float(np.nanmin(z)), float(np.nanmax(z))
     n = np.clip((z - lo) / (hi - lo) if hi > lo else np.zeros_like(z), 0, 1)
     n = np.where(np.isfinite(n), n, 0)
@@ -181,6 +181,7 @@ def _colour_ramp(z: np.ndarray) -> Image.Image:
 
 
 def _depth_png(resp: dict) -> Image.Image:
+    from PIL import Image
     h, w = resp["shape"]
     raw = base64.b64decode(resp["data_b64"])
     if resp.get("encoding") == "u16-zlib":
@@ -203,6 +204,7 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
     job_id = uuid.uuid4().hex
     out = generated_dir() / job_id
     out.mkdir(parents=True, exist_ok=True)
+    from PIL import Image  # imported here, not at module import (idle memory; docs/container-measurements.md)
     img = Image.open(io.BytesIO(preview)).convert("RGB")
     img.save(out / "satellite.png", optimize=True)
     _depth_png(depth_resp).save(out / "relative_depth.png", optimize=True)
