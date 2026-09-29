@@ -65,3 +65,6 @@ data/library_v2_*/
 
 # Local build/measurement output (container work, 2026-09-30)
 build/
+
+# Pre-baked static library (scripts/bake_static_library.py): holds DFC2019-derived files. Never commit.
+frontend/public/library-static/
