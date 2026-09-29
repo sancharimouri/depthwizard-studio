@@ -66,8 +66,8 @@ The HF Space was down on 2026-09-28, so this runs everything on this Mac, next t
    - `docs/DEPLOY.md` (all of it, especially LIVE and PENDING DEPLOY);
    - `docs/DESKTOP_APP.md` (Build, In-app updates, Tiered tile library, Real generation);
    - `docs/STORAGE.md`.
-2. `git status`, `git log origin/main..HEAD --oneline` (expect 46 commits: the DFC2019 pack series `619d1d7`…
-   `7c8cbec`, then these sessions up to the docs commit that added this file), and `git remote -v`.
+2. `git status`, `git log origin/main..HEAD --oneline` (expect 46 commits: the DFC2019 pack series `9145d44`…
+   `0270343`, then these sessions up to the docs commit that added this file), and `git remote -v`.
 3. **Resolve the push route before anything else.**
    - This repo's `origin` is `sancharimouri/depthwizard-studio`, the repo linked in the SIH deck. But `docs/DEPLOY.md`
      says that repo is a private, backend-only copy (`backend/` + `bridge/` + `requirements.txt`) that Render
@@ -189,7 +189,7 @@ The HF Space was down on 2026-09-28, so this runs everything on this Mac, next t
 ## Phase 6: storage and GPU (report real numbers, fix what's safe)
 1. **Hugging Face:**
    - Sizes of the private dataset `sancharimouri/depthwizard2-library-private` (`tiles/`, `previews/`, `thumbnails/`,
-     `manifest.json`, and the `dem/` DFC2019 packs from `7c8cbec`), the private model `sancharimouri/depthwizard2-method6`,
+     `manifest.json`, and the `dem/` DFC2019 packs from `0270343`), the private model `sancharimouri/depthwizard2-method6`,
      and the Space.
    - Compare with the current free-tier limits (look them up; don't guess).
    - Confirm Render's `HF_TOKEN` can read `dem/`.

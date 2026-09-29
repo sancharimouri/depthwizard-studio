@@ -471,8 +471,8 @@ terrain.** None of the research-track work is deployed into it.
 
 ### 5z. 2026-09-28 UI/UX sessions (17 prompts): committed locally, NOT pushed, NOT deployed
 
-Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc3536`–`e3b0d9a`; series B: 8 prompts,
-`15d18e0`–`9d0174d`). Every commit message has the detail and the verification; this is the map.
+Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `ee6f95c`–`1bfccd1`; series B: 8 prompts,
+`cae681d`–`8f7c709`). Every commit message has the detail and the verification; this is the map.
 
 **Frontend (`frontend/`)**
 - Jobs: any job can be opened while another generates. The grid paints only the on-screen job (`job.run` stage state,
@@ -534,7 +534,7 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `9dc353
 - Local-only testing recipe (no Space needed): `uv run python -m uvicorn bridge.dav2_server:app --port 8766`, then a
   backend with `DAV2_INFERENCE_URL=http://localhost:8766` on another port, then a Vite with its proxy pointed there.
 - Unpushed: 25 commits on `main` (`git log origin/main..main`). They include the DFC2019 terrain-pack series
-  (`619d1d7`–`7c8cbec`), whose web integration was also never deployed.
+  (`9145d44`–`0270343`), whose web integration was also never deployed.
 
 The next-session deployment prompt is `docs/NEXT_SESSION_DEPLOY.md`.
 
