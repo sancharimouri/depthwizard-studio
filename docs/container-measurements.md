@@ -134,3 +134,56 @@ The next largest (all under 2 MB): pyasn1_modules, google-api-core, fastapi, any
 
 `pyproject.toml` / `uv.lock` (the full research environment) keep scipy and pyproj: research scripts use them.
 `requirements.txt` is the web backend's list.
+
+## Part 2: static library, measured then STOPPED on size (2026-09-30)
+
+**Bake:** `scripts/bake_static_library.py` (re-runnable).
+
+- It runs the backend's own `pipeline.generate` offline on each included tile's **baked** depth, so it makes no Space
+  calls; a tile without baked depth fails the bake.
+- Each tile gets `satellite.png`, `relative_depth.png`, `elevation.png`, `terrain.json` (Maxar: DISPLAY for the mesh,
+  real bands for the statistics), `preview.jpg`, `thumbnail.jpg` and `tile.json` (the generate response minus the
+  base64 depth, plus the manifest fields).
+- `index.json` is the curated listing.
+- The output folder `frontend/public/library-static/` is gitignored and rejected by the pre-commit hook.
+- The trial ran into `build/slim/static_trial/` only.
+
+**Parity** (`build/slim/results/parity_static_vs_live.txt`): Almora, Kutch, a_valley (Maxar, DISPLAY), OMA_212_033 and
+JAX_416_009, static files vs the live `POST /api/generate/library/<id>`.
+
+- All four assets are **byte-identical**.
+- The metadata and the depth fields are identical.
+
+**Size of the full set:** 76 tiles, 533 files, **251.8 MB**. Largest file: 2.64 MB (`sentinel2-pune/satellite.png`).
+
+| part | size |
+|---|---|
+| `satellite.png` | 139.3 MB |
+| `terrain.json` | 74.4 MB |
+| `preview.jpg` | 25.1 MB |
+| `elevation.png` | 7.6 MB |
+| `relative_depth.png` | 3.5 MB |
+| thumbnails | 1.6 MB |
+
+| by source | size |
+|---|---|
+| DFC2019 | 130.9 MB |
+| Sentinel-2 | 101.0 MB |
+| Maxar | 19.8 MB |
+
+A tile view transfers about 3.6 MB.
+
+**Vercel Hobby limits** (looked up 2026-09-30):
+
+- https://vercel.com/docs/limits (last updated 2026-09-16):
+  - "Static File uploads": **100 MB** (Pro 1 GB), the maximum source-file size of a CLI deployment;
+  - "Files": **15,000** source files per CLI deployment.
+- https://vercel.com/docs/limits/fair-use-guidelines: Hobby includes **100 GB** Fast Data Transfer and 10 GB Fast
+  Origin Transfer a month.
+- https://vercel.com/changelog/cli-deployment-limits-removed (June 2026) says "CLI-specific deployment limits" were
+  removed without naming any; the limits page still lists 100 MB, so it is treated as binding.
+- The frontend deploys by CLI upload of `frontend/`, and `frontend/public/` is **already 102 MB**. 84 MB of that is the
+  untracked `public/data/vhr/`, which no code references, and there is no `.vercelignore`.
+
+**Verdict:** the set does **not fit** as baked; the file count (533) is fine. Options, and the DFC2019 question, are
+in HANDOFF §6. The frontend wiring and `vercel.json` wait for that decision.
