@@ -27,6 +27,7 @@ import os
 import re
 import tempfile
 import threading
+import time
 from pathlib import Path
 
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
@@ -73,19 +74,40 @@ def _record(request: httpx.Request) -> None:
             _audit[key] += 1
 
 
+# HF's edge in front of *.hf.space answers a share of requests with 502 before they reach any replica: no
+# x-proxied-replica header (2026-09-29: 8-23% of requests, on this Space and on unrelated popular ones). Such a
+# request never reached the app, so it is re-sent after these delays; the app's own errors are left alone.
+EDGE_RETRY_DELAYS_S = (0.5, 1.0, 2.0, 3.0)
+
+
+def _edge_502(request: httpx.Request, response: httpx.Response) -> bool:
+    return (request.url.host.endswith(".hf.space") and response.status_code in (502, 503, 504)
+            and "x-proxied-replica" not in response.headers)
+
+
 def _install_audit() -> None:
-    """Count every httpx request to *.hf.space and whether it carried a Bearer token."""
+    """Count every httpx request to *.hf.space and whether it carried a Bearer token; re-send edge 502s."""
     if getattr(httpx.Client.send, "_dw2_audit", False):
         return
     sync_send, async_send = httpx.Client.send, httpx.AsyncClient.send
 
     def send(self, request, **kw):
-        _record(request)
-        return sync_send(self, request, **kw)
+        for delay in (*EDGE_RETRY_DELAYS_S, None):
+            _record(request)
+            response = sync_send(self, request, **kw)
+            if delay is None or not _edge_502(request, response):
+                return response
+            response.close()
+            time.sleep(delay)
 
     async def asend(self, request, **kw):
-        _record(request)
-        return await async_send(self, request, **kw)
+        for delay in (*EDGE_RETRY_DELAYS_S, None):
+            _record(request)
+            response = await async_send(self, request, **kw)
+            if delay is None or not _edge_502(request, response):
+                return response
+            await response.aclose()
+            await asyncio.sleep(delay)
 
     send._dw2_audit = asend._dw2_audit = True
     httpx.Client.send, httpx.AsyncClient.send = send, asend
@@ -131,7 +153,8 @@ def _space_predict(sid: str, body: bytes, suffix: str) -> dict:
 # hold the old instance's config). Quota errors and timeouts are never retried.
 SPACE_RETRY_DELAYS_S = (2.0, 5.0)
 _TRANSIENT = re.compile(r"\b50[234]\b|bad gateway|service unavailable|gateway time-?out|clientdisconnect|"
-                        r"connection (?:reset|refused|aborted)|remote ?protocol|server disconnected", re.I)
+                        r"connection (?:reset|refused|aborted)|remote ?protocol|server disconnected|"
+                        r"could not fetch (?:api info|config)", re.I)
 
 
 def _is_transient(msg: str) -> bool:
