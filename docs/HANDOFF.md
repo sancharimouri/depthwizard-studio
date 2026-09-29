@@ -566,6 +566,8 @@ The protected folders are SHA-256-identical before and after (474 files).
   3 stars; b_glacier excluded.
 - The DFC2019 limiter bug is fixed (DFC2019 terrain.json has `limitOutliers: false`).
 - Darjeeling's A and B are identical, so there is no decision.
+- DFC2019: OMA_212_033 (16x) and OMA_258_020 (22x) are kept; OMA_211_039, OMA_211_032, OMA_376_023 and
+  OMA_376_038 are excluded (files stay). All included DFC2019 tiles have 3 stars. The container holds 76 tiles.
 - Items 1, 2 and 4 below are closed. The DFC2019 anchors may need re-checking, since they now render at full relief.
 
 **Decisions waiting on the owner (as of 2026-09-29):**

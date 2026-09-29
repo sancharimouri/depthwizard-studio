@@ -18,7 +18,14 @@
 >     were chosen while the limiter was capping them (e.g. OMA_269_035 showed 46 % of its relief, JAX_004_006 60 %),
 >     so they now look taller at the same value.
 >   - Sentinel-2, Maxar and the demo regions keep the limiter, so their rated looks are unchanged.
-> - **Darjeeling:** the generated B render is **pixel-identical** to the original. Darjeeling's RGB raster is already
+> - **DFC2019 owner decisions (2026-09-30):**
+>   - Of the six formerly flattened tiles, only OMA_212_033 (16x) and OMA_258_020 (22x) are kept. 22x is the owner's
+>     value, outside the 10–16x rule.
+>   - OMA_211_039, OMA_211_032, OMA_376_023 and OMA_376_038 are excluded; their files stay on disk.
+>   - Every included DFC2019 tile gets 3 stars.
+>   - 45 DFC2019 tiles are included (76 in the container in total).
+>   - `build_library_v2.py dfc` now keeps owner-set values when re-run.
+> - **Darjeeling:** stays as it is (original; it is identical to B). The generated B render is **pixel-identical** to the original. Darjeeling's RGB raster is already
 >   stretched to 0–255 (per-band 2nd/98th percentiles = 0/255), so the B stretch is the identity. There is no colour
 >   choice to make. The side-by-side is in `_qa/compare/darjeeling_A_original_vs_B.png`.
 

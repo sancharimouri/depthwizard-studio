@@ -378,6 +378,8 @@ def cmd_dfc(root: Path) -> None:
             continue
         k = t["tile_id"].split("-", 1)[1]
         r = table[k]
+        if t["exaggeration_origin"] == "user" and not r["anchor"]:
+            continue  # the owner's own value and notes (set after this rule ran, e.g. 2026-09-30) are kept
         t["default_exaggeration"] = r["final"]
         t["exaggeration_origin"] = "user" if r["anchor"] else "derived_rule"
         notes = []
