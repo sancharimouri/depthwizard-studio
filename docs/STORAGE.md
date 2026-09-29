@@ -66,6 +66,9 @@ for the private backend container.
   - `manifest.json` + `tiles/` (symlinks to the original rasters) are the bundle-mode catalog;
   - `_analysis/` holds tables (the DFC2019 per-tile tables stay here, never in git);
   - `_guard/` holds the SHA-256 baseline.
+- **Baked depth (2026-09-30):** each included pack also holds the DAv2 relative depth of its exact preview
+  (metadata domain `DAV2_DEPTH`, u16+zlib as the Space returns it; about 0.9 MB per entry). Library tiles need no Space
+  call. DFC2019 depth is private, like the rest of those packs.
 - **Container staging** (dry run, `scripts/stage_container_tiles.py`): 81 packs (41.0 MB) + 162 images (27.7 MB).
   - DFC2019 content may go into the **private** container only.
   - Nothing here is uploaded to HF or GitHub yet: the HF `dem/` and the public release still hold the previous sets.

@@ -22,6 +22,8 @@ Steps (run in this order; `all` runs them all):
            entry) and tiles/ (symlinks to the original RGB rasters; never copied, never modified).
   dfc      DFC2019 flat-render rule and the 10x-16x exaggeration mapping (docs/library_v2.md) ->
            include_in_container / default_exaggeration for dfc2019 entries; tables in _analysis/.
+  depth    bakes DAv2 relative depth (the app's own Space call, on the exact shipped preview) into each included
+           tile's pack, so opening a library tile makes no Space call. Re-run after packs/--activate (cached: no calls).
   exag     bakes the app's automatic exaggeration (frontend/src/terrain.js:336-344, reproduced exactly
            below) where the manifest asks for it; reports every tile's slider range.
 """
@@ -405,6 +407,67 @@ def cmd_dfc(root: Path) -> None:
     print(json.dumps({k: v for k, v in rep.items() if k != "tiles"}, indent=1))
 
 
+# ----------------------------------------------------------------------------- depth
+def cmd_depth(root: Path) -> None:
+    """Bake DAv2 relative depth into each included tile's pack (and both Darjeeling colour variants), so opening a
+    library tile makes no Space call (backend/generation/pipeline.py baked_depth).
+
+    The input is the exact preview image the tile ships with; the call is the app's own
+    (backend/api/depth_routes.py _forward, same filename and bytes), so the stored payload is what the app would
+    receive. Each response is cached under _analysis/depth_cache/<preview sha256>.json: a rebuild (new packs,
+    another Maxar preset) re-bakes without new Space calls. Stored per pack in the DAV2_DEPTH metadata domain as
+    SHA256_<preview sha256> = the response JSON (u16+zlib payload) + model, Space id + revision, preview sha, date.
+    Maxar: written into dem/ and every dem_maxar/<preset>/ pack, so --activate keeps it."""
+    import asyncio
+    import datetime
+    import hashlib
+    import rasterio
+    pipeline, catalog, _ = _backend(root)
+    from backend.api import depth_routes
+    from huggingface_hub import HfApi
+    man = _load(root)
+    cat = {i["id"]: i for i in _catalog()}
+    cache = _guard(root, root / "_analysis" / "depth_cache")
+    cache.mkdir(parents=True, exist_ok=True)
+    sid = depth_routes.space_id(depth_routes.hosts()[0])
+    assert sid, "the primary depth host is not a Space"
+    rev = HfApi().space_info(sid, token=depth_routes.hf_token()).sha
+    jobs = []
+    for t in man["tiles"]:
+        if not t["include_in_container"]:
+            continue
+        name = cat[t["tile_id"]]["preview"]
+        jobs.append((t["tile_id"], root / "previews" / name))
+        if t["tile_id"] == "sentinel2-darjeeling":
+            jobs += [(t["tile_id"], p) for p in sorted((root / "previews" / "_variants").glob(name.replace(".jpg", "__*.jpg")))]
+    calls, report = 0, {}
+    today = datetime.date.today().isoformat()
+    for iid, prev in jobs:
+        body = prev.read_bytes()
+        sha = hashlib.sha256(body).hexdigest()
+        c = cache / f"{sha}.json"
+        if c.exists():
+            resp = json.loads(c.read_text())
+        else:
+            resp = asyncio.run(depth_routes._forward(f"{iid}.jpg", body, "image/jpeg"))
+            calls += 1
+            resp = {**resp, "space": sid, "space_revision": rev, "baked_at": today}
+            _guard(root, c).write_text(json.dumps(resp))
+        entry = {**resp, "preview_sha256": sha, "preview_file": str(prev.relative_to(root))}
+        packs = [root / "dem" / f"{iid}.tif"]
+        if iid.startswith("vhr-"):
+            packs += sorted((root / "dem_maxar").glob(f"*/{iid}.tif"))
+        for p in packs:
+            with rasterio.open(_guard(root, p), "r+") as w:
+                w.update_tags(ns=pipeline.DEPTH_NS, **{f"SHA256_{sha}": json.dumps(entry)})
+        report.setdefault(iid, []).append({"preview": entry["preview_file"], "sha256": sha, "shape": resp.get("shape"),
+                                           "encoding": resp.get("encoding"), "model": resp.get("model"),
+                                           "packs": [str(p.relative_to(root)) for p in packs]})
+    (root / "_analysis" / "depth_bake_report.json").write_text(json.dumps(
+        {"space": sid, "space_revision": rev, "space_calls_this_run": calls, "previews": len(jobs), "tiles": report}, indent=1))
+    print(f"baked {len(jobs)} previews into {len(report)} tiles; Space calls this run: {calls} ({sid} @ {rev[:12]})")
+
+
 # ----------------------------------------------------------------------------- exag
 def cmd_exag(root: Path) -> None:
     man = _load(root)
@@ -425,17 +488,18 @@ def cmd_exag(root: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("step", choices=["seed", "packs", "images", "catalog", "dfc", "exag", "all"])
+    ap.add_argument("step", choices=["seed", "packs", "images", "catalog", "dfc", "exag", "depth", "all"])
     ap.add_argument("--root", type=Path, default=ROOT / f"data/library_v2_{DATE}")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args()
     root = a.root.resolve()
     assert root != LIB.resolve() and root.name.startswith("library_v2_"), root
     root.mkdir(parents=True, exist_ok=True)
-    steps = ["seed", "packs", "images", "catalog", "dfc", "exag"] if a.step == "all" else [a.step]
+    steps = ["seed", "packs", "images", "catalog", "dfc", "exag", "depth"] if a.step == "all" else [a.step]
     for s in steps:
         {"seed": lambda: cmd_seed(root, a.force), "packs": lambda: cmd_packs(root), "images": lambda: cmd_images(root),
-         "catalog": lambda: cmd_catalog(root), "dfc": lambda: cmd_dfc(root), "exag": lambda: cmd_exag(root)}[s]()
+         "catalog": lambda: cmd_catalog(root), "dfc": lambda: cmd_dfc(root), "exag": lambda: cmd_exag(root),
+         "depth": lambda: cmd_depth(root)}[s]()
 
 
 if __name__ == "__main__":

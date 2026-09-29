@@ -140,6 +140,37 @@ def _input_elevation(meta: dict, input_dir: Path) -> dict | None:
     return out
 
 
+# ----------------------------------------------------------------------------- baked depth
+DEPTH_NS = "DAV2_DEPTH"  # pack metadata domain: one "SHA256_<preview sha256>" entry per exact preview image
+
+
+def baked_depth(item: dict | None, preview: bytes) -> dict | None:
+    """The DAv2 response baked into the item's pack for exactly these preview bytes (same u16+zlib payload the
+    Space returned), or None: no pack, no entry for this preview (e.g. the colours changed), or unreadable."""
+    import hashlib
+    import logging
+    if not item:
+        return None
+    from backend.storage import library_store
+    try:
+        pack = library_store.local_asset(item, "dem") or library_store.private_pack(item)
+        if pack is None:
+            return None
+        import rasterio
+        sha = hashlib.sha256(preview).hexdigest()
+        with rasterio.open(pack) as r:
+            raw = r.tags(ns=DEPTH_NS).get(f"SHA256_{sha}")
+        if raw is None:
+            return None
+        entry = json.loads(raw)
+        if entry.get("preview_sha256") != sha:
+            return None
+        return {**entry, "baked": True, "fallback_used": False}
+    except Exception as exc:  # noqa: BLE001 - a bad entry must never break generation: the Space answers instead
+        logging.getLogger(__name__).warning("baked depth unreadable for %s (%s)", item.get("id"), type(exc).__name__)
+        return None
+
+
 # ----------------------------------------------------------------------------- textures
 def _colour_ramp(z: np.ndarray) -> Image.Image:
     lo, hi = float(np.nanmin(z)), float(np.nanmax(z))
@@ -178,7 +209,7 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
 
     elev = _library_elevation(item) if kind == "library" else _input_elevation(input_meta, input_dir)
     meta = {"job": job_id, "input": {"kind": kind, "id": item_id}, "has_elevation": elev is not None,
-            "depth": {k: depth_resp.get(k) for k in ("model", "device", "infer_s", "encoding", "host", "fallback_used")}}
+            "depth": {k: depth_resp.get(k) for k in ("model", "device", "infer_s", "encoding", "host", "fallback_used", "baked")}}
     if elev is None:
         # no georeference: no elevation model exists for this input; a flat plane carries the textures
         w, h = img.size

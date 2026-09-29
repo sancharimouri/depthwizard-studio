@@ -570,6 +570,12 @@ The protected folders are SHA-256-identical before and after (474 files).
   OMA_376_038 are excluded (files stay). All included DFC2019 tiles have 3 stars. The container holds 76 tiles.
 - Items 1, 2 and 4 below are closed. The DFC2019 anchors may need re-checking, since they now render at full relief.
 
+**Part 4B (2026-09-30):**
+- DAv2 depth is baked into the library_v2 packs, so opening a library tile makes 0 Space calls (bake: 76 calls).
+- Uploads and CDSE scenes still call the Space.
+- Verified (a)–(d); see `docs/library_v2.md`.
+- Open: the unchanged pipeline log line still prints the bake-time inference seconds.
+
 **Decisions waiting on the owner (as of 2026-09-29):**
 1. **Re-rate** Bhitarkanika, Kutch and Amalapuram (offset-only recalculation, relief 2.4–5.2 → 7.0–12.3 m;
    Bhitarkanika shows a sharp step between mangrove and farmland at 60x).

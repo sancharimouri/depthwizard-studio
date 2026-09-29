@@ -239,6 +239,45 @@ OMA_211_039, OMA_211_032 and OMA_376_023 (resolved from `OMA_376_23`) have 28–
 | `frontend/index.html` | Docs credit |
 | tests | `backend/tests/test_tile_manifest.py` (3), `frontend/tests/input-view.test.mjs` (+1): 58 + 93 pass |
 
+## Part 4B: baked DAv2 relative depth (2026-09-30)
+
+Opening a library tile now makes **zero Space calls**. Uploads and CDSE scenes call the Space exactly as before.
+
+- **Bake** (`scripts/build_library_v2.py depth`):
+  - Every included tile (76), plus both Darjeeling colour variants.
+  - The input is the exact preview each pack ships with (the colour-corrected ones).
+  - The call is the app's own `depth_routes._forward`, with the same filename and bytes.
+  - It used **76 Space calls** (78 previews). Darjeeling's active preview, `__original` and `__B_own_percentiles` are
+    byte-identical files (same SHA-256), so they needed one call.
+  - Space `sancharimouri/DepthWizard2` @ revision `f9c671a38481…`, model `depth-anything/Depth-Anything-V2-Small-hf`.
+- **Storage:** inside each library_v2 pack, metadata domain `DAV2_DEPTH`, key `SHA256_<preview sha256>`.
+  - The value is the Space's response JSON (u16+zlib payload, shape, model, device, infer_s, host), plus the Space id,
+    its revision, the preview's SHA-256 and file, and the bake date.
+  - Maxar entries are written into `dem/` and all `dem_maxar/<preset>/` packs, so `--activate` keeps them.
+  - Responses are cached in `_analysis/depth_cache/`, so re-baking after a rebuild makes no calls.
+  - DFC2019 depth exists only in these private packs (gitignored); none of it is committed.
+- **Backend:** `pipeline.baked_depth(item, preview)` returns the entry whose SHA-256 matches the exact preview bytes,
+  or None. It is used in:
+  - `generation_routes.generate` for library tiles;
+  - `depth_routes.relative_for` for library tiles.
+
+  If there is no pack, no entry for these bytes (e.g. the colours changed) or the entry is unreadable, the Space is
+  called exactly as before. Every real depth-host call is logged: `depth host call #n -> <host> (<file>)`.
+- **Frontend:**
+  - The DAv2 inference stat and the relative-depth box show "precomputed" for baked depth. The DAv2 name and the real
+    generation time are unchanged.
+  - The pipeline log is unchanged. For a baked tile it prints the bake-time values, e.g. Almora:
+    `Relative depth: DAv2-Small on CUDA (ZEROGPU), 518×518, 1.299s inference (u16-zlib) via sancharimouri/DepthWizard2`.
+    That is the inference time of the original Space run, so the line reads like a live call.
+- **Verified in the preview:**
+  - (a) Almora, Bhitarkanika, a_valley, OMA_212_033 and JAX_416_009 opened with **0** depth-host calls; all are
+    `baked: true`.
+  - (b) An upload made exactly 1 Space call and generated normally.
+  - (c) For Almora, JAX_416_009 and a_valley, the baked payload is **byte-identical** to what the Space returned live
+    on 2026-09-29 (u16 max |diff| 0, Pearson 1.0, `relative_depth.png` byte-identical).
+  - (d) With `DAV2_INFERENCE_URL` set to a nonexistent Space (test backend only; status `RepositoryNotFoundError`),
+    Kutch, Darjeeling, c_town, OMA_258_020 and JAX_004_006 generated fully, while the upload failed with a 404.
+
 ## Local QA switch
 
 - `data/library_v2_2026-09-29/qa.env` is untracked.

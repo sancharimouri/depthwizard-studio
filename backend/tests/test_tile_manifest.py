@@ -52,3 +52,28 @@ def test_limit_outliers_flag_only_when_disabled(tmp_path):
     assert "limitOutliers" not in json.loads(p.read_text())     # default: unchanged output, viewer limits as before
     write_terrain_json(p, surface, (0, 0, 1, 1), (4, 4), limit_outliers=False)
     assert json.loads(p.read_text())["limitOutliers"] is False  # DFC2019 lidar: the viewer skips the limiter
+
+
+def test_baked_depth_matches_only_the_exact_preview(tmp_path, monkeypatch):
+    import hashlib
+
+    import rasterio
+
+    from backend.generation import pipeline
+    from backend.storage import library_store
+    pack = tmp_path / "p.tif"
+    with rasterio.open(pack, "w", driver="GTiff", width=4, height=4, count=2, dtype="float32") as w:
+        w.write(np.zeros((2, 4, 4), np.float32))
+    preview = b"the exact preview bytes"
+    sha = hashlib.sha256(preview).hexdigest()
+    entry = {"data_b64": "AAAA", "shape": [2, 2], "encoding": "u16-zlib", "model": "m", "device": "cuda",
+             "infer_s": 0.2, "host": "s/p", "preview_sha256": sha}
+    with rasterio.open(pack, "r+") as w:
+        w.update_tags(ns=pipeline.DEPTH_NS, **{f"SHA256_{sha}": json.dumps(entry)})
+    monkeypatch.setattr(library_store, "local_asset", lambda item, kind: pack)
+    got = pipeline.baked_depth({"id": "x", "collection": "sentinel2"}, preview)
+    assert got["baked"] is True and got["data_b64"] == "AAAA" and got["fallback_used"] is False
+    assert pipeline.baked_depth({"id": "x", "collection": "sentinel2"}, b"other colours") is None  # -> the Space
+    monkeypatch.setattr(library_store, "local_asset", lambda item, kind: None)
+    monkeypatch.setattr(library_store, "private_pack", lambda item: None)
+    assert pipeline.baked_depth({"id": "x", "collection": "sentinel2"}, preview) is None           # no pack -> the Space

@@ -23,6 +23,7 @@ The response is the host's JSON, plus "host" and "fallback_used": 518x518 relati
 from __future__ import annotations
 
 import asyncio
+import logging
 import concurrent.futures
 import os
 import re
@@ -210,11 +211,16 @@ async def _call_http(url: str, filename: str, body: bytes, content_type: str) ->
     return r.json()
 
 
+HOST_CALLS = {"n": 0}  # real depth-host calls made by this process (logged; baked library depth never counts)
+
+
 async def _forward(filename: str, body: bytes, content_type: str) -> dict:
     """Primary host, then the explicit fallback (if configured) on a host-side failure."""
     errors = []
     for i, host in enumerate(hosts()):
         sid = space_id(host)
+        HOST_CALLS["n"] += 1
+        logging.getLogger("uvicorn.error").info("depth host call #%d -> %s (%s)", HOST_CALLS["n"], sid or host, filename)
         try:
             out = await (_call_space(sid, filename, body) if sid else _call_http(host, filename, body, content_type))
             return {**out, "host": sid or host, "fallback_used": i > 0}
@@ -294,4 +300,9 @@ async def relative_for(source: str, item_id: str) -> dict:
         body = await _preview_bytes(source, item_id)
     except httpx.HTTPError as exc:
         raise HTTPException(status_code=502, detail=f"Could not fetch the preview ({type(exc).__name__}).") from exc
+    if source == "library":
+        from backend.generation import pipeline
+        baked = pipeline.baked_depth(catalog.get(item_id), body)
+        if baked is not None:
+            return baked
     return await _forward(f"{item_id}.jpg", body, "image/jpeg")
