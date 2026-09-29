@@ -627,7 +627,7 @@ function registerJobRegion(job) {
         terrainSource: m.has_elevation ? shortSource(m.terrain_source) : null,
         crsEpsg: m.crs ? m.crs.replace(/^EPSG:/, "") : "—",
         resolution: m.resolution_m ? `${m.resolution_m >= 10 ? Math.round(m.resolution_m) : m.resolution_m} m` : "—",
-        inferenceTime: m.depth?.infer_s != null ? `${m.depth.infer_s}s` : "—",
+        inferenceTime: m.depth?.baked ? "precomputed" : m.depth?.infer_s != null ? `${m.depth.infer_s}s` : "—",
     };
 }
 
@@ -656,7 +656,7 @@ function applyDepthBox(job) {
             alt: `Relative depth of ${job.input.title}`,
             lines: [
                 "Depth Anything V2 (ViT-Small)",
-                `Inference: ${d.infer_s}s (${where.replace(/[()]/g, "")})`,
+                d.baked ? "Inference: precomputed" : `Inference: ${d.infer_s}s (${where.replace(/[()]/g, "")})`,
                 `Generation: ${gen.roundTripS.toFixed(1)}s`,
             ],
         });

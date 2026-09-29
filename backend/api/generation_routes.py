@@ -24,7 +24,11 @@ async def generate(source: str, item_id: str) -> dict:
     if source not in ("library", "input"):
         raise HTTPException(status_code=404, detail="source must be 'library' or 'input'.")
     preview = await depth_routes._preview_bytes(source, item_id)
-    depth = await depth_routes._forward(f"{item_id}.jpg", preview, "image/jpeg")
+    # Library tiles: the DAv2 depth baked into the tile's pack for exactly this preview (scripts/build_library_v2.py
+    # depth), so opening a library tile makes no Space call. No baked entry -> the Space, exactly as before.
+    depth = pipeline.baked_depth(catalog.get(item_id), preview) if source == "library" else None
+    if depth is None:
+        depth = await depth_routes._forward(f"{item_id}.jpg", preview, "image/jpeg")
     kwargs = {}
     if source == "library":
         kwargs["item"] = catalog.get(item_id)
