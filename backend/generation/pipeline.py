@@ -58,11 +58,19 @@ def job_path(job_id: str, name: str) -> Path:
 
 
 # ----------------------------------------------------------------------------- elevation
+M_PER_DEG = 111_320.0  # metres per degree of latitude
+
+
 def _grid_from_bounds(crs, bounds, res_m: float):
+    """A north-up grid over `bounds` (in `crs` units) with cells of about `res_m` metres. In a geographic CRS the
+    bounds are degrees, so the cell size is converted to degrees first. (It used to be applied as-is: a Search Online
+    scene, EPSG:4326, got cells of 1 or 30 degrees, i.e. the 8 x 8 minimum mesh; fixed 2026-09-30.)"""
+    from rasterio.crs import CRS
     from rasterio.transform import from_bounds
+    step = res_m / M_PER_DEG if CRS.from_user_input(crs).is_geographic else res_m
     left, bottom, right, top = bounds
-    w = max(8, round((right - left) / res_m))
-    h = max(8, round((top - bottom) / res_m))
+    w = max(8, round((right - left) / step))
+    h = max(8, round((top - bottom) / step))
     return (h, w), from_bounds(left, bottom, right, top, w, h)
 
 
@@ -119,7 +127,8 @@ def _input_elevation(meta: dict, input_dir: Path) -> dict | None:
     if not dem or not (input_dir / "dem.tif").is_file():
         return _glo30_only(crs, bounds, "live GLO-30 (no DEM attached to this input)")
     with rasterio.open(input_dir / "dem.tif") as r:
-        res = max(abs(r.transform.a), 1.0)
+        # the DEM's own pixel size in metres (a geographic DEM's transform is in degrees), floored at 1 m
+        res = max(abs(r.transform.a) * (M_PER_DEG if r.crs.is_geographic else 1.0), 1.0)
         shape, tf = _grid_from_bounds(crs, bounds, res)
         terrain = np.full(shape, np.nan, np.float32)
         reproject(r.read(1).astype(np.float32), terrain, src_transform=r.transform, src_crs=r.crs,
