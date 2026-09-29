@@ -3279,6 +3279,9 @@ async function runGenerationSequence(job) {
         // the real work: fetch this job's terrain + textures, then build the preview meshes
         await runStage(job, index, Promise.all([
             (async () => {
+                // Let this box's readout paint first: building the preview meshes blocks the main
+                // thread (~140 ms), and the 1.3 s minimum is counted from the stage's start.
+                await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve)));
                 await loadMiniPreviewAssets(job).catch(() => null);
                 if (isOnScreen(job)) {
                     await showJobInMiniPreviews(job);
