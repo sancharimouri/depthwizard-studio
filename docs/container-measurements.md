@@ -258,3 +258,102 @@ Owner decisions:
   - The only backend request left is `/api/facts` for georeferenced tiles: the Facts panel's live location query, not
     tile data.
 - **`vercel.json`:** `X-Robots-Tag: noindex` on `/library-static/(.*)`.
+
+## Part 3: Dockerfile and image hygiene (2026-09-30)
+
+**`docker/Dockerfile`**, multi-stage:
+
+- **Builder:** python:3.11-slim + binutils; a venv; `pip install` with a BuildKit cache mount, which keeps the pip cache
+  out of the image. Then, in the venv:
+  - uninstall `hf-xet`;
+  - delete `googleapiclient/discovery_cache/documents`;
+  - delete package `tests/` folders (`numpy/testing` is kept: it is a runtime module);
+  - delete the wheels' `__pycache__`;
+  - `strip --strip-unneeded` every `.so`: nothing broke, and the 3 flows are byte-identical to BEFORE on arm64 and
+    amd64;
+  - uninstall pip / setuptools / wheel;
+  - compile the bytecode once.
+- **Final stage:** python:3.11-slim + `libexpat1` + the venv + `backend/` (compiled). It runs as a non-root user
+  (`app`, uid 10001), with `PYTHONDONTWRITEBYTECODE=1`, a `HEALTHCHECK` on `/health` and `PORT` 8080.
+- Base python:3.11-slim still carries its own pip (~12 MB unpacked). Removing it in a later layer would not shrink the
+  image, so it stays.
+- **Deviation from the brief (owner-approved 2026-09-30): the `.pyc` files are KEPT.** Without them every import
+  compiles in memory:
+
+  | arm64 | no `.pyc` | `.pyc` |
+  |---|---|---|
+  | start-up | 0.83 s | 0.45 s |
+  | idle RSS | 65.6 MiB | 60.8 MiB |
+  | peak RSS per flow | +10–17 MiB | — |
+  | compressed image | 102.5 MB | 114.3 MB |
+
+- **`.dockerignore`** is a whitelist: only `requirements.txt` and `backend/` (minus tests and caches) enter the build
+  context. So everything on HANDOFF §4's hide list, `data/`, `docs/`, `frontend/`, notebooks, `scripts/` and tests stay
+  out. **The image carries zero tile data, no models, no secrets.**
+- There is **no duplicate GDAL/PROJ** left: pyproj's PROJ is gone, and only rasterio's own GDAL + PROJ remain. So
+  osgeo/gdal was not considered.
+
+## Part 4: AFTER vs BEFORE (2026-09-30)
+
+| | BEFORE | AFTER | change |
+|---|---|---|---|
+| **image, amd64, compressed** | 212.3 MB | **116.7 MB** | −45 % |
+| image, amd64, unpacked | 703.5 MB | **331.5 MB** | −53 % |
+| image, arm64, compressed / unpacked | 208.5 / 741.1 MB | 114.3 / 359.3 MB | |
+| Python-deps layer, amd64, compressed | 166.5 MB (pip install) | 70.2 MB (venv copy) | −58 % |
+| start → first `/health`, arm64 (median of 5, indicative) | 0.40 s | 0.46 s | ≈ |
+| start → first `/health`, amd64 under Rosetta | 0.75 s | 0.77 s | ≈ |
+| **idle RSS, arm64 / amd64** | 91.4 / 116.7 MiB | **60.8 / 80.0 MiB** | −33 % / −31 % |
+| idle cgroup, arm64 / amd64 | 55.2 / 82.4 MiB | 43.7 / 65.2 MiB | |
+| peak RSS, PNG flow, arm64 / amd64 | 132.8 / 170.4 MiB | 122.6 / 157.7 MiB | |
+| peak RSS, GeoTIFF + FABDEM, arm64 / amd64 | 194.4 / 249.1 MiB | 183.1 / 233.9 MiB | |
+| peak RSS, CDSE + FABDEM, arm64 / amd64 | 190.1 / 243.4 MiB | 180.0 / 228.9 MiB | |
+| peak, 3 flows concurrently in one instance, amd64 | — | **287.2 MiB RSS / 240.1 MiB cgroup**, /tmp 12.3 MiB | |
+| flow outputs vs BEFORE | — | byte-identical (all 3 flows, arm64 and amd64) | |
+
+- **Top packages AFTER** (amd64, unpacked): rasterio 71.7 MB (was 111.1), numpy 52.9 (71.4), pillow 17.5 (21.1),
+  cryptography 12.7, huggingface_hub 6.7, pydantic_core 5.2, pydantic 4.0, google-cloud-storage 3.6,
+  earthengine-api 2.5.
+- **Gone:** scipy (142.9), pyproj (32.9), the google-api-python-client discovery documents (~100), hf-xet (12.5),
+  pip / setuptools / wheel.
+- amd64 timings and RSS come from Rosetta translation. That inflates RSS by roughly 20–40 MiB against native arm64.
+
+**Recommendation:**
+
+**(a) Memory: 512 MiB is feasible.**
+- The worst measured peak is 287 MiB RSS / 240 MiB cgroup, with three heavy flows at once on amd64.
+- 512 MiB leaves about 225 MiB of margin, and Cloud Run gen2's minimum *is* 512 MiB.
+- **Conditions:**
+  - concurrency ≤ 4 per instance (each extra heavy flow adds about 40–60 MiB);
+  - `/tmp` is in memory on Cloud Run and **is never cleaned**: each upload/scene generation leaves about 2.5–5 MB. At
+    min-instances 0, instances are recycled often. On a long-lived min-instances = 1 day, a few hundred generations
+    would eat the margin, so an age/size cap on `DW2_UPLOADS_DIR` / `DW2_GENERATED_DIR` is an open item.
+- Library tiles no longer generate on the backend (Part 2), so only uploads and CDSE scenes write `/tmp`.
+- Go to 1 GiB only if concurrency is raised or Method 6 is added.
+
+**(b) Cold start.**
+- The container is ready in ~0.5 s once running (indicative).
+- On Cloud Run, a cold start adds the image pull (116.7 MB compressed; Cloud Run streams it) and the instance boot.
+- Expect **roughly 2–5 s** on a gen2 instance with CPU boost. That is an estimate, not a measurement: it must be
+  measured after the first real deploy (docs/deploy-cloud-run.md).
+- The first request on a fresh instance also imports rasterio / PIL / Earth Engine lazily (≈ +0.3 s).
+
+**(c) What is left to trim, and whether it is worth it:**
+- rasterio's bundled GDAL (71.7 MB unpacked) is the floor for GeoTIFF / DEM work.
+- numpy 52.9 MB is needed.
+- The google-* / grpc-free Earth Engine client is small now.
+- Base-image pip (~3 MB compressed) could only go by flattening the image, which loses base-layer sharing: not worth
+  it.
+- Dropping cryptography (12.7 MB, pulled in by google-auth) would break Earth Engine auth: not worth it.
+- **Remaining gains are small (< 10 %)**; memory is dominated by numpy + GDAL buffers during a flow.
+
+**Method 6 (not wired into the web backend; no weights ship) would raise size and memory if added later.**
+Measured 2026-09-30 with the desktop app's DAv2-Small ONNX model (99.1 MB, fp32; Method 6 is the same backbone plus a
+small head):
+- onnxruntime 1.30.0 adds **68.2 MB** unpacked on amd64 (60.2 arm64), estimated ≈ 20–25 MB compressed.
+- Each checkpoint adds **~100 MB**, which barely compresses (fp32 weights). The 4-fold ensemble is ~400 MB.
+- Memory: a session costs ~150 MiB, and one 518 × 518 inference peaks at **325–339 MiB** in a bare Python process.
+- Added to this backend's ~180–230 MiB flow peak, **one instance would need 1 GiB (≈ 2 GiB with the ensemble or
+  concurrent inferences)**.
+- Image ≈ +120 MB compressed for a single model.
+- Per HANDOFF §1, it should only ever run on genuine ≤ ~2.4 m uploads.
