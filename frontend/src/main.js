@@ -15,6 +15,8 @@ import {
 } from "./jobs.js";
 import { installCloseGuard } from "./desktop-close.js";
 import { apiUrl } from "./api-base.js";
+import { fetchTerrainData } from "./terrain-data.js";
+import { LIBRARY_SOURCE, staticTileResponse } from "./library-source.js";
 import { PAGE_ROUTES, resolveHash, hashMatchesPage } from "./routes.js";
 import { flatTerrainWarning, footprintKmFromBbox } from "./flat-warning.js";
 import { createDurationMemory, trackWork } from "./progress-sync.js";
@@ -742,17 +744,23 @@ async function computeJobGeneration(job) {
             throw new Error("this input has no id to send");
         }
         const kind = ref.source === "library" ? "library" : "input";
-        const response = await fetch(apiUrl(`/api/generate/${kind}/${encodeURIComponent(ref.id)}`), { method: "POST" });
-        if (!response.ok) {
-            let detail = `HTTP ${response.status}`;
-            try {
-                detail = (await response.json()).detail || detail;
-            } catch {
-                // not JSON
+        let g;
+        if (kind === "library" && LIBRARY_SOURCE === "static") {
+            // web build: the tile's pre-baked result (scripts/bake_static_library.py), no backend, no Space call
+            g = await staticTileResponse(ref.id);
+        } else {
+            const response = await fetch(apiUrl(`/api/generate/${kind}/${encodeURIComponent(ref.id)}`), { method: "POST" });
+            if (!response.ok) {
+                let detail = `HTTP ${response.status}`;
+                try {
+                    detail = (await response.json()).detail || detail;
+                } catch {
+                    // not JSON
+                }
+                throw new Error(detail);
             }
-            throw new Error(detail);
+            g = await response.json();
         }
-        const g = await response.json();
         const assets = Object.fromEntries(Object.entries(g.assets).map(([k, v]) => [k, apiUrl(v)]));
         // WebGL textures load as CORS images. WebKit (the desktop shell) can reuse the cached
         // non-CORS response of the same URL shown in an <img> box and then fail the CORS check,
@@ -2004,7 +2012,7 @@ function loadMiniPreviewAssets(job) {
     }
     if (!miniAssetCache.has(gen.key)) {
         miniAssetCache.set(gen.key, (async () => {
-            const terrainData = await (await fetch(gen.textures.terrain)).json();
+            const terrainData = await fetchTerrainData(gen.textures.terrain);
             const textureLoader = new THREE.TextureLoader();
             const [satelliteTexture, depthTexture, elevationTexture] = await Promise.all([
                 textureLoader.loadAsync(gen.textures.satellite),

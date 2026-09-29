@@ -187,3 +187,74 @@ A tile view transfers about 3.6 MB.
 
 **Verdict:** the set does **not fit** as baked; the file count (533) is fine. Options, and the DFC2019 question, are
 in HANDOFF §6. The frontend wiring and `vercel.json` wait for that decision.
+
+### Part 2, continued: compact format and wiring (2026-09-30, owner decisions)
+
+Owner decisions:
+- Option 1 (the compact format).
+- DFC2019 served publicly by the web app too (see the dated rule change in docs/HANDOFF.md).
+- Web build static; desktop build unchanged.
+- Maxar: the one selected preset only. None is chosen yet, so **"medium" is a flagged placeholder**: `index.json` and
+  each Maxar item carry `display_preset: {name: "medium", placeholder: true}`.
+
+**Compact format** (`scripts/bake_static_library.py`, default):
+
+- `terrain.u16.gz` is generate's `terrain.json` as gzipped uint16.
+  - Worst height error = half a step = range / 131070.
+  - Maxar keeps both the real heights (statistics) and the DISPLAY heights (mesh).
+- `preview.jpg` doubles as the 3D texture. Generate's `satellite.png` is that JPEG decoded and re-saved losslessly.
+- The DISPLAY preset is read in place from `dem_maxar/<preset>/`; library_v2 is not changed.
+
+**Result:** 76 tiles, 457 files, **52.4 MB** (it was 251.8 MB).
+
+**The whole Vercel upload** (`frontend/` minus `node_modules/`, `.vercel/`, `dist/` and `.vercelignore`'s
+`public/data/vhr/`):
+
+- **535 files, 72.9 MB: 27.1 MB of headroom** under Hobby's 100 MB.
+- The 15,000-file limit is far away.
+- `public/data/vhr/` stays on disk; `.vercelignore` only keeps it out of the upload.
+
+**Tolerance parity**, 5 tiles, compact vs exact format, same preset (`build/slim/results/parity_compact_*`):
+
+| tile | height range | max height error (= half step) | texture max / mean pixel diff |
+|---|---|---|---|
+| Almora | 1011.00 m | 7.71 mm (7.71 mm) | 1 / 0.317 |
+| Kutch | 7.02 m | 0.054 mm (0.054 mm) | 1 / 0.275 |
+| a_valley, real bands | 327.26 m | 2.50 mm (2.50 mm) | 1 / 0.282 |
+| a_valley, DISPLAY | 91.69 m | 0.70 mm (0.70 mm) | (same texture) |
+| OMA_212_033 | 21.16 m | 0.16 mm (0.16 mm) | 1 / 0.257 |
+| JAX_416_009 | 23.27 m | 0.18 mm (0.18 mm) | 1 / 0.270 |
+
+- Every error is at the half-step bound or under it.
+- The headers (size, bounds, min/max, `limitOutliers`) are identical.
+- The texture is the browser-decoded `preview.jpg` vs the exact `satellite.png`. No channel of any pixel differs by
+  more than 1.
+- Rendered mesh: `build/slim/qa_static/shots/before_after_sheet.png`, the same viewer at each tile's default
+  exaggeration.
+  - The elevation min/max, the auto exaggeration and the applied default are identical before and after.
+  - Screenshot pixel differences come mostly from the viewer's idle auto-rotate (a different camera angle after a
+    timed run); the texture and height numbers above are the authoritative parity.
+
+**Frontend:**
+
+- **Build-time switch** `VITE_LIBRARY_SOURCE` (`frontend/src/library-source.js`):
+  - `npm run build:web` (the `vercel.json` `buildCommand`) = `static`.
+  - The desktop's Tauri `beforeBuildCommand` (unchanged) and local dev = `backend`: the unchanged `/api/library` +
+    `/api/generate/library` routes on the sidecar's local packs.
+- **Desktop bundle:** `vite.config.js` drops `library-static/` from every build that isn't `static`. Checked: the
+  desktop build has no `library-static/`, and the web build carries all 76 tiles.
+- **Static paths:**
+  - listing = `library-static/index.json` (the `/api/library` shape, plus each item's baked `select` plan);
+  - generation = the tile's `tile.json` (the generate response shape);
+  - terrain decoding = `frontend/src/terrain-data.js`, shared by the viewer and the mini previews.
+- **End-to-end** (real Workbench, static mode, CDP network log, `build/slim/results/e2e_static_mode.json`): Almora,
+  c_town and JAX_416_009 were opened.
+  - **0 backend generate calls** and **0 Space calls**.
+  - The inference stat and the depth box show "precomputed".
+  - Defaults were applied (x2.2 / x4.0 / x16).
+  - The Maxar display note and the DFC2019 credit show in Details.
+  - The pipeline log line is unchanged, e.g. "Relative depth: DAv2-Small on CUDA (ZEROGPU), 518×518, 0.208s inference
+    (u16-zlib) via sancharimouri/DepthWizard2".
+  - The only backend request left is `/api/facts` for georeferenced tiles: the Facts panel's live location query, not
+    tile data.
+- **`vercel.json`:** `X-Robots-Tag: noindex` on `/library-static/(.*)`.

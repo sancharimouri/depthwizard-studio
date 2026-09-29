@@ -1,0 +1,5 @@
+# Upload only what the web build needs (2026-09-30; docs/container-measurements.md, Part 2).
+# public/data/vhr/ (84 MB, untracked, referenced by no code) stays on disk; it is only kept out of the deploy.
+public/data/vhr/
+# Vercel builds from source (npm run build:web), so a local build output is never uploaded.
+dist/
