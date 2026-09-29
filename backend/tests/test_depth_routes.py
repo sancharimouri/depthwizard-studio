@@ -169,3 +169,59 @@ def test_quota_is_not_retried(monkeypatch):
     monkeypatch.setattr(depth_routes, "SPACE_RETRY_DELAYS_S", (0, 0))
     r = post()
     assert r.status_code == 429 and len(calls) == 1
+
+
+def _edge_flaky(fails, replica_header=False):
+    """Answers 502 `fails` times (as HF's edge does, without a replica header), then 200."""
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) <= fails:
+            return httpx.Response(502, headers={"x-proxied-replica": "r1"} if replica_header else {}, text="<html>")
+        return httpx.Response(200, json={"ok": True})
+    return handler, calls
+
+
+def test_hf_edge_502_is_retried_per_request(monkeypatch):
+    monkeypatch.setattr(depth_routes, "EDGE_RETRY_DELAYS_S", (0, 0, 0, 0))
+    handler, calls = _edge_flaky(3)
+    with httpx.Client(transport=httpx.MockTransport(handler)) as c:
+        r = c.post("https://owner-space.hf.space/gradio_api/upload", files={"files": ("a.png", PNG, "image/png")})
+    assert r.status_code == 200 and len(calls) == 4
+    assert calls[0].read() == calls[3].read()  # the multipart body is re-sent intact
+
+
+def test_hf_edge_502_is_retried_async(monkeypatch):
+    import asyncio
+    monkeypatch.setattr(depth_routes, "EDGE_RETRY_DELAYS_S", (0, 0))
+    handler, calls = _edge_flaky(1)
+
+    async def go():
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as c:
+            return await c.get("https://owner-space.hf.space/gradio_api/info")
+    assert asyncio.run(go()).status_code == 200 and len(calls) == 2
+
+
+def test_502_from_the_app_itself_or_other_hosts_is_not_retried_here(monkeypatch):
+    monkeypatch.setattr(depth_routes, "EDGE_RETRY_DELAYS_S", (0, 0))
+    handler, calls = _edge_flaky(5, replica_header=True)  # reached a replica: the app's own answer
+    with httpx.Client(transport=httpx.MockTransport(handler)) as c:
+        assert c.get("https://owner-space.hf.space/config").status_code == 502
+    assert len(calls) == 1
+    handler, calls = _edge_flaky(5)
+    with httpx.Client(transport=httpx.MockTransport(handler)) as c:
+        assert c.get("https://example.com/x").status_code == 502
+    assert len(calls) == 1
+
+
+def test_edge_retries_give_up_after_the_last_delay(monkeypatch):
+    monkeypatch.setattr(depth_routes, "EDGE_RETRY_DELAYS_S", (0, 0))
+    handler, calls = _edge_flaky(10)
+    with httpx.Client(transport=httpx.MockTransport(handler)) as c:
+        assert c.get("https://owner-space.hf.space/config").status_code == 502
+    assert len(calls) == 3
+
+
+def test_could_not_fetch_api_info_counts_as_transient():
+    assert depth_routes._is_transient("Could not fetch api info for https://x.hf.space: <!DOCTYPE html>")
