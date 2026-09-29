@@ -71,4 +71,6 @@ demo = gr.Interface(fn=predict, inputs=gr.Image(type="pil"), outputs=gr.JSON(),
                     title="DepthWizard2 DAv2-Small (ZeroGPU)", api_name="predict", flagging_mode="never")
 
 if __name__ == "__main__":
-    demo.queue(max_size=8).launch()
+    # ssr_mode=False: the SSR Node proxy (:7860 -> Python :7861) kept answering while the Python app
+    # behind it had stopped (every /gradio_api/upload -> 502, 2026-09-28). Without SSR, Python serves :7860 itself.
+    demo.queue(max_size=8).launch(ssr_mode=False)
