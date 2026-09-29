@@ -1,4 +1,4 @@
-# Desktop app (Tauri 2 shell + frozen Python sidecar) — status 2026-09-26
+# Desktop app (Tauri 2 shell + frozen Python sidecar) — status 2026-09-29 (v1.0.2 released)
 
 **What it is:**
 - The existing Vite/Three.js frontend (`frontend/`, unchanged) in a Tauri 2.11 window (`desktop/tauri/`).
@@ -205,6 +205,51 @@ The backend here is 800 MB (the earlier 813 MB build also contained `requests` a
 | · shell + frontend | 59.3 MB |
 | **DMG (installer)** | **316.2 MB** |
 | Update artifact (`.app.tar.gz`) | 305.6 MB |
+
+## v1.0.2 (released 2026-09-29)
+
+**What's new:** the 2026-09-28/29 UI (DW Studio / Demo / Home, sidebar, jobs, readouts, bright mode, GSD card) and every
+backend fix since v1.0.1: tile-seam mosaic, nearest-neighbour hole fill, manual GSD, Space retries. The desktop depth path
+is the local ONNX sidecar, not the Space. The DFC2019 terrain packs are not in the desktop app (still a flat plane).
+
+**Build** (as "Build" and "Torch → ONNX Runtime" above):
+- `build_freeze.py` in a fresh torch-free Python 3.11 venv from `requirements-freeze.txt`.
+- `dav2_small.onnx` reused byte-for-byte from the v1.0.1 sidecar (sha256 `352d84f3…`), so no re-export.
+- **scipy 1.17.1 added to `requirements-freeze.txt`:** `fill_nan_nearest` imports it when a height grid has holes
+  (live GLO-30 on a tile seam). Without it, those generations would fail.
+- Then `build-signed.sh` and `publish-release.sh`. 41 symlinks restored.
+
+**Measured sizes (2026-09-29, `ls -l` / `du -sk` on the released artifacts and an installed copy):**
+
+| | v1.0.1 | **v1.0.2** |
+|---|---|---|
+| DMG (installer) | 340.4 MB (340,418,450 B) | **355.7 MB** (355,727,127 B) |
+| Update archive `DepthWizard.app.tar.gz` | 328.7 MB | **343.2 MB** (343,215,706 B) |
+| `DepthWizard.app` installed | 455.2 MB | **492.2 MB** |
+| · frozen backend (ONNX Runtime + scipy) | 297 MB | **335 MB** (scipy ~38 MB) |
+| · of which the ONNX model | 95 MB | 95 MB |
+| · bundled tile library + elevation packs | 99 MB | 99 MB (unchanged since 2026-09-27) |
+| · shell + embedded frontend | 57 MB | 57 MB |
+| Per-user cache after 2 on-demand downloads + generating them | — | 10 MB (library 5 MB, generated 5 MB) |
+
+**Verified:**
+- **Frozen backend alone** (no token, fresh cache):
+  - 89 items, `/gsd` listed;
+  - bundled Sentinel-2 / Maxar / DFC2019 generate in 0.3–1.1 s, DAv2 on the CPU in ~0.2 s;
+  - Darjeeling from its pack: 554–2,476 m, max 32.6 m below its 5×5 median;
+  - a Darjeeling GeoTIFF upload through live GLO-30 across 27°N: 554–2,478 m;
+  - a PNG at 0.5 m → 200 × 150 m;
+  - listening 0.35 s after launch (the first launch of a new build took ~26 s: macOS scans new binaries once).
+- **In-app E2E** (`DW2_E2E=1`, the signed build): `tauri://localhost`, 0 page errors, Almora → Studio in 6.8 s
+  (ONNX 0.239 s), Maxar and DFC2019 generation 200.
+- **On demand:** Bengaluru 3.0 MB in 1.7 s and DFC2019 `OMA_364_043` 2.2 MB in 2.6 s, both then generated.
+- **Updates:**
+  - the released `latest.json` says 1.0.2, and its signature verifies against the built-in public key for the artifact
+    downloaded from GitHub (a changed byte fails);
+  - `…/releases/latest` → v1.0.2;
+  - the **published v1.0.1**, installed and launched (auto-accept test flag), logged "1.0.2 available → downloaded →
+    installed 1.0.2; restarting", then "Depth Wizard 1.0.2 · update check: up to date (1.0.2)" (~60 s).
+- **Licence:** v1.0.2 ships exactly v1.0.1's DFC2019 files (8 tiles, 50 thumbnails); nothing new was published.
 
 ## Real generation (2026-09-26): no more Darjeeling placeholders
 

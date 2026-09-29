@@ -1,5 +1,8 @@
 # Next session: ship everything to the website and the desktop app, sort out storage/GPU, report sizes and load times
 
+> **Executed 2026-09-29.** Everything below is deployed; see `docs/CHANGES_2026-09-28_29.md` "Deployed" and
+> `docs/DEPLOY_REPORT_2026-09-29.md`. Kept as the record of what was asked.
+
 Ship every committed-but-undeployed change to the live website (Vercel frontend + Render backend) and the desktop app,
 make storage and GPU work reliably, and finish with a measured report. Work through the phases in order and commit after
 each one. The full list of what changed, with file references, is `docs/CHANGES_2026-09-28_29.md`: read it first.

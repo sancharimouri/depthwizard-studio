@@ -469,7 +469,7 @@ terrain.** None of the research-track work is deployed into it.
   outcomes — confirm with a fresh `npm run dev` + visual check before relying on this,
   don't assume it's still green without checking.
 
-### 5z. 2026-09-28 UI/UX sessions (17 prompts): committed locally, NOT pushed, NOT deployed
+### 5z. 2026-09-28 UI/UX sessions (17 prompts): DEPLOYED 2026-09-29 (web + desktop v1.0.2)
 
 Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `ee6f95c`–`1bfccd1`; series B: 8 prompts,
 `cae681d`–`8f7c709`). Every commit message has the detail and the verification; this is the map.
@@ -523,20 +523,34 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `ee6f95
   minimum fill drew the 554 m "downward spikes".
 - Tests: `uv run python -m pytest -q backend/tests` → 48 passed, 1 skipped.
 
-**Open issues found 2026-09-28**
-- **DAv2 Space down.** `sancharimouri/DepthWizard2` reports RUNNING, but every `/gradio_api/upload` returns 502.
-  - Gradio runs in SSR mode (Node :7860 → Python :7861), and the Python app behind the proxy is not answering.
-  - Its run log has no Python output since the 2026-09-25 start. Every live/local generation fails until it's restarted.
-  - Option: `ssr_mode=False` in `space/app.py` `launch()` to drop the Node proxy layer.
-  - `space/README.md` still says "CPU-only" although the hardware is `zero-a10g`.
-- The generated Darjeeling seam bug affected only the live-GLO-30 path (web). The desktop pack
-  `data/library/dem/sentinel2-darjeeling.tif` is clean.
-- Local-only testing recipe (no Space needed): `uv run python -m uvicorn bridge.dav2_server:app --port 8766`, then a
-  backend with `DAV2_INFERENCE_URL=http://localhost:8766` on another port, then a Vite with its proxy pointed there.
-- Unpushed: 25 commits on `main` (`git log origin/main..main`). They include the DFC2019 terrain-pack series
-  (`9145d44`–`0270343`), whose web integration was also never deployed.
+**Deployed 2026-09-29** (full record: `docs/CHANGES_2026-09-28_29.md` "Deployed"; live checks: `docs/DEPLOY.md` LIVE)
+- **Git:** the unpushed commits were rewritten before the first push. `Claude-Session:` lines were stripped, and
+  `CLAUDE.md` / `last_session.md` were kept out, since the owner had deleted them on GitHub. The commits were then
+  pushed to `origin` (`sancharimouri/depthwizard-studio`, PUBLIC, this whole repo) as fast-forwards, `376c22d..36789c0`
+  plus the later docs commits. There's a single identity (Sanchari Mouri) and no Co-Authored-By.
+- **Render** builds that repo's `main` with `pip install -r requirements.txt`. That root file didn't exist, so every build
+  since 2026-09-27 had failed; it was added in `abbb7b6`. `/api/library` 89, `/gsd` listed, Darjeeling without pits (max
+  39.7 m below its 5×5 median), a DFC2019 generation from its private pack, a PNG at 0.5 m → 200 × 150 m, CORS exact.
+- **Space:** restarted, then `ssr_mode=False` (Space `f9c671a`). Its README must keep `python_version: '3.12'`: a `3.11`
+  push built on 3.10 and failed (ZeroGPU supports 3.12.12 / 3.10.13 only).
+- **HF edge 502s** (8–23% of `*.hf.space` requests on 2026-09-29, unrelated Spaces too):
+  - `86787df` re-sends edge 502s.
+  - `cedb449` retries a Space job whose event stream broke (it used to be a bare 500).
+  - After both: 15/15 live generations.
+- **Frontend** (Vercel `depthwizard2-62bvvq0xf`, both domains): the whole §5z UI, plus
+  - `ceed1ac`, a favicon (the only console error);
+  - `36789c0`, the elevation-3D box readout, which paints before its mesh build (it was 1.15–1.24 s; now 1.32–1.39 s).
 
-The next-session deployment prompt is `docs/NEXT_SESSION_DEPLOY.md`.
+  The four deck links load with 0 console errors.
+- **Desktop v1.0.2** (`c6afa57`, released on `sancharimouri/depthwizard2-desktop`):
+  - the backend is re-frozen with every fix, plus scipy (for `fill_nan_nearest`);
+  - DMG 355.7 MB, update archive 343.2 MB, installed 492.2 MB;
+  - the signature was verified against the built-in key;
+  - a published v1.0.1 updated itself to 1.0.2 and relaunched.
+- **Still open:**
+  - `#demo-video` is a placeholder until the recording exists.
+  - Home says "88 curated scenes (32 Sentinel-2)"; the library has 89 (33).
+  - The DFC2019 terrain packs are web-only; the desktop app still shows DFC2019 flat.
 
 ## 6. Credentials/access inventory (`.env`)
 
