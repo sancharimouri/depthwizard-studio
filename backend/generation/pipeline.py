@@ -205,7 +205,11 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
         _colour_ramp(surface if elev.get("ramp") == "SURFACE" else terrain).save(out / "elevation.png", optimize=True)
         lonlat = transform_bounds(elev["crs"], "EPSG:4326", *elev["bounds"], densify_pts=21)
         display = elev.get("display")
-        mesh = write_terrain_json(out / "terrain.json", surface, lonlat, _mesh_hw(surface.shape), display=display)
+        # DFC2019: the surface is reference lidar, so its tall cells are real buildings, not outliers. The viewer's
+        # outlier limiter capped them near the ground on tiles that are mostly bare ground (IQR of a few cm).
+        lidar = kind == "library" and bool(item) and item.get("collection") == "dfc2019"
+        mesh = write_terrain_json(out / "terrain.json", surface, lonlat, _mesh_hw(surface.shape), display=display,
+                                  limit_outliers=not lidar)
         crs = elev.get("crs_label") or str(elev["crs"])
         if elev.get("note"):
             meta["note"] = elev["note"]
