@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Curated DFC2019 terrain packs (08-dfc2019-terrain-packs, Prompt 5).
 
-  build    for each of the 50 tiles: reference correction of the held-out Method 6 heights
-           (rule pre-registered in docs/method-audit/08-dfc2019-terrain-packs/packs.md, cap and
-           margin from Prompt 4's heights/cap.json), + base ground (Prompt 3), written as a pack in
+  build    for each of the 50 tiles: base ground (Prompt 3) + above-ground height taken directly from
+           the DFC2019 lidar AGL truth (2026-09-29 rebuild; no Method 6 / DAv2 input at all; fallback
+           rule below), written as a pack in
            the exact desktop/tiles/build_dem_pack.py format (2-band TERRAIN/SURFACE float32 GeoTIFF),
            at the app's mesh grid (341 x 341), in a synthetic local metric frame at (0, 0) so no
            real location ever ships. -> data/dfc2019/terrain_packs/packs/dfc2019-<tile>.tif
@@ -27,9 +27,12 @@ PACKS = SCR / "packs"
 AGL_DIR = ROOT / "data/dfc2019/raw/Truth/Track1-Truth"
 N = 341                     # _mesh_hw(1024 px) = 341: the pack is never finer than the mesh it feeds
 LOCAL_CRS = "+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84"
-FEATHER_SIGMA = 2.0         # px at 0.3 m
 NEG_FLOOR = -5.0            # AGL in [-5, 0) = ground noise -> 0; below -5 = invalid (none in this data)
-SURFACE_SOURCE = "Model-predicted heights (Method 6), with reference lidar correction for tall structures and trees"
+# Fallback rule (2026-09-29), per pixel: AGL valid (finite, -5 <= AGL < 1000) -> height = max(AGL, 0), i.e.
+# small negative lidar ground noise is ground level; AGL invalid -> height 0 (ground level). Per tile: more than
+# LOW_COVERAGE of pixels invalid -> CONFIDENCE=reduced tag + report flag (the heights still follow the pixel rule).
+LOW_COVERAGE = 0.05
+SURFACE_SOURCE = "Reference lidar above-ground heights (IEEE GRSS DFC2019 AGL)"
 CRS_LABEL = "local frame (no georeference)"
 
 
@@ -39,17 +42,10 @@ def read_agl(tid):
         return r.read(1).astype(np.float32)
 
 
-def correct(pred, agl, cap, margin):
-    """The pre-registered rule. Returns corrected heights and the (feathered) replacement weight."""
-    from scipy.ndimage import gaussian_filter
+def agl_heights(agl):
+    """The 2026-09-29 rule: lidar AGL is the height wherever valid; invalid pixels fall back to ground level (0)."""
     valid = np.isfinite(agl) & (agl >= NEG_FLOOR) & (agl < 1000)
-    a = np.where(valid, np.clip(agl, 0, None), 0.0)
-    tall = valid & ((a > cap) | (pred > cap))
-    rep = (tall & (np.abs(pred - a) > margin)).astype(np.float32)
-    w = np.maximum(rep, np.clip(gaussian_filter(rep, FEATHER_SIGMA) * 2, 0, 1))   # 1 inside, soft ring outside
-    w[~valid] = 0.0
-    out = pred * (1 - w) + a * w
-    return out.astype(np.float32), rep, w, valid
+    return np.where(valid, np.clip(agl, 0, None), 0.0).astype(np.float32), valid
 
 
 def block_to(a, n=N):
@@ -61,8 +57,6 @@ def cmd_build(a):
     import rasterio
     from rasterio.crs import CRS
     from rasterio.transform import from_bounds
-    cap_info = json.loads((SCR / "heights/cap.json").read_text())
-    cap, margin = float(cap_info["cap_m"]), float(cap_info["margin_m"])
     locs = json.loads((SCR / "locate/locations.json").read_text())["tiles"]
     PACKS.mkdir(parents=True, exist_ok=True)
     # GSD: located tiles use their own matched GSD; city-level tiles the city's median matched GSD
@@ -71,20 +65,15 @@ def cmd_build(a):
     report = {}
     tiles = sorted(p.name[:-8] for p in AGL_DIR.glob("*_AGL.tif"))
     for tid in tiles:
-        pred = np.load(SCR / f"heights/{tid}.npz")["agl"]
         agl = read_agl(tid)
-        valid_frac = float((np.isfinite(agl) & (agl >= NEG_FLOOR) & (agl < 1000)).mean())
-        if valid_frac < 0.5:
-            corr, rep, w = pred, np.zeros_like(pred), np.zeros_like(pred)
-            corrected = False
-        else:
-            corr, rep, w, _ = correct(pred, agl, cap, margin)
-            corrected = True
+        heights, valid = agl_heights(agl)
+        valid_frac = float(valid.mean())
+        reduced = (1 - valid_frac) > LOW_COVERAGE
         b = np.load(SCR / f"base/{tid}.npz")
         base = b["base"].astype(np.float32)
         info = json.loads(str(b["info"]))
         assert base.shape == (N, N), base.shape
-        surface = base + block_to(corr)
+        surface = base + block_to(heights)
         gsd = locs[tid]["gsd"] if tid in locs else city_gsd[tid[:3]]
         size = 1024 * gsd
         tf = from_bounds(0, 0, size, size, N, N)
@@ -93,7 +82,7 @@ def cmd_build(a):
                        else "Approximate city-level ground elevation (USGS 3DEP city median)")
         note = ("Ground level from a public DEM; " if located else
                 "Elevations are approximate: ground level is one city-level value, not measured at this tile; ") + \
-               "heights are model-predicted, with reference lidar correction for tall structures and trees."
+               "heights are reference lidar above-ground heights."
         path = PACKS / f"dfc2019-{tid}.tif"
         with rasterio.open(path, "w", driver="GTiff", width=N, height=N, count=2, dtype="float32",
                            crs=CRS.from_proj4(LOCAL_CRS), transform=tf, nodata=np.nan,
@@ -103,13 +92,16 @@ def cmd_build(a):
             wr.set_band_description(1, "TERRAIN")
             wr.set_band_description(2, "SURFACE")
             wr.update_tags(TERRAIN_SOURCE=terrain_src, SURFACE_SOURCE=SURFACE_SOURCE, CRS_LABEL=CRS_LABEL,
-                           RAMP_BAND="SURFACE", NOTE=note, HOW="curated elevation pack")
-        report[tid] = {"base_source": info["base_source"], "gsd_m": round(gsd, 4), "corrected": corrected,
-                       "frac_replaced": round(float(rep.mean()), 4), "frac_touched_feathered": round(float((w > 0).mean()), 4),
-                       "valid_agl_frac": round(valid_frac, 6), "surface_range_m": [round(float(surface.min()), 1), round(float(surface.max()), 1)],
-                       "pred_max_m": round(float(pred.max()), 1), "corrected_max_m": round(float(corr.max()), 1)}
+                           RAMP_BAND="SURFACE", NOTE=note, HOW="curated elevation pack",
+                           CONFIDENCE="reduced" if reduced else "normal")
+        report[tid] = {"base_source": info["base_source"], "gsd_m": round(gsd, 4), "valid_agl_frac": round(valid_frac, 6),
+                       "fallback_pixels_frac": round(1 - valid_frac, 6), "reduced_confidence": reduced,
+                       "neg_agl_clamped_frac": round(float((valid & (agl < 0)).mean()), 4),
+                       "surface_range_m": [round(float(surface.min()), 1), round(float(surface.max()), 1)],
+                       "height_max_m": round(float(heights.max()), 1)}
         print(tid, report[tid], flush=True)
-    (PACKS / "build_report.json").write_text(json.dumps({"cap_m": cap, "margin_m": margin, "city_gsd_m": city_gsd,
+    (PACKS / "build_report.json").write_text(json.dumps({"heights": "lidar AGL primary, no Method 6", "neg_floor_m": NEG_FLOOR,
+                                                         "low_coverage_frac": LOW_COVERAGE, "city_gsd_m": city_gsd,
                                                          "tiles": report}, indent=1))
 
 
