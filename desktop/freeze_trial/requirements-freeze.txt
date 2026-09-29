@@ -14,3 +14,4 @@ gradio-client==2.7.1
 pyinstaller==6.22.3
 psutil
 onnxruntime==1.30.0
+scipy==1.17.1
