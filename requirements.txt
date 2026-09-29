@@ -1,0 +1,17 @@
+# Render web backend (build: pip install -r requirements.txt; start: uvicorn backend.main:app).
+# Versions are the ones the backend tests pass with locally (uv env, Python 3.11). No torch: the free
+# instance (512 MB) can't load a model, so depth inference goes to the ZeroGPU Space via gradio_client.
+fastapi==0.141.1
+uvicorn==0.52.4
+python-dotenv==1.2.3
+python-multipart==0.0.32
+httpx==0.28.1
+gradio_client==2.7.1
+huggingface_hub==1.30.0
+pydantic==2.13.5
+numpy==2.4.6
+pillow==12.3.0
+scipy==1.17.1
+pyproj==3.7.2
+rasterio==1.4.4
+certifi==2026.7.22
