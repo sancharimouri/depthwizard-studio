@@ -37,3 +37,25 @@ data/terrain_relief_control/kaggle_out/terrain_ctrl/ckpt_fold*.pt
 # Local-only agent notes (removed from the public repo 2026-09-29)
 CLAUDE.md
 last_session.md
+
+# Never commit (2026-09-29): model checkpoints, bulk research arrays/rasters, DFC2019-derived imagery
+# (contest terms forbid redistribution), third-party repos cloned for reading, personal documents.
+# Files already tracked are unaffected.
+*.pt
+*.pth
+data/**/*.npy
+data/**/*.npz
+data/**/*.tif
+data/**/*.tiff
+data/**/*.gz
+data/dfc2019/**/*.png
+data/dfc2019/**/*.jpg
+external/SIH26175-DepthWizard-notvishuuuu/
+external/sih2026-depthwizard/
+/*.pdf
+/*.pages
+/*.pptx
+/Screenshot*.png
+data/icesat2_photons/*.csv
+data/gamus_eval/zeroshot_tiles_*.jsonl
+data/dfc2019/experiments/dav2_calibration/calibration_samples.csv
