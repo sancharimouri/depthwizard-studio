@@ -1,5 +1,27 @@
 # Curated tile library v2 (2026-09-29, branch `curated-tiles-2026-09-29`, local only)
 
+> **Update 2026-09-30** (owner re-ratings and the DFC2019 fix):
+> - **Sentinel-2 re-rated** (all now 3 stars, `user` defaults):
+>   - Bhitarkanika 30x, Kutch 90x (= its slider maximum), Amalapuram 43x.
+>   - Amalapuram moves into the 3-star tier.
+> - **Maxar ratings:**
+>   - a_valley 10x, c_town 4x, c_river 11x; a_forest and c_terraces use auto; all rated 3 stars.
+>   - **b_glacier is excluded.**
+>   - These values are in the slider units of the active DISPLAY preset (`subtle`). Switching the preset changes what
+>     they look like.
+> - **The DFC2019 flat-render bug is fixed:**
+>   - `backend/generation/pipeline.py` writes `limitOutliers: false` into DFC2019 terrain.json, and
+>     `frontend/src/terrain.js` then skips the outlier limiter.
+>   - The six tiles show their full relief. Verified in the viewer: OMA_211_039, OMA_211_032, OMA_212_033, OMA_376_023,
+>     OMA_376_038, OMA_258_020 (`_qa/screenshots_2026-09-30/`).
+>   - It applies to all DFC2019 tiles, so every DFC2019 tile now shows its full relief. The anchors' 10–16x values
+>     were chosen while the limiter was capping them (e.g. OMA_269_035 showed 46 % of its relief, JAX_004_006 60 %),
+>     so they now look taller at the same value.
+>   - Sentinel-2, Maxar and the demo regions keep the limiter, so their rated looks are unchanged.
+> - **Darjeeling:** the generated B render is **pixel-identical** to the original. Darjeeling's RGB raster is already
+>   stretched to 0–255 (per-band 2nd/98th percentiles = 0/255), so the B stretch is the identity. There is no colour
+>   choice to make. The side-by-side is in `_qa/compare/darjeeling_A_original_vs_B.png`.
+
 A curated tile set for the private backend container, built from the owner's visual-QA ratings. **Nothing is pushed or
 deployed.** Everything is non-destructive:
 

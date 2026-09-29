@@ -385,8 +385,8 @@ def cmd_dfc(root: Path) -> None:
             t["include_in_container"] = False
             notes.append(f"excluded: genuinely flat data (tile spans {r['mesh_range_m']:.2f} m); files stay")
         elif r["flat_render"]:
-            notes.append("renders flat because of the frontend outlier limiter (Q3 < 5 cm), NOT flat data; "
-                         "kept included pending your decision (fix the limiter or exclude)")
+            notes.append("was drawn flat by the viewer's outlier limiter (Q3 < 5 cm), not flat data; fixed 2026-09-30: "
+                         "DFC2019 terrain.json carries limitOutliers: false")
         if r["anchor"]:
             notes.append("exaggeration anchor (user)")
         t["notes"] = "; ".join(notes)

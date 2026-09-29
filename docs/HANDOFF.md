@@ -561,7 +561,14 @@ Full record: `docs/library_v2.md`. It adds:
 
 The protected folders are SHA-256-identical before and after (474 files).
 
-**Decisions waiting on the owner:**
+**2026-09-30 update:**
+- Re-ratings applied: Bhitarkanika 30x, Kutch 90x, Amalapuram 43x; Maxar a_valley 10x, c_town 4x, c_river 11x; all
+  3 stars; b_glacier excluded.
+- The DFC2019 limiter bug is fixed (DFC2019 terrain.json has `limitOutliers: false`).
+- Darjeeling's A and B are identical, so there is no decision.
+- Items 1, 2 and 4 below are closed. The DFC2019 anchors may need re-checking, since they now render at full relief.
+
+**Decisions waiting on the owner (as of 2026-09-29):**
 1. **Re-rate** Bhitarkanika, Kutch and Amalapuram (offset-only recalculation, relief 2.4–5.2 → 7.0–12.3 m;
    Bhitarkanika shows a sharp step between mangrove and farmland at 60x).
 2. **Darjeeling colours:** original (active) vs the generated B_own_percentiles render.

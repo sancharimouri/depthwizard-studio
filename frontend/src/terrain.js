@@ -413,7 +413,9 @@ export function createTerrain(
     // What the mesh actually shows: extrudedZ with extreme outliers limited for
     // the current display exaggeration (src/outlier-relief.js). Identical to
     // extrudedZ on tiles without extreme outliers.
-    const outlierLimits = outlierFences(extrudedZ);
+    // terrain.json `limitOutliers: false` (DFC2019 reference-lidar surfaces): tall cells are buildings, never
+    // outliers. On a mostly-bare-ground tile the fences' IQR is a few cm and would flatten every building.
+    const outlierLimits = terrainData.limitOutliers === false ? null : outlierFences(extrudedZ);
     const shownZ = limitOutliers(extrudedZ, new Float32Array(extrudedZ.length), outlierLimits, 1);
 
     for (

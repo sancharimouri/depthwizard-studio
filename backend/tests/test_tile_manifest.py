@@ -43,3 +43,12 @@ def test_display_field_is_optional_and_separate(tmp_path):
     assert (d["elevationMin"], d["elevationMax"]) == (0.0, 15.0)           # real surface unchanged
     assert (d["display"]["elevationMin"], d["display"]["elevationMax"]) == (0.0, 150.0)
     assert len(d["display"]["heights"]) == len(d["heights"]) == 16
+
+
+def test_limit_outliers_flag_only_when_disabled(tmp_path):
+    surface = np.arange(16, dtype=np.float32).reshape(4, 4)
+    p = tmp_path / "t.json"
+    write_terrain_json(p, surface, (0, 0, 1, 1), (4, 4))
+    assert "limitOutliers" not in json.loads(p.read_text())     # default: unchanged output, viewer limits as before
+    write_terrain_json(p, surface, (0, 0, 1, 1), (4, 4), limit_outliers=False)
+    assert json.loads(p.read_text())["limitOutliers"] is False  # DFC2019 lidar: the viewer skips the limiter
