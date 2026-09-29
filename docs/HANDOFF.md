@@ -593,6 +593,37 @@ The protected folders are SHA-256-identical before and after (474 files).
   are still uncommitted.
 - `docs/method-audit/08-dfc2019-terrain-packs/packs.md` is only partly updated: a dated note at the top.
 
+### 5z+2. Slim backend container + static web library (2026-09-30): LOCAL ONLY, branch `slim-container-2026-09-30`
+
+Records: `docs/container-measurements.md` (BEFORE / AFTER, dated per part) and `docs/deploy-cloud-run.md` (runbook).
+
+- **§2 build state:**
+  - The image is 116.7 MB compressed on amd64 (was 212.3); idle RSS is 80 / 61 MiB (was 117 / 91); all 3 flows'
+    outputs are byte-identical.
+  - scipy and pyproj are gone; `/health` added.
+  - The web library is static on Vercel (52.4 MB), with 0 backend / Space calls to open a tile.
+  - The desktop app is unchanged.
+  - A CDSE 8 × 8 mesh bug is fixed (5647668).
+- **§5 Docker / Cloud Run:**
+  - Memory: 512 MiB is feasible (worst peak 287 MiB), with concurrency 4, CPU boost, min-instances 0, and 1 only on
+    judging days.
+  - Measure the real cold start after the first deploy: keep scale-to-zero if the median is ≤ 5 s.
+  - Method 6 would need about 1 GiB and about +120 MB of image.
+- **Owner decisions logged 2026-09-30:**
+  - compact static format;
+  - DFC2019 served publicly at display resolution (**standing rule changed:** "DFC2019 raw data (imagery, AGL, per-pixel research outputs) must never be in the public git repo. Display-resolution tiles derived from it may be served publicly by the web app, with credit to IEEE GRSS DFC2019 and JHU/APL US3D.");
+  - keep the `.pyc` files;
+  - fix the CDSE bug separately;
+  - report-only on the DFC2019 paths already in git.
+- **§6 open items / decisions waiting on the owner:**
+  - Choose the Maxar DISPLAY preset ("medium" is a placeholder in the static library).
+  - The cleanup of the 3,691 `dfc2019` paths in public git history: all on origin/main, including 47,500 anchor pixel
+    samples. It waits for the backup repo.
+  - Measure the real Cloud Run cold start after the first deploy.
+  - A `/tmp` cap on long-lived instances.
+  - `/api/facts` is still called for georeferenced tiles (the Facts panel; not tile data).
+  - The Vercel limits page still lists 100 MB for CLI uploads: re-check it before the first deploy.
+
 ## 6. Credentials/access inventory (`.env`)
 
 | Key | Status |

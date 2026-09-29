@@ -73,6 +73,28 @@ for the private backend container.
   - DFC2019 content may go into the **private** container only.
   - Nothing here is uploaded to HF or GitHub yet: the HF `dem/` and the public release still hold the previous sets.
 
+## Static web library (2026-09-30; branch `slim-container-2026-09-30`, not deployed)
+
+The web app loads library tiles from pre-baked static files served by Vercel, not from the backend.
+
+- **Bake:** `scripts/bake_static_library.py` → `frontend/public/library-static/` (gitignored; the pre-commit hook
+  rejects it).
+- **Contents:** one folder per included tile of `data/library_v2_2026-09-29/tile_manifest.json` (76: 26 Sentinel-2,
+  5 Maxar, 45 DFC2019), plus `index.json`.
+  - `terrain.u16.gz`: generate's `terrain.json` as gzipped uint16; the error is at most half a step (range / 131070).
+    Maxar carries both the real heights and the DISPLAY heights.
+  - `preview.jpg`: also the 3D texture.
+  - `relative_depth.png` (from the baked DAv2 depth), `elevation.png`, `thumbnail.jpg`, `tile.json`.
+- **Size:** 52.4 MB, 457 files. The whole Vercel upload is 72.9 MB against Hobby's 100 MB.
+  `frontend/.vercelignore` keeps the untracked 84 MB `public/data/vhr/` out of the upload.
+- **Maxar DISPLAY preset:** exactly one is baked (the manifest's, or `--maxar-preset`). **"medium" is a placeholder**
+  until the owner chooses.
+- **`vercel.json`:** `X-Robots-Tag: noindex` on `/library-static/`. Note that the files are still publicly
+  downloadable.
+- **DFC2019:** served publicly at display resolution under the owner's rule of 2026-09-30: "DFC2019 raw data (imagery, AGL, per-pixel research outputs) must never be in the public git repo. Display-resolution tiles derived from it may be served publicly by the web app, with credit to IEEE GRSS DFC2019 and JHU/APL US3D."
+- **Backend container:** ships ZERO tile data; the desktop app keeps its bundled library and sidecar routes.
+- **Details:** docs/container-measurements.md, Part 2.
+
 ## Why DFC2019 is private
 
 The IEEE GRSS DFC2019 contest terms forbid redistributing the data. This was checked against the primary source, not just a search result.

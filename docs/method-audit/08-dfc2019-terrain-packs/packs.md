@@ -1,5 +1,7 @@
 # Prompt 5 — reference correction, packs, integration, QA
 
+> **2026-09-30:** the included DFC2019 packs are also baked into the web app's static library (`scripts/bake_static_library.py`) at display resolution: a 341² uint16 surface, previews, and relative-depth / elevation PNGs. They are served publicly with the IEEE GRSS DFC2019 / JHU/APL US3D credit, under the owner's new standing rule (docs/HANDOFF.md). The raw packs stay private and out of git.
+
 > **Superseded in part (2026-09-29).**
 > - **Heights:** the packs were rebuilt with the **DFC2019 lidar AGL as the sole height source** (no Method 6):
 >   - valid AGL → max(AGL, 0); invalid → 0;

@@ -357,3 +357,80 @@ small head):
   concurrent inferences)**.
 - Image ≈ +120 MB compressed for a single model.
 - Per HANDOFF §1, it should only ever run on genuine ≤ ~2.4 m uploads.
+
+## Fix, separate commit 5647668 (2026-09-30): Search Online (CDSE) scenes rendered an 8 × 8 mesh
+
+- **Cause:**
+  - `backend/generation/pipeline.py:122` (before the fix) floored the attached DEM's pixel size with
+    `max(abs(transform.a), 1.0)`. The floor is meant in metres, but a scene's DEM is in EPSG:4326, so its ~0.0003°
+    pixel became 1°.
+  - `_grid_from_bounds` (`:64-65`) then made the ~0.09° footprint its 8-cell minimum.
+  - `_glo30_only` (`:105`) passed 30 m as 30° the same way.
+- **Fix:** `_grid_from_bounds` converts metres to degrees for a geographic CRS, and `_input_elevation` measures the
+  DEM's pixel in metres before the floor.
+- **Result:** CDSE Bathinda goes from an 8 × 8 mesh at "1.0 m" (surface 205.0–212.4 m) to **375 × 324 at 30.9 m**
+  (197.7–234.6 m).
+- **UTM path unchanged:** for the GeoTIFF flow, `terrain.json` is byte-identical and the PNGs are pixel-identical.
+- **Screenshots:** `build/slim/qa_static/shots/cdse_before_after.png`.
+- **Test:** `backend/tests/test_grid_crs.py`.
+
+## Report only (2026-09-30): the 3,691 tracked paths containing "dfc2019"
+
+Nothing was changed.
+
+**By content** (`build/slim/results/dfc_tracked_breakdown.txt`):
+- 3,450 sparse-anchor JSONs (7.5 MB): row / col + AGL + DAv2 value at 5–100 pixels per file, **47,500 pixel samples**
+  in total.
+- 192 metrics / config / fit JSON / JSONL / CSV (20.1 MB).
+- 26 logs / text.
+- 21 code / docs.
+- **0 images.**
+- 3,515 of the JSONs embed an absolute `/Users/...` path (the truth / depth file locations).
+
+**The two binary files:**
+- `data/kaggle_bundles/gamus_zeroshot/dfc2019_block_hashes.npy`: uint8 (51,125, 12).
+  - These are blake2b-96 hashes of the 32 × 32 RGB blocks of the DFC2019 tiles (`block_hashes()` in
+    `scripts/gamus_zeroshot_kaggle.py`), used for the GAMUS leakage check.
+  - They are fingerprints, not pixels; the pixels can't be recovered from them.
+- `data/dfc2019/experiments/dav2_calibration/models/isotonic_mapping.joblib` (7.9 KB): a scikit-learn
+  `IsotonicRegression` (460 knots, clip), i.e. a 1-D DAv2 → height calibration curve fitted by
+  `scripts/fit_dav2_calibration.py`. It is a model, not per-pixel data.
+
+**Commits:** 33 commits added them, and **all 33 are on origin/main** (checked against the local remote-tracking refs;
+origin/main was last fetched at b34064c).
+- 3,615 files came in `4711b13` (2026-09-23, "traceability: commit DFC2019 result files … JSON/CSV/logs only").
+- The rest came from single research commits (2026-09-22 … 09-28).
+- The full list is in `build/slim/results/dfc_commits.txt`.
+- Under the new standing rule, "per-pixel research outputs" arguably covers the anchor samples. Cleanup is the owner's
+  decision, and any history rewrite waits for the backup repo.
+
+## Part 5 (2026-09-30)
+
+`docs/deploy-cloud-run.md` covers:
+- project + billing;
+- a budget alert at 50 / 90 / 100 %;
+- the APIs;
+- Artifact Registry with a keep-last-2 cleanup policy;
+- the amd64 build + push;
+- secrets via Secret Manager;
+- the Earth Engine service account;
+- the deploy flags (512Mi, cpu-boost, concurrency 4, timeout 300, min-instances 0, plus the one-line switches to 1 and
+  back);
+- the cold-start measurement and the ≤ 5 s decision rule.
+
+## Part 6: checks (2026-09-30)
+
+- **Desktop sidecar smoke test** (`desktop/freeze_trial/dw2_entry.py` from source, with the sidecar's own
+  `dav2_small.onnx` and `library_bundle/`):
+  - `--selftest`: HTTP 200, local ONNX depth 518 × 518, GeoTIFF upload 200 with EPSG:32643 read, so GDAL / PROJ work
+    without pyproj.
+  - Serve mode:
+    - `/health` ok;
+    - `/api/library` lists the bundled catalog (89 items, 25 local; no curation, as before);
+    - `POST /api/generate/library/{sentinel2-darjeeling, vhr-a_valley}` returns 200 with "bundled elevation pack" and
+      depth from the local ONNX model; all assets 200.
+  - The desktop frontend build (Tauri's own `beforeBuildCommand`) contains **no `library-static/`**.
+- **Tests:** backend 62 passed (1 skipped); frontend 96 passed.
+- **Protected data** (`data/library/`, `data/library_v2_2026-09-29/` except the running preview's `_qa/`, the DFC2019
+  packs + backup, `data/display_test_2026-09-29/`, the Sentinel-2 RGBs; 864 files): SHA-256 before vs after is
+  **identical** (864 of 864 files, and the file list is unchanged).
