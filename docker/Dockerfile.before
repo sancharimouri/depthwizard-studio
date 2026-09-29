@@ -1,0 +1,13 @@
+# BEFORE baseline, 2026-09-30 ("Configuration A" as it stood): python:3.11-slim + requirements.txt +
+# the Earth Engine client + backend code. Measurement only (docs/container-measurements.md); not for deploy.
+# As first written it did not start: the rasterio 1.4.4 wheel needs the system libexpat.so.1, which python:3.11-slim
+# (Debian trixie) lacks ("ImportError: libexpat.so.1"). The baseline adds that one package, nothing else.
+FROM python:3.11-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libexpat1 && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt earthengine-api==1.7.43
+COPY backend/ backend/
+ENV DW2_NO_DOTENV=1 PORT=8080
+EXPOSE 8080
+CMD ["sh", "-c", "exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}"]

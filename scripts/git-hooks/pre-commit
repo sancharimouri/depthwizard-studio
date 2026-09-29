@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Pre-commit guard (2026-09-30): DFC2019 data and the pre-baked static library never get committed.
+# The repo is PUBLIC and the DFC2019 contest terms forbid redistribution (docs/STORAGE.md).
+#
+# Install once per clone:   git config core.hooksPath scripts/git-hooks
+# (or: cp scripts/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit)
+#
+# Rejected: any staged addition / copy / rename / modification whose path contains "dfc2019" (any case) or the
+# static library folder frontend/public/library-static/.
+# Allowed: deletions (so `git rm --cached` clean-ups work), and modifications to .py / .md / .sh files that are
+# ALREADY tracked (code and docs about DFC2019, e.g. scripts/dfc2019_build_packs.py; never data).
+STATIC="frontend/public/library-static/"
+bad=""
+git diff --cached --name-status -z --diff-filter=ACMR | {
+  while IFS= read -r -d '' status; do
+    case "$status" in R*|C*) IFS= read -r -d '' _old ;; esac
+    IFS= read -r -d '' path
+    lower=$(printf '%s' "$path" | tr '[:upper:]' '[:lower:]')
+    hit=""
+    case "$path" in "$STATIC"*) hit="static library folder" ;; esac
+    case "$lower" in *dfc2019*) [ -z "$hit" ] && hit="dfc2019 in path" ;; esac
+    [ -z "$hit" ] && continue
+    if [ "$hit" = "dfc2019 in path" ] && [ "$status" = "M" ]; then
+      case "$path" in *.py|*.md|*.sh) git cat-file -e "HEAD:$path" 2>/dev/null && continue ;; esac
+    fi
+    echo "pre-commit: refusing $path ($hit)" >&2
+    bad=1
+  done
+  [ -z "$bad" ]
+} || {
+  echo "pre-commit: DFC2019 data and the static library must never be committed (see scripts/git-hooks/pre-commit)." >&2
+  exit 1
+}
