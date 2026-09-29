@@ -2346,10 +2346,23 @@ async function showJobInFinalDemo(job) {
     if (active && active !== job) {
         return active.gen?.status === "ok" && active.status === "complete" ? showJobInFinalDemo(active) : null;
     }
+    applyDefaultExaggeration(job);
     finalDemoHistory?.reset();
     renderSource(job);
     applyViewerMemory(job.viewMemory); // the user's own edits for this job, if any
     return terrain;
+}
+
+// The curated tile's default slider value (tile_manifest.json -> generate meta.default_exaggeration),
+// in the slider's own units. null/missing keeps the automatic value. Applied before the history
+// baseline and before the job's saved view, so undo and the user's own changes still win.
+function applyDefaultExaggeration(job) {
+    const value = Number(job?.gen?.meta?.default_exaggeration);
+    if (!(value > 0) || !finalDemoCurrentTerrain?.setDisplayExaggeration) {
+        return;
+    }
+    finalDemoCurrentTerrain.setDisplayExaggeration(value);
+    syncExaggerationSlider(finalDemoCurrentTerrain);
 }
 
 async function loadFinalDemoRegion(regionKey, assets = null) {

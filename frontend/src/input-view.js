@@ -86,6 +86,10 @@ export function itemTerrain(item) {
 }
 
 export function orderLibraryItems(items) {
+    // A curated listing (backend tile_manifest.json) carries its own order: follow it as served.
+    if (items.length && items.every(item => Number.isFinite(item.order_index))) {
+        return [...items].sort((a, b) => a.order_index - b.order_index);
+    }
     const rank = item => {
         const i = PINNED_FIRST.indexOf(item.id);
         return i < 0 ? PINNED_FIRST.length : i;

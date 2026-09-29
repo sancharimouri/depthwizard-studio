@@ -53,6 +53,18 @@ test("library order: Darjeeling, Almora, Manali first, then catalog order", () =
         ["sentinel2-darjeeling", "sentinel2-almora", "sentinel2-manali", "dfc2019-A", "sentinel2-kota"]);
 });
 
+test("library order: a curated listing (order_index on every item) is followed as served", () => {
+    const items = [
+        { id: "sentinel2-almora", order_index: 2 },
+        { id: "sentinel2-kota", order_index: 0 },
+        { id: "sentinel2-darjeeling", order_index: 1 },
+    ];
+    assert.deepEqual(orderLibraryItems(items).map(i => i.id), ["sentinel2-kota", "sentinel2-darjeeling", "sentinel2-almora"]);
+    // one item without an index: the pinned order applies, as before
+    assert.deepEqual(orderLibraryItems([{ id: "sentinel2-kota", order_index: 0 }, { id: "sentinel2-darjeeling" }]).map(i => i.id),
+        ["sentinel2-darjeeling", "sentinel2-kota"]);
+});
+
 test("library terrain: manifest field, Sentinel-2 category, collection fallback", () => {
     assert.equal(itemTerrain({ terrain: "coastal", collection: "sentinel2" }), "coastal");
     assert.equal(itemTerrain({ category: "agricultural", collection: "sentinel2" }), "agricultural");

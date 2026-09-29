@@ -32,6 +32,7 @@ from backend.terrain.mesh_export import write_terrain_json
 
 ROOT = Path(__file__).resolve().parents[2]
 MESH_MAX = 400  # mesh cells per side (Darjeeling's demo mesh is 361 x 325)
+DFC2019_CREDIT = "Data: IEEE GRSS Data Fusion Contest 2019 (Track 1), from the JHU/APL Urban Semantic 3D (US3D) dataset."
 RAMP = np.array([  # scripts/prepare_elevation_texture.py
     [0.00, 0.08, 0.18, 0.55],
     [0.25, 0.00, 0.55, 0.75],
@@ -79,11 +80,17 @@ def _library_elevation(item: dict) -> dict | None:
             tags = r.tags()
             # optional tags (DFC2019 packs): CRS_LABEL for a local frame with no real location,
             # RAMP_BAND=SURFACE when the terrain band is a constant, NOTE = provenance for the UI
-            return {"terrain": r.read(1), "surface": r.read(2), "crs": r.crs, "transform": r.transform,
-                    "bounds": tuple(r.bounds), "res_m": abs(r.transform.a),
-                    "terrain_source": tags.get("TERRAIN_SOURCE"), "surface_source": tags.get("SURFACE_SOURCE"),
-                    "how": tags.get("HOW", how), "crs_label": tags.get("CRS_LABEL"),
-                    "ramp": tags.get("RAMP_BAND", "TERRAIN"), "note": tags.get("NOTE")}
+            out = {"terrain": r.read(1), "surface": r.read(2), "crs": r.crs, "transform": r.transform,
+                   "bounds": tuple(r.bounds), "res_m": abs(r.transform.a),
+                   "terrain_source": tags.get("TERRAIN_SOURCE"), "surface_source": tags.get("SURFACE_SOURCE"),
+                   "how": tags.get("HOW", how), "crs_label": tags.get("CRS_LABEL"),
+                   "ramp": tags.get("RAMP_BAND", "TERRAIN"), "note": tags.get("NOTE")}
+            # optional band 3 DISPLAY (Maxar library_v2 packs, scripts/build_maxar_display_packs.py): a cosmetic
+            # surface that shapes the 3D mesh only; the real bands still feed statistics and readouts
+            if r.count >= 3 and (r.descriptions[2] or "").upper() == "DISPLAY":
+                out["display"] = r.read(3)
+                out["display_note"] = tags.get("DISPLAY_NOTE")
+            return out
     geo = item.get("geo")
     if not geo:
         return None
@@ -197,14 +204,23 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
         surface = np.asarray(elev["surface"], np.float32)
         _colour_ramp(surface if elev.get("ramp") == "SURFACE" else terrain).save(out / "elevation.png", optimize=True)
         lonlat = transform_bounds(elev["crs"], "EPSG:4326", *elev["bounds"], densify_pts=21)
-        mesh = write_terrain_json(out / "terrain.json", surface, lonlat, _mesh_hw(surface.shape))
+        display = elev.get("display")
+        mesh = write_terrain_json(out / "terrain.json", surface, lonlat, _mesh_hw(surface.shape), display=display)
         crs = elev.get("crs_label") or str(elev["crs"])
         if elev.get("note"):
             meta["note"] = elev["note"]
+        if display is not None:
+            meta["display_note"] = elev.get("display_note") or "3D shape is a cosmetic display surface; statistics show real elevations."
         meta.update(terrain_source=elev["terrain_source"], surface_source=elev["surface_source"], how=elev["how"],
                     crs=crs, resolution_m=round(float(elev["res_m"]), 3), grid=[mesh["width"], mesh["height"]],
-                    mesh_from="surface", bounds_lonlat=list(lonlat),
+                    mesh_from="display" if display is not None else "surface", bounds_lonlat=list(lonlat),
                     terrain_range_m=[round(float(np.nanmin(terrain)), 1), round(float(np.nanmax(terrain)), 1)],
                     surface_range_m=[round(float(np.nanmin(surface)), 1), round(float(np.nanmax(surface)), 1)])
+    if kind == "library" and item:
+        from backend.library import tile_manifest
+        if item.get("collection") == "dfc2019":
+            meta["credit"] = DFC2019_CREDIT
+        # curated default for the slider (tile_manifest.json); None = the viewer's automatic value
+        meta["default_exaggeration"] = tile_manifest.default_exaggeration(item["id"])
     (out / "meta.json").write_text(json.dumps(meta, indent=1))
     return meta

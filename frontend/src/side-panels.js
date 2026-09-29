@@ -79,10 +79,13 @@ export function renderSource(job) {
         const m = job?.gen?.status === "ok" ? job.gen.meta : null;
         note.textContent = !job ? ""
             : !m ? "Terrain not generated for this job."
-            : m.has_elevation
+            : [m.has_elevation
                 ? `The 3D terrain and its statistics are this job's own: surface from ${m.surface_source}, `
                     + `terrain from ${m.terrain_source}.`
-                : m.note;
+                : m.note,
+               m.display_note, // Maxar DISPLAY band: the mesh shape is cosmetic, statistics are real
+               m.credit]       // DFC2019 attribution
+                .filter(Boolean).join(" ");
     }
     renderInspection(job?.input);
 }

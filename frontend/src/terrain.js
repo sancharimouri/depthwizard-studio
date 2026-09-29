@@ -285,6 +285,13 @@ export function createTerrain(
     const elevationRange =
         elevationMax - elevationMin;
 
+    // Optional cosmetic display surface (terrain.json `display`, e.g. the Maxar DISPLAY band of
+    // scripts/build_maxar_display_packs.py): it shapes the extruded mesh only. Everything read from
+    // `heights` / `grid` / elevationMin..Max (statistics, readouts, Measure values) stays real.
+    const meshSource = terrainData.display ?? { heights, elevationMin, elevationMax };
+    const meshMin = meshSource.elevationMin;
+    const meshRange = meshSource.elevationMax - meshSource.elevationMin;
+
 
     // Vertical exaggeration is derived per-region from the real relief
     // ratio (elevation range vs. horizontal footprint in meters), not
@@ -316,7 +323,7 @@ export function createTerrain(
         );
 
     const reliefRatio =
-        elevationRange / footprintMeters;
+        meshRange / footprintMeters;
 
     const referenceReliefRatio = 0.2;
 
@@ -329,8 +336,8 @@ export function createTerrain(
     // Steep scenes (Darjeeling ~1900 m) already exceed the floor: unchanged.
     const MIN_RELIEF_FRACTION = 0.15;
     const MAX_AUTO_EXAGGERATION = 60;
-    const reliefFloorFactor = elevationRange > 0
-        ? (MIN_RELIEF_FRACTION * terrainHeight) / (elevationRange * baseVerticalScale)
+    const reliefFloorFactor = meshRange > 0
+        ? (MIN_RELIEF_FRACTION * terrainHeight) / (meshRange * baseVerticalScale)
         : 1;
 
     const exaggerationFactor =
@@ -356,8 +363,8 @@ export function createTerrain(
     const spikeSmoothingParams = SPIKE_SMOOTHING_PARAMS[regionKey];
 
     const heightsForMesh = spikeSmoothingParams
-        ? medianFilter2D(heights, width, height, spikeSmoothingParams.medianKernelSize)
-        : heights;
+        ? medianFilter2D(meshSource.heights, width, height, spikeSmoothingParams.medianKernelSize)
+        : meshSource.heights;
 
     const extrudedZ = new Float32Array(positions.count);
 
@@ -377,14 +384,14 @@ export function createTerrain(
                 y * width + x;
 
             const elevation =
-                elevationMin +
+                meshMin +
                 heightsForMesh[index] *
-                elevationRange;
+                meshRange;
 
             extrudedZ[index] =
                 (
                     elevation -
-                    elevationMin
+                    meshMin
                 ) *
                 verticalExaggeration;
         }
@@ -819,7 +826,7 @@ export function createTerrain(
     // ~80% of the tile's north-south extent, so a flat scene (tens of metres
     // of relief) can go far higher than an already-steep one.
     const DISPLAY_RELIEF_CAP = 0.8 * terrainHeight;
-    const reliefUnitsPerFactor = Math.max(elevationRange * baseVerticalScale, 1e-6);
+    const reliefUnitsPerFactor = Math.max(meshRange * baseVerticalScale, 1e-6);
     const maxDisplayExaggeration = Math.max(
         exaggerationFactor * 1.5,
         Math.min(50, DISPLAY_RELIEF_CAP / reliefUnitsPerFactor)
