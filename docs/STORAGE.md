@@ -1,19 +1,48 @@
-# Storage: where the non-code assets live (2026-09-26)
+# Storage: where the non-code assets live (updated 2026-09-29)
 
 Split by licence. Active code: `backend/storage/library_store.py` (tile library) and
 `backend/storage/hf_checkpoints.py` (Method 6 checkpoints). Publisher: `scripts/publish_library.py`.
 `backend/storage/r2.py` (Cloudflare R2) is kept but **dormant**. Nothing calls it and nothing was uploaded there.
 
+Measured 2026-09-29 (HF API tree listing, `gh release view`, `du`).
+
 | Asset | Where | Access | Files | Size |
 |---|---|---|---|---|
-| Sentinel-2 library (32 scenes: tile + thumb + preview) | GitHub Release `sancharimouri/depthwizard2-assets@library-v1` | **public**, attribution README | 96 | 80.1 MB |
-| Maxar Open Data VHR library (6 crops from 3 distinct 2022 scenes) | same release | **public**, CC BY-NC 4.0 attribution | 18 | 58.7 MB |
-| **GitHub release total** | | | **114** | **138.9 MB** (138,858,442 B) |
-| DFC2019 library (50 tiles) | HF dataset `sancharimouri/depthwizard2-library-private` → `tiles/` | **private** (anonymous → 401) | 50 | 127.6 MB |
-| DFC2019 previews / thumbnails | same dataset → `previews/`, `thumbnails/` | private, proxied by the backend | 50 + 50 | 12.1 + 0.9 MB |
-| `manifest.json` (all 88 items) + README | same dataset | private | 2 | 0.1 MB |
-| **HF library dataset total** | | | **152** | **140.7 MB** (140,707,646 B) |
-| Method 6 checkpoints (4 folds, seed 43, + full-DFC2019) | HF model `sancharimouri/depthwizard2-method6` | **private** | 5 + README | **496.2 MB** (496,194,811 B) |
+| Sentinel-2 + Maxar library, 40 DFC2019 on-demand tiles (+ previews) | GitHub Release `sancharimouri/depthwizard2-assets@library-v1` | **public** | 201 | 228 MB (largest file 11 MB) |
+| DFC2019 library: `tiles/` | HF dataset `sancharimouri/depthwizard2-library-private` | **private** | 50 | 127.6 MB |
+| DFC2019 terrain packs: `dem/` (series from `7c8cbec`, now `0270343`) | same dataset | private, backend only | 50 | 21.4 MB |
+| DFC2019 `previews/`, `thumbnails/` | same dataset | private, proxied by the backend | 50 + 50 | 12.1 + 0.9 MB |
+| `manifest.json` (89 items) + README + .gitattributes | same dataset | private | 3 | 0.1 MB |
+| **HF library dataset total** | | | **203** | **162.1 MB** (162,102,670 B) |
+| Method 6 checkpoints (4 folds, seed 43, + full-DFC2019) | HF model `sancharimouri/depthwizard2-method6` | **private** | 5 + README | **496.2 MB** |
+| DAv2 inference Space | HF Space `sancharimouri/DepthWizard2` (ZeroGPU) | public | 4 | 6 KB (code only) |
+| Desktop releases | `sancharimouri/depthwizard2-desktop` | public | v1.0.2 (latest): 4 assets, 699 MB; v1.0.1: 669 MB; v1.0.0: 621 MB | 1,989 MB in total |
+
+**Free-tier limits (looked up 2026-09-29, huggingface.co/docs/hub/storage-limits and spaces-zerogpu):**
+- HF private storage: **100 GB** per free account. In use: 0.66 GB (dataset 162.1 MB + model 496.2 MB).
+- HF public storage: "best-effort". The Space is 6 KB.
+- ZeroGPU: a free account may host up to 2 ZeroGPU Spaces (we use 1), and gets **5 min of GPU a day** as a caller
+  (PRO: 40 min). Measured 2026-09-26: ~585 depth calls before the first quota refusal, so ~585 generations a day
+  (the backend calls the Space with the owner's token). A judging session of a few dozen generations fits easily.
+- ZeroGPU supports Python 3.12.12 and 3.10.13 only: the Space's README must keep `python_version: '3.12'`
+  (a `3.11` build fell back to 3.10 and failed on `numpy==2.4.6`, 2026-09-29).
+- GitHub: every release asset is far below the 2 GB per-file limit (largest: the 1.0.2 DMG, 355.7 MB).
+- Verified 2026-09-29: Render's `HF_TOKEN` reads `dem/` (live DFC2019 generation → "curated elevation pack"); all 178
+  thumbnail/preview URLs of `/api/library` resolve (78 via 307 to GitHub, 100 from the backend).
+
+**Render (free, 512 MB):** peak backend RSS 192 MB over 15 generations (clean venv from `requirements.txt`,
+measured locally; the Render dashboard metrics were not read). Each generation writes ~2.7 MB (max 3.4 MB) under `/tmp`,
+which the instance loses on every spin-down (15 min idle) and deploy; at the ZeroGPU ceiling (~585 a day) that is
+≤1.6 GB, so no age/size cap was added.
+
+**Local disk (2026-09-29, `du -sh`):** repo 37 GB: `data/` 28 GB (`dfc2019` 19 GB, `sentinel2_benchmark` 3.0 GB,
+`vhr_dsm` 1.6 GB), `models/` 1.3 GB, `desktop/tauri/src-tauri/target` 4.5 GB, `frontend/node_modules` 392 MB,
+root `node_modules` 86 MB, `external/` 51 MB; HF cache `~/.cache/huggingface` 1.4 GB.
+- Rebuildable/downloadable (safe to delete, owner's OK first): `target/` (4.5 GB; `cargo clean`), the HF cache and
+  `models/hub` (re-downloaded on demand), `node_modules` (`npm install`).
+- Not safe without the owner: `data/` research outputs; most checkpoints there exist nowhere else.
+- `.gitignore` (2026-09-29) keeps checkpoints, bulk arrays/rasters, DFC2019-derived files, cloned third-party repos and
+  personal documents out of git: untracked went from 3,355 files (~21 GB) to ~300 (~210 MB, the owner's call).
 
 The GitHub repo holds only these release assets and a README. The application code is not published there.
 
@@ -33,8 +62,8 @@ Sentinel-2 (Copernicus licence, all 2025 acquisitions) and Maxar Open Data are p
 - If `HF_TOKEN` is missing or wrong, `/api/library` returns 503. There is **no** silent fallback to local files.
 - `DW2_LIBRARY=local` → `data/library/` (development only).
 - Environment overrides: `DW2_ASSETS_REPO`, `DW2_ASSETS_TAG`, `DW2_LIBRARY_DATASET`, `DW2_CKPT_REPO`.
-- **Deployment note (Prompt 2):** DFC2019 image URLs are relative (`/api/...`). The deployed frontend must reach the backend at the same origin
-  (or through a proxy), and CORS in `backend/main.py` currently allows only `http://localhost:5173`.
+- DFC2019 image URLs are relative (`/api/...`); the deployed frontend reaches the backend through `VITE_API_BASE`, and CORS
+  allows exactly `https://depthwizard-studio.vercel.app` and `https://depthwizard2.vercel.app` (verified 2026-09-29).
 
 ## Cost
 
