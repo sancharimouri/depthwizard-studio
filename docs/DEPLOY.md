@@ -1,11 +1,32 @@
-# Deployment (Render backend + Vercel frontend) — status 2026-09-26
+# Deployment (Render backend + Vercel frontend) — status 2026-09-29
 
-## LIVE (2026-09-27)
+## LIVE (2026-09-29: the 2026-09-28/29 UI/UX sessions, backend fixes and DFC2019 packs are deployed)
+- **Deployed 2026-09-29:** GitHub `main` up to `36789c0` (Render autodeploy); Vercel production `depthwizard2-62bvvq0xf`
+  (both domains); Space `sancharimouri/DepthWizard2` at `f9c671a` (`ssr_mode=False`).
+- **Verified live 2026-09-29** (headless Chrome with the Metal GPU, fresh profile per deck link, DevTools protocol):
+  - Deck links: `/` → DW Studio, `#/demo` → Demo, `#demo-video` → Home scrolled to the video section, `#/docs` → Home;
+    0 console errors on each. The two GitHub links answer 200; `…/releases/latest` → v1.0.1 until the desktop release.
+  - Backend (also in a clean Python 3.11 venv from `requirements.txt`, production mode): `/openapi.json` 200,
+    `/api/library` 89 items, `POST /api/input/{id}/gsd` listed; Darjeeling 200 with no pit deeper than 39.7 m below its
+    5×5 median (was ~1,850 m); DFC2019 `JAX_004_006` → "curated elevation pack"; 400×300 PNG at 0.5 m → 200 × 150 m plane;
+    CORS exactly the two Vercel origins. Peak backend RSS 192 MB over 15 generations (Render free: 512 MB).
+  - Generations on the live API: 15/15 Almora (13–29 s) after the retry fixes; the UI flow on the live site: Almora 22.1 s
+    end to end (depth request 16.4 s), every box readout 1.32–1.39 s from 0%, the log done before the DEM Elevation box.
+  - UI: sidebar labels, D mark → Home, drag 208–360 px and collapse below 160 px, footer links; Terrain dropdown and the
+    DFC2019 + Hilly notice (closes itself); PNG upload → GSD card, START waits for it; 12 background icons moving, big
+    satellite top-left, earth + satellite bottom-right; a job opened mid-generation (the running job completes: 0→100%);
+    viewer edits kept across job switches; a failed job shows "Failed" + Retry and the retry succeeds; low-relief warning
+    on Vidisha; wireframe green (dark) and orange (bright), recoloured live; bright mode has no green except the T2 badges.
+- **HF edge 502s (2026-09-29):** 8–23% of requests to any `*.hf.space` (also unrelated Spaces) got a 502 from HF's edge.
+  The backend re-sends those (`EDGE_RETRY_DELAYS_S`) and retries a Space job cancelled by a broken event stream.
+
+## Earlier state (2026-09-27)
 - **Frontend:** https://depthwizard-studio.vercel.app (primary; also https://depthwizard2.vercel.app) (Vercel project `sherry-c508/depthwizard2`, root `frontend/`,
   deployed with `npx vercel deploy --prod` from `frontend/`; `VITE_API_BASE` is a Production env var).
 - **Backend:** https://depthwizard2-api.onrender.com (Render `srv-dasjfqvpn0mc738mbqcg`, free plan, Singapore).
-  - Source: PRIVATE repo `sancharimouri/depthwizard-studio` (`backend/` + `bridge/` + `requirements.txt`), autodeploy on push to `main`.
-    It is a copy, not this repo: after a backend change here, sync those folders there and push.
+  - Source (corrected 2026-09-29): `sancharimouri/depthwizard-studio` is **this repo, PUBLIC** (it's the SIH deck's GitHub
+    link). Render builds it on every push to `main`: build `pip install -r requirements.txt` (root file, added 2026-09-29;
+    before that every build failed), start `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
   - Env (Render only, never committed): `HF_TOKEN`, `CDSE_CLIENT_ID/SECRET`, `DW2_NO_DOTENV=1`, `PYTHON_VERSION=3.11.9`,
     `CORS_ORIGINS=https://depthwizard-studio.vercel.app,https://depthwizard2.vercel.app` (exact; no regex), `DW2_{CACHE,GENERATED,UPLOADS}_DIR` under `/tmp` (ephemeral).
   - Depth: ZeroGPU Space `sancharimouri/DepthWizard2` (default host).
