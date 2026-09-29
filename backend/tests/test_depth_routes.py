@@ -225,3 +225,39 @@ def test_edge_retries_give_up_after_the_last_delay(monkeypatch):
 
 def test_could_not_fetch_api_info_counts_as_transient():
     assert depth_routes._is_transient("Could not fetch api info for https://x.hf.space: <!DOCTYPE html>")
+
+
+def _cancelling_client(monkeypatch, fails):
+    """gradio_client cancels its job when HF's edge puts an HTML page into the event stream (seen on Render
+    2026-09-29): predict() then raises CancelledError, a BaseException that used to escape as a bare 500."""
+    import concurrent.futures
+    import gradio_client
+    calls = []
+
+    class Client:
+        def __init__(self, src, **kw):
+            pass
+
+        def predict(self, *a, **kw):
+            calls.append(1)
+            if len(calls) <= fails:
+                raise concurrent.futures.CancelledError()
+            return DEPTH
+
+    monkeypatch.setattr(gradio_client, "Client", Client)
+    monkeypatch.setattr(depth_routes, "hf_token", lambda: "hf_test")
+    monkeypatch.setattr(depth_routes, "SPACE_RETRY_DELAYS_S", (0, 0))
+    return calls
+
+
+def test_a_broken_space_event_stream_is_retried(monkeypatch):
+    calls = _cancelling_client(monkeypatch, fails=1)
+    r = post()
+    assert r.status_code == 200 and len(calls) == 2
+
+
+def test_a_space_event_stream_that_keeps_breaking_is_a_502_not_a_500(monkeypatch):
+    calls = _cancelling_client(monkeypatch, fails=10)
+    r = post()
+    assert r.status_code == 502 and len(calls) == 3
+    assert "event stream" in r.json()["detail"]

@@ -23,6 +23,7 @@ The response is the host's JSON, plus "host" and "fallback_used": 518x518 relati
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import os
 import re
 import tempfile
@@ -170,6 +171,19 @@ async def _call_space(sid: str, filename: str, body: bytes) -> dict:
             raise
         except asyncio.TimeoutError as exc:
             raise HTTPException(status_code=504, detail=f"Space {sid} timed out after {TIMEOUT_S:.0f}s.") from exc
+        except (asyncio.CancelledError, concurrent.futures.CancelledError) as exc:
+            task = asyncio.current_task()
+            if task is not None and task.cancelling():
+                raise  # this request itself is being cancelled (client gone, shutdown)
+            # gradio_client cancels its job when the event stream breaks, e.g. HF's edge sends an HTML error page
+            # into it (Render, 2026-09-29). A BaseException, so it used to escape as a bare 500.
+            msg = "the Space's event stream broke (bad gateway) and the job was cancelled"
+            if attempt < len(SPACE_RETRY_DELAYS_S):
+                with _clients_lock:
+                    _clients.pop(sid, None)
+                await asyncio.sleep(SPACE_RETRY_DELAYS_S[attempt])
+                continue
+            raise HTTPException(status_code=502, detail=f"Space {sid}: {msg}") from exc
         except Exception as exc:  # noqa: BLE001 - gradio AppError carries ZeroGPU quota messages
             msg = str(exc).strip() or type(exc).__name__
             if attempt < len(SPACE_RETRY_DELAYS_S) and _is_transient(msg):
