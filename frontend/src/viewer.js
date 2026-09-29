@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { createTerrain } from "./terrain.js";
+import { fetchTerrainData } from "./terrain-data.js";
 import { createControls } from "./controls.js";
 
 // Shared interactive 3D terrain viewer — one instance drives Explore's
@@ -198,13 +199,8 @@ export function createTerrainViewer(canvas, options = {}) {
             depth: `/data/${regionKey}/relative_depth.png`,
             elevation: `/data/${regionKey}/elevation.png`,
         };
-        const terrainResponse = await fetch(url.terrain);
-
-        if (!terrainResponse.ok) {
-            throw new Error(`Failed to load terrain: ${terrainResponse.status}`);
-        }
-
-        const terrainData = await terrainResponse.json();
+        // terrain.json, or the static library's compact terrain.u16.gz (src/terrain-data.js)
+        const terrainData = await fetchTerrainData(url.terrain);
 
         const textureLoader = new THREE.TextureLoader();
 

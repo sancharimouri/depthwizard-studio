@@ -10,6 +10,7 @@
 // prediction), orange = Tier 1 (DEM only), neutral = relative preview only.
 // ============================================================
 
+import { LIBRARY_SOURCE, staticLibraryListing } from "./library-source.js";
 import { apiUrl } from "./api-base.js";
 import { attachMagnifier } from "./magnifier.js";
 import { footprintKmFromBbox } from "./flat-warning.js";
@@ -684,7 +685,7 @@ export function createInputView(root, { onStart }) {
             libraryStatus.replaceChildren(el("span", { class: "scene-search-spinner" }), LOADING_COPY.coldStart);
         }, COLD_AFTER_MS);
         try {
-            state.library = await (await api("/api/library")).json();
+            state.library = LIBRARY_SOURCE === "static" ? await staticLibraryListing() : await (await api("/api/library")).json();
             clearTimeout(coldTimer);
             libraryStatus.hidden = true;
             chipRow.querySelectorAll(".iv-chip").forEach(chip => {
@@ -872,7 +873,8 @@ export function createInputView(root, { onStart }) {
         });
         // Server-side routing is authoritative (Sentinel-2 is locked to Tier 1 there).
         try {
-            const routed = await (await api(`/api/library/${item.id}/select`, {
+            // static web build: the plan the backend returns for this request, baked with the listing
+            const routed = LIBRARY_SOURCE === "static" ? item.select : await (await api(`/api/library/${item.id}/select`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ requested_tier: item.routing.tier }),
