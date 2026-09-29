@@ -406,6 +406,7 @@ dependencies = [
 [package.optional-dependencies]
 backend = [
     { name = "fastapi" },
+    { name = "gradio-client" },
     { name = "httpx" },
     { name = "python-dotenv" },
     { name = "uvicorn" },
@@ -443,6 +444,7 @@ requires-dist = [
     { name = "albumentations", marker = "extra == 'training'" },
     { name = "fastapi", marker = "extra == 'backend'" },
     { name = "ftfy", marker = "extra == 'ml'", specifier = ">=6.3.1" },
+    { name = "gradio-client", marker = "extra == 'backend'", specifier = "==2.7.1" },
     { name = "httpx", marker = "extra == 'backend'" },
     { name = "numpy", marker = "extra == 'ml'" },
     { name = "omegaconf", marker = "extra == 'ml'", specifier = ">=2.3.1" },
@@ -531,6 +533,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/39/a9/0478b74a33aea66827c10baaf6025cb2a17e44b1c117533eecd3e977bb75/geopandas-1.1.4.tar.gz", hash = "sha256:06f2890a07e1a239047daa14b486a7c6ae5ce82dcf7405e13c46bf31f5d0dd66", size = 337445, upload-time = "2026-06-26T17:23:54.497Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/59/a8/bd530cc264e62ddbc1d1bb7225823992e6f2432c664693e9281bb6b9c359/geopandas-1.1.4-py3-none-any.whl", hash = "sha256:1a0c459cbdb1537cd154dafe6174be20d1760844b7f1c967dc8520b180f2e773", size = 343292, upload-time = "2026-06-26T17:23:53.112Z" },
+]
+
+[[package]]
+name = "gradio-client"
+version = "2.7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fsspec" },
+    { name = "httpx" },
+    { name = "huggingface-hub" },
+    { name = "packaging" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/14/dd/bfc46f5c671f4be56949fd26a062972d63b03aa6fc799c7aacb004a48807/gradio_client-2.7.1.tar.gz", hash = "sha256:2c629110496dbca67a848cd70add8cf5c3a24776404a2c5ef4fd759c7c2c33c4", size = 62702, upload-time = "2026-09-18T11:58:23.469Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/03/8a/dea48fd8863da2a920e6f83c3ce9b0a00dbb5517cd77b834746812d4687e/gradio_client-2.7.1-py3-none-any.whl", hash = "sha256:b4f953212a66eeb7fa12d93fcf98fa90a0567c2c9c6a5fc2795610f7c71e21b5", size = 63574, upload-time = "2026-09-18T11:58:21.845Z" },
 ]
 
 [[package]]
