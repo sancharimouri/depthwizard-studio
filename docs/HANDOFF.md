@@ -552,6 +552,32 @@ Two prompt series ran from `prompts.pages` (series A: 9 prompts, commits `ee6f95
   - Home says "88 curated scenes (32 Sentinel-2)"; the library has 89 (33).
   - The DFC2019 terrain packs are web-only; the desktop app still shows DFC2019 flat.
 
+### 5z+1. Curated tile library v2 (2026-09-29): LOCAL ONLY, branch `curated-tiles-2026-09-29`, not pushed or deployed
+
+Full record: `docs/library_v2.md`. It adds:
+- `data/library_v2_2026-09-29/` with `tile_manifest.json`, the single source of truth;
+- `scripts/build_library_v2.py`, `scripts/build_maxar_display_packs.py` and `scripts/stage_container_tiles.py`;
+- the backend and frontend reading the manifest (`DW2_TILE_MANIFEST`) and a Maxar DISPLAY band.
+
+The protected folders are SHA-256-identical before and after (474 files).
+
+**Decisions waiting on the owner:**
+1. **Re-rate** Bhitarkanika, Kutch and Amalapuram (offset-only recalculation, relief 2.4–5.2 → 7.0–12.3 m;
+   Bhitarkanika shows a sharp step between mangrove and farmland at 60x).
+2. **Darjeeling colours:** original (active) vs the generated B_own_percentiles render.
+3. **Maxar preset:** subtle (active), medium or strong, or new f / k / W / T values.
+4. **DFC2019 flat tiles:** OMA_211_039, OMA_211_032, OMA_212_033, OMA_376_023, OMA_376_038 and OMA_258_020 render
+   flat because of `frontend/src/outlier-relief.js` (IQR collapses when at least 75 % of cells are ground), not their
+   data. Fix the limiter, or exclude them. OMA_144_030 is excluded (genuinely flat).
+5. **DFC2019 mapping:** p98−p2 orders the anchors except OMA_269_035 (Spearman −0.79). Accept it, or give more anchors.
+
+**Open:**
+- No Dockerfile yet (staging is a dry run).
+- HF `dem/` and the public release still hold the previous sets.
+- The pre-existing uncommitted pack-rebuild edits (`desktop/tiles/build_dem_pack.py`, `scripts/dfc2019_build_packs.py`)
+  are still uncommitted.
+- `docs/method-audit/08-dfc2019-terrain-packs/packs.md` is only partly updated: a dated note at the top.
+
 ## 6. Credentials/access inventory (`.env`)
 
 | Key | Status |

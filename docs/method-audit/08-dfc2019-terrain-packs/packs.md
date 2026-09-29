@@ -1,5 +1,16 @@
 # Prompt 5 — reference correction, packs, integration, QA
 
+> **Superseded in part (2026-09-29).**
+> - **Heights:** the packs were rebuilt with the **DFC2019 lidar AGL as the sole height source** (no Method 6):
+>   - valid AGL → max(AGL, 0); invalid → 0;
+>   - more than 5 % invalid → `CONFIDENCE=reduced` (`scripts/dfc2019_build_packs.py`);
+>   - the fallback fired on 1 pixel in total.
+> - **Unchanged:** the pre-registered correction below describes the earlier series.
+> - **Curated set** (`docs/library_v2.md`):
+>   - 49/50 packs are included; OMA_144_030 is genuinely flat (0.75 m).
+>   - Six OMA tiles render flat because of a frontend outlier-limiter bug, not their data.
+>   - Default exaggeration is mapped to 10–16x from p98−p2 of the rendered surface.
+
 Script: `scripts/dfc2019_build_packs.py` (build, upload). Backend: `backend/storage/library_store.private_pack`,
 `backend/generation/pipeline._library_elevation` / `generate`.
 

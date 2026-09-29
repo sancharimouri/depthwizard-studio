@@ -46,6 +46,30 @@ root `node_modules` 86 MB, `external/` 51 MB; HF cache `~/.cache/huggingface` 1.
 
 The GitHub repo holds only these release assets and a README. The application code is not published there.
 
+## Curated library v2 (local only, 2026-09-29; `docs/library_v2.md`)
+
+`data/library_v2_2026-09-29/` (190 MB, gitignored; branch `curated-tiles-2026-09-29`, not pushed) holds the curated set
+for the private backend container.
+
+- **`tile_manifest.json`:** the single source of truth for inclusion, order and default exaggeration. It is read by
+  `backend/library/tile_manifest.py` (only when `DW2_TILE_MANIFEST` is set) and by `scripts/stage_container_tiles.py`.
+- **`dem/`:** the elevation packs the app reads (89).
+  - Sentinel-2: copies of `data/library/dem/`; 3 are offset-only recalculated.
+  - DFC2019: copies of `data/dfc2019/terrain_packs/packs/`.
+  - Maxar: 3-band packs with a cosmetic **DISPLAY** band. TERRAIN and SURFACE are unchanged, and DISPLAY shapes the
+    mesh only.
+- **`dem_maxar/{subtle,medium,strong}/`:** the DISPLAY presets. The active one is copied into `dem/` and named in
+  `dem_maxar/ACTIVE`.
+- **`previews/`, `thumbnails/`:** Sentinel-2 in the approved B_own_percentiles colours; Darjeeling's variants are in
+  `_variants/`. Maxar and DFC2019 are unchanged copies.
+- **Other files:**
+  - `manifest.json` + `tiles/` (symlinks to the original rasters) are the bundle-mode catalog;
+  - `_analysis/` holds tables (the DFC2019 per-tile tables stay here, never in git);
+  - `_guard/` holds the SHA-256 baseline.
+- **Container staging** (dry run, `scripts/stage_container_tiles.py`): 81 packs (41.0 MB) + 162 images (27.7 MB).
+  - DFC2019 content may go into the **private** container only.
+  - Nothing here is uploaded to HF or GitHub yet: the HF `dem/` and the public release still hold the previous sets.
+
 ## Why DFC2019 is private
 
 The IEEE GRSS DFC2019 contest terms forbid redistributing the data. This was checked against the primary source, not just a search result.
