@@ -1,15 +1,14 @@
 ---
 title: DepthWizard2
-emoji: 🏔️
-colorFrom: green
-colorTo: gray
+emoji: 🚀
+colorFrom: indigo
+colorTo: blue
 sdk: gradio
 sdk_version: 6.28.0
-python_version: '3.11'
+python_version: '3.12'
 app_file: app.py
 pinned: false
-license: apache-2.0
-short_description: DAv2-Small relative depth on ZeroGPU (API for DepthWizard2)
+license: other
 ---
 
 ZeroGPU (`zero-a10g`) inference endpoint for the Depth Wizard 2 (SIH26175) backend. It runs
