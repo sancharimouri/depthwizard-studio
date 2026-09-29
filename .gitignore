@@ -33,3 +33,7 @@ models/hub/
 models/xet/
 .claude/settings.local.json
 data/terrain_relief_control/kaggle_out/terrain_ctrl/ckpt_fold*.pt
+
+# Local-only agent notes (removed from the public repo 2026-09-29)
+CLAUDE.md
+last_session.md
