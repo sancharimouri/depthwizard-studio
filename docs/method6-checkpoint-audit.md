@@ -436,3 +436,63 @@ quadrants, the MAE against ground truth is:
 
 **Decision:** a FAIR RE-TEST of the retrained full model on data NEITHER it nor the seed-42 fold models has seen,
 scored against real LiDAR (the GAMUS test set, as in 07 Part B). §7.3's FAIL remains on record as-is.
+
+### 7.8 Fair re-test on GAMUS vs. real LiDAR: protocol and PRE-REGISTRATION (committed 2026-10-01, BEFORE any inference)
+
+**Test set:** the 07 Part B GAMUS test tiles, exactly.
+- **Tile list:** the saved list `data/gamus_eval/zeroshot_tiles_merged.jsonl`. It has 2,861 test tiles (HF
+  `earthflow/GAMUS`, `images/test/`, cities DC / NYC / PHL), in the same order.
+- **Leakage and exclusions as in Part B:**
+  - 0 tiles share a non-flat 32 px block with DFC2019 (Part A/B byte-hash check), and the per-tile check is recomputed
+    and recorded;
+  - tiles with < 400 valid pixels are skipped, as in Part B, which scored 2,848.
+- **Neither model saw GAMUS:** the full model and the seed-42 fold models trained on DFC2019 only.
+
+**Protocol identical to Part B** (`scripts/gamus_zeroshot_eval.py`; the new evaluator imports its functions):
+- **Preprocessing:** the tile is split into four 512² quadrants. Each is ImageNet-normalised and reflect-padded to
+  518. Each model's `mu` is scored directly: **no scale calibration**, as Method 6's DFC2019 protocol and Part B.
+- **Validity:** valid = finite and AGL ≥ 0; a quadrant needs ≥ 100 valid pixels.
+- **Metrics code:** Part B's `metrics()` gives MAE, RMSE, Pearson, Spearman, variance ratio and bias per quadrant.
+  - **The tile value is the mean of its quadrant metrics.**
+  - **The headline ("pooled test set") is the mean of tiles over all scored tiles**, Part B's aggregation. The
+    pixel-pooled variance ratio (from moments) is reported too.
+- **Per city:** DC, NYC and PHL.
+- **CIs:** tile-level bootstrap, 10,000 resamples, seed 0, 95% percentile (Part B's `boot_ci`).
+
+**Models** (inference only, MPS):
+- (a) **full** = `method6_full_dfc2019_hb_seed42.pt`;
+- (b) **f0–f3** = the four seed-42 fold models, each scored individually;
+- (c) **ens** = the mean of f0–f3's `mu`, a reference only and not part of the rule. **It must reproduce Part B's
+  saved `m6_s42` per-quadrant metrics**: that is the protocol-parity check;
+- (d) **oracle** = Part B's saved per-tile-OLS DAv2-Large result for the same tile and quadrant, context only and
+  not re-run.
+
+**Rule** (applied mechanically):
+- **F = the mean of the four seed-42 fold models' metrics.** Each fold model's metric is computed individually as the
+  mean of tiles, then the four are averaged.
+- **The full model PASSES if, on the pooled test set (all scored tiles):**
+  - **MAE_full ≤ 1.05 × MAE_F**, AND
+  - **RMSE_full ≤ 1.05 × RMSE_F**, AND
+  - **Pearson_full ≥ Pearson_F − 0.02**,
+  - **AND it meets all three in at least 2 of the 3 cities** (DC, NYC, PHL), with F computed per city the same way.
+- **For information only:** paired per-tile differences (full − F_tile, where F_tile = the mean of the 4 fold models'
+  tile metrics), with a Wilcoxon signed-rank test, per metric, pooled and per city.
+
+**Framing:**
+- GAMUS is **out of domain** (aerial imagery, 3 US cities). Both models may lose to the oracle there, as Method 6 did
+  on RMSE in Part B.
+- **This test compares two models built with the same recipe on data neither has seen. It does not measure absolute
+  accuracy.**
+- Method 6's accuracy claim stays: "validated on DFC2019 (US cities, satellite imagery); did not generalize to GAMUS
+  by RMSE", with the 3-seed CV estimate 1.990 / 3.504 / 0.743 / 0.656.
+
+**Outcomes:**
+- **FAIL:** stop, and recommend shipping one seed-42 fold model: the one with the median held-out DFC2019 accuracy.
+  No uploads.
+- **PASS:** ONNX export and parity, then the HF archive + upload after the protected-links check, then the code
+  references, tests and desktop smoke test.
+
+**Outputs:**
+- `build/gamus_fulltest/tiles.jsonl` (per tile and quadrant, resumable);
+- `build/gamus_fulltest/summary.json`;
+- the evaluator, `scripts/gamus_fulltest_eval.py`.
