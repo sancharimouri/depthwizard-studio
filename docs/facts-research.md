@@ -525,3 +525,25 @@ Latency per source, **cold, seconds** (Darjeeling / Chennai coast / Jacksonville
 - **Desktop:** `desktop/freeze_trial/build_freeze.py` now `--add-data`s `backend/facts/data`, because PyInstaller's
   `--collect-submodules` collects only code. The desktop library path uses the same live route: its `staticInfo` is
   `null`, so it sends its bbox to its own sidecar.
+
+## v2 Part E: Docs page "Data sources & credits" (2026-09-30)
+
+- **Where:** a new section `#docs-credits` on the Docs page (`frontend/index.html`), linked from the page's table of
+  contents. It was added to the existing permanent routes, and none were changed. It went in with commit `9f3c1d8`
+  (the same `index.html` edit set).
+- **Contents:** a table of 10 rows (Source / Used for / Attribution / Licence):
+  - ThinkHazard!;
+  - FAO GAUL 2015 (district lookup grid; non-commercial);
+  - Wikidata;
+  - Copernicus EMS / GloFAS flood maps;
+  - JRC Global Surface Water;
+  - the World Bank / ARUP landslide map;
+  - USGS ComCat;
+  - NOAA IBTrACS;
+  - NOAA SPC tornadoes;
+  - DFC2019 (IEEE GRSS DFC2019 Track 1 / JHU/APL US3D; the existing credit paragraph is kept too).
+- **The UI panels carry no sources.** Screenshot: `docs/screenshots/2026-09-30_v2_docs_credits.png`.
+- **Licence notes, no action** (owner, 2026-09-30: SIH is non-commercial):
+  - GAUL 2015 and FABDEM are non-commercial;
+  - the World Bank landslide licence text is unverified;
+  - these would need review before any commercial use.
