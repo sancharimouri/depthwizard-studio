@@ -51,7 +51,10 @@ ENV PATH=/venv/bin:$PATH \
     DW2_GENERATED_DIR=/tmp/dw2/gen \
     # Cloud Run's filesystem is in memory: cap the generated jobs + uploads by age and size (backend/storage/tmp_cap.py)
     DW2_TMP_CAP=1 \
-    # any Hugging Face download (private library packs, remote mode) also lands in /tmp, never in the image
+    # the private DFC2019 library (HF dataset) is off here: the web app's library is static, and this keeps the HF
+    # cache from ever being written (backend/storage/library_store.py _hub_file); the desktop sidecar keeps it
+    DW2_PRIVATE_LIBRARY=off \
+    # belt and braces: anything Hugging Face would still cache lands in /tmp, never in the image
     HF_HOME=/tmp/dw2/hf \
     PORT=8080
 USER app

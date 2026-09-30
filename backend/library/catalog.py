@@ -47,6 +47,8 @@ def load() -> dict:
     if library_store.mode() == "remote":
         try:
             return library_store.load_manifest()
+        except library_store.PrivateLibraryDisabled:
+            raise  # switched off on purpose (Cloud Run): a 404, not an outage
         except Exception as exc:  # noqa: BLE001 - surfaced as 503, never a silent local fallback
             raise CatalogUnavailable(
                 f"Library manifest unavailable from {library_store.HF_DATASET} ({type(exc).__name__}: {exc})."
