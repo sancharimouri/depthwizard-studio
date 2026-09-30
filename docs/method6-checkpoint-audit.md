@@ -255,3 +255,66 @@ The full model is **not production-valid** (§3: recipe mismatch), so it was not
   MiB idle / 354 MiB peak (arena off); + Method 6 ≈ 500 MiB estimated, plan 1 GiB. With a 4-fold ensemble loaded at
   once, add ≈ 3 × 146 MiB idle, **≈ 800 MiB**, so plan **2 GiB** or load folds sequentially.
 - **Owner decision:** retrain the full model (≈ 25 min), or accept an ensemble.
+
+---
+
+## 7. Retrain: full model with the adopted recipe (2026-10-01)
+
+**Owner decisions:**
+- retrain ONE full model with the adopted recipe, seed 42, instead of shipping an ensemble;
+- in the private HF repo, upload the new model and archive the old mismatched one (don't delete it); don't upload
+  the seed-42 folds;
+- wording: "validated on DFC2019 (US cities, satellite imagery); did not generalize to GAMUS by RMSE."
+
+### 7.1 `--train-on-all` (Part 1)
+
+- **Where:** `scripts/evaluate_method6_gsd_film_height_balanced.py`, the adopted 3-seed script. **The only
+  behavioural change is the data split.**
+  - With `--train-on-all`, the existing fold loop runs **once** with no held-out quadrant (`held_out_q = None`), so
+    all 4 quadrants of all 50 tiles (200) are training samples.
+  - The evaluation block is skipped, since there is nothing held out.
+  - The final weights are saved as `method6_full_dfc2019_hb_seed<seed>.pt`, refusing to overwrite an existing file.
+- **Guards:**
+  - It asserts that the DAv2-Small snapshot actually loaded is revision `5426e4f0f365…` (`BASE_REVISION`).
+  - It refuses `--extra-train-npz` / `--gamus-test-npz`.
+- **Refactors that don't change behaviour:**
+  - `build_parser()`, so the config is testable;
+  - `resolve_args()`, the existing 50× head-LR rule, moved into a function;
+  - `per_tile / fold_agg / fold_diag` default to empty when nothing is held out;
+  - the results JSON also records `warmup_steps`, `train_on_all` and `checkpoint`.
+- **Unchanged, the same code path as every fold:**
+  - the height-balanced loss (+0.35 × capped HW-Huber) and the weighted quadrant sampler;
+  - 12 fixed epochs and the final weights;
+  - the 30-step Huber warm-up then Gaussian NLL;
+  - AdamW 5e-6 / 2.5e-4, wd 0.01, clip 1.0, the warmup + linear-decay schedule, batch 2;
+  - `height_scale` = training p95;
+  - 512 px quadrants reflect-padded to 518, ImageNet normalisation, no augmentation;
+  - seed 42.
+- **Test:** `backend/tests/test_method6_recipe.py`, 3 tests:
+  - the `--train-on-all` config resolves to every adopted value;
+  - compared with the command that produced the seed-42 folds, **only `train_on_all` (and `save_checkpoints`, which
+    train-on-all forces) differ**;
+  - the fixed constants: model id, revision, pad, patch, ImageNet stats, height thresholds, loss weights, and the
+    sampler formula.
+
+### 7.2 PRE-REGISTRATION (committed before training; nothing has been run)
+
+- **Command** (background, `nohup`, logged):
+  `python -u scripts/evaluate_method6_gsd_film_height_balanced.py --outdir data/dfc2019/experiments/method6_full_checkpoint --tag m6_hb_full_seed42 --enable-height-balanced --epochs 12 --seed 42 --train-on-all`
+  → `data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019_hb_seed42.pt`. That is a new name next to
+  the old `method6_full_dfc2019.pt`, which is never overwritten.
+- **Audit criteria** (all required):
+  1. every recipe parameter matches: the config in the results JSON + `train.log` + the saved metadata;
+  2. `load_state_dict(strict=True)` into the adopted architecture;
+  3. sane output on the 3 audit tiles:
+     - all finite;
+     - prediction range within [−5, 60] m;
+     - pooled variance ratio in [0.4, 1.2];
+     - these are in-sample and are a sanity check only.
+- **Agreement rule, against the four seed-42 fold models on each fold's held-out quadrant** (all 50 tiles):
+  - **PASS if the median of the 4 per-fold Pearson correlations (full vs. fold prediction) is ≥ 0.95, AND the mean
+    absolute difference between the two predictions, averaged over the 4 folds, is ≤ 0.9 m.**
+  - References: seed-to-seed 0.978–0.984 / 0.50–0.66 m; the old mismatched full model 0.880–0.930 / 1.11–1.34 m.
+  - The full model has trained on those quadrants, so some extra deviation is expected.
+- **Not reported:** its DFC2019 accuracy. The estimate stays the 3-seed CV result, 1.990 / 3.504 / 0.743 / 0.656.
+- **If any criterion fails: STOP, report, and upload nothing.**

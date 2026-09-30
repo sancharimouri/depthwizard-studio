@@ -248,7 +248,10 @@ def quadrant_sample_weight(agl_c: np.ndarray, valid_c: np.ndarray) -> float:
 # Main
 # ============================================================================
 
-def main():
+BASE_REVISION = "5426e4f0f36572d16453bbda7a8389317b1bef99"  # the DAv2-Small revision every adopted run used
+
+
+def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser()
     ap.add_argument("--outdir", type=Path, required=True)
     ap.add_argument("--tag", type=str, required=True)
@@ -279,8 +282,25 @@ def main():
     ap.add_argument("--gamus-test-npz", type=Path, default=None,
                     help="npz with rgb (M,3,1024,1024), agl, cls; each fold model is also scored on it "
                          "(descriptive only)")
-    args = ap.parse_args()
+    # Added 2026-10-01 (owner decision: one production model). The ONLY change is the data split: one run
+    # that trains on all 4 quadrants of all 50 tiles (no held-out quadrant, so no evaluation) and saves the
+    # final weights under a new name. Loss, sampler, schedule, warm-up, epochs, height_scale rule, seed
+    # handling and inputs are the same code path as every fold. Off by default.
+    ap.add_argument("--train-on-all", action="store_true",
+                    help="train on ALL quadrants of all tiles (no fold split); implies --save-checkpoints")
+    ap.add_argument("--all-checkpoint-name", default=None,
+                    help="file name for --train-on-all (default method6_full_dfc2019_hb_seed<seed>.pt)")
+    return ap
+
+
+def resolve_args(args: argparse.Namespace) -> argparse.Namespace:
+    """The effective training config (the head LR defaults to 50x the backbone LR)."""
     args.lr_head = args.lr_head if args.lr_head is not None else args.lr_backbone * 50
+    return args
+
+
+def main():
+    args = resolve_args(build_parser().parse_args())
 
     assert args.outdir.name not in ("method4", "method4_v2"), "refusing to overwrite an existing method's outputs"
     args.outdir.mkdir(parents=True, exist_ok=True)
@@ -307,6 +327,17 @@ def main():
         print(f"[{args.tag}] extra training quadrants: {len(extra)} from {args.extra_train_npz}")
     gtest = np.load(args.gamus_test_npz) if args.gamus_test_npz else None
 
+    if args.train_on_all:
+        assert not args.extra_train_npz and not args.gamus_test_npz, "--train-on-all is DFC2019-only"
+        from transformers import AutoConfig
+        rev = AutoConfig.from_pretrained(MODEL_ID)._commit_hash  # the snapshot this run actually loads
+        assert rev == BASE_REVISION, f"DAv2-Small revision {rev} != adopted {BASE_REVISION}"
+        print(f"[{args.tag}] train-on-all: base revision {rev}")
+        args.folds = [None]  # one pass, nothing held out
+        args.save_checkpoints = True
+        args.all_checkpoint_name = args.all_checkpoint_name or f"method6_full_dfc2019_hb_seed{args.seed}.pt"
+        assert not (args.outdir / args.all_checkpoint_name).exists(), "never overwrite an existing checkpoint"
+
     fold_results = []
     t_start_all = time.time()
 
@@ -325,7 +356,7 @@ def main():
                 rgb_c = rgb[:, r0:r1, c0:c1]
                 agl_c = agl[r0:r1, c0:c1]
                 valid_c = valid[r0:r1, c0:c1]
-                if q == held_out_q:
+                if held_out_q is not None and q == held_out_q:
                     eval_samples.append((tid, rgb_c, agl_c, valid_c))
                 else:
                     train_samples.append((rgb_c, agl_c, valid_c))
@@ -403,62 +434,65 @@ def main():
                 print(f"[{args.tag}] fold{held_out_q}: wall-clock budget reached, stopping epochs")
                 break
 
-        model.eval()
-        per_tile = []
-        pooled_y, pooled_p = [], []
-        with torch.no_grad():
-            for tid, rgb_c, agl_c, valid_c in eval_samples:
-                rgb_t = torch.from_numpy(rgb_c / 255.0)
-                rgb_t = (rgb_t - IMAGENET_MEAN[0]) / IMAGENET_STD[0]
-                rgb_t = pad_to(rgb_t, PAD_TO)[None].to(device)
-                mu, _ = model(rgb_t)
-                mu = mu[0, 0, : agl_c.shape[0], : agl_c.shape[1]].cpu().numpy()
-
-                yv = agl_c[valid_c]
-                pv = mu[valid_c]
-                m = compute_metrics(yv, pv)
-                m["tile"] = tid
-                per_tile.append(m)
-                ok = np.isfinite(yv) & np.isfinite(pv)
-                pooled_y.append(yv[ok].astype(np.float64)); pooled_p.append(pv[ok].astype(np.float64))
-
-        fold_agg = agg(per_tile)
-        # Evaluation-only diagnostics (added 2026-09-23 for C1; do not affect training):
-        # pooled-within-fold variance ratio var(pred)/var(gt), OLS slope pred~gt, bias.
-        Y, P = np.concatenate(pooled_y), np.concatenate(pooled_p)
-        fold_diag = {"pooled_variance_ratio": float(np.var(P) / np.var(Y)),
-                     "pooled_ols_slope": float(np.polyfit(Y, P, 1)[0]),
-                     "pooled_bias_m": float(np.mean(P - Y)), "n_pixels": int(len(Y))}
-        print(f"[{args.tag}] fold{held_out_q} diagnostics={fold_diag}")
-        if gtest is not None:
-            g_tiles, gy, gp, gc = [], [], [], []
+        fold_agg, fold_diag, per_tile = {}, {}, []
+        if eval_samples:  # empty with --train-on-all
+            model.eval()
+            per_tile = []
+            pooled_y, pooled_p = [], []
             with torch.no_grad():
-                for rgb_g, agl_g, cls_g in zip(gtest["rgb"], gtest["agl"], gtest["cls"]):
-                    pred = np.zeros(agl_g.shape, np.float32)
-                    for r0 in (0, 512):
-                        for c0 in (0, 512):
-                            x = torch.from_numpy(rgb_g[:, r0:r0 + 512, c0:c0 + 512].astype(np.float32) / 255.0)
-                            x = ((x - IMAGENET_MEAN[0]) / IMAGENET_STD[0]).float()
-                            mu, _ = model(pad_to(x, PAD_TO)[None].to(device))
-                            pred[r0:r0 + 512, c0:c0 + 512] = mu[0, 0, :512, :512].float().cpu().numpy()
-                    v = np.isfinite(agl_g) & (agl_g >= 0)
-                    if v.sum() < 100:
-                        continue
-                    g_tiles.append(compute_metrics(agl_g[v], pred[v]))
-                    gy.append(agl_g[v]); gp.append(pred[v]); gc.append(cls_g[v])
-            gy, gp, gc = map(np.concatenate, (gy, gp, gc))
-            tree = gc == 6  # GAMUS: 6 = tree, 3 = building
-            gdiag = {"tiles": agg([m | {"tile": str(i)} for i, m in enumerate(g_tiles)])}
-            for lo, hi in [(10, 20), (20, 30), (30, 50)]:
-                s = tree & (gy >= lo) & (gy < hi)
-                if s.sum() >= 100:
-                    gdiag[f"tree_{lo}-{hi}"] = {"n": int(s.sum()), "truth_med": float(np.median(gy[s])),
-                                               "pred_med": float(np.median(gp[s]))}
-            fold_diag["gamus_dc_test"] = gdiag
-            print(f"[{args.tag}] fold{held_out_q} GAMUS-DC test (descriptive): {gdiag}")
+                for tid, rgb_c, agl_c, valid_c in eval_samples:
+                    rgb_t = torch.from_numpy(rgb_c / 255.0)
+                    rgb_t = (rgb_t - IMAGENET_MEAN[0]) / IMAGENET_STD[0]
+                    rgb_t = pad_to(rgb_t, PAD_TO)[None].to(device)
+                    mu, _ = model(rgb_t)
+                    mu = mu[0, 0, : agl_c.shape[0], : agl_c.shape[1]].cpu().numpy()
+
+                    yv = agl_c[valid_c]
+                    pv = mu[valid_c]
+                    m = compute_metrics(yv, pv)
+                    m["tile"] = tid
+                    per_tile.append(m)
+                    ok = np.isfinite(yv) & np.isfinite(pv)
+                    pooled_y.append(yv[ok].astype(np.float64)); pooled_p.append(pv[ok].astype(np.float64))
+
+            fold_agg = agg(per_tile)
+            # Evaluation-only diagnostics (added 2026-09-23 for C1; do not affect training):
+            # pooled-within-fold variance ratio var(pred)/var(gt), OLS slope pred~gt, bias.
+            Y, P = np.concatenate(pooled_y), np.concatenate(pooled_p)
+            fold_diag = {"pooled_variance_ratio": float(np.var(P) / np.var(Y)),
+                         "pooled_ols_slope": float(np.polyfit(Y, P, 1)[0]),
+                         "pooled_bias_m": float(np.mean(P - Y)), "n_pixels": int(len(Y))}
+            print(f"[{args.tag}] fold{held_out_q} diagnostics={fold_diag}")
+            if gtest is not None:
+                g_tiles, gy, gp, gc = [], [], [], []
+                with torch.no_grad():
+                    for rgb_g, agl_g, cls_g in zip(gtest["rgb"], gtest["agl"], gtest["cls"]):
+                        pred = np.zeros(agl_g.shape, np.float32)
+                        for r0 in (0, 512):
+                            for c0 in (0, 512):
+                                x = torch.from_numpy(rgb_g[:, r0:r0 + 512, c0:c0 + 512].astype(np.float32) / 255.0)
+                                x = ((x - IMAGENET_MEAN[0]) / IMAGENET_STD[0]).float()
+                                mu, _ = model(pad_to(x, PAD_TO)[None].to(device))
+                                pred[r0:r0 + 512, c0:c0 + 512] = mu[0, 0, :512, :512].float().cpu().numpy()
+                        v = np.isfinite(agl_g) & (agl_g >= 0)
+                        if v.sum() < 100:
+                            continue
+                        g_tiles.append(compute_metrics(agl_g[v], pred[v]))
+                        gy.append(agl_g[v]); gp.append(pred[v]); gc.append(cls_g[v])
+                gy, gp, gc = map(np.concatenate, (gy, gp, gc))
+                tree = gc == 6  # GAMUS: 6 = tree, 3 = building
+                gdiag = {"tiles": agg([m | {"tile": str(i)} for i, m in enumerate(g_tiles)])}
+                for lo, hi in [(10, 20), (20, 30), (30, 50)]:
+                    s = tree & (gy >= lo) & (gy < hi)
+                    if s.sum() >= 100:
+                        gdiag[f"tree_{lo}-{hi}"] = {"n": int(s.sum()), "truth_med": float(np.median(gy[s])),
+                                                   "pred_med": float(np.median(gp[s]))}
+                fold_diag["gamus_dc_test"] = gdiag
+                print(f"[{args.tag}] fold{held_out_q} GAMUS-DC test (descriptive): {gdiag}")
         if args.save_checkpoints:
+            name = args.all_checkpoint_name if held_out_q is None else f"fold{held_out_q}.pt"
             torch.save({"state_dict": model.state_dict(), "height_scale": height_scale, "seed": args.seed,
-                        "fold": held_out_q}, args.outdir / f"fold{held_out_q}.pt")
+                        "fold": held_out_q}, args.outdir / name)
         fold_time = time.time() - t_fold
         print(f"[{args.tag}] fold{held_out_q} DONE in {fold_time:.1f}s. metrics={fold_agg}")
 
@@ -476,13 +510,16 @@ def main():
         if device.type == "mps":
             torch.mps.empty_cache()
 
-    final = agg([f["method6_variant"] | {"tile": "fold_mean"} for f in fold_results]) if fold_results else {}
+    scored = [f for f in fold_results if f["method6_variant"]]  # train-on-all has no held-out quadrant to score
+    final = agg([f["method6_variant"] | {"tile": "fold_mean"} for f in scored]) if scored else {}
     output = {
         "tag": args.tag,
         "config": {"seed": args.seed, "epochs": args.epochs, "batch": args.batch, "lr_backbone": args.lr_backbone,
                    "lr_head": args.lr_head, "weight_decay": args.weight_decay,
                    "enable_gsd_film": args.enable_gsd_film, "enable_height_balanced": args.enable_height_balanced,
-                   "extra_train_npz": str(args.extra_train_npz) if args.extra_train_npz else None},
+                   "extra_train_npz": str(args.extra_train_npz) if args.extra_train_npz else None,
+                   "warmup_steps": args.warmup_steps, "train_on_all": args.train_on_all,
+                   "checkpoint": args.all_checkpoint_name},
         "overall": final,
         "total_time_sec": time.time() - t_start_all,
         "folds": fold_results,
