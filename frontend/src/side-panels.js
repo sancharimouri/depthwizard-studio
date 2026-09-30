@@ -8,7 +8,7 @@
 // view's `meta` list already omits unknown fields, e.g. DFC2019 tiles have no
 // acquisition date); nothing is filled in by guesswork here.
 
-import { countLines, factsBodyHtml, infoQuery, loadGeoInfo, normaliseInfo, queryKey, scenarioCardHtml } from "./geo-info.js";
+import { countLines, factsBodyHtml, fitFactRows, infoQuery, loadGeoInfo, normaliseInfo, queryKey, scenarioCardHtml } from "./geo-info.js";
 import { attachMagnifier } from "./magnifier.js";
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -337,6 +337,7 @@ export function renderFacts(job) {
         box.hidden = countLines(info) === 0;
         form.hidden = true;
         body.innerHTML = box.hidden ? "" : factsBodyHtml(info);
+        fitFactRows(body);
         renderScenarioCard(job, scenarioKey);
         return;
     }
@@ -369,6 +370,7 @@ export function renderFacts(job) {
             ? `<p class="xp-fact-empty">Couldn't look this place up just now.</p>`
                 + `<button class="xp-tour-close" type="button" data-facts-retry>Retry</button>`
             : factsBodyHtml(res.info);
+        fitFactRows(body);
         renderScenarioCard(job, scenarioKey);
     });
 }
@@ -393,6 +395,7 @@ export function renderScenarioCard(job, key) {
         const html = scenarioCardHtml(res.info, key);
         card.hidden = !html;
         card.innerHTML = html;
+        fitFactRows(card);
     });
 }
 
@@ -403,6 +406,9 @@ export function initFacts(getActiveJob) {
         return;
     }
     box.querySelector(".xp-head").addEventListener("click", () => renderFacts(getActiveJob()));
+    // rows are fitted by measuring, which needs a visible box: re-fit the card when Scenario Analysis opens
+    document.querySelector('[data-box="scenario"] .xp-head')?.addEventListener("click", () =>
+        requestAnimationFrame(() => fitFactRows(document.getElementById("xp-scenario-card"))));
     // "Flood · Earthquake · Landslide → Scenario Analysis" opens that box
     box.addEventListener("click", event => {
         if (event.target.closest("[data-facts-retry]")) {
@@ -414,6 +420,7 @@ export function initFacts(getActiveJob) {
         }
         const scenario = document.querySelector('[data-box="scenario"]');
         scenario?.xpSetOpen?.(true);
+        requestAnimationFrame(() => fitFactRows(document.getElementById("xp-scenario-card")));
         scenario?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     });
     form.addEventListener("submit", event => {
