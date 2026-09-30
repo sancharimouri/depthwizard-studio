@@ -325,3 +325,22 @@ once in section 0. It covers:
     Cloud Run: `/home/app/.cache/rosetta` (Colima's Rosetta amd64 emulation) and `/home/app/.config/earthengine` (the
     bench's read-only mount of local EE credentials).
 - The HANDOFF open item "HF_HOME not capped" is resolved.
+
+## Parts 2–4 (2026-10-01): Method 6 checkpoint audit, ONNX feasibility, docs
+
+- **Record:** `docs/method6-checkpoint-audit.md`, containing:
+  - the recipe definition;
+  - the per-checkpoint table with SHA-256, saved metadata, a strict load, and a held-out 3-tile check;
+  - a parameter-by-parameter comparison;
+  - the verdicts;
+  - the full-model analysis and its retrain plan;
+  - the HF copies;
+  - GAMUS-DC and the 07 Parts A–C.
+- **Tooling:** `scripts/method6_checkpoint_audit.py`, which writes `build/method6_audit/audit.json`. The DAv2-Small
+  base is fetched into `build/hf`. Both are gitignored.
+- **Verdicts:**
+  - 12 adopted-recipe folds (seeds 42 / 43 / 44): **production-valid** as 4-fold ensembles;
+  - 4 GAMUS-DC folds: **valid for evaluation only**;
+  - the full model: **mismatch** (pre-adoption recipe).
+- **Part 3 (ONNX) skipped**, because the full model isn't production-valid.
+- **Protected data:** SHA-256 identical, 1,865 of 1,865 files.

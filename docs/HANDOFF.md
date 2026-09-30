@@ -689,6 +689,38 @@ push, no GCP, no API sign-ups.
   6. `vhr-a_valley` opens at ×10 and looks spiky with subtle: consider a lower `default_exaggeration`.
   7. Still deferred (unchanged): the `/tmp` cap, the DFC2019 git-history cleanup, GCP, and the data/ backup.
 
+### 5z+6. Session 2026-10-01: standing links rule, private library off, Method 6 checkpoint audit (branch `release-candidate-2026-09-30`, local only)
+
+- **The 5 protected links** are a standing rule (§0), enforced by `scripts/check_protected_links.sh`. Baseline: ALL
+  PASS.
+- **Cloud Run image:** `DW2_PRIVATE_LIBRARY=off`. The private HF dataset is never read, `/api/library*` answers 404,
+  and `docker diff` confirms no HF cache is ever written. The desktop keeps the private library.
+- **Method 6 checkpoint audit:** `docs/method6-checkpoint-audit.md`.
+  - All 17 local checkpoints load strictly and give sane held-out output. All 5 private-HF copies are byte-identical
+    to the local files.
+
+**Model-service readiness (Method 6):**
+- **Production-valid:** the adopted-recipe **4-fold ensembles** for seeds 42, 43 and 44 (12 checkpoints).
+  - Expected accuracy = the 3-seed CV result, 1.990 / 3.504 / 0.743 / 0.656.
+  - Seed 42 is the headline, reproduced bit-for-bit; seed 43 is the one on HF.
+- **Valid for evaluation only:** the GAMUS-DC folds (not adopted; the tall-tree criterion failed).
+- **Mismatch:** `method6_full_dfc2019.pt`, the full model (also on HF). It uses the pre-adoption recipe: no
+  height-balanced loss or sampler, warmup 40.
+  - Its agreement with the adopted fold models (Pearson 0.88–0.93, 1.1–1.3 m) is about twice as loose as seed-to-seed
+    agreement (0.98, 0.5–0.7 m).
+- **ONNX export:** not done (Part 3 skipped: the full model isn't production-valid).
+- **Memory:** DAv2-Small ONNX measured at 214 MiB idle / 354 MiB peak. DAv2 + one Method 6 model ≈ 500 MiB (plan
+  1 GiB); + a 4-fold ensemble resident ≈ 800 MiB (plan 2 GiB, or load folds sequentially).
+
+**Open items:**
+- **Owner decision:** retrain an adopted-recipe full model (a `--train-all` option, fixed 12 epochs, ≈ 20–25 min per
+  seed on MPS; the plan is in the audit §3), **or** ship a 4-fold ensemble.
+- **The HF repo's full model is the mismatched one.** If the retrain goes ahead, its upload would replace or sit
+  beside it; owner decision, not done.
+- **Owner decision:** the HF repo lacks the seed-42 headline folds. Upload them only if the seed-42 ensemble is the
+  one to ship.
+- Still open from §5z+5: the real Cloud Run cold start, the GCP setup, the cutover, and the desktop sidecar rebuild.
+
 ### 5z+5. Release candidate (2026-09-30): LOCAL ONLY, branch `release-candidate-2026-09-30`; not merged into main, not pushed
 
 Full record: `docs/release-candidate-2026-09-30.md` (Parts 1–8). Runbook: `docs/deploy-cloud-run.md`, rewritten.
@@ -724,9 +756,8 @@ Full record: `docs/release-candidate-2026-09-30.md` (Parts 1–8). Runbook: `doc
 **Open items:**
 - **Real Cloud Run cold start:** not measurable locally (0.75 s start-to-health in Docker).
 - **4-way concurrency is estimated, not measured:** ≈ 360–380 MiB, ≤ ≈ 450 MiB with a full /tmp.
-- **`HF_HOME=/tmp/dw2/hf` is not capped.** Only the remote-mode library route for private DFC2019 packs writes there,
-  and the static web build doesn't call it. Consider disabling library generation routes on Cloud Run
-  (`DW2_LIBRARY=off`, a small change) if you want zero risk.
+- ~~`HF_HOME=/tmp/dw2/hf` is not capped~~ **Resolved 2026-10-01:** `DW2_PRIVATE_LIBRARY=off` in the image, so the HF
+  cache is never written (§5z+6).
 - **The CDSE flow ranged 29–105 s** across runs, from upstream latency.
 - **The desktop sidecar binary** still needs a rebuild to get Facts v2 (unchanged from §5z+4).
 - **Model service (future):** DAv2-Small ONNX measured at 214 MiB idle and 354 MiB peak (arena off). DAv2 + Method 6

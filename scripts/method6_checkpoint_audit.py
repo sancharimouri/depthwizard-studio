@@ -1,0 +1,181 @@
+"""Method 6 checkpoint audit (docs/method6-checkpoint-audit.md): for each of the 17 local checkpoints
+  - SHA-256, and the metadata saved IN the checkpoint (height_scale, seed, fold; the full model's config);
+  - a strict load into the adopted architecture (TwinHeadDav2GSD(enable_gsd_film=False), which is TwinHeadDav2);
+  - a forward pass on 3 DFC2019 tiles, on the quadrant the checkpoint did NOT train on (fold models); the full
+    model saw every quadrant, so its 3-tile numbers are in-sample (sanity only);
+  - for the full model: agreement with each fold model on that fold's held-out quadrants of all 50 tiles
+    (Pearson and MAE between the two predictions). Never the full model's DFC2019 accuracy.
+And the 5 checkpoints in the private HF repo: their LFS SHA-256 from the repo metadata (read-only, no download).
+
+Read-only on data/. Output: build/method6_audit/audit.json (gitignored). The DAv2-Small base config/weights needed
+to build the architecture are fetched into build/hf (HF_HOME), never into the repo.
+
+  .venv/bin/python scripts/method6_checkpoint_audit.py
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "build/method6_audit"
+os.environ.setdefault("HF_HOME", str(ROOT / "build/hf"))
+sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT))
+
+import numpy as np  # noqa: E402
+import torch  # noqa: E402
+
+import evaluate_method4 as m4  # noqa: E402
+from evaluate_method6_finetune_twinhead import (  # noqa: E402
+    IMAGENET_MEAN, IMAGENET_STD, MODEL_ID, PAD_TO, load_tile_rgb_agl, pad_to, tile_ids,
+)
+from evaluate_method6_gsd_film_height_balanced import TwinHeadDav2GSD  # noqa: E402
+
+EXP = ROOT / "data/dfc2019/experiments"
+SETS = {
+    "hb_seed42": EXP / "method6_height_balanced_seed42_ckpt",
+    "hb_seed43": EXP / "method6_height_balanced_seed43",
+    "hb_seed44": EXP / "method6_height_balanced_seed44",
+    "hb_gamusdc_seed43": EXP / "method6_hb_gamusdc_seed43",
+}
+FULL = EXP / "method6_full_checkpoint/method6_full_dfc2019.pt"
+HF_REPO = "sancharimouri/depthwizard2-method6"
+HF_MAP = {"full_dfc2019/method6_full_dfc2019.pt": FULL,
+          **{f"height_balanced_seed43/fold{q}.pt": SETS["hb_seed43"] / f"fold{q}.pt" for q in range(4)}}
+
+
+def sha256(p: Path) -> str:
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def build(height_scale: float) -> torch.nn.Module:
+    return TwinHeadDav2GSD(height_scale=height_scale, init_sigma_m=5.0, log_var_max=7.0, log_var_min=-8.0,
+                           enable_gsd_film=False)
+
+
+def load(path: Path, device):
+    ck = torch.load(path, map_location="cpu", weights_only=False)
+    sd = ck.get("state_dict") or ck.get("model")
+    meta = {k: v for k, v in ck.items() if k not in ("state_dict", "model")}
+    model = build(float(ck["height_scale"]))
+    res = model.load_state_dict(sd, strict=True)  # raises on any missing / unexpected key
+    n_params = sum(v.numel() for v in sd.values())
+    return model.to(device).eval(), meta, {"strict_load": "ok", "missing": list(res.missing_keys),
+                                           "unexpected": list(res.unexpected_keys), "n_tensors": len(sd),
+                                           "n_params": int(n_params),
+                                           "has_gsd_film": any("film" in k.lower() for k in sd)}
+
+
+@torch.no_grad()
+def predict(model, rgb_c: np.ndarray, device) -> np.ndarray:
+    x = torch.from_numpy(rgb_c / 255.0).float()
+    x = ((x - IMAGENET_MEAN[0]) / IMAGENET_STD[0]).float()
+    mu, _ = model(pad_to(x, PAD_TO)[None].to(device))
+    return mu[0, 0, : rgb_c.shape[1], : rgb_c.shape[2]].float().cpu().numpy()
+
+
+def quad(arrs, q):
+    rgb, agl, valid = arrs
+    h, w = agl.shape
+    r0, r1, c0, c1 = m4.quadrant_bounds(h, w, q)
+    return rgb[:, r0:r1, c0:c1], agl[r0:r1, c0:c1], valid[r0:r1, c0:c1]
+
+
+def sanity(model, tiles_data, quads, device) -> dict:
+    ys, ps = [], []
+    for arrs, q in zip(tiles_data, quads):
+        rgb_c, agl_c, valid_c = quad(arrs, q)
+        p = predict(model, rgb_c, device)
+        ys.append(agl_c[valid_c].astype(np.float64))
+        ps.append(p[valid_c].astype(np.float64))
+    Y, P = np.concatenate(ys), np.concatenate(ps)
+    ok = np.isfinite(P).all()
+    return {"finite": bool(ok), "pred_min": float(P.min()), "pred_p50": float(np.median(P)),
+            "pred_p99": float(np.percentile(P, 99)), "pred_max": float(P.max()),
+            "gt_p99": float(np.percentile(Y, 99)), "variance_ratio": float(np.var(P) / np.var(Y)),
+            "pearson": float(np.corrcoef(Y, P)[0, 1]), "mae_m": float(np.mean(np.abs(P - Y))),
+            "n_pixels": int(len(Y))}
+
+
+def main():
+    OUT.mkdir(parents=True, exist_ok=True)
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    tids = tile_ids()
+    assert len(tids) == 50, len(tids)
+    sample_tiles = [tids[0], tids[len(tids) // 2], tids[-1]]  # one early JAX, one mid, one late (OMA) tile
+    cache = {t: load_tile_rgb_agl(t) for t in tids}
+    res = {"device": str(device), "sample_tiles": sample_tiles, "checkpoints": {}, "started": time.ctime()}
+
+    # base weights: the recipe loads MODEL_ID unpinned; record the repo's revision + last modification
+    from huggingface_hub import HfApi
+    mi = HfApi().model_info(MODEL_ID)
+    res["base_model"] = {"id": MODEL_ID, "revision_sha": mi.sha, "last_modified": str(mi.last_modified)}
+
+    entries = [(f"{k}/fold{q}", SETS[k] / f"fold{q}.pt", q) for k in SETS for q in range(4)]
+    entries.append(("full_dfc2019", FULL, None))
+    full_model = None
+    for name, path, q in entries:
+        t0 = time.time()
+        model, meta, arch = load(path, device)
+        # fold models: the quadrant they never trained on; full model: in-sample, so use quadrant 0 (labelled)
+        held = q if q is not None else 0
+        s = sanity(model, [cache[t] for t in sample_tiles], [held] * 3, device)
+        s["held_out"] = q is not None
+        res["checkpoints"][name] = {"path": str(path.relative_to(ROOT)), "size_bytes": path.stat().st_size,
+                                    "sha256": sha256(path), "saved_metadata": {k: (float(v) if isinstance(v, (float, np.floating)) else v)
+                                                                               for k, v in meta.items()},
+                                    "architecture": arch, "sanity_3_tiles": s, "seconds": round(time.time() - t0, 1)}
+        print(name, json.dumps({"hs": meta.get("height_scale"), "seed": meta.get("seed"), "fold": meta.get("fold"),
+                                "vr": round(s["variance_ratio"], 3), "r": round(s["pearson"], 3),
+                                "range": [round(s["pred_min"], 1), round(s["pred_max"], 1)]}), flush=True)
+        if q is None:
+            full_model = model
+        else:
+            del model
+
+    # full model vs every adopted-recipe fold model, on that fold's held-out quadrants of all 50 tiles
+    agree = {}
+    for k in ("hb_seed42", "hb_seed43", "hb_seed44"):
+        for q in range(4):
+            fm, _, _ = load(SETS[k] / f"fold{q}.pt", device)
+            pf, pF = [], []
+            for t in tids:
+                rgb_c, agl_c, valid_c = quad(cache[t], q)
+                a, b = predict(fm, rgb_c, device), predict(full_model, rgb_c, device)
+                pf.append(a[valid_c]); pF.append(b[valid_c])
+            A, Bv = np.concatenate(pf).astype(np.float64), np.concatenate(pF).astype(np.float64)
+            agree[f"{k}/fold{q}"] = {"pearson": float(np.corrcoef(A, Bv)[0, 1]), "mae_between_m": float(np.mean(np.abs(A - Bv))),
+                                     "mean_full_minus_fold_m": float(np.mean(Bv - A)), "n_pixels": int(len(A))}
+            print("agreement", k, q, {kk: round(v, 3) for kk, v in agree[f'{k}/fold{q}'].items() if kk != "n_pixels"}, flush=True)
+            del fm
+    res["full_vs_fold_agreement"] = agree
+
+    # the private HF copies: LFS SHA-256 from the repo metadata (read-only, nothing downloaded)
+    from backend.storage.hf_checkpoints import token
+    info = HfApi(token=token()).model_info(HF_REPO, files_metadata=True)
+    hf = {}
+    for s in info.siblings:
+        if s.rfilename in HF_MAP:
+            local = res["checkpoints"][next(n for n, e in res["checkpoints"].items() if e["path"] == str(HF_MAP[s.rfilename].relative_to(ROOT)))]
+            hf[s.rfilename] = {"hf_sha256": s.lfs.sha256 if s.lfs else None, "hf_size": s.size,
+                               "local": local["path"], "local_sha256": local["sha256"],
+                               "match": bool(s.lfs and s.lfs.sha256 == local["sha256"])}
+    res["hf_repo"] = {"repo": HF_REPO, "revision": info.sha, "files": hf}
+    res["finished"] = time.ctime()
+    (OUT / "audit.json").write_text(json.dumps(res, indent=1, default=str))
+    print("HF:", {k: v["match"] for k, v in hf.items()})
+    print(f"-> {OUT / 'audit.json'}")
+
+
+if __name__ == "__main__":
+    main()
