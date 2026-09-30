@@ -11,6 +11,10 @@ Read-only on data/. Output: build/method6_audit/audit.json (gitignored). The DAv
 to build the architecture are fetched into build/hf (HF_HOME), never into the repo.
 
   .venv/bin/python scripts/method6_checkpoint_audit.py
+  .venv/bin/python scripts/method6_checkpoint_audit.py --checkpoint <path.pt> --agree-with hb_seed42
+      one checkpoint (a retrain): strict load, 3-tile sanity, recipe match (its results JSON + train log), and the
+      pre-registered agreement rule vs the given seed's 4 fold models on their held-out quadrants
+      (docs/method6-checkpoint-audit.md §7.2: median Pearson >= 0.95 AND mean abs difference <= 0.9 m)
 """
 
 from __future__ import annotations
@@ -107,7 +111,78 @@ def sanity(model, tiles_data, quads, device) -> dict:
             "n_pixels": int(len(Y))}
 
 
+AGREE_MIN_MEDIAN_PEARSON, AGREE_MAX_MEAN_ABS_M = 0.95, 0.9  # pre-registered 2026-10-01 (§7.2)
+SANE_RANGE_M, SANE_VR = (-5.0, 60.0), (0.4, 1.2)
+
+
+def audit_one(ckpt: Path, agree_with: str) -> dict:
+    """The §7.2 pre-registered audit of one retrained checkpoint."""
+    OUT.mkdir(parents=True, exist_ok=True)
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    tids = tile_ids()
+    cache = {t: load_tile_rgb_agl(t) for t in tids}
+    sample_tiles = [tids[0], tids[len(tids) // 2], tids[-1]]
+    model, meta, arch = load(ckpt, device)
+    s = sanity(model, [cache[t] for t in sample_tiles], [0] * 3, device)  # in-sample for a full model: sanity only
+    sane = s["finite"] and SANE_RANGE_M[0] <= s["pred_min"] and s["pred_max"] <= SANE_RANGE_M[1] \
+        and SANE_VR[0] <= s["variance_ratio"] <= SANE_VR[1]
+    # recipe: the run's own results JSON (config) + train log
+    res_json = next(ckpt.parent.glob("*_results.json"), None)
+    cfgs = [json.loads(p.read_text()).get("config", {}) for p in ckpt.parent.glob("*_results.json")]
+    cfg = next((c for c in cfgs if c.get("checkpoint") == ckpt.name), {})
+    log = next((p for p in ckpt.parent.glob("*train.log")), None)
+    log_txt = log.read_text() if log else ""
+    recipe = {"seed": (cfg.get("seed"), 42), "epochs": (cfg.get("epochs"), 12), "batch": (cfg.get("batch"), 2),
+              "lr_backbone": (cfg.get("lr_backbone"), 5e-6), "lr_head": (cfg.get("lr_head"), 2.5e-4),
+              "weight_decay": (cfg.get("weight_decay"), 0.01), "warmup_steps": (cfg.get("warmup_steps"), 30),
+              "enable_height_balanced": (cfg.get("enable_height_balanced"), True),
+              "enable_gsd_film": (cfg.get("enable_gsd_film"), False), "extra_train_npz": (cfg.get("extra_train_npz"), None),
+              "train_on_all": (cfg.get("train_on_all"), True),
+              "log: base revision 5426e4f": ("train-on-all: base revision 5426e4f" in log_txt, True),
+              "log: 200 train quadrants": ("200 train quadrants, 0 eval quadrants" in log_txt, True),
+              "log: height-balanced sampler": ("height-balanced sampler" in log_txt, True),
+              "log: reached epoch 12/12": ("epoch 12/12" in log_txt, True),
+              "log: no non-finite abort": ("non-finite" not in log_txt, True),
+              "saved seed": (meta.get("seed"), 42), "saved fold": (meta.get("fold"), None)}
+    mismatches = {k: v for k, v in recipe.items() if not (v[0] == v[1] or (isinstance(v[1], float) and v[0] is not None
+                                                                          and abs(v[0] - v[1]) < 1e-12))}
+    agree = {}
+    for q in range(4):
+        fm, _, _ = load(SETS[agree_with] / f"fold{q}.pt", device)
+        a, b = [], []
+        for t in tids:
+            rgb_c, _agl, v = quad(cache[t], q)
+            a.append(predict(fm, rgb_c, device)[v]); b.append(predict(model, rgb_c, device)[v])
+        A, Bv = np.concatenate(a).astype(np.float64), np.concatenate(b).astype(np.float64)
+        agree[f"fold{q}"] = {"pearson": float(np.corrcoef(A, Bv)[0, 1]), "mean_abs_diff_m": float(np.mean(np.abs(A - Bv))),
+                             "mean_full_minus_fold_m": float(np.mean(Bv - A)), "n_pixels": int(len(A))}
+        print("agreement", q, {k: round(v, 4) for k, v in agree[f"fold{q}"].items() if k != "n_pixels"}, flush=True)
+        del fm
+    med_r = float(np.median([v["pearson"] for v in agree.values()]))
+    mean_mad = float(np.mean([v["mean_abs_diff_m"] for v in agree.values()]))
+    rule_pass = med_r >= AGREE_MIN_MEDIAN_PEARSON and mean_mad <= AGREE_MAX_MEAN_ABS_M
+    out = {"checkpoint": str(ckpt.relative_to(ROOT)), "sha256": sha256(ckpt), "size_bytes": ckpt.stat().st_size,
+           "saved_metadata": meta, "architecture": arch, "sanity_3_tiles_in_sample": s, "sane": bool(sane),
+           "recipe_check": {k: {"got": v[0], "want": v[1]} for k, v in recipe.items()},
+           "recipe_mismatches": list(mismatches), "results_json": str(res_json.relative_to(ROOT)) if res_json else None,
+           "agreement_vs": agree_with, "agreement": agree,
+           "rule": {"median_pearson": med_r, "mean_abs_diff_m": mean_mad,
+                    "thresholds": [AGREE_MIN_MEDIAN_PEARSON, AGREE_MAX_MEAN_ABS_M], "pass": bool(rule_pass)},
+           "verdict": "PASS" if (rule_pass and sane and not mismatches and arch["strict_load"] == "ok") else "FAIL"}
+    (OUT / f"retrain_{ckpt.stem}.json").write_text(json.dumps(out, indent=1, default=str))
+    return out
+
+
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--checkpoint", type=Path)
+    ap.add_argument("--agree-with", default="hb_seed42", choices=list(SETS))
+    a = ap.parse_args()
+    if a.checkpoint:
+        out = audit_one(a.checkpoint.resolve(), a.agree_with)
+        print(json.dumps({k: out[k] for k in ("sha256", "sane", "recipe_mismatches", "rule", "verdict")}, indent=1))
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     tids = tile_ids()

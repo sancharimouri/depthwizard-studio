@@ -7,8 +7,10 @@ rule was committed to the log before its test ran (commits prefixed `prereg:` in
 
 ## Executive summary
 
+**Method 6 claim (owner's wording, 2026-10-01):** validated on DFC2019 (US cities, satellite imagery); did not generalize to GAMUS by RMSE. Expected accuracy is the 3-seed cross-validation result on DFC2019: MAE 1.990 ± 0.010 m, RMSE 3.504 ± 0.026 m, Pearson 0.743 ± 0.002, Spearman 0.656 ± 0.0003.
+
 On the DFC2019 benchmark (50 tiles, dense airborne LiDAR, 4-fold held-out spatial quadrants),
-**Method 6** is clearly the best result. It is a full fine-tune of Depth-Anything-V2-Small with a
+**Method 6** is the best DFC2019 result. It is a full fine-tune of Depth-Anything-V2-Small with a
 twin mean/variance head and height-balanced loss and sampling, and it scores **MAE 1.980 m, RMSE
 3.492 m, Pearson 0.745, Spearman 0.656**. That beats the per-tile-OLS oracle on all four metrics
 and on **47–49 of 50 tiles per metric**, with tile-bootstrap intervals that don't overlap on MAE,

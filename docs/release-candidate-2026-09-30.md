@@ -344,3 +344,17 @@ once in section 0. It covers:
   - the full model: **mismatch** (pre-adoption recipe).
 - **Part 3 (ONNX) skipped**, because the full model isn't production-valid.
 - **Protected data:** SHA-256 identical, 1,865 of 1,865 files.
+
+## Session 2026-10-01 (continued): Method 6 retrain
+
+- **Part 1:** `--train-on-all` plus the recipe test and the pre-registration, committed before training (`821792e`).
+- **Part 2:** trained (1,070 s). Recipe, load and sanity checks pass. **The agreement rule FAILS** (median r 0.861,
+  mean |diff| 1.40 m) → **STOPPED**.
+- **Parts 3–4:** the ONNX export and HF changes were **not run**. The HF repo is confirmed private and unchanged. The
+  Maxar packs come from the seed-43 ensemble.
+- **Part 5:** docs wording updated; UI overclaims listed, not changed.
+- **Details:** `docs/method6-checkpoint-audit.md` §7 and HANDOFF §5z+7.
+- **Part 6:**
+  - Protected data: SHA-256 identical, 1,865 of 1,865 files.
+  - `scripts/check_protected_links.sh`: ALL PASS. It was run as a status check; no upload happened.
+  - Backend tests: 90 passed, 1 skipped.

@@ -1,6 +1,8 @@
 # Method 6 → absolute DSM on real India VHR imagery (Maxar, Sikkim/Darjeeling hills)
 
-_2026-09-23. This bridges "Method 6 works on DFC2019" and a renderable elevation surface on real
+**Method 6 claim (owner's wording, 2026-10-01):** validated on DFC2019 (US cities, satellite imagery); did not generalize to GAMUS by RMSE. Expected accuracy is the 3-seed cross-validation result on DFC2019: MAE 1.990 ± 0.010 m, RMSE 3.504 ± 0.026 m, Pearson 0.743 ± 0.002, Spearman 0.656 ± 0.0003.
+
+_2026-09-23. This bridges "Method 6 is validated on DFC2019" and a renderable elevation surface on real
 India imagery. **No ground truth exists for these crops.** Everything below is a visual/statistical
 plausibility pass, not an accuracy claim._
 

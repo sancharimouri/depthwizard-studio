@@ -101,6 +101,9 @@ def main():
             gstep += 1
         print(f"epoch {epoch:02d}/{EPOCHS}: loss={np.mean(running):.4f} ({time.time()-t0:.0f}s)")
 
+    # 2026-10-01: never overwrite an existing checkpoint (this legacy script trains the PRE-height-balanced recipe;
+    # the adopted-recipe full model comes from evaluate_method6_gsd_film_height_balanced.py --train-on-all)
+    assert not (OUT_DIR / "method6_full_dfc2019.pt").exists(), "refusing to overwrite method6_full_dfc2019.pt"
     ckpt = {"model": model.state_dict(), "height_scale": height_scale,
             "config": {"init_sigma_m": 5.0, "log_var_max": 7.0, "log_var_min": -8.0}}
     torch.save(ckpt, OUT_DIR / "method6_full_dfc2019.pt")

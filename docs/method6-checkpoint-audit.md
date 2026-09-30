@@ -153,7 +153,7 @@ the saved checkpoint metadata. ✓ = matches.
 - This is how the project's own GAMUS (07 Part B) and VHR pipelines already use Method 6 ("per seed, the 4 fold
   models are averaged").
 - Its expected accuracy is the 3-seed CV result above.
-- Method 6 is the **DFC2019 research best**, not a product model. It does not generalize to GAMUS (07 Part B) or to
+- Method 6 is **validated on DFC2019 (US cities, satellite imagery); it did not generalize to GAMUS by RMSE** (07 Part B), nor to
   10 m Sentinel-2.
 
 ### The full model specifically
@@ -318,3 +318,113 @@ The full model is **not production-valid** (§3: recipe mismatch), so it was not
   - The full model has trained on those quadrants, so some extra deviation is expected.
 - **Not reported:** its DFC2019 accuracy. The estimate stays the 3-seed CV result, 1.990 / 3.504 / 0.743 / 0.656.
 - **If any criterion fails: STOP, report, and upload nothing.**
+
+### 7.3 Training and audit result (2026-10-01): **FAIL on the pre-registered agreement rule → STOPPED, nothing uploaded**
+
+**Training** ran as pre-registered, in the background with `nohup`:
+- 200 train quadrants, 0 eval; `height_scale` (p95) 16.43 m; base revision `5426e4f` asserted;
+- height-balanced sampler with weights 1.00–3.67;
+- loss 6.41 → 3.08 → 2.40 → 1.70 (epochs 1 / 3 / 6 / 9);
+- epoch 12/12 reached, 0 non-finite; **1,070 s on MPS**.
+
+Output: `data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019_hb_seed42.pt`, 99.26 MB,
+SHA-256 `69a29e10b965b282891d12468f7a994c2374031cbbe42130a226250a8b7d7d63`. The old `method6_full_dfc2019.pt` is
+untouched. The run's results JSON and train log sit beside it (local: the pre-commit hook keeps `dfc2019` paths
+out of git).
+
+**Audit** (`scripts/method6_checkpoint_audit.py --checkpoint … --agree-with hb_seed42` →
+`build/method6_audit/retrain_method6_full_dfc2019_hb_seed42.json`):
+
+| Criterion | Result |
+|---|---|
+| Every recipe parameter matches | ✅ 0 mismatches: seed 42, epochs 12, batch 2, LR 5e-6 / 2.5e-4, wd 0.01, **warmup 30**, height-balanced on, GSD-FiLM off, no extra data, train-on-all, and in the log: base revision 5426e4f, 200 quadrants, HB sampler, epoch 12/12, no non-finite. Saved seed 42, fold None |
+| Exact load | ✅ `strict=True`, 0 missing and 0 unexpected, 24.79 M parameters, no GSD-FiLM |
+| Sane output (3 tiles, in-sample) | ✅ finite; range −0.7 … 22.6 m; variance ratio **0.82** |
+| **Agreement vs the seed-42 fold models, each on its held-out quadrant (50 tiles)** | **❌ FAIL.** Per-fold Pearson 0.834 / 0.876 / 0.882 / 0.847 → **median 0.861** (rule ≥ 0.95); mean |diff| 1.324 / 1.435 / 1.445 / 1.392 m → **mean 1.399 m** (rule ≤ 0.9 m) |
+
+- **References:** seed-to-seed 0.978–0.984 / 0.50–0.66 m; the old mismatched full model 0.880–0.930 / 1.11–1.34 m.
+  **The retrain agrees *less* with the adopted fold models than the old mismatched full model did.**
+- **Per the rule: STOPPED.**
+  - No ONNX export (§7.4 skipped).
+  - No HF upload or archive (§7.5).
+  - No code renames.
+- **Its DFC2019 accuracy is not reported.** The estimate stays the 3-seed CV result: **1.990 / 3.504 / 0.743 / 0.656**.
+
+**Diagnostic** (post hoc, labelled; it changes no decision): *why* is the disagreement large? On each fold's held-out
+quadrants, the MAE against ground truth is:
+
+| Fold | seed-42 fold model (held-out) | **new full model (in-sample)** | old full model (in-sample) | new vs. old full: r / mean |diff| |
+|---|---|---|---|---|
+| 0 | 1.934 | 1.120 | 1.418 | 0.951 / 0.787 m |
+| 1 | 2.156 | 1.302 | 1.601 | 0.962 / 0.821 m |
+| 2 | 2.082 | 1.310 | 1.576 | 0.966 / 0.821 m |
+| 3 | 2.021 | 1.184 | 1.499 | 0.963 / 0.778 m |
+
+- **The in-sample columns are memorisation checks, NOT accuracy estimates.**
+- **Reading:** the new model fits its *own training* quadrants much more tightly (1.12–1.31 m) than the old recipe
+  did (1.42–1.60 m). The height-balanced loss and sampler fit harder.
+- On those quadrants, the fold models give *held-out* predictions that are about 2 m off the truth. A model that has
+  memorised them necessarily moves away from the fold predictions.
+- **So the rule, as pre-registered, measures memorisation of the evaluation quadrants as much as recipe fidelity.**
+  Every train-on-all model is in-sample there. That is the confound the pre-registration itself noted; it turned out
+  to be larger than the thresholds allowed.
+- The new and old full models agree with each other at r 0.95–0.97 / 0.78–0.82 m.
+
+**Options (owner decision; nothing run):**
+1. **A new pre-registered agreement test on data NEITHER model saw.** For example, the new full model vs. the seed-42
+   fold ensemble on GAMUS test tiles (never trained on; 2,861 tiles, already used in 07) or on the 6 Maxar VHR crops.
+   Suggested rule: Pearson ≥ 0.95 and mean |diff| ≤ 0.9 m, the same thresholds on a fair test.
+2. **Ship the seed-42 4-fold ensemble instead.** It is already production-valid, needs no retraining, and costs 4× the
+   inference and ≈ 800 MiB resident.
+3. **Accept the retrain on the recipe audit alone** (every parameter matches, exact load, sane output) and discard
+   the agreement rule. This would override your pre-registration, so it isn't my call.
+
+### 7.4 ONNX export (Part 3): **not run**
+
+- **Why:** it was conditional on §7.3 passing. The model service estimate is unchanged (release-candidate Part 7):
+  DAv2-Small measured at 214 MiB idle / 354 MiB peak; + one Method 6 model ≈ 500 MiB (plan 1 GiB).
+- **Prepared, not run:** `scripts/method6_onnx_export.py`. It exports TwinHeadDav2 with `height_scale` baked in,
+  input 1 × 3 × 518 × 518, outputs `mu` + `log_var`, opset 17, to `build/method6_onnx/`, then runs a PyTorch parity
+  check on 3 tiles × 4 quadrants.
+- **Tooling note:** `onnx` 1.23.1 was installed into `.venv` with `uv pip` (not in any lockfile) for this purpose.
+
+### 7.5 Private HF repo (Part 4): **no changes**
+
+- **Checked (read-only):** `sancharimouri/depthwizard2-method6` is **PRIVATE** (revision `676f908…`), and the local
+  token has write access.
+- **Nothing was archived, moved or uploaded**, because §7.3 failed. `scripts/check_protected_links.sh` is required
+  before an upload; no upload happened, so it was run only as a status check (Part 6 below).
+- **Code references to the old filename are NOT changed**, since the rename depends on the upload:
+  - `backend/storage/hf_checkpoints.py:28-29`
+  - `backend/storage/r2.py:21,50-51` (dormant)
+  - `scripts/vhr_dsm_pipeline.py:83-84` (its full-data *cross-check* only)
+  - `scripts/method6_vhr_sanity_check.py:36,41` (historical C4 check)
+  - `scripts/method6_checkpoint_audit.py:51-53`
+  - `scripts/hf_upload_checkpoints.py:33`
+  - `scripts/train_method6_full_dfc2019.py:106` (now guarded: it refuses to overwrite)
+- **Report only: which checkpoint built the current Maxar packs?** **Not the old mismatched full model.**
+  - `desktop/tiles/build_dem_pack.py:124-125` reads `data/vhr_dsm/<crop>_margin192/dsm.tif` = FABDEM +
+    `agl.tif`.
+  - `scripts/vhr_dsm_pipeline.py` computes `agl.tif` as the **mean of the 4 seed-43 height-balanced fold models**
+    (`CKPT_DIR = method6_height_balanced_seed43`), which are production-valid.
+  - The old full model produced only the separate cross-check `agl_fullckpt.tif`, which no pack reads. The display
+    presets (`dem_maxar/*`) derive from the same surface.
+
+### 7.6 Wording (Part 5)
+
+- **Updated to the owner's wording:** "validated on DFC2019 (US cities, satellite imagery); did not generalize to
+  GAMUS by RMSE", with the expected accuracy stated as the 3-seed CV result:
+  - `docs/method-audit/final-comparison.md` (headline: "clearly the best result" → "the best DFC2019 result");
+  - `docs/HANDOFF.md` §2a ("Current best" → "DFC2019 research best");
+  - `docs/method-audit/06-full-finetune-twin-head/vhr_dsm_pipeline.md` (header);
+  - this audit, §3.
+- **UI / Docs-page strings that overclaim Method 6** (listed, NOT changed; a UI redesign is coming):
+  - `frontend/index.html:1246-1247`: "On 0.3 m imagery (the DFC2019 benchmark) a fine-tuned Depth Anything V2 does
+    beat a strong per-tile baseline (MAE 1.98 m, RMSE 3.49 m)." It quotes the single-seed headline, without the
+    scope. It should give the 3-seed CV result and "validated on DFC2019 (US cities, satellite imagery)".
+  - `frontend/index.html:1251`: "it did not generalise to US aerial imagery". Not an overclaim, but imprecise: on
+    GAMUS it lost on **RMSE** while winning MAE and ranking. It should say "did not generalize to GAMUS by RMSE".
+  - Nothing else in the UI claims Method 6 accuracy.
+    - The in-app surface label for the Maxar packs reads "FABDEM + Method 6 above-ground height (research model;
+      under-states canopy above ~18–23 m)". It makes no accuracy claim.
+    - `frontend/src/main.js` has no Method 6 claims.

@@ -56,7 +56,9 @@ system — see §5.
 
 ### 2a. DFC2019 track
 
-Current best: **Method 6**: full DAv2-Small fine-tune, twin (mean, log-variance) head,
+**Method 6 claim (owner's wording, 2026-10-01):** validated on DFC2019 (US cities, satellite imagery); did not generalize to GAMUS by RMSE. Expected accuracy is the 3-seed cross-validation result on DFC2019: MAE 1.990 ± 0.010 m, RMSE 3.504 ± 0.026 m, Pearson 0.743 ± 0.002, Spearman 0.656 ± 0.0003.
+
+DFC2019 research best: **Method 6**: full DAv2-Small fine-tune, twin (mean, log-variance) head,
 height-balanced recipe (`CappedHeightWeightedLoss` + `WeightedRandomSampler`). 50-tile DFC2019,
 4-fold spatial-quadrant holdout, mean of fold means, 95% tile-bootstrap CIs.
 
@@ -688,6 +690,32 @@ push, no GCP, no API sign-ups.
   5. **Earthquake placeholder:** replace it per Part D, or remove it.
   6. `vhr-a_valley` opens at ×10 and looks spiky with subtle: consider a lower `default_exaggeration`.
   7. Still deferred (unchanged): the `/tmp` cap, the DFC2019 git-history cleanup, GCP, and the data/ backup.
+
+### 5z+7. Method 6 full-model retrain (2026-10-01): FAILED the pre-registered agreement rule; nothing uploaded
+
+- **Retrain:** `--train-on-all` was added to the adopted script (only the data split changes; tested). Seed 42
+  trained in 1,070 s → `data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019_hb_seed42.pt`, SHA-256
+  `69a29e10…`.
+- **Audit:** every recipe parameter matches, exact load, sane output.
+- **Agreement vs the seed-42 folds on their held-out quadrants: median r 0.861 (rule ≥ 0.95), mean |diff| 1.40 m
+  (rule ≤ 0.9 m) → FAIL → STOPPED.** No ONNX, no HF changes, no renames.
+- **Diagnostic** (in-sample, not an accuracy estimate): the new model memorises its training quadrants harder (MAE
+  1.12–1.31 m vs the old recipe's 1.42–1.60 m), so on quadrants it trained on it moves away from the folds' held-out
+  predictions. The rule measured memorisation as much as fidelity.
+- **Model-service readiness:** **no single-file production model yet.**
+  - Production-valid today: the seed-42 or seed-43 4-fold ensembles.
+  - The model-service estimate is unchanged (DAv2-Small 214 / 354 MiB measured; + one Method 6 model ≈ 500 MiB, plan
+    1 GiB; + a 4-fold ensemble ≈ 800 MiB, plan 2 GiB).
+- **HF repo:** PRIVATE, unchanged (still the old full model + the seed-43 folds).
+- **Maxar packs:** built from the **seed-43 fold ensemble** (production-valid), not the old full model.
+- **Wording updated:** "validated on DFC2019 (US cities, satellite imagery); did not generalize to GAMUS by RMSE"
+  (final-comparison, HANDOFF §2a, the VHR doc, the audit).
+- **UI overclaims listed** (`index.html:1246-1247, 1251`), not changed; the UI redesign is coming.
+- **Decisions waiting on the owner:**
+  1. a fair agreement test on unseen data (GAMUS / VHR), **or** ship an ensemble, **or** accept on the recipe audit
+     alone;
+  2. the UI wording, during the redesign;
+  3. whether the Maxar packs should ever be rebuilt (not needed: already on production-valid models).
 
 ### 5z+6. Session 2026-10-01: standing links rule, private library off, Method 6 checkpoint audit (branch `release-candidate-2026-09-30`, local only)
 
