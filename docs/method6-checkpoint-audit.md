@@ -496,3 +496,12 @@ scored against real LiDAR (the GAMUS test set, as in 07 Part B). §7.3's FAIL re
 - `build/gamus_fulltest/tiles.jsonl` (per tile and quadrant, resumable);
 - `build/gamus_fulltest/summary.json`;
 - the evaluator, `scripts/gamus_fulltest_eval.py`.
+
+**Run log (2026-10-01):**
+- `scripts/gamus_fulltest_eval.py` imports Part B's `metrics`, `block_hashes`, `QUAD` and `gamus_io`, and walks Part
+  B's saved 2,861-tile list in order.
+- `scripts/gamus_fulltest_aggregate.py` imports Part B's `tile_table` and `boot_ci`, and applies §7.8 mechanically.
+- **Protocol parity check:** the recomputed seed-42 ensemble reproduces Part B's saved `m6_s42` metrics **exactly**:
+  max |diff| 0.0 over the first 896 per-quadrant values (smoke test + the first 56 tiles).
+- The full run was launched in the background (`nohup`, `build/gamus_fulltest/run.log`) at about 2.5 s/tile on MPS
+  (queue full, so GPU-bound), an ETA of about 2 h.
