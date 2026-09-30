@@ -374,6 +374,19 @@ function renderFactsData(data) {
         + `<p class="xp-note">Queried ${esc(data.queried_at)}. These facts are for this job's location.</p>`;
 }
 
+// Web build, library tile: the curated facts baked into the static library
+// (scripts/bake_static_library.py, status "curated" only). Rendered as-is; no request.
+function renderBakedFacts(facts) {
+    return facts.map(f => {
+        const derived = f.origin === "derived";
+        return `<div class="xp-fact"><div class="xp-fact-head"><span>${esc(String(f.scope ?? "").toUpperCase())}</span>`
+            + `<span class="xp-fact-tag ${derived ? "is-na" : "is-ok"}">${derived ? "Derived from the DEM" : "Source"}</span></div>`
+            + `<p class="xp-fact-text">${esc(f.text)}</p>`
+            + `<div class="xp-fact-src">Source: ${link(f.source_url, f.source)} · retrieved ${esc(f.retrieved)}</div>`
+            + `<div class="xp-fact-src">${esc(f.licence)}</div></div>`;
+    }).join("") + `<p class="xp-note">Curated facts for this library tile, checked when the library was built; no live query.</p>`;
+}
+
 async function loadFacts(job, geo) {
     const body = document.getElementById("xp-facts-body");
     const key = `${geo.lat},${geo.lon}`;
@@ -413,6 +426,15 @@ export function renderFacts(job) {
     const form = document.getElementById("xp-facts-form");
     const body = document.getElementById("xp-facts-body");
     if (!box || !where) {
+        return;
+    }
+    // web build, library tile: pre-baked curated facts only (null everywhere else, incl. the desktop build)
+    const baked = job?.input?.staticFacts;
+    box.hidden = Array.isArray(baked) && baked.length === 0;
+    if (Array.isArray(baked)) {
+        form.hidden = true;
+        where.textContent = "";
+        body.innerHTML = baked.length ? renderBakedFacts(baked) : "";
         return;
     }
     if (!job) {

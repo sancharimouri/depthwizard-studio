@@ -306,3 +306,34 @@ It is a static matplotlib sketch; nothing is wired.
   the last tile's ids. The facts are now deep-copied per tile, and all 347 ids are unique.
 - **Review note:** in the drafts, Maxar's WB landslide fact usually covers one ~1 km cell ("100% class 3"). That is
   honest, but it is the scale limit from Part D.
+
+## Part E2: the pre-bake slot (2026-09-30)
+
+- **Schema.** Every static-library item now carries a `facts` list, in its `index.json` entry and in its `tile.json`.
+  - Each fact has `{text, source, source_url, licence, retrieved, origin, confidence, scope}`.
+  - The drafts' `value`, `kind`, `status` and `id` stay out of the build.
+  - `[]` means nothing is curated.
+- **Bake.**
+  - `scripts/bake_static_library.py --facts <facts_drafts.json>` (default: `data/library_v2_2026-09-30/facts_drafts.json`).
+    A missing file means no facts.
+  - `curated_facts()` keeps **only `status == "curated"`**; `backend/tests/test_static_facts.py` covers it.
+  - The tile manifest is untouched.
+- **Web build.**
+  - `input-view.js` passes `item.facts` as `job.input.staticFacts`, only when `LIBRARY_SOURCE === "static"`.
+  - `side-panels.js` `renderFacts` renders those facts with **no request** (`renderBakedFacts`). Derived facts are
+    tagged "Derived from the DEM"; source facts are tagged "Source", with link, retrieval date and licence.
+  - **The Facts box is hidden** (`hidden`) when the list is empty. The tour skips hidden boxes already.
+- **Desktop build: unchanged.** `staticFacts` is `null` outside the static build, so the existing live
+  `/api/facts` path runs as before. The desktop bundle never contains `library-static/`.
+- **Verified** with a temporary copy of the drafts in which only `sentinel2-chennai` was marked curated (6 facts).
+  The real drafts file was not changed.
+  - Bake: "6 curated facts on 1 tiles".
+  - Headless Chrome on `vite preview` of `build:web`: Chennai shows the 6 facts
+    (`docs/screenshots/2026-09-30_facts_curated_test_chennai.png`).
+  - Darjeeling (not curated) has the Facts box hidden (`docs/screenshots/2026-09-30_facts_hidden_darjeeling.png`).
+  - **0 `/api/` requests** were seen, by both the DevTools Network domain and the Resource Timing API.
+  - The library was then re-baked from the real drafts: **0 curated facts on 0 tiles**, Maxar subtle, 52.5 MB.
+  - The preview server was stopped.
+- **Tests:** frontend 96 passed; backend 64 passed, 1 skipped (+2 new).
+- **Consequence to note:** while nothing is curated, **the web build shows no Facts panel for any library tile.**
+  Before, it made the live `/api/facts` call. CDSE scenes and uploads are unchanged and still call `/api/facts`.
