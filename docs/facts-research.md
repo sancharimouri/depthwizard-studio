@@ -347,3 +347,25 @@ It is a static matplotlib sketch; nothing is wired.
   - SHA-256 before vs after: **identical, 1,864 of 1,864 files**, and the file list is unchanged.
   - The only new data folder is `data/library_v2_2026-09-30/` (the drafts, gitignored).
 - **Pre-commit hook:** active (`core.hooksPath = scripts/git-hooks`), and it passed on every commit.
+
+---
+
+# Facts v2 (2026-09-30, branch `facts-v2-2026-09-30`)
+
+Owner decisions:
+- a new crisp Facts box;
+- flood, landslide and earthquake data move to Scenario Analysis;
+- drop Nominatim and Open-Meteo;
+- no licence action (SIH is non-commercial);
+- no FIRMS or GeoNames;
+- replace the earthquake placeholder with real data;
+- vhr-a_valley exaggeration screenshots, with no change to its default.
+
+## v2 Part F: vhr-a_valley at ×3 / ×5 / ×7 / ×10, subtle preset (2026-09-30)
+
+- **How:** headless Chrome against `vite preview` of `build:web`. The tile is opened, idle auto-rotate is paused with
+  the nav bar's Pause button (so all four share one camera), and the slider is set through its own `input` event.
+  Nothing is saved; the manifest default stays at ×10.
+- **Contact sheet:** `docs/screenshots/2026-09-30_vhr-a_valley_subtle_x3_x5_x7_x10.png`.
+- **Full frames:** `docs/screenshots/2026-09-30_vhr-a_valley_subtle_x{3,5,7,10}.png`.
+- **Observation:** at ×3 to ×5 the canopy reads as texture; from ×7 the tree crowns turn into spikes. The owner picks.
