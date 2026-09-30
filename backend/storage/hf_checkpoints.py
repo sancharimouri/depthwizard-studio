@@ -35,7 +35,7 @@ def token() -> str | None:
     if tok:
         return tok
     env = ROOT / ".env"
-    if env.exists():
+    if os.environ.get("DW2_NO_DOTENV") != "1" and env.exists():  # never a .env in the container or the desktop app
         for line in env.read_text().splitlines():
             if line.startswith("HF_TOKEN="):
                 return line.split("=", 1)[1].strip() or None
