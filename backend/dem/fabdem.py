@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import math
 import os
+import threading
 
 import numpy as np
 
@@ -23,6 +24,7 @@ FABDEM_RES_M = 30.0
 MAX_SIDE_PX = 4096  # computePixels request size guard (~120 km at 30 m)
 
 _initialised = False
+_init_lock = threading.Lock()  # concurrent requests (Cloud Run concurrency 4) initialise EE once
 
 
 class FabdemError(RuntimeError):
@@ -35,15 +37,18 @@ def _ee():
         import ee
     except ImportError as exc:  # pragma: no cover - dependency present in this repo
         raise FabdemError("earthengine-api is not installed") from exc
-    if not _initialised:
-        project = os.environ.get("EARTHENGINE_PROJECT")
-        if not project:
-            raise FabdemError("EARTHENGINE_PROJECT is not set — FABDEM is fetched through Google Earth Engine")
-        try:
-            ee.Initialize(project=project)
-        except Exception as exc:  # noqa: BLE001 - EE raises a variety of auth errors
-            raise FabdemError(f"Earth Engine initialisation failed: {exc}") from exc
-        _initialised = True
+    with _init_lock:
+        if not _initialised:
+            project = os.environ.get("EARTHENGINE_PROJECT")
+            if not project:
+                raise FabdemError("EARTHENGINE_PROJECT is not set — FABDEM is fetched through Google Earth Engine")
+            try:
+                # credentials: ~/.config/earthengine locally; on Cloud Run, Application Default Credentials, i.e.
+                # the service's runtime service account (earthengine-api falls back to google.auth.default())
+                ee.Initialize(project=project)
+            except Exception as exc:  # noqa: BLE001 - EE raises a variety of auth errors
+                raise FabdemError(f"Earth Engine initialisation failed: {exc}") from exc
+            _initialised = True
     return ee
 
 

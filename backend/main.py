@@ -38,7 +38,10 @@ def _cors_origins() -> list[str]:
     backend sets the Vercel URL in its environment. The Vite dev proxy is same-origin,
     so plain `npm run dev` works even when this is empty.
     """
-    return [o.strip().rstrip("/") for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+    origins = [o.strip().rstrip("/") for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+    if "*" in origins:  # an allowlist only: a wildcard would let any site call the backend with a user's browser
+        logging.getLogger(__name__).warning("CORS_ORIGINS: '*' is ignored; list exact origins instead.")
+    return [o for o in origins if o != "*"]
 
 
 CORS_ORIGINS = _cors_origins()

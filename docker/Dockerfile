@@ -49,9 +49,15 @@ ENV PATH=/venv/bin:$PATH \
     DW2_UPLOADS_DIR=/tmp/dw2/up \
     DW2_CACHE_DIR=/tmp/dw2/cache \
     DW2_GENERATED_DIR=/tmp/dw2/gen \
+    # Cloud Run's filesystem is in memory: cap the generated jobs + uploads by age and size (backend/storage/tmp_cap.py)
+    DW2_TMP_CAP=1 \
+    # any Hugging Face download (private library packs, remote mode) also lands in /tmp, never in the image
+    HF_HOME=/tmp/dw2/hf \
     PORT=8080
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", \"8080\")}/health', timeout=2)"
-CMD ["sh", "-c", "exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT} --no-server-header"]
+# exec: uvicorn is PID 1 and gets Cloud Run's SIGTERM; it stops accepting, lets in-flight requests finish for up to
+# 8 s (Cloud Run allows 10 s), then exits. Logs (app + access) go to stdout (backend/log_config.json).
+CMD ["sh", "-c", "exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT} --no-server-header --log-config backend/log_config.json --timeout-graceful-shutdown 8"]

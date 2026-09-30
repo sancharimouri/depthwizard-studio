@@ -34,6 +34,7 @@ import numpy as np
 # memory and start-up stay low until an input actually needs GDAL (docs/container-measurements.md).
 
 from backend.dem import fabdem
+from backend.storage import tmp_cap
 
 ROOT = Path(__file__).resolve().parents[2]
 # DW2_UPLOADS_DIR: a writable per-user folder when the backend runs from a read-only
@@ -57,7 +58,13 @@ def _dir(input_id: str) -> Path:
     d = UPLOADS / input_id
     if not d.is_dir():
         raise InputError("unknown input id")
+    tmp_cap.touch(d)  # "last used" for the /tmp cap (backend/storage/tmp_cap.py)
     return d
+
+
+def input_dir(input_id: str) -> Path:
+    """The input's folder (validated id; raises InputError when unknown)."""
+    return _dir(input_id)
 
 
 def load_meta(input_id: str) -> dict:
@@ -186,6 +193,7 @@ def create_upload(filename: str, stream, max_bytes: int = 1024 ** 3) -> dict:
     ext = Path(filename or "").suffix.lower()
     if ext not in ALLOWED_EXT:
         raise InputError("Unsupported file type — upload a GeoTIFF (.tif/.tiff), PNG or JPG.")
+    tmp_cap.maybe_sweep()
     input_id = uuid.uuid4().hex
     d = UPLOADS / input_id
     d.mkdir(parents=True)
@@ -260,6 +268,7 @@ def create_scene(scene: dict) -> dict:
     """A Sentinel-2 scene picked in Search Online. Sentinel-2 is 10 m, so it is
     always Tier 1 (DEM only) — same rule as the curated library."""
     bbox = [float(v) for v in scene["bbox"]]
+    tmp_cap.maybe_sweep()
     input_id = uuid.uuid4().hex
     d = UPLOADS / input_id
     d.mkdir(parents=True)
@@ -306,6 +315,11 @@ def _write_dem(d: Path, elev: np.ndarray, transform: Affine, crs: str, source: s
 
 
 def fetch_fabdem(input_id: str) -> dict:
+    with tmp_cap.in_use(_dir(input_id)):  # the Earth Engine fetch can take a while: keep the input
+        return _fetch_fabdem(input_id)
+
+
+def _fetch_fabdem(input_id: str) -> dict:
     d = _dir(input_id)
     meta = load_meta(input_id)
     if not meta.get("georeferenced"):
@@ -324,6 +338,11 @@ def fetch_fabdem(input_id: str) -> dict:
 
 
 def attach_user_dem(input_id: str, filename: str, stream, max_bytes: int = 512 * 1024 ** 2) -> dict:
+    with tmp_cap.in_use(_dir(input_id)):
+        return _attach_user_dem(input_id, filename, stream, max_bytes)
+
+
+def _attach_user_dem(input_id: str, filename: str, stream, max_bytes: int = 512 * 1024 ** 2) -> dict:
     d = _dir(input_id)
     meta = load_meta(input_id)
     if not meta.get("georeferenced"):
