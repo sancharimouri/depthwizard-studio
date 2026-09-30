@@ -5137,7 +5137,7 @@ kbd {
 
 .xp-facts-more {
     margin: 16px 0 0;
-    font-size: 8px;
+    font-size: 7.5px;
     white-space: nowrap;
     color: rgba(var(--text-rgb), 0.5);
 }
