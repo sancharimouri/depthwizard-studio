@@ -7,10 +7,13 @@ footprint and CRS (NaN = no data), with the sources in its tags:
   band 1  TERRAIN  bare-earth DEM
   band 2  SURFACE  surface model (DSM)
 Sources (all real, produced by this project's earlier pipelines; nothing is estimated here):
-  Sentinel-2  terrain = FABDEM (data/sentinel2_benchmark/fabdem/<t>_fabdem.npy, already on the
-              tile's 10 m grid); surface = Copernicus GLO-30 (copernicus_dem_raw/<t>_dem.tif,
-              EPSG:4326, reprojected here). Output ~30 m, the DEMs' native resolution.
-              Darjeeling (the demo scene, scripts/library_catalog.py EXTRA_S2): FABDEM from
+  Sentinel-2  terrain = surface = calibrated FABDEM (2026-09-29): FABDEM (data/sentinel2_benchmark/
+              fabdem/<t>_fabdem.npy, the tile's 10 m grid) through a per-tile OLS fit a + b*FABDEM
+              against ICESat-2 ground (terrain_rf_residual/samples.parquet). Copernicus GLO-30
+              (copernicus_dem_raw/<t>_dem.tif) is only a cross-check in the calibration report, never
+              drawn. Output ~30 m, the DEMs' native resolution.
+              Darjeeling (the demo scene, scripts/library_catalog.py EXTRA_S2; no ICESat-2 samples, so
+              still terrain = FABDEM, surface = GLO-30): FABDEM from
               data/library/extra/darjeeling_fabdem.npy (Earth Engine, tile grid); GLO-30 from
               data/library/extra/darjeeling_glo30.tif (backend/dem/glo30.py on the tile footprint;
               the older data/elevation/darjeeling crop leaves 1.4% of the tile's edges empty).
@@ -56,6 +59,11 @@ def write(path, terrain, surface, transform, crs, tags):
         w.update_tags(**tags)
 
 
+import pandas as pd  # noqa: E402
+
+S2_SAMPLES = pd.read_parquet(ROOT / "data/sentinel2_benchmark/terrain_rf_residual/samples.parquet",
+                             columns=["tile_id", "row", "col", "rgt", "h_ref", "fabdem"])
+S2_REPORT = {}
 n = 0
 only = set(sys.argv[2:])  # optional item ids: rebuild just these packs
 for it in items:
@@ -76,13 +84,41 @@ for it in items:
                     else f"data/sentinel2_benchmark/copernicus_dem_raw/{t}_dem.tif")
         fab = np.load(ROOT / fab_path).astype(np.float32)
         assert fab.shape == tile_shape, (iid, fab.shape, tile_shape)
-        terrain = regrid(fab, tile_tf, crs, (size, size), tf, crs, Resampling.average)
         with rasterio.open(ROOT / glo_path) as g:
             glo = g.read(1).astype(np.float32)
             if g.nodata is not None:
                 glo[glo == g.nodata] = np.nan
-            surface = regrid(glo, g.transform, g.crs, (size, size), tf, crs, Resampling.bilinear)
-        tags = {"TERRAIN_SOURCE": "FABDEM v1-2 (bare earth, 30 m)", "SURFACE_SOURCE": "Copernicus GLO-30 DSM (30 m)"}
+            glo_tf, glo_crs = g.transform, g.crs
+        if extra:  # no ICESat-2 samples for the demo scene: previous recipe (FABDEM terrain, GLO-30 surface)
+            terrain = regrid(fab, tile_tf, crs, (size, size), tf, crs, Resampling.average)
+            surface = regrid(glo, glo_tf, glo_crs, (size, size), tf, crs, Resampling.bilinear)
+            tags = {"TERRAIN_SOURCE": "FABDEM v1-2 (bare earth, 30 m)", "SURFACE_SOURCE": "Copernicus GLO-30 DSM (30 m)"}
+        else:
+            # Calibrated FABDEM (2026-09-29): per-tile OLS h_ICESat-2 = a + b*FABDEM on the benchmark's
+            # ICESat-2 ground samples (terrain_rf_residual/samples.parquet, EGM2008 orthometric), applied
+            # at 10 m, then averaged. Both bands = calibrated FABDEM; GLO-30 is a cross-check only.
+            s = S2_SAMPLES[S2_SAMPLES.tile_id == t]
+            b, a = np.polyfit(s.fabdem.values, s.h_ref.values, 1)
+            cal = (a + b * fab).astype(np.float32)
+            terrain = regrid(cal, tile_tf, crs, (size, size), tf, crs, Resampling.average)
+            surface = terrain.copy()
+            glo10 = regrid(glo, glo_tf, glo_crs, tile_shape, tile_tf, crs, Resampling.bilinear)
+            glo_pack = regrid(glo, glo_tf, glo_crs, (size, size), tf, crs, Resampling.bilinear)
+            r_, c_ = s.row.values, s.col.values
+            rmse = lambda e: float(np.sqrt(np.nanmean(np.square(e))))  # noqa: E731
+            d = glo_pack - terrain
+            S2_REPORT[iid] = {"a": float(a), "b": float(b), "n": len(s), "n_rgt": int(s.rgt.nunique()),
+                              "fab_range_sampled_m": [float(s.fabdem.min()), float(s.fabdem.max())],
+                              "fab_range_tile_m": [float(np.nanmin(fab)), float(np.nanmax(fab))],
+                              "rmse_vs_icesat2_insample": {"raw_fabdem": rmse(s.fabdem.values - s.h_ref.values),
+                                                           "calibrated_fabdem": rmse(cal[r_, c_] - s.h_ref.values),
+                                                           "glo30": rmse(glo10[r_, c_] - s.h_ref.values)},
+                              "glo30_minus_calibrated_on_pack": {"median": float(np.nanmedian(d)),
+                                                                 "p05": float(np.nanpercentile(d, 5)),
+                                                                 "p95": float(np.nanpercentile(d, 95))}}
+            tags = {"TERRAIN_SOURCE": "FABDEM v1-2 calibrated to ICESat-2 ground (per-tile linear fit)",
+                    "SURFACE_SOURCE": "FABDEM v1-2 calibrated to ICESat-2 ground (per-tile linear fit)",
+                    "CALIBRATION": f"h = {a:.4f} + {b:.6f} * FABDEM (OLS on {len(s)} ICESat-2 ground samples)"}
     elif col == "vhr":
         crop = Path(it["file"]).stem
         d = ROOT / f"data/vhr_dsm/{crop}_margin192"
@@ -104,5 +140,9 @@ for it in items:
     n += 1
     print(f"{iid:28s} {terrain.shape}  terrain {np.nanmin(terrain):7.1f}..{np.nanmax(terrain):7.1f} m"
           f"  surface {np.nanmin(surface):7.1f}..{np.nanmax(surface):7.1f} m")
+if S2_REPORT:
+    rep = ROOT / "data/sentinel2_benchmark/pack_calibration.json"
+    rep.write_text(json.dumps(S2_REPORT, indent=1))
+    print(f"calibration report -> {rep}")
 total = sum(p.stat().st_size for p in out.glob("*.tif")) / 1e6
 print(f"{n} packs, {total:.1f} MB -> {out}")
