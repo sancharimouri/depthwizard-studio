@@ -259,3 +259,17 @@ once in section 0. It covers:
 - min-instances 1 / 0;
 - **ROLLBACK:** Render stays up; switch Vercel back, route Cloud Run traffic to the previous revision, or set
   `--max-instances 0`.
+
+## Part 8: docs and verification (2026-09-30)
+
+- **HANDOFF:** §5z+5 carries the build state, the deploy readiness checklist, the open items and the decisions
+  waiting on the owner.
+- **Protected data** (`data/library/`, `data/library_v2_2026-09-29/` except `_qa/`, `data/dfc2019/terrain_packs/`,
+  `data/display_test_2026-09-29/`, `data/sentinel2/`): SHA-256 before vs after **identical, 1,865 of 1,865 files**.
+  The file list is unchanged: 1,864 plus the owner-approved ratings file from facts-v2.
+- The pre-commit hook is active (`core.hooksPath = scripts/git-hooks`) and passed on every commit.
+- **Local Docker cleaned up:** the local registry container is removed, and no `dw2` containers are left. The images
+  `dw2-backend:rc-amd64` and `dw2-modelsvc-probe` stay in Colima for re-runs.
+- **Verdict: READY for a backend-only Cloud Run deploy**, pending the owner's GCP setup (runbook §0–5). There are no
+  code blockers. The only unmeasured risks are the real cold start and 4-way concurrency, and both are within margin
+  by estimate.

@@ -659,6 +659,57 @@ push, no GCP, no API sign-ups.
   6. `vhr-a_valley` opens at ×10 and looks spiky with subtle: consider a lower `default_exaggeration`.
   7. Still deferred (unchanged): the `/tmp` cap, the DFC2019 git-history cleanup, GCP, and the data/ backup.
 
+### 5z+5. Release candidate (2026-09-30): LOCAL ONLY, branch `release-candidate-2026-09-30`; not merged into main, not pushed
+
+Full record: `docs/release-candidate-2026-09-30.md` (Parts 1–8). Runbook: `docs/deploy-cloud-run.md`, rewritten.
+
+**Build state:**
+- The RC = `facts-v2-2026-09-30`, which already contains curated-tiles, slim-container and facts-research, **plus a
+  merge of `pack-rebuild-code`**. There was no textual conflict. `build_dem_pack.py`'s calibrated OLS recipe and
+  `build_library_v2.py`'s offset-only override (3 tiles) are consistent with the library.
+- **Tests:** backend 84 passed, 1 skipped; frontend 104 passed. Desktop smoke test PASS.
+- **Parity:** PNG / GeoTIFF / CDSE / CDSE+facts outputs are **identical** to slim-container
+  (`scripts/flow_parity.py`).
+- **amd64 image:** **119.1 MB compressed / 335.9 MB unpacked**; idle RSS 79.5 MiB; per-flow peaks 156–251 MiB;
+  **3 flows at once (with live facts): 287.6 MiB RSS / 246.5 MiB cgroup: fits 512 MiB with ~225 MiB margin.**
+- **New:**
+  - the /tmp cap (30 min + 64 MiB, never in-flight or < 2 min-old; image-only);
+  - logs to stdout;
+  - graceful shutdown 8 s;
+  - the CORS `*` guard;
+  - the EE init lock;
+  - no `.env` fallback when `DW2_NO_DOTENV=1`.
+
+**Deploy readiness checklist (backend only):**
+- [x] Image builds for linux/amd64, non-root, `0.0.0.0:$PORT`, `/health`, stdout logs, clean SIGTERM (0.41 s, exit 0).
+- [x] Memory fits 512Mi (measured); the timeout for the longest flow is 300 s; concurrency 4 is thread-safe.
+- [x] /tmp is capped; the CORS allowlist is exact; secrets are env-only (Secret Manager); no files outside the image.
+- [x] Earth Engine works with the runtime service account (ADC); no code change needed.
+- [x] The runbook is written, with budget, APIs, EE, secrets, registry cleanup, deploy, smoke tests, cold start,
+      min-instances and rollback.
+- [ ] **Owner:** GCP project + billing, EE registration decision, the secret values, and running the runbook.
+- [ ] **Owner:** measure the real cold start (runbook §11) and decide min-instances for judging days.
+- [ ] **Owner:** the Vercel `VITE_API_BASE` cutover after verification; Render stays up until then.
+
+**Open items:**
+- **Real Cloud Run cold start:** not measurable locally (0.75 s start-to-health in Docker).
+- **4-way concurrency is estimated, not measured:** ≈ 360–380 MiB, ≤ ≈ 450 MiB with a full /tmp.
+- **`HF_HOME=/tmp/dw2/hf` is not capped.** Only the remote-mode library route for private DFC2019 packs writes there,
+  and the static web build doesn't call it. Consider disabling library generation routes on Cloud Run
+  (`DW2_LIBRARY=off`, a small change) if you want zero risk.
+- **The CDSE flow ranged 29–105 s** across runs, from upstream latency.
+- **The desktop sidecar binary** still needs a rebuild to get Facts v2 (unchanged from §5z+4).
+- **Model service (future):** DAv2-Small ONNX measured at 214 MiB idle and 354 MiB peak (arena off). DAv2 + Method 6
+  is estimated at ≈ 500 MiB peak: plan 1 GiB. No Method 6 ONNX export exists yet.
+- **Still deferred:** the DFC2019 git-history cleanup and the data/ backup.
+
+**Decisions waiting on the owner:**
+1. **Earth Engine project:** reuse the existing `EARTHENGINE_PROJECT` and deploy Cloud Run into it (recommended), or
+   use a new project. If new, either register it for EE or grant the service account the roles on the existing one.
+2. **Region** (`asia-south1` is proposed) and **max-instances** (3 is proposed, as a cost cap).
+3. **When to cut over** `VITE_API_BASE` and **when to decommission Render**.
+4. **Merging the RC into `main` and pushing:** not done.
+
 ### 5z+4. Facts v2 (2026-09-30): LOCAL ONLY, branch `facts-v2-2026-09-30`
 
 Branched from `facts-research-2026-09-30`. Full record: `docs/facts-research.md` (sections "Facts v2", dated per
