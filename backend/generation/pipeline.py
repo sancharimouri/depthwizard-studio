@@ -27,6 +27,7 @@ from pathlib import Path
 
 import numpy as np
 
+from backend.storage import tmp_cap
 from backend.terrain.mesh_export import write_terrain_json
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -54,7 +55,9 @@ def job_path(job_id: str, name: str) -> Path:
     if not job_id.isalnum() or name not in {"satellite.png", "relative_depth.png", "elevation.png",
                                             "terrain.json", "meta.json"}:
         raise GenerationError("unknown generated asset")
-    return generated_dir() / job_id / name
+    path = generated_dir() / job_id / name
+    tmp_cap.touch(path.parent)  # "last used" for the /tmp cap
+    return path
 
 
 # ----------------------------------------------------------------------------- elevation
@@ -210,9 +213,18 @@ def _mesh_hw(shape) -> tuple[int, int]:
 # ----------------------------------------------------------------------------- job
 def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item: dict | None = None,
              input_meta: dict | None = None, input_dir: Path | None = None) -> dict:
+    tmp_cap.maybe_sweep()
     job_id = uuid.uuid4().hex
     out = generated_dir() / job_id
     out.mkdir(parents=True, exist_ok=True)
+    # the new job and its input are held until written (the /tmp cap never deletes them mid-request)
+    with tmp_cap.in_use(out, input_dir):
+        return _generate(kind, item_id, preview, depth_resp, job_id, out, item=item, input_meta=input_meta,
+                         input_dir=input_dir)
+
+
+def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id: str, out: Path, *,
+              item: dict | None = None, input_meta: dict | None = None, input_dir: Path | None = None) -> dict:
     from PIL import Image  # imported here, not at module import (idle memory; docs/container-measurements.md)
     img = Image.open(io.BytesIO(preview)).convert("RGB")
     img.save(out / "satellite.png", optimize=True)

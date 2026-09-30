@@ -14,6 +14,7 @@ from backend.api import depth_routes
 from backend.generation import pipeline
 from backend.input import store
 from backend.library import catalog
+from backend.storage import tmp_cap
 
 router = APIRouter(prefix="/api")
 MEDIA = {".png": "image/png", ".json": "application/json"}
@@ -23,6 +24,17 @@ MEDIA = {".png": "image/png", ".json": "application/json"}
 async def generate(source: str, item_id: str) -> dict:
     if source not in ("library", "input"):
         raise HTTPException(status_code=404, detail="source must be 'library' or 'input'.")
+    hold = None
+    if source == "input":  # held for the whole request (a cold Space can take minutes): the /tmp cap keeps it
+        try:
+            hold = store.input_dir(item_id)
+        except store.InputError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+    with tmp_cap.in_use(hold):
+        return await _generate(source, item_id)
+
+
+async def _generate(source: str, item_id: str) -> dict:
     preview = await depth_routes._preview_bytes(source, item_id)
     # Library tiles: the DAv2 depth baked into the tile's pack for exactly this preview (scripts/build_library_v2.py
     # depth), so opening a library tile makes no Space call. No baked entry -> the Space, exactly as before.
