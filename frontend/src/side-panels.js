@@ -364,7 +364,11 @@ export function renderFacts(job) {
         if (factsJob !== job || res.key !== queryKey(infoQuery(job))) {
             return;
         }
-        body.innerHTML = factsBodyHtml(res.info);
+        // the whole lookup failed (offline, backend asleep): say so plainly, never an error text, never "no hazards"
+        body.innerHTML = res.failed
+            ? `<p class="xp-fact-empty">Couldn't look this place up just now.</p>`
+                + `<button class="xp-tour-close" type="button" data-facts-retry>Retry</button>`
+            : factsBodyHtml(res.info);
         renderScenarioCard(job, scenarioKey);
     });
 }
@@ -401,6 +405,10 @@ export function initFacts(getActiveJob) {
     box.querySelector(".xp-head").addEventListener("click", () => renderFacts(getActiveJob()));
     // "Flood · Earthquake · Landslide → Scenario Analysis" opens that box
     box.addEventListener("click", event => {
+        if (event.target.closest("[data-facts-retry]")) {
+            renderFacts(getActiveJob());
+            return;
+        }
         if (!event.target.closest("[data-open-scenario]")) {
             return;
         }

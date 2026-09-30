@@ -29,6 +29,9 @@ args = [
     "--distpath", str(out / "dist"), "--workpath", str(out / "build"), "--specpath", str(out),
     "--paths", str(root), "--paths", str(root / "bridge"),
     "--add-data", f"{Path(a.onnx).resolve()}:models",
+    # Facts v2 (2026-09-30): the bundled ThinkHazard district grid + JRC tile index (backend/facts/data/);
+    # --collect-submodules only collects code. Without them the Facts lines for districts are simply omitted.
+    "--add-data", f"{root / 'backend/facts/data'}:backend/facts/data",
     "--hidden-import", "gradio_client", "--hidden-import", "huggingface_hub",
     "--exclude-module", "ee", "--exclude-module", "googleapiclient",
     "--collect-binaries", "onnxruntime",

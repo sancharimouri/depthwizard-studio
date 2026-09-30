@@ -182,7 +182,7 @@ def info(bbox: list[float] | None = None, lat: float | None = None, lon: float |
             return hit[1]
     status: dict[str, str] = {}
     out_lines: list[dict] = []
-    district = thinkhazard.lookup(lat, lon)
+    district = thinkhazard.lookup(lat, lon, bbox)
     status["thinkhazard"] = "ok" if district else "empty"
     if district:
         out_lines += L.thinkhazard_lines(district["levels"])

@@ -443,3 +443,85 @@ exclusive; the selected one shows its card.
   - **0 `/api/` requests.**
   - The library was then re-baked from the real drafts: **0 curated items on 0 tiles**. Every draft is still
     `draft`.
+
+## v2 Part D: live design for CDSE scenes and uploads (2026-09-30)
+
+**Route.** `GET /api/facts?bbox=w,s,e,n` for georeferenced input (the footprint; at most 2°), or
+`?lat=&lon=` for a non-georeferenced image with user-entered coordinates, which gets point lookups only (no
+surface-water share, a single cell for JRC / WB). Implementation: `backend/api/facts_routes.py` and
+`backend/facts/sources.py`. **Nominatim, Open-Meteo and GDACS are removed.**
+
+- **Facts:**
+  - The **bundled ThinkHazard lookup by coordinates** (`backend/facts/thinkhazard.py`) gives wildfire, cyclone,
+    tsunami and volcano.
+  - **Wikidata live** gives the nearest named peak (15 km), the river (10 km: the longest with a known length, else
+    the nearest) and a glacier.
+- **Scenario cards:**
+  - **live windowed COG reads**: JRC/GloFAS RP100 and the World Bank landslide class, plus GSW for a bbox;
+  - **USGS** M4.5+ within 100 km since 1973, with the largest since 1900;
+  - district levels from the same bundled grid (no network).
+- **The bundle** (`scripts/build_thinkhazard_grid.py`):
+  - GAUL 2015 admin-2 (38,258 divisions, paged from FAO's WFS) is burnt into a **0.025° (~2.8 km) global uint16 grid
+    of row indices**, plus a table of 38,253 rated divisions with ThinkHazard's 9 hazard levels.
+  - ThinkHazard's division code **is** the GAUL `adm2_code`. Verified at 7 points, and levels identical to
+    ThinkHazard's reports: Darjiling, Kachchh, South Sikkim, Hyderabad, Chennai, Duval, Douglas.
+  - No boundaries are shipped.
+  - A centre in water with a bbox takes the majority division in the box (the Chennai coast).
+  - Near a district border the ~2.8 km cell can name the neighbour; the lines say "(district)".
+  - If the bundle is missing (e.g. an older desktop sidecar), district lines are omitted.
+- **Graceful fallback:**
+  - Every source runs in its own thread: httpx 5 s (connect 3 s), GDAL HTTP 5 s (connect 3 s, no retries), and an
+    overall **9 s deadline**. Late sources are dropped.
+  - A failing, slow or empty source adds no lines. `status` records `ok / empty / failed / timeout` per source,
+    never a raw error.
+  - In the UI, a whole-request failure (backend down, blocked) shows "Couldn't look this place up just now." with a
+    Retry, never "no hazards" and never an error text. The tile itself always renders; nothing blocks it.
+- **Cache:** an in-memory LRU per location (bbox or point rounded to 0.001°), **at most 128 entries**. Complete
+  answers are kept 24 h, partial ones 10 min.
+- **Tests:** `backend/tests/test_facts.py` has 13 tests:
+  - validation;
+  - the bbox success path;
+  - point mode;
+  - each of the 4 live sources failing (the rest still show, no error text);
+  - an HTTP timeout;
+  - a source past the deadline (the response returns in < 1.5 s);
+  - a missing bundle;
+  - empty values giving no lines;
+  - the bounded cache and partial-TTL;
+  - the real bundle (Darjeeling → Darjiling / landslide HIGH; ocean → none; Chennai coast via bbox).
+
+  `frontend/tests/geo-info.test.mjs` has 8: rendering, the empty state, the epicentre map, the query choice, static
+  = no request, and live caching / failure / HTTP 500.
+- **Verified in the UI (backend mode, local uvicorn + Vite dev):**
+  - Chennai sent exactly one request, `facts?bbox=80.22459,13.03748,80.31681,13.12792`, and got real lines
+    (`docs/screenshots/2026-09-30_v2_live_chennai_backend_mode.png`).
+  - With `/api/facts` blocked via DevTools, the tile rendered, the Facts box showed the plain message and Retry, and
+    the cards stayed hidden. After unblocking, Retry filled the lines.
+
+**Cost** (measured from this Mac, 2026-09-30):
+
+| | Value |
+|---|---|
+| Added image size | **+4.3 MB** uncompressed (grid 2.13 MB + table 2.20 MB + JRC tile index 4 KB); **~2.4 MB compressed** |
+| New Python dependencies | none (httpx and rasterio are already in the container) |
+| Peak memory | the app imported alone is 60 MiB RSS. After 3 sequential cold lookups: 119 MiB. **After 4 concurrent cold lookups: 137 MiB** (+77 MiB). Adding that to the worst generation peak measured earlier (287 MiB) gives ≈ 364 MiB, **within the 512 MiB plan** |
+| Money | $0 (free sources, no keys); egress ≈ 1–3 MB per cold lookup |
+
+Latency per source, **cold, seconds** (Darjeeling / Chennai coast / Jacksonville):
+
+| Source | Darjeeling | Chennai | Jacksonville |
+|---|---|---|---|
+| ThinkHazard (bundled) | 0.04 | 0.00 | 0.00 |
+| Wikidata | 4.57 | 1.52 | 1.41 |
+| USGS (2 queries) | 3.01 | 3.13 | 3.15 |
+| JRC RP100 (COG window) | 1.96 | 1.69 | 1.71 |
+| World Bank landslide (COG window) | 0.83 | 0.11 | 0.13 |
+| JRC GSW (COG window) | 5.50 | 4.93 | 4.58 |
+
+- **End to end** (the sources in parallel, warm connections): 1.1–1.4 s. Cached: ~0.04 ms. The worst case is the
+  9 s deadline.
+- GSW is the slowest (~5 s, at the 5 s GDAL timeout), so it is the most likely to be dropped when cold. The
+  surface-water line is the least important one.
+- **Desktop:** `desktop/freeze_trial/build_freeze.py` now `--add-data`s `backend/facts/data`, because PyInstaller's
+  `--collect-submodules` collects only code. The desktop library path uses the same live route: its `staticInfo` is
+  `null`, so it sends its bbox to its own sidecar.
