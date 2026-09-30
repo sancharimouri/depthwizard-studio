@@ -7,7 +7,7 @@ import { createFloodSim } from "./flood-sim.js";
 import { createSidebar } from "./sidebar.js";
 import { createViewerHistory } from "./viewer-history.js";
 import { createFlythrough } from "./flythrough.js";
-import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderSource, renderTerrainStats, setInspectionHandlers, setInspectionSelected } from "./side-panels.js";
+import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderScenarioCard, renderSource, renderTerrainStats, setInspectionHandlers, setInspectionSelected } from "./side-panels.js";
 import { createSurfacePoints } from "./surface-point.js";
 import { createInputView } from "./input-view.js";
 import {
@@ -870,6 +870,10 @@ function resetViewerForNewJob() {
     }
     if (finalDemoEarthquakeActive) {
         setFinalDemoEarthquakeActive(false);
+    }
+    if (finalDemoLandslideInfo) {
+        finalDemoLandslideInfo = false;
+        syncScenarioNote();
     }
     finalDemoMeasureTool?.setMode("normal");
     finalDemoMeasureTool?.model.clear();
@@ -2268,30 +2272,33 @@ function setFinalDemoFloodActive(active) {
     syncScenarioNote();
 }
 
-// Scenario overlays share the terrain's vertex colours, so at most one is on.
+// One scenario at a time. Each shows a card of real hazard data for this place (src/geo-info.js); flood also
+// runs the water-plane simulation. Earthquake and landslide change nothing on the mesh: at tile scale a hazard
+// tint would be a single colour, so the earthquake card shows the recorded epicentres on an inset map instead.
 const SCENARIO_NOTES = {
     flood: "Flood (illustrative): a flat water plane at the chosen level, filling every DEM cell below it (a 'bathtub' fill). "
         + "It ignores flow and connectivity. It is not a hydrological flood model.",
-    earthquake: "Earthquake — PLACEHOLDER, not a seismic hazard model. The red gradient only marks the steepest slopes " +
-        "(a slope-based heuristic on the DEM); there is no earthquake model anywhere in this project.",
+    earthquake: "Earthquake: the district hazard level and the recorded M4.5+ earthquakes nearby. No shaking model runs on the terrain.",
+    landslide: "Landslide: the mapped hazard class and the district level. No landslide model runs on the terrain.",
 };
 
-// Landslide: a visible, clickable placeholder with a "Coming soon" state.
-// There is no landslide logic, model or data behind it.
 let finalDemoLandslideInfo = false;
-SCENARIO_NOTES.landslide = "Landslide — coming soon. There is no landslide susceptibility model or data in this project yet, so this option does nothing for now.";
+
+function activeScenarioKey() {
+    return finalDemoEarthquakeActive ? "earthquake" : finalDemoFloodActive ? "flood" : finalDemoLandslideInfo ? "landslide" : null;
+}
 
 function syncScenarioNote() {
     const note = document.getElementById("final-demo-scenario-note");
     if (!note) {
         return;
     }
-    const key = finalDemoEarthquakeActive ? "earthquake" : finalDemoFloodActive ? "flood" : finalDemoLandslideInfo ? "landslide" : null;
-    document.getElementById("final-demo-landslide-button")?.classList.toggle("is-soon-open", key === "landslide");
+    const key = activeScenarioKey();
+    document.getElementById("final-demo-landslide-button")?.classList.toggle("active", key === "landslide");
     document.getElementById("final-demo-landslide-button")?.setAttribute("aria-pressed", String(key === "landslide"));
     note.hidden = !key;
     note.textContent = key ? SCENARIO_NOTES[key] : "";
-    note.classList.toggle("is-placeholder", key === "earthquake" || key === "landslide");
+    renderScenarioCard(jobStore.active(), key);
 }
 
 function setFinalDemoEarthquakeActive(active) {
@@ -2300,7 +2307,6 @@ function setFinalDemoEarthquakeActive(active) {
         finalDemoLandslideInfo = false;
     }
     document.getElementById("final-demo-earthquake-button")?.classList.toggle("active", active);
-    finalDemoCurrentTerrain?.setEarthquakeOverlay(active);
     syncScenarioNote();
 }
 
@@ -2660,16 +2666,21 @@ function initFinalDemoViewer(job) {
     });
 
     document.getElementById("final-demo-landslide-button")?.addEventListener("click", () => {
+        if (!finalDemoLandslideInfo) {
+            if (finalDemoFloodActive) {
+                setFinalDemoFloodActive(false);
+            }
+            if (finalDemoEarthquakeActive) {
+                setFinalDemoEarthquakeActive(false);
+            }
+        }
         finalDemoLandslideInfo = !finalDemoLandslideInfo;
         syncScenarioNote();
     });
 
     document.getElementById("final-demo-earthquake-button")?.addEventListener("click", () => {
-        if (!finalDemoEarthquakeActive) {
-            if (finalDemoFloodActive) {
-                setFinalDemoFloodActive(false);
-            }
-            activateFinalDemoLayer("dsm-3d");
+        if (!finalDemoEarthquakeActive && finalDemoFloodActive) {
+            setFinalDemoFloodActive(false);
         }
         setFinalDemoEarthquakeActive(!finalDemoEarthquakeActive);
     });

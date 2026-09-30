@@ -8,7 +8,7 @@
 // view's `meta` list already omits unknown fields, e.g. DFC2019 tiles have no
 // acquisition date); nothing is filled in by guesswork here.
 
-import { apiUrl } from "./api-base.js";
+import { countLines, factsBodyHtml, infoQuery, loadGeoInfo, normaliseInfo, queryKey, scenarioCardHtml } from "./geo-info.js";
 import { attachMagnifier } from "./magnifier.js";
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -185,7 +185,7 @@ const TOUR_STEPS = [
     { sel: '[data-box="inspect"]', title: "Image inspection", text: "The job's source image. Hover it to magnify; click to select that point on the 3D surface." },
     { sel: '[data-box="scenario"]', title: "Scenario analysis", text: "Illustrative flood and (placeholder) slope overlays, and a Landslide option that is coming soon. Not hazard models." },
     { sel: '[data-box="flythrough"]', title: "Fly-through", text: "One full orbit while zooming in, with pause/resume, Run again and Reset." },
-    { sel: '[data-box="facts"]', title: "Facts", text: "Place, elevation, and earthquake and flood-alert history for this job's location, from live public sources." },
+    { sel: '[data-box="facts"]', title: "Facts", text: "Hazards not covered by Scenario Analysis, and named peaks, rivers and glaciers near this place." },
     { sel: '[data-box="gestures"]', title: "Learn gestures", text: "How to rotate, zoom and use the terrain menu with mouse, trackpad or touch." },
 ];
 
@@ -303,174 +303,111 @@ export function initTour(box) {
     return { stop };
 }
 
-// ------------------------------------------------------------------ facts
-// Location facts + hazard history from live, named sources (backend
-// /api/facts). Coordinates come only from the job's own geo-metadata
-// (job.input.geo) or from the user typing them in (job.userGeo); without
-// either, the box stays empty and says why. Fetched only while the box is
-// open, once per job and location.
+// ------------------------------------------------------------------ facts + scenario cards
+// Facts box: hazards Scenario Analysis doesn't cover + named terrain features, one short line each
+// (src/geo-info.js). Scenario Analysis cards: flood / landslide / earthquake lines + the epicentre map.
+// Library tiles in the web build use the curated, baked lines (no request); everything else asks
+// /api/facts once per job and location, only while a box that needs it is open.
 
 let factsJob = null;
+let scenarioKey = null;
 
-function factsGeo(job) {
-    if (job?.input?.geo) {
-        return { ...job.input.geo, user: false };
-    }
-    if (job?.userGeo) {
-        return { ...job.userGeo, origin: "coordinates you entered", user: true };
-    }
-    return null;
+function factsBox() {
+    return document.querySelector('[data-box="facts"]');
 }
 
-const link = (href, text) => (href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>` : esc(text));
-
-function sourceLine(section) {
-    return `<div class="xp-fact-src">Source: ${link(section.url, section.source)}</div>`;
-}
-
-function factSection(title, section, render) {
-    let inner;
-    let tag;
-    if (!section || section.status === "unavailable") {
-        tag = `<span class="xp-fact-tag is-na">Not available</span>`;
-        inner = `<p class="xp-fact-text">${esc(section?.reason ?? "No source.")}</p>`;
-    } else if (section.status === "error") {
-        tag = `<span class="xp-fact-tag is-error">Source unreachable</span>`;
-        inner = `<p class="xp-fact-text">${esc(section.source)} could not be reached just now (${esc(section.message)}). `
-            + "Nothing is shown in its place.</p>";
-    } else {
-        tag = `<span class="xp-fact-tag is-ok">Live</span>`;
-        inner = render(section) + sourceLine(section);
-    }
-    return `<div class="xp-fact"><div class="xp-fact-head"><span>${esc(title)}</span>${tag}</div>${inner}</div>`;
-}
-
-function renderFactsData(data) {
-    const place = factSection("PLACE", data.place, s => (s.name
-        ? `<p class="xp-fact-text">${esc(s.name)}</p>`
-        : `<p class="xp-fact-text">${esc(s.note)}</p>`)
-        + (s.licence ? `<div class="xp-fact-src">${esc(s.licence)}</div>` : ""));
-    const elev = factSection("POINT ELEVATION", data.elevation, s =>
-        `<p class="xp-fact-text"><span class="xp-fact-big numeric-mono">${Math.round(s.elevation_m).toLocaleString()} m</span> at these coordinates (90 m DEM cell)</p>`);
-    const quake = factSection("SEISMIC HISTORY", data.seismic, s => {
-        const rows = s.largest.map(e =>
-            `<li><span class="numeric-mono">M${e.mag.toFixed(1)}</span> ${link(e.url, e.place ?? "event")} · ${esc(e.date)} · ${e.distance_km} km</li>`).join("");
-        return `<p class="xp-fact-text"><span class="xp-fact-big numeric-mono">${s.count.toLocaleString()}</span> earthquakes of M${s.min_magnitude}+ within ${s.radius_km} km since 1900.</p>`
-            + (rows ? `<div class="xp-fact-sub">Largest</div><ul class="xp-fact-list">${rows}</ul>` : "")
-            + (s.latest ? `<div class="xp-fact-sub">Most recent</div><ul class="xp-fact-list"><li><span class="numeric-mono">M${s.latest.mag.toFixed(1)}</span> ${link(s.latest.url, s.latest.place ?? "event")} · ${esc(s.latest.date)}</li></ul>` : "")
-            + `<p class="xp-note">${esc(s.caveat)}</p>`;
-    });
-    const flood = factSection("FLOOD ALERTS", data.floods, s => {
-        const alerts = Object.entries(s.by_alert).map(([k, v]) => `${v} ${esc(k)}`).join(", ");
-        const rows = s.recent.map(e =>
-            `<li>${link(e.url, e.name ?? "Flood")} · ${esc(e.from)} · ${esc(e.alert)} · ${e.distance_km} km</li>`).join("");
-        return `<p class="xp-fact-text"><span class="xp-fact-big numeric-mono">${s.count}</span> GDACS flood alert${s.count === 1 ? "" : "s"} within ${s.radius_km} km since 2000${alerts ? ` (${alerts})` : ""}.</p>`
-            + (rows ? `<div class="xp-fact-sub">Most recent</div><ul class="xp-fact-list">${rows}</ul>` : "")
-            + `<p class="xp-note">${esc(s.caveat)}</p>`;
-    });
-    const slide = factSection("LANDSLIDES", data.landslides);
-    const volc = factSection("VOLCANOES", data.volcanoes);
-    return place + elev + quake + flood + slide + volc
-        + `<p class="xp-note">Queried ${esc(data.queried_at)}. These facts are for this job's location.</p>`;
-}
-
-// Web build, library tile: the curated facts baked into the static library
-// (scripts/bake_static_library.py, status "curated" only). Rendered as-is; no request.
-function renderBakedFacts(facts) {
-    return facts.map(f => {
-        const derived = f.origin === "derived";
-        return `<div class="xp-fact"><div class="xp-fact-head"><span>${esc(String(f.scope ?? "").toUpperCase())}</span>`
-            + `<span class="xp-fact-tag ${derived ? "is-na" : "is-ok"}">${derived ? "Derived from the DEM" : "Source"}</span></div>`
-            + `<p class="xp-fact-text">${esc(f.text)}</p>`
-            + `<div class="xp-fact-src">Source: ${link(f.source_url, f.source)} · retrieved ${esc(f.retrieved)}</div>`
-            + `<div class="xp-fact-src">${esc(f.licence)}</div></div>`;
-    }).join("") + `<p class="xp-note">Curated facts for this library tile, checked when the library was built; no live query.</p>`;
-}
-
-async function loadFacts(job, geo) {
-    const body = document.getElementById("xp-facts-body");
-    const key = `${geo.lat},${geo.lon}`;
-    if (job.facts?.key === key && job.facts.data) {
-        body.innerHTML = renderFactsData(job.facts.data);
-        return;
-    }
-    if (job.facts?.key === key && job.facts.pending) {
-        return;
-    }
-    job.facts = { key, pending: true };
-    body.innerHTML = `<p class="xp-note">Querying Nominatim, Open-Meteo, USGS and GDACS…</p>`;
-    try {
-        const response = await fetch(apiUrl(`/api/facts?lat=${encodeURIComponent(geo.lat)}&lon=${encodeURIComponent(geo.lon)}`));
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        job.facts = { key, data: await response.json() };
-    } catch (error) {
-        job.facts = null;
-        if (factsJob === job) {
-            body.innerHTML = `<p class="xp-note">Facts service unreachable (${esc(error.message)}). Nothing is shown in its place.</p>`
-                + `<button class="xp-tour-close" type="button" id="xp-facts-retry">Retry</button>`;
-            document.getElementById("xp-facts-retry")?.addEventListener("click", () => renderFacts(job));
-        }
-        return;
-    }
-    if (factsJob === job && factsGeo(job) && `${factsGeo(job).lat},${factsGeo(job).lon}` === key) {
-        body.innerHTML = renderFactsData(job.facts.data);
-    }
+function isOpen(box) {
+    return box && !box.hidden && !box.classList.contains("is-collapsed");
 }
 
 export function renderFacts(job) {
     factsJob = job ?? null;
-    const box = document.querySelector('[data-box="facts"]');
+    const box = factsBox();
     const where = document.getElementById("xp-facts-where");
     const form = document.getElementById("xp-facts-form");
     const body = document.getElementById("xp-facts-body");
-    if (!box || !where) {
+    if (!box || !where || !body) {
         return;
     }
-    // web build, library tile: pre-baked curated facts only (null everywhere else, incl. the desktop build)
-    const baked = job?.input?.staticFacts;
-    box.hidden = Array.isArray(baked) && baked.length === 0;
-    if (Array.isArray(baked)) {
+    where.textContent = "";
+    const baked = job?.input?.staticInfo;
+    if (baked) {
+        // web build, library tile: hidden when nothing is curated for it
+        const info = normaliseInfo(baked);
+        box.hidden = countLines(info) === 0;
         form.hidden = true;
-        where.textContent = "";
-        body.innerHTML = baked.length ? renderBakedFacts(baked) : "";
+        body.innerHTML = box.hidden ? "" : factsBodyHtml(info);
+        renderScenarioCard(job, scenarioKey);
         return;
     }
+    box.hidden = false;
     if (!job) {
-        where.textContent = "";
         form.hidden = true;
-        body.innerHTML = `<p class="xp-note">No job is open, so there is no location to describe.</p>`;
+        body.innerHTML = `<p class="xp-fact-empty">No job is open.</p>`;
         return;
     }
-    const geo = factsGeo(job);
+    const q = infoQuery(job);
     form.hidden = Boolean(job.input?.geo);
-    if (!geo) {
-        where.textContent = "";
-        body.innerHTML = `<p class="xp-fact-empty">Location not available: no coordinates in this image's metadata, and none entered.</p>`;
+    if (!q) {
+        body.innerHTML = `<p class="xp-fact-empty">Enter this image's coordinates to look up its hazards and named features.</p>`;
         return;
     }
-    where.innerHTML = `<span class="numeric-mono">${Number(geo.lat).toFixed(4)}, ${Number(geo.lon).toFixed(4)}</span>`
-        + `<span> · from ${esc(geo.origin)}</span>`;
-    if (geo.user) {
-        document.getElementById("xp-facts-lat").value = geo.lat;
-        document.getElementById("xp-facts-lon").value = geo.lon;
+    if (job.userGeo && !job.input?.geo) {
+        document.getElementById("xp-facts-lat").value = job.userGeo.lat;
+        document.getElementById("xp-facts-lon").value = job.userGeo.lon;
     }
-    // only hit the external sources while the box is actually open
-    if (!box.classList.contains("is-collapsed")) {
-        loadFacts(job, geo);
-    } else if (!(job.facts?.data)) {
-        body.innerHTML = "";
+    if (!isOpen(box) && !scenarioKey) {
+        return; // external sources only while a box that shows them is open
     }
+    body.innerHTML = `<p class="xp-fact-empty">Looking up this place…</p>`;
+    loadGeoInfo(job).then(res => {
+        if (factsJob !== job || res.key !== queryKey(infoQuery(job))) {
+            return;
+        }
+        body.innerHTML = factsBodyHtml(res.info);
+        renderScenarioCard(job, scenarioKey);
+    });
+}
+
+// The card under the Scenario Analysis buttons for the active option ("flood" / "landslide" / "earthquake"
+// / null). Hidden when that option has no lines.
+export function renderScenarioCard(job, key) {
+    scenarioKey = key ?? null;
+    const card = document.getElementById("xp-scenario-card");
+    if (!card) {
+        return;
+    }
+    if (!job || !key || (!job.input?.staticInfo && !infoQuery(job))) {
+        card.hidden = true;
+        card.innerHTML = "";
+        return;
+    }
+    loadGeoInfo(job).then(res => {
+        if (scenarioKey !== key || factsJob !== job) {
+            return;
+        }
+        const html = scenarioCardHtml(res.info, key);
+        card.hidden = !html;
+        card.innerHTML = html;
+    });
 }
 
 export function initFacts(getActiveJob) {
-    const box = document.querySelector('[data-box="facts"]');
+    const box = factsBox();
     const form = document.getElementById("xp-facts-form");
     if (!box || !form) {
         return;
     }
     box.querySelector(".xp-head").addEventListener("click", () => renderFacts(getActiveJob()));
+    // "Flood · Earthquake · Landslide → Scenario Analysis" opens that box
+    box.addEventListener("click", event => {
+        if (!event.target.closest("[data-open-scenario]")) {
+            return;
+        }
+        const scenario = document.querySelector('[data-box="scenario"]');
+        scenario?.xpSetOpen?.(true);
+        scenario?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
     form.addEventListener("submit", event => {
         event.preventDefault();
         const job = getActiveJob();
