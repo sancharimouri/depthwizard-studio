@@ -23,8 +23,8 @@ const DARJ = {
 
 test("Facts box: one row per fact, the Scenario Analysis link, no sources or badges", () => {
     const html = factsBodyHtml(normaliseInfo(DARJ));
-    assert.match(html, /Wildfire hazard<\/span><span class="xp-fact-value">HIGH \(district\)/);
-    assert.match(html, /Observatory Hill · 2,188 m · 0.8 km/);
+    assert.match(html, /Wildfire hazard<\/span><span class="xp-fact-value"><span class="xp-fact-part">HIGH \(district\)<\/span>/);
+    assert.match(html, /<span class="xp-fact-part">Observatory Hill<\/span><span class="xp-fact-part">2,188 m<\/span><span class="xp-fact-part">0.8 km<\/span>/);
     assert.match(html, /data-open-scenario>Scenario Analysis</);
     assert.doesNotMatch(html, /Source|licen|Derived from the DEM|not available|curated/i);
 });

@@ -5078,42 +5078,67 @@ kbd {
 }
 
 /* Facts v2 (2026-09-30): one short line per fact; the same rows in the Scenario Analysis cards */
+/* No divider lines: rows are separated by space. Label left, value right; a value wider than half the
+   card moves under its label, left-aligned (.is-long, set by fitFactRows in src/side-panels.js). */
 .xp-fact-row {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    column-gap: 10px;
-    row-gap: 1px;
-    padding: 6px 0;
-    border-top: 1px solid rgba(var(--text-rgb), 0.07);
+    column-gap: 16px;
+    row-gap: 3px;
+    margin-top: 11px;
     font-size: 11px;
     line-height: 1.35;
 }
 
 .xp-fact-row:first-child {
-    border-top: 0;
-    padding-top: 0;
+    margin-top: 0;
 }
 
-/* a short value sits on the label's line; a long one wraps as a whole onto its own line below */
 .xp-fact-label {
     color: rgba(var(--text-rgb), 0.58);
     white-space: nowrap;
 }
 
+/* a value is one or more parts ("Observatory Hill", "2,188 m", "0.8 km") with a clear gap between them */
 .xp-fact-value {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    column-gap: 12px;
+    row-gap: 2px;
     margin-left: auto;
     color: rgb(var(--text-rgb));
     font-weight: 600;
     text-align: right;
 }
 
+.xp-fact-part {
+    white-space: nowrap;
+}
+
+.xp-fact-row.is-long .xp-fact-value {
+    flex-basis: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+    text-align: left;
+}
+
+/* measuring pass: every value on one line at its natural width */
+.xp-fact-row.is-measuring,
+.xp-fact-row.is-measuring .xp-fact-value {
+    flex-wrap: nowrap;
+}
+
+.xp-fact-row.is-measuring .xp-fact-value {
+    flex: none;
+}
+
 .xp-facts-more {
-    margin: 10px 0 0;
-    padding-top: 8px;
-    border-top: 1px solid rgba(var(--text-rgb), 0.07);
-    font-size: 10px;
+    margin: 16px 0 0;
+    font-size: 8px;
+    white-space: nowrap;
     color: rgba(var(--text-rgb), 0.5);
 }
 

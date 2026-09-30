@@ -593,3 +593,38 @@ Latency per source, **cold, seconds** (Darjeeling / Chennai coast / Jacksonville
   - `frontend/dist` is the web build;
   - no servers are running;
   - the pre-commit hook is active and passed on every commit.
+
+## v2 layout pass + vhr-a_valley ×6 (2026-09-30, owner feedback)
+
+- **Footer:** "Flood · Earthquake · Landslide → Scenario Analysis" is 8 px, `nowrap`, and **one line**: 210 px of text
+  in a 210 px row, measured in the web build.
+- **No divider lines** in the Facts box or in the flood / landslide / earthquake cards. Rows are separated by 11 px
+  of space, the footer by 16 px, and label and value by a 16 px gap.
+- **Multi-part values** ("Observatory Hill · 2,188 m · 0.8 km", "M6.9 · 2011 · 77 km away") render as separate
+  parts with a 12 px gap instead of the `·` separators.
+- **Alignment rule:** label left, value right. When a value, on one line, is wider than **50% of the card**, it moves
+  under its label, **left-aligned**.
+  - `fitFactRows()` in `frontend/src/geo-info.js` measures this after each render, and again when a box opens.
+  - Darjeeling examples: the peak and "Largest within 100 km" go left; "HIGH (district)" and "47 since 1973" stay
+    right.
+- **vhr-a_valley default exaggeration: ×6** (was ×10), owner's pick from the ×3–×10 screenshots.
+  - Following the earlier re-rating pattern, it is recorded in `data/library_v2_2026-09-29/_input_ratings_2026-09-30c.json`
+    and applied to `tile_manifest.json`, the source of truth.
+  - **These are the only two changes in the protected folders.**
+    - The manifest's SHA-256 differs only by this entry: reverting the entry in memory reproduces the baseline hash
+      exactly.
+    - The new ratings file is the one added file; the other 1,863 files are identical.
+  - Re-baked: the tile opens at ×6 in the web build. The desktop app doesn't read this manifest unless
+    `DW2_TILE_MANIFEST` is set (unchanged).
+- **Screenshots:** the old Facts / Scenario screenshots (v1 and v2) were deleted. The new set is in
+  **`docs/screenshots/facts-v2/`**:
+  1. `1_facts_darjeeling.png`
+  2. `2_facts_empty_state_hisar.png`
+  3. `3_scenario_flood_darjeeling.png`
+  4. `4_scenario_landslide_darjeeling.png`
+  5. `5_scenario_earthquake_darjeeling.png`
+  6. `6_vhr-a_valley_default_x6.png`
+
+  They were taken with Darjeeling and Hisar curated in a temporary copy only. The library was then re-baked from the
+  real drafts: 0 curated, and every item is still `draft`.
+- **Tests:** frontend 104 passed; backend 74 passed, 1 skipped.

@@ -100,10 +100,31 @@ export function loadGeoInfo(job, fetchImpl = globalThis.fetch) {
     return promise;
 }
 
+// A value's parts ("Observatory Hill · 2,188 m · 0.8 km") render as separate spans with a gap between them.
+function valueParts(text) {
+    return String(text).split(" · ").map(p => `<span class="xp-fact-part">${esc(p)}</span>`).join("");
+}
+
 function rows(lines) {
     return lines.filter(l => l.kind !== "epicentres" && l.text)
         .map(l => `<div class="xp-fact-row"><span class="xp-fact-label">${esc(l.label)}</span>`
-            + `<span class="xp-fact-value">${esc(l.text)}</span></div>`).join("");
+            + `<span class="xp-fact-value">${valueParts(l.text)}</span></div>`).join("");
+}
+
+// Value left-aligned under its label when, on one line, it would be wider than half the row. Needs layout,
+// so it runs on visible content (again whenever a box opens).
+export function fitFactRows(root) {
+    root?.querySelectorAll(".xp-fact-row").forEach(row => {
+        const value = row.querySelector(".xp-fact-value");
+        if (!value || !row.clientWidth) {
+            return;
+        }
+        row.classList.remove("is-long");
+        row.classList.add("is-measuring");
+        const natural = value.getBoundingClientRect().width;
+        row.classList.remove("is-measuring");
+        row.classList.toggle("is-long", natural > row.clientWidth * 0.5);
+    });
 }
 
 export const SCENARIO_LINK = `<p class="xp-facts-more">Flood · Earthquake · Landslide → `

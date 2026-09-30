@@ -681,12 +681,13 @@ part, and "v2 final design"). No deploy, no push, no GCP, no API sign-ups.
   - vhr-a_valley ×3 / ×5 / ×7 / ×10 screenshots.
   - The desktop smoke test PASS.
   - Protected data: SHA-256 identical (1,864 / 1,864).
+- **Layout pass (owner feedback):** no divider lines, one-line footer, and values wider than half the card are left-aligned under their labels. Screenshots are in `docs/screenshots/facts-v2/`.
 - **Decisions waiting on the owner:**
   1. **Curate:** in `data/library_v2_2026-09-30/facts_drafts.json`, set `status: "curated"` on the items to publish
      (review `facts_drafts.md`), then run `scripts/bake_static_library.py`. Until then, library tiles in the web
      build show no Facts panel and empty Scenario cards (the flood simulation still works).
-  2. **vhr-a_valley default exaggeration:** pick from `docs/screenshots/2026-09-30_vhr-a_valley_subtle_x3_x5_x7_x10.png`.
-     It is currently ×10, unchanged.
+  2. ~~vhr-a_valley default exaggeration~~ Done 2026-09-30: **×6** (owner's pick; `_input_ratings_2026-09-30c.json`,
+     applied to `tile_manifest.json`).
   3. **Rebuild the desktop sidecar** (`desktop/freeze_trial/build_freeze.py`) when the desktop app should get the new
      Facts route. The prebuilt sidecar degrades to "Couldn't look this place up".
   4. **Deploy** (backend + web) when ready; nothing is pushed. `requirements.txt` needs no change.
