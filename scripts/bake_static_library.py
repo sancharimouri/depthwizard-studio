@@ -24,10 +24,11 @@ Maxar: only ONE DISPLAY preset is baked, the manifest's `maxar_display_preset`, 
 data/library_v2_<date>/dem_maxar/<preset>/, nothing in the library is changed). None is chosen yet (2026-09-30):
 "medium" is the flagged placeholder.
 
-Facts (2026-09-30, docs/facts-research.md Part E2): --facts points at a facts_drafts.json
-(scripts/draft_library_facts.py). ONLY facts whose status is "curated" are baked, into the tile's index.json entry and
-tile.json as `facts` (a list; [] when none is curated). The web build shows them with no backend call and hides the
-Facts panel for a library tile whose list is empty. The desktop build never reads the static library, so it is unchanged.
+Facts + Scenario cards (2026-09-30, docs/facts-research.md v2 Part C): --facts points at a facts_drafts.json
+(scripts/draft_library_facts.py). ONLY items whose status is "curated" are baked, into the tile's index.json entry and
+tile.json as `facts` (a list of {kind, label, text}) and `scenario` ({flood, landslide, earthquake}: lists of
+{kind, label, text[, data]}); [] when none is curated. The web build shows them with no backend call and hides the
+Facts panel for a library tile with no curated items at all. The desktop build never reads the static library, so it is unchanged.
 
 Never calls the Space: a tile without a baked depth entry fails the bake (run build_library_v2.py depth first).
 Re-runnable: re-rate tiles or pick a Maxar preset in library_v2, then run this again (the output folder is rebuilt).
@@ -49,14 +50,21 @@ ROOT = Path(__file__).resolve().parents[1]
 LIB_V2 = ROOT / "data/library_v2_2026-09-29"
 DEFAULT_OUT = ROOT / "frontend/public/library-static"
 DEFAULT_FACTS = ROOT / "data/library_v2_2026-09-30/facts_drafts.json"
-# what a baked fact carries (the drafts' internal fields, e.g. value/kind/status, stay out of the build)
-FACT_FIELDS = ("text", "source", "source_url", "licence", "retrieved", "origin", "confidence", "scope")
+# what a baked line carries: the UI line only (sources, licences, raw values and status stay in the drafts;
+# the Docs page credits the sources)
+LINE_FIELDS = ("kind", "label", "text", "data")
+SCENARIOS = ("flood", "landslide", "earthquake")
 
 
-def curated_facts(drafts: dict, tile_id: str) -> list[dict]:
-    """The tile's facts with status "curated" only, in draft order, reduced to FACT_FIELDS."""
-    facts = drafts.get("tiles", {}).get(tile_id, {}).get("facts", [])
-    return [{k: f.get(k) for k in FACT_FIELDS} for f in facts if f.get("status") == "curated"]
+def curated_info(drafts: dict, tile_id: str) -> dict:
+    """{"facts": [...], "scenario": {flood, landslide, earthquake}}: the tile's items with status "curated" only,
+    in draft order, reduced to LINE_FIELDS."""
+    tile = drafts.get("tiles", {}).get(tile_id, {})
+
+    def keep(items):
+        return [{k: x[k] for k in LINE_FIELDS if x.get(k) is not None} for x in items or [] if x.get("status") == "curated"]
+
+    return {"facts": keep(tile.get("facts")), "scenario": {g: keep((tile.get("scenario") or {}).get(g)) for g in SCENARIOS}}
 
 
 def main() -> None:
@@ -67,7 +75,7 @@ def main() -> None:
     ap.add_argument("--format", choices=["compact", "json"], default="compact")
     ap.add_argument("--maxar-preset", help="override the manifest's maxar_display_preset")
     ap.add_argument("--facts", type=Path, default=DEFAULT_FACTS,
-                    help="facts_drafts.json; only status 'curated' facts are baked (missing file: no facts)")
+                    help="facts_drafts.json; only status 'curated' items are baked (missing file: none)")
     a = ap.parse_args()
     lib, out = a.library.resolve(), a.out.resolve()
     assert lib not in out.parents and out != lib, "never write into the library"
@@ -144,18 +152,19 @@ def main() -> None:
         response = {"meta": meta, "depth": {k: v for k, v in depth.items() if k != "data_b64"},
                     "assets": {"terrain": terrain_url, "satellite": satellite_url,
                                "depth": f"{base}/relative_depth.png", "elevation": f"{base}/elevation.png"}}
-        facts = curated_facts(drafts, iid)
-        (d / "tile.json").write_text(json.dumps({**response, "facts": facts, "manifest": {k: t.get(k) for k in (
+        baked = curated_info(drafts, iid)
+        n_items = len(baked["facts"]) + sum(len(v) for v in baked["scenario"].values())
+        (d / "tile.json").write_text(json.dumps({**response, **baked, "manifest": {k: t.get(k) for k in (
             "display_name", "source", "stars", "order_index", "default_exaggeration", "exaggeration_origin", "notes")}},
             separators=(",", ":")))
         entry = _public(item)
         entry.update(thumbnail_url=f"{base}/thumbnail.jpg", preview_url=f"{base}/preview.jpg", tile_url=None,
                      static=f"{base}/tile.json", bundled=True, available=True,
-                     select=catalog.route(item, item["routing"]["tier"]), facts=facts)
+                     select=catalog.route(item, item["routing"]["tier"]), **baked)
         if item.get("collection") == "vhr":
             entry["display_preset"] = {"name": preset, "placeholder": placeholder}
         listing.append(entry)
-        print(f"{iid:32s} {sum(f.stat().st_size for f in d.iterdir()) / 1e6:6.2f} MB  {len(facts)} curated facts", flush=True)
+        print(f"{iid:32s} {sum(f.stat().st_size for f in d.iterdir()) / 1e6:6.2f} MB  {n_items} curated items", flush=True)
     idx = out / "index.json"
     if a.only and idx.exists():
         old = {i["id"]: i for i in json.loads(idx.read_text())["items"]}
@@ -169,8 +178,11 @@ def main() -> None:
                               separators=(",", ":")))
     shutil.rmtree(gen_tmp, ignore_errors=True)
     files = [f for f in out.rglob("*") if f.is_file()]
-    n_facts = sum(len(i.get("facts") or []) for i in listing)
-    print(f"{n_facts} curated facts on {sum(bool(i.get('facts')) for i in listing)} tiles (from {a.facts if drafts else 'no facts file'})")
+    def n_of(i):
+        return len(i.get("facts") or []) + sum(len(v) for v in (i.get("scenario") or {}).values())
+
+    print(f"{sum(n_of(i) for i in listing)} curated items on {sum(bool(n_of(i)) for i in listing)} tiles "
+          f"(from {a.facts if drafts else 'no facts file'})")
     print(f"{len(listing)} tiles, {len(files)} files, {sum(f.stat().st_size for f in files) / 1e6:.1f} MB -> {out}")
 
 

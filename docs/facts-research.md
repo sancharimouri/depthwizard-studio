@@ -369,3 +369,77 @@ Owner decisions:
 - **Contact sheet:** `docs/screenshots/2026-09-30_vhr-a_valley_subtle_x3_x5_x7_x10.png`.
 - **Full frames:** `docs/screenshots/2026-09-30_vhr-a_valley_subtle_x{3,5,7,10}.png`.
 - **Observation:** at ×3 to ×5 the canopy reads as texture; from ×7 the tree crowns turn into spikes. The owner picks.
+
+## v2 Parts A–C: Facts box, Scenario cards, re-split library drafts (2026-09-30)
+
+**One line format for both paths.** `backend/facts/lines.py` builds every UI line as `{group, kind, label, text[, data]}`.
+The live route and the library drafts both use it, so a baked tile and a live scene read identically.
+- It returns nothing when a value doesn't exist. The UI never says "not available".
+- Display order is fixed (`ORDER`): tile values before district ratings.
+
+**A. The Facts box** (`frontend/src/geo-info.js` `factsBodyHtml`, `side-panels.js` `renderFacts`):
+- **Content:** only hazards Scenario Analysis doesn't cover, plus named terrain features.
+  - ThinkHazard wildfire: always, when rated.
+  - Cyclone, tsunami, volcano: only at LOW or above ("where they apply").
+  - Cyclone-track history (IBTrACS) and tornadoes (NOAA SPC): library tiles only.
+  - Nearest named peak with height and distance; the river; a glacier.
+- **River label:** the river is "Main river" only when Wikidata gives a length to choose by, otherwise "Nearest river".
+  The label never overclaims.
+- **Removed:** elevation, slope, flood, landslide and earthquake lines; sources, licences, badges and the footer.
+- **Link:** "Flood · Earthquake · Landslide → Scenario Analysis", where the link opens that box.
+- **Empty state:** "No other terrain hazards on record here." when a tile has scenario lines but no Facts lines.
+- **Hidden:** a library tile with no curated items at all has no panel (unchanged).
+- **Layout:** a short value sits on its label's line; a long one wraps whole onto its own line.
+- **Screenshots:** `docs/screenshots/2026-09-30_v2_facts_darjeeling.png` (Darjeeling fully curated, as a test) and
+  `2026-09-30_v2_facts_empty_hisar.png` (Hisar with only scenario items curated: the empty state).
+
+**B. Scenario Analysis cards** (`#xp-scenario-card`; `scenarioCardHtml`, `renderScenarioCard`). The three options are
+exclusive; the selected one shows its card.
+- **Flood:** JRC/GloFAS 1-in-100-yr extent ("% of tile · up to X m deep" or "none modelled in this tile"), JRC Global
+  Surface Water (when ≥ 0.5% of the tile), and ThinkHazard river and coastal flood district levels. The existing water
+  simulation and slider are unchanged.
+- **Landslide:** the World Bank 1 km class ("class 3–4 of 4 · 75% class 4") and the ThinkHazard district level.
+  It was "COMING SOON"; it is now a normal option.
+- **Earthquake:** the ThinkHazard district level; "M4.5+ within 100 km: N since 1973"; "Largest within 100 km: M ·
+  year · distance". The radius is stated in every label.
+- **Earthquake overlay replaced (Part D design):**
+  - The fake slope tint is deleted: `terrain.js` `computePlaceholderSlopeDanger` and `setEarthquakeOverlay`, 55 lines.
+  - The card carries an **inset SVG map** instead: the tile outline, 50 / 100 km rings, and every USGS M4.5+
+    epicentre since 1973 within 100 km, sized by magnitude, with M6+ in red.
+  - There is no mesh tint, and selecting the option no longer switches layers.
+  - DFC2019 tiles get no map, because it would imply a private tile position.
+- **Notes:** the scenario notes are one short sentence each; the "PLACEHOLDER" and "COMING SOON" tags are gone.
+- **Screenshots (Darjeeling):** `2026-09-30_v2_scenario_{flood,landslide,earthquake}_darjeeling.png` and
+  `2026-09-30_v2_window_earthquake_darjeeling.png`.
+
+**C. Library data.**
+- **Drafts:** `scripts/draft_library_facts.py` (v2; v1 kept as `draft_library_facts_v1.py`) regenerated
+  `data/library_v2_2026-09-30/facts_drafts.{json,md}` (gitignored). The v1 files are kept as `facts_drafts_v1.*`.
+  - **76 tiles, 732 items, all `draft`**, per tile in two groups: `facts` and `scenario` {flood, landslide, earthquake}.
+  - Every item keeps its source, licence, retrieval date, raw value, confidence and scope, for review only.
+  - The old DEM-derived relief/slope/low-lying items are dropped: they repeat Terrain Statistics.
+- **Darjeeling:**
+  - Observatory Hill · 2,188 m · 0.8 km;
+  - the river line is "Nearest river: Bātāsi Jhora" (Wikidata has no river length near the tile, so "main" can't be
+    claimed);
+  - Wikidata has no glacier near any library tile.
+- **ThinkHazard misses fixed: 0 / 31, was 11 / 31.**
+  - Each district is found by **point-in-polygon on ThinkHazard's own admin areas**
+    (`report/<code>/neighbours.geojson?bbox=` with a ~1 m box at the tile centre).
+  - A centre in water (Gulf of Kutch) falls back to the division covering most of the tile, with invalid polygons
+    repaired by `buffer(0)`.
+  - Kutch → Kachchh, the Sikkim tiles → South/North/West Sikkim, Hyderabad, the new AP and Telangana districts: all
+    resolved.
+- **Line counts:** wildfire 76, flood/earthquake district 76, USGS count 76, landslide district 75, tornado 45,
+  cyclone 44, tsunami 35, coastal flood 35, cyclone history 34, RP100 31, WB class 31, surface water 21, river 20,
+  USGS largest 20, epicentre maps 20, peak 17.
+- **Bake:** `scripts/bake_static_library.py` `curated_info()` bakes only `curated` items, for both groups, reduced to
+  `{kind, label, text[, data]}`. Sources and licences never enter the build. `backend/tests/test_static_facts.py`
+  covers it.
+- **Verified:**
+  - Darjeeling fully curated, plus Hisar's scenario items, in a temporary copy only: "20 curated items on 2 tiles".
+    In the web build, Darjeeling showed its Facts and all three cards, Hisar showed the empty state, and
+    Almora (nothing curated) had the Facts panel hidden.
+  - **0 `/api/` requests.**
+  - The library was then re-baked from the real drafts: **0 curated items on 0 tiles**. Every draft is still
+    `draft`.

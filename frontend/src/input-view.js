@@ -11,6 +11,7 @@
 // ============================================================
 
 import { LIBRARY_SOURCE, staticLibraryListing } from "./library-source.js";
+import { bboxFromCentre } from "./geo-info.js";
 import { apiUrl } from "./api-base.js";
 import { attachMagnifier } from "./magnifier.js";
 import { footprintKmFromBbox } from "./flat-warning.js";
@@ -518,7 +519,7 @@ export function createInputView(root, { onStart }) {
             routing: sel.routing,
             dem: sel.dem ?? null,
             geo: sel.geo ?? null,
-            staticFacts: sel.staticFacts ?? null,
+            staticInfo: sel.staticInfo ?? null,
             landscape: sel.landscape ?? null,
             // what the backend needs to run relative depth on this exact input (src/depth-result.js)
             inputRef: sel.id ? { source: sel.source, id: sel.id } : null,
@@ -863,9 +864,13 @@ export function createInputView(root, { onStart }) {
             meta,
             routing: item.routing,
             // centre from the tile's own geotransform (scripts/library_catalog.py _geo); none for DFC2019
-            geo: item.geo ? { lat: item.geo.lat, lon: item.geo.lon, origin: "the file's geotransform (tile centre)" } : null,
-            // web build only: the curated facts baked into the static library ([] = none; the Facts panel hides)
-            staticFacts: LIBRARY_SOURCE === "static" ? (item.facts ?? []) : null,
+            geo: item.geo ? {
+                lat: item.geo.lat, lon: item.geo.lon, origin: "the file's geotransform (tile centre)",
+                bbox: item.geo.footprint_km ? bboxFromCentre(item.geo.lat, item.geo.lon, item.geo.footprint_km) : null,
+            } : null,
+            // web build only: the curated Facts + Scenario lines baked into the static library (none curated: the
+            // Facts panel hides); null elsewhere, so the desktop build asks its own backend
+            staticInfo: LIBRARY_SOURCE === "static" ? { facts: item.facts ?? [], scenario: item.scenario ?? {} } : null,
             // for the flat-terrain warning (src/flat-warning.js)
             landscape: {
                 collection: item.collection,
@@ -947,6 +952,7 @@ export function createInputView(root, { onStart }) {
         return {
             lat: Number(((s + n) / 2).toFixed(5)),
             lon: Number(((w + e) / 2).toFixed(5)),
+            bbox: [w, s, e, n].map(v => Number(Number(v).toFixed(5))),
             origin: source === "search" ? "the searched Sentinel-2 scene's area (centre)" : "the file's geotransform (footprint centre)",
         };
     }

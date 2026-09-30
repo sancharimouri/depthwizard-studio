@@ -5077,6 +5077,119 @@ kbd {
     text-decoration-color: rgba(var(--text-rgb), 0.3);
 }
 
+/* Facts v2 (2026-09-30): one short line per fact; the same rows in the Scenario Analysis cards */
+.xp-fact-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    column-gap: 10px;
+    row-gap: 1px;
+    padding: 6px 0;
+    border-top: 1px solid rgba(var(--text-rgb), 0.07);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.xp-fact-row:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+/* a short value sits on the label's line; a long one wraps as a whole onto its own line below */
+.xp-fact-label {
+    color: rgba(var(--text-rgb), 0.58);
+    white-space: nowrap;
+}
+
+.xp-fact-value {
+    margin-left: auto;
+    color: rgb(var(--text-rgb));
+    font-weight: 600;
+    text-align: right;
+}
+
+.xp-facts-more {
+    margin: 10px 0 0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(var(--text-rgb), 0.07);
+    font-size: 10px;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+.xp-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-solid);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.xp-scenario-card {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--text-rgb), 0.1);
+    background: rgba(var(--text-rgb), 0.04);
+    text-transform: none;
+    letter-spacing: normal;
+    text-align: left;
+}
+
+.xp-scenario-card[hidden] {
+    display: none;
+}
+
+.xp-epi {
+    margin: 8px 0 0;
+}
+
+.xp-epi svg {
+    display: block;
+    max-width: 220px;
+    margin: 0 auto;
+}
+
+.xp-epi-ring {
+    fill: none;
+    stroke: rgba(var(--text-rgb), 0.28);
+    stroke-width: 0.8;
+    stroke-dasharray: 3 3;
+}
+
+.xp-epi-label {
+    fill: rgba(var(--text-rgb), 0.45);
+    font-size: 8px;
+    text-anchor: middle;
+}
+
+.xp-epi-dot {
+    fill: rgba(217, 164, 65, 0.75);
+    stroke: rgba(0, 0, 0, 0.45);
+    stroke-width: 0.5;
+}
+
+.xp-epi-dot.is-strong {
+    fill: rgba(224, 96, 63, 0.9);
+}
+
+.xp-epi-tile {
+    fill: none;
+    stroke: var(--accent-solid);
+    stroke-width: 1.6;
+}
+
+.xp-epi figcaption {
+    margin-top: 4px;
+    font-size: 9.5px;
+    color: rgba(var(--text-rgb), 0.5);
+    text-align: center;
+}
+
 .final-demo-right-rail .xp-box[data-box="facts"] .xp-body {
     max-height: 55vh;
     overflow-y: auto;
@@ -5946,7 +6059,7 @@ kbd {
     cursor: default;
 }
 
-/* Scenario: three options; Landslide is a coming-soon placeholder */
+/* Scenario: three options (flood / earthquake / landslide), each with a data card below */
 .danger-zone-buttons {
     flex-wrap: wrap;
 }
@@ -5954,6 +6067,9 @@ kbd {
 .danger-zone-buttons .danger-button {
     flex: 1 1 30%;
     min-width: 0;
+    padding: 10px 4px;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
 }
 
 .danger-button.danger-button-soon {
