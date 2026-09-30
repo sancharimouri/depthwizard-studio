@@ -683,9 +683,9 @@ part, and "v2 final design"). No deploy, no push, no GCP, no API sign-ups.
   - Protected data: SHA-256 identical (1,864 / 1,864).
 - **Layout pass (owner feedback):** no divider lines, one-line footer, and values wider than half the card are left-aligned under their labels. Screenshots are in `docs/screenshots/facts-v2/`.
 - **Decisions waiting on the owner:**
-  1. **Curate:** in `data/library_v2_2026-09-30/facts_drafts.json`, set `status: "curated"` on the items to publish
-     (review `facts_drafts.md`), then run `scripts/bake_static_library.py`. Until then, library tiles in the web
-     build show no Facts panel and empty Scenario cards (the flood simulation still works).
+  1. ~~Curate~~ Done 2026-09-30: the owner approved the design and **all 732 items are curated**. The static
+     library is re-baked (732 items on 76 tiles). The all-draft file is kept as `facts_drafts_all_draft_backup.json`.
+     To un-publish an item, set it back to `draft` and re-run `scripts/bake_static_library.py`.
   2. ~~vhr-a_valley default exaggeration~~ Done 2026-09-30: **×6** (owner's pick; `_input_ratings_2026-09-30c.json`,
      applied to `tile_manifest.json`).
   3. **Rebuild the desktop sidecar** (`desktop/freeze_trial/build_freeze.py`) when the desktop app should get the new

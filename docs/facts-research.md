@@ -628,3 +628,15 @@ Latency per source, **cold, seconds** (Darjeeling / Chennai coast / Jacksonville
   They were taken with Darjeeling and Hisar curated in a temporary copy only. The library was then re-baked from the
   real drafts: 0 curated, and every item is still `draft`.
 - **Tests:** frontend 104 passed; backend 74 passed, 1 skipped.
+
+## v2 approved and curated (2026-09-30)
+
+- **Owner approval:** the owner approved the design.
+- **Footer:** reduced to 7.5 px, because at 8 px the "Scenario Analysis" link was cut at the card edge. The link now
+  ends inside the box, measured in the web build. Updated `docs/screenshots/facts-v2/1_facts_darjeeling.png`.
+- **All 732 items are set to `curated`**, per the owner, in `data/library_v2_2026-09-30/facts_drafts.json`
+  (gitignored, local).
+  - The all-draft state is kept as `facts_drafts_all_draft_backup.json`.
+  - The static library was re-baked: **732 curated items on 76 tiles**, 52.6 MB.
+  - Every library tile in the web build now shows its Facts box and Scenario cards with 0 backend calls. Checked on
+    Darjeeling and on DFC2019 JAX_004_006, which shows its county-level lines.
