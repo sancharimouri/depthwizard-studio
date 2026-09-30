@@ -659,6 +659,43 @@ push, no GCP, no API sign-ups.
   6. `vhr-a_valley` opens at ×10 and looks spiky with subtle: consider a lower `default_exaggeration`.
   7. Still deferred (unchanged): the `/tmp` cap, the DFC2019 git-history cleanup, GCP, and the data/ backup.
 
+### 5z+4. Facts v2 (2026-09-30): LOCAL ONLY, branch `facts-v2-2026-09-30`
+
+Branched from `facts-research-2026-09-30`. Full record: `docs/facts-research.md` (sections "Facts v2", dated per
+part, and "v2 final design"). No deploy, no push, no GCP, no API sign-ups.
+
+- **Done:**
+  - **Facts box:** a crisp one-line design, only non-scenario hazards plus named peak / river / glacier, a link to
+    Scenario Analysis, and an empty state.
+  - **Scenario Analysis:** Flood / Landslide / Earthquake cards with real data. **The fake earthquake slope tint is
+    deleted**, replaced by the district level, USGS M4.5+ within 100 km, and an epicentre inset map.
+  - **Library drafts** re-split into `facts` / `scenario`: 76 tiles, 732 items, **all draft**. ThinkHazard misses went
+    from 11/31 to **0/31** (point-in-polygon).
+  - The bake bakes only curated items for both groups, with 0 backend calls for library tiles.
+  - **Live route** `/api/facts?bbox=|lat&lon`:
+    - a bundled ThinkHazard district grid (+4.3 MB; 2.4 MB compressed);
+    - Wikidata, JRC/WB/GSW COG windows and USGS live;
+    - a 9 s deadline, a bounded cache, and a peak of 137 MiB with 4 concurrent lookups;
+    - Nominatim, Open-Meteo and GDACS removed.
+  - The Docs page "Data sources & credits" section.
+  - vhr-a_valley ×3 / ×5 / ×7 / ×10 screenshots.
+  - The desktop smoke test PASS.
+  - Protected data: SHA-256 identical (1,864 / 1,864).
+- **Decisions waiting on the owner:**
+  1. **Curate:** in `data/library_v2_2026-09-30/facts_drafts.json`, set `status: "curated"` on the items to publish
+     (review `facts_drafts.md`), then run `scripts/bake_static_library.py`. Until then, library tiles in the web
+     build show no Facts panel and empty Scenario cards (the flood simulation still works).
+  2. **vhr-a_valley default exaggeration:** pick from `docs/screenshots/2026-09-30_vhr-a_valley_subtle_x3_x5_x7_x10.png`.
+     It is currently ×10, unchanged.
+  3. **Rebuild the desktop sidecar** (`desktop/freeze_trial/build_freeze.py`) when the desktop app should get the new
+     Facts route. The prebuilt sidecar degrades to "Couldn't look this place up".
+  4. **Deploy** (backend + web) when ready; nothing is pushed. `requirements.txt` needs no change.
+- **Open items:**
+  - The GAUL-derived grid and the World Bank landslide map carry non-commercial or unverified licence terms. No
+    action for SIH; they are noted in the docs and the credits.
+  - GSW's cold read (~5 s) sits at the GDAL timeout, so it is the first line to drop when cold.
+  - Still deferred: the `/tmp` cap, the DFC2019 git-history cleanup, GCP, and the data/ backup.
+
 ## 6. Credentials/access inventory (`.env`)
 
 | Key | Status |

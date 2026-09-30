@@ -547,3 +547,49 @@ Latency per source, **cold, seconds** (Darjeeling / Chennai coast / Jacksonville
   - GAUL 2015 and FABDEM are non-commercial;
   - the World Bank landslide licence text is unverified;
   - these would need review before any commercial use.
+
+## v2 final design (2026-09-30)
+
+| Panel | Shows | Library tile, web build | CDSE scene / georeferenced upload | Non-georeferenced upload + typed lat/lon | Desktop |
+|---|---|---|---|---|---|
+| **Facts** | wildfire; cyclone / tsunami / volcano where ≥ LOW; cyclone-track history and tornadoes (library only); nearest named peak · height · distance; main or nearest river; glacier; the link to Scenario Analysis | baked curated lines, 0 calls. Hidden if nothing is curated; the empty state if only scenario lines are curated | `/api/facts?bbox=`: bundled ThinkHazard grid + Wikidata live | `/api/facts?lat&lon`: the same, as a point | sends its bbox to its own sidecar (same route) |
+| **Scenario · Flood** | JRC RP100 % and depth; GSW %; district river / coastal flood; plus the existing water simulation | baked | live COG windows + grid | point samples + grid | sidecar |
+| **Scenario · Landslide** | WB 1 km class; district level | baked | live COG window + grid | one cell + grid | sidecar |
+| **Scenario · Earthquake** | district level; M4.5+ within 100 km since 1973; the largest within 100 km since 1900; **the epicentre inset map** (no mesh tint) | baked (no map for DFC2019) | USGS live + grid | USGS around the point (a centre marker, no tile outline) | sidecar |
+
+- No sources in the panels; they are credited on the Docs page.
+- One short line per fact.
+- A missing value means no line, never "not available".
+- A failed source means no lines from it.
+- A failed request means "Couldn't look this place up just now." with Retry.
+
+## v2 Part G: verification (2026-09-30)
+
+- **Tests:**
+  - backend 74 passed, 1 skipped (unchanged pre-existing skip); new/changed: `test_facts.py` 13, `test_static_facts.py` 2;
+  - frontend 104 passed (+8 in `geo-info.test.mjs`).
+- **Desktop smoke test** (the sidecar entry `desktop/freeze_trial/dw2_entry.py` from source, with the sidecar's own
+  `dav2_small.onnx` and `library_bundle/`; user cache in the scratchpad):
+  - `--selftest`: HTTP 200, local ONNX depth 518 × 518 (0.22 s), and a GeoTIFF upload 200 with EPSG:32645 read.
+  - Serve mode:
+    - `/health` ok;
+    - `/api/library` has 89 items, 25 local (as before);
+    - `POST /api/generate/library/{sentinel2-darjeeling, vhr-a_valley}` returns 200 with depth from the local ONNX
+      model; assets 200;
+    - **new: `/api/facts?bbox=` through the sidecar** returns 3 Facts lines plus flood 2 / landslide 2 /
+      earthquake 4, with all sources ok (GSW empty in Darjeeling: no water).
+  - Tauri's exact `beforeBuildCommand` (`VITE_API_BASE=http://127.0.0.1:8765 npx vite build`) builds, with **no
+    `library-static/`**.
+  - **Note:** the *prebuilt* sidecar binary in `desktop/tauri/src-tauri/sidecar/` still has the old backend. A new
+    frontend against it gets 422 on `?bbox=`, and the Facts box then shows the plain "Couldn't look this place up"
+    state. Nothing breaks. Rebuilding the sidecar (`build_freeze.py`, which now bundles `backend/facts/data`) brings
+    the new route.
+- **Protected data** (`data/library/`, `data/library_v2_2026-09-29/` except `_qa/`, `data/dfc2019/terrain_packs/`,
+  `data/display_test_2026-09-29/`, `data/sentinel2/`):
+  - SHA-256 before vs after: **identical, 1,864 of 1,864 files**; the file list is unchanged.
+  - New data lives only in the gitignored `data/library_v2_2026-09-30/` (drafts v2 plus the v1 backups).
+- **State left behind:**
+  - the static library is re-baked from the real drafts: 0 curated items, Maxar subtle, 52.5 MB;
+  - `frontend/dist` is the web build;
+  - no servers are running;
+  - the pre-commit hook is active and passed on every commit.
