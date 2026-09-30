@@ -428,3 +428,11 @@ quadrants, the MAE against ground truth is:
     - The in-app surface label for the Maxar packs reads "FABDEM + Method 6 above-ground height (research model;
       under-states canopy above ~18–23 m)". It makes no accuracy claim.
     - `frontend/src/main.js` has no Method 6 claims.
+
+### 7.7 Owner decision (2026-10-01), logged before anything was run
+
+> "The agreement rule was flawed. It compared models on quadrants the full model trained on, so it measured
+> memorisation. Superseded by the pre-registered accuracy test below. The original FAIL stays on record."
+
+**Decision:** a FAIR RE-TEST of the retrained full model on data NEITHER it nor the seed-42 fold models has seen,
+scored against real LiDAR (the GAMUS test set, as in 07 Part B). §7.3's FAIL remains on record as-is.
