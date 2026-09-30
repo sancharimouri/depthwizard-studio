@@ -273,3 +273,36 @@ It is a static matplotlib sketch; nothing is wired.
 - "Hazard level: ThinkHazard! – GFDRR (CC BY 4.0)."
 - If GEM is used: "Seismic hazard: GEM Global Seismic Hazard Map v2023.1, Global Earthquake Model Foundation (CC
   BY-NC-SA 4.0)."
+
+## Part E1: library facts drafted for curation (2026-09-30)
+
+- **Script:** `scripts/draft_library_facts.py`. It reads the manifest and packs read-only, queries the Part C sources,
+  and caps each tile at 6 facts by a fixed priority. The priority runs from the most tile-specific and
+  hazard-relevant facts to the least: relief, slope, low-lying ground, ThinkHazard, WB landslide, JRC flood, USGS,
+  IBTrACS, SPC, GSW, Wikidata, TRI.
+- **Output:** `data/library_v2_2026-09-30/facts_drafts.json` (310 KB) and `facts_drafts.md` (174 KB, for review).
+  Both are **gitignored** (`data/library_v2_*/`), so they stay local.
+- **Coverage:** 76 tiles, **347 facts, all `status: "draft"`**.
+  - Sentinel-2 and Maxar: 6 facts each.
+  - DFC2019: 4 city-level facts each (Jacksonville: ThinkHazard Duval, USGS, IBTrACS, SPC tornadoes; Omaha:
+    ThinkHazard Douglas, USGS, SPC).
+  - Facts by kind: usgs 71, thinkhazard 65, spc 45, relief 31, slope 31, wb_ls 31, jrc_flood 31, ibtracs 26,
+    lowlying 9, gsw 4, tri 3.
+- **What each fact records:**
+  - text, source, source_url, retrieval date and licence/attribution;
+  - `value` (the retrieved or derived number);
+  - `origin` (source / derived), `confidence` and `scope` (tile / district / 100 km radius / city);
+  - `status`.
+- **DFC2019:** only public city centres were used. The private recovered tile locations
+  (`data/dfc2019/terrain_packs/locate/`) were **not** read.
+- **ThinkHazard missed 11 of 31 tiles.** The name lookup is fragile, and every miss is logged per tile. No fact is
+  invented, and those tiles fall through to the next source.
+  - Kakinada, Amalapuram and Nizamabad: GAUL 2015 predates Telangana and the new AP districts.
+  - Kendrapara and Kutch: GAUL spells it "Kachchh".
+  - Hyderabad: ThinkHazard returned a non-JSON reply.
+  - The 5 Maxar Sikkim tiles: the districts were renamed (Namchi, Mangan, Soreng).
+  - This is the case for the bundled level grid in C3 option 4.
+- **Bug found and fixed before commit:** DFC2019 tiles of one city shared one cached fact object, so every tile got
+  the last tile's ids. The facts are now deep-copied per tile, and all 347 ids are unique.
+- **Review note:** in the drafts, Maxar's WB landslide fact usually covers one ~1 km cell ("100% class 3"). That is
+  honest, but it is the scale limit from Part D.
