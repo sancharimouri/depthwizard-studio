@@ -518,6 +518,7 @@ export function createInputView(root, { onStart }) {
             routing: sel.routing,
             dem: sel.dem ?? null,
             geo: sel.geo ?? null,
+            staticFacts: sel.staticFacts ?? null,
             landscape: sel.landscape ?? null,
             // what the backend needs to run relative depth on this exact input (src/depth-result.js)
             inputRef: sel.id ? { source: sel.source, id: sel.id } : null,
@@ -863,6 +864,8 @@ export function createInputView(root, { onStart }) {
             routing: item.routing,
             // centre from the tile's own geotransform (scripts/library_catalog.py _geo); none for DFC2019
             geo: item.geo ? { lat: item.geo.lat, lon: item.geo.lon, origin: "the file's geotransform (tile centre)" } : null,
+            // web build only: the curated facts baked into the static library ([] = none; the Facts panel hides)
+            staticFacts: LIBRARY_SOURCE === "static" ? (item.facts ?? []) : null,
             // for the flat-terrain warning (src/flat-warning.js)
             landscape: {
                 collection: item.collection,
