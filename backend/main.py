@@ -13,8 +13,9 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.api.depth_routes import router as depth_router
 from backend.api.facts_routes import router as facts_router
@@ -22,6 +23,7 @@ from backend.api.generation_routes import router as generation_router
 from backend.api.input_routes import router as input_router
 from backend.api.library_routes import router as library_router
 from backend.api.routes import router
+from backend.storage.library_store import PrivateLibraryDisabled
 
 # DW2_NO_DOTENV=1 (the desktop app): python-dotenv searches upward from this file's
 # location, so a packaged app would pick up any .env in a folder above its install path.
@@ -58,6 +60,12 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Retry-After"],  # read by the frontend's api() on 429s
 )
+
+@app.exception_handler(PrivateLibraryDisabled)
+async def _private_library_disabled(_request: Request, exc: PrivateLibraryDisabled) -> JSONResponse:
+    # DW2_PRIVATE_LIBRARY=off (Cloud Run): /api/library*, generate/library and depth/library answer 404, never 500
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
 
 app.include_router(router)
 app.include_router(library_router)

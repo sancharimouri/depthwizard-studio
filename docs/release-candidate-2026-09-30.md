@@ -292,3 +292,36 @@ once in section 0. It covers:
   - `src/routes.js` keeps both.
 - **Baseline run 2026-10-01: ALL PASS, exit 0.** `/releases/latest` → `.../releases/tag/v1.0.2`.
 - It must run before any deploy, push, release or merge.
+
+## Part 1 (2026-10-01): the private DFC2019 library is off on Cloud Run
+
+- **Flag:** `DW2_PRIVATE_LIBRARY=off`, set **only in `docker/Dockerfile`**. The desktop sidecar never sets it: the
+  default is on, and its bundle mode is unchanged.
+- **Chokepoint:** `library_store._hub_file()` is the single function that downloads from the private HF dataset:
+  - the remote catalog manifest behind `/api/library`;
+  - DFC2019 thumbnails and previews;
+  - the private DEM packs;
+  - on-demand tiles.
+
+  With the flag off it raises `PrivateLibraryDisabled` before `huggingface_hub` is imported or called.
+- **Responses:** `catalog.load()` and `_image()` let that exception through instead of turning it into a 503.
+  `main.py` maps it to **404** "The tile library is served statically by the web app…".
+- **Effect on Cloud Run:** every `/api/library*` route and `POST /api/generate/library/*` answers 404. The web build's
+  library is static (`library-static/`, 0 backend calls, verified in facts-v2), so no user-facing path changes.
+  Uploads, CDSE and Facts are unaffected.
+- **Tests:** `backend/tests/test_private_library_off.py`, 3 tests:
+  - `_hub_file`, `private_file` and `catalog.load` all refuse, with `hf_hub_download` spied and **never called**, and
+    the `HF_HOME` folder never created;
+  - the library routes answer 404, not 5xx;
+  - the default is on for the desktop.
+
+  Suite: backend 87 passed, 1 skipped.
+- **Confirmed in the real container** (`dw2-backend:rc2-amd64`, amd64): PNG, GeoTIFF and CDSE+facts flows, plus the
+  library routes (all 404). Then `docker diff` against the image:
+  - **no Hugging Face path anywhere**; `/tmp/dw2/hf` and `~/.cache/huggingface` were never created;
+  - the app wrote only `/tmp/dw2/gen` and `/tmp/dw2/up` (both under the /tmp cap), plus an empty `/tmp/gradio`
+    (4 KB, `gradio_client`);
+  - the other two entries exist from start-up, before any request, and are local test artefacts that don't exist on
+    Cloud Run: `/home/app/.cache/rosetta` (Colima's Rosetta amd64 emulation) and `/home/app/.config/earthengine` (the
+    bench's read-only mount of local EE credentials).
+- The HANDOFF open item "HF_HOME not capped" is resolved.

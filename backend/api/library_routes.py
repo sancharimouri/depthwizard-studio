@@ -55,6 +55,8 @@ def _image(item: dict, kind: str):
             return RedirectResponse(library_store.release_url(names[kind]), status_code=307)
         try:
             path = library_store.private_file(item, kind)
+        except library_store.PrivateLibraryDisabled:
+            raise
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(status_code=503, detail=f"Private library image unavailable ({type(exc).__name__}).") from exc
         return FileResponse(path, media_type="image/jpeg")

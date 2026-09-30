@@ -57,7 +57,20 @@ def release_url(name: str) -> str:
     return f"https://github.com/{GH_REPO}/releases/download/{GH_TAG}/{name}"
 
 
+class PrivateLibraryDisabled(PermissionError):
+    """DW2_PRIVATE_LIBRARY=off (the Cloud Run image): the private HF dataset is never read, so nothing is ever written
+    to the HF cache. The web app's library is static (frontend/public/library-static) and never calls these routes."""
+
+
+def private_library_enabled() -> bool:
+    return os.environ.get("DW2_PRIVATE_LIBRARY", "on").strip().lower() not in ("off", "0", "false", "no")
+
+
 def _hub_file(path: str, force: bool = False) -> Path:
+    # the ONE place the private dataset is downloaded (manifest, DFC2019 images, packs, on-demand tiles)
+    if not private_library_enabled():
+        raise PrivateLibraryDisabled("The tile library is served statically by the web app; this backend does not "
+                                     "serve the private library.")
     from huggingface_hub import hf_hub_download
     return Path(hf_hub_download(repo_id=HF_DATASET, filename=path, repo_type="dataset",
                                 token=hf_token(), force_download=force))
