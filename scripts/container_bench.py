@@ -5,8 +5,10 @@
           never a remote one), unpacked size (du inside the container), per-layer sizes (docker history),
           and the top 25 installed Python distributions by size
   start   IMAGE [--runs 5]                container start -> first 200 from /health (median), idle RSS
-  flows   IMAGE [--flows png,geotiff,cdse] one fresh container per flow; after it: peak RSS of the server
-          process (VmHWM), cgroup memory.peak / memory.current, /tmp usage; outputs saved for parity
+  flows   IMAGE [--flows png,geotiff,cdse,cdse_facts] one fresh container per flow; after it: peak RSS of the
+          server process (VmHWM), cgroup memory.peak / memory.current, /tmp usage; outputs saved for parity.
+          cdse_facts = the CDSE flow plus the live Facts + Scenario lookup for the scene's bbox (/api/facts)
+  concurrent IMAGE                        png + geotiff + cdse_facts at once in ONE container, then its peaks
   trace   IMAGE                           runs all flows in one container under an import tracer and saves the
           modules actually loaded (Part 1 import audit)
 
@@ -182,7 +184,7 @@ def flow(kind: str, client: httpx.Client, inputs: dict, dest: Path) -> dict:
         up = client.post("/api/input/upload", files={"file": (p.name, p.read_bytes(), "image/png" if kind == "png" else "image/tiff")})
         up.raise_for_status()
         iid = up.json()["id"]
-    else:
+    else:  # cdse / cdse_facts
         s = client.post("/api/cdse/search", json={"lat": 30.21, "lon": 74.95, "aoi_km": 10, "date_from": "2025-11-01",
                                                   "date_to": "2025-12-31", "max_cloud": 10})
         s.raise_for_status()
@@ -191,7 +193,7 @@ def flow(kind: str, client: httpx.Client, inputs: dict, dest: Path) -> dict:
         up = client.post("/api/input/scene", json={"id": sc["id"], "date": sc["date"], "cloud": sc["cloud"], "bbox": sj["bbox"]})
         up.raise_for_status()
         iid = up.json()["id"]
-    if kind in ("geotiff", "cdse"):  # what the UI does automatically for a > 2.4 m GeoTIFF and every CDSE scene
+    if kind in ("geotiff", "cdse", "cdse_facts"):  # what the UI does automatically for a > 2.4 m GeoTIFF and every CDSE scene
         f = client.post(f"/api/input/{iid}/fabdem")
         f.raise_for_status()
         dest.mkdir(parents=True, exist_ok=True)
@@ -199,7 +201,16 @@ def flow(kind: str, client: httpx.Client, inputs: dict, dest: Path) -> dict:
     g = client.post(f"/api/generate/input/{iid}")
     g.raise_for_status()
     _generated(client, g.json(), dest)
-    return {"seconds": time.perf_counter() - t, "input_id": iid}
+    out = {"seconds": time.perf_counter() - t, "input_id": iid}
+    if kind == "cdse_facts":  # what the UI asks when the Facts box or a Scenario card opens
+        t2 = time.perf_counter()
+        f = client.get("/api/facts", params={"bbox": ",".join(str(v) for v in sj["bbox"])})
+        f.raise_for_status()
+        fj = f.json()
+        (dest / "facts.json").write_text(json.dumps(fj, indent=1))
+        out.update(facts_seconds=time.perf_counter() - t2, facts_status=fj["status"],
+                   facts_lines=len(fj["facts"]) + sum(len(v) for v in fj["scenario"].values()))
+    return out
 
 
 def cmd_flows(image: str, platform: str | None, kinds: list[str], ee_home: str, label: str) -> dict:
@@ -221,6 +232,33 @@ def cmd_flows(image: str, platform: str | None, kinds: list[str], ee_home: str, 
             (OUT / "runs" / label / f"{kind}.log").write_text(sh("docker", "logs", name, check=False) or "")
             rm(name)
     return res
+
+
+def cmd_concurrent(image: str, platform: str | None, ee_home: str, label: str) -> dict:
+    """png + geotiff + cdse_facts at the same time in one container (Cloud Run concurrency: one instance)."""
+    from concurrent.futures import ThreadPoolExecutor
+    inputs = ensure_inputs()
+    name = f"dw2bench-conc-{uuid.uuid4().hex[:6]}"
+    run_container(image, name, platform, ee_home)
+    try:
+        wait_health()
+        time.sleep(2)
+        idle = mem(name)
+        t = time.perf_counter()
+
+        def one(kind):
+            with httpx.Client(base_url=f"http://127.0.0.1:{PORT}", timeout=300) as c:
+                return kind, flow(kind, c, inputs, OUT / "runs" / label / kind)
+
+        with ThreadPoolExecutor(3) as ex:
+            results = dict(ex.map(one, ["png", "geotiff", "cdse_facts"]))
+        res = {"seconds": time.perf_counter() - t, "idle": idle, "after": mem(name), "flows": results}
+        print(json.dumps(res), flush=True)
+        return res
+    finally:
+        (OUT / "runs" / label).mkdir(parents=True, exist_ok=True)
+        (OUT / "runs" / label / "concurrent.log").write_text(sh("docker", "logs", name, check=False) or "")
+        rm(name)
 
 
 # ----------------------------------------------------------------------------- trace
@@ -263,7 +301,7 @@ def cmd_trace(image: str, platform: str | None, ee_home: str, label: str) -> dic
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("cmd", choices=["size", "start", "flows", "trace"])
+    ap.add_argument("cmd", choices=["size", "start", "flows", "concurrent", "trace"])
     ap.add_argument("image")
     ap.add_argument("--platform")
     ap.add_argument("--runs", type=int, default=5)
@@ -278,6 +316,8 @@ def main() -> None:
         res = cmd_start(a.image, a.platform, a.runs, a.ee_home)
     elif a.cmd == "flows":
         res = cmd_flows(a.image, a.platform, a.flows.split(","), a.ee_home, a.label)
+    elif a.cmd == "concurrent":
+        res = cmd_concurrent(a.image, a.platform, a.ee_home, a.label)
     else:
         res = cmd_trace(a.image, a.platform, a.ee_home, a.label)
     out = OUT / "results" / f"{a.label}_{a.cmd}.json"
