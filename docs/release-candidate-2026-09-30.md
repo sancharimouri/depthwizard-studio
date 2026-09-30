@@ -273,3 +273,22 @@ once in section 0. It covers:
 - **Verdict: READY for a backend-only Cloud Run deploy**, pending the owner's GCP setup (runbook §0–5). There are no
   code blockers. The only unmeasured risks are the real cold start and 4-way concurrency, and both are within margin
   by estimate.
+
+---
+
+# Session 2026-10-01 (same branch; no merge, push, deploy or GCP)
+
+- Owner decisions: no merge or push until cutover day, after Cloud Run is verified; region `asia-south1` and
+  max-instances 3 confirmed; the Earth Engine project to be decided during GCP setup.
+
+## Standing rule: the 5 protected links (2026-10-01)
+
+- **Where:** added as a dated top-level rule to `docs/HANDOFF.md` (§0) and to `CLAUDE.md`, which is local and
+  gitignored.
+- **Check:** `scripts/check_protected_links.sh`:
+  - the 5 URLs return HTTP 200 after redirects, with `/releases/latest` resolving to a release tag;
+  - the live home page serves `id="demo-video"`;
+  - the local web build keeps `id="demo-video"` and routes `page-explore → #/demo`;
+  - `src/routes.js` keeps both.
+- **Baseline run 2026-10-01: ALL PASS, exit 0.** `/releases/latest` → `.../releases/tag/v1.0.2`.
+- It must run before any deploy, push, release or merge.

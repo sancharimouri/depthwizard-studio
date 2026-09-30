@@ -4,6 +4,36 @@ Read this once, act on it. This is the organized reference; `docs/method-audit/s
 and the per-method `docs/method-audit/*/` folders are the chronological logs — go there for
 blow-by-blow detail, come here for "what's the state and what's next."
 
+## 0. STANDING RULE: the 5 protected links (owner decision, 2026-10-01)
+
+These 5 links must **never break**, whatever the change:
+
+1. https://github.com/sancharimouri/depthwizard2-desktop/releases/latest
+2. https://depthwizard-studio.vercel.app/
+3. https://depthwizard-studio.vercel.app/#demo-video
+4. https://github.com/sancharimouri/depthwizard-studio
+5. https://depthwizard-studio.vercel.app/#/demo
+
+**What this forbids, in practice:**
+- **Repos:** never rename, delete, transfer or make private either GitHub repo. A history rewrite or force-push is
+  allowed only if the repo URL is unchanged.
+- **Desktop releases:** every one must be a full, non-draft, non-prerelease release with installers, so
+  `/releases/latest` always resolves.
+- **Vercel:** never rename the project or change its domain.
+- **Frontend changes** (including the coming UI redesign) must keep the element `id="demo-video"` on the home page and
+  the hash route `#/demo`, both working. See `frontend/src/routes.js` and `frontend/tests/routes.test.mjs`.
+- **Backend cutover:** the web app must keep working throughout. Switch `VITE_API_BASE` only after Cloud Run is
+  verified. Shut Render down only after the new setup is confirmed live.
+
+**Enforcement:**
+- `scripts/check_protected_links.sh` checks:
+  - that all 5 URLs return HTTP 200 after redirects, with `/releases/latest` resolving to a release tag;
+  - that the live home page serves `id="demo-video"`;
+  - that the local web build keeps `id="demo-video"` and the `#/demo` route.
+- **Run it before ANY deploy, push, release or merge, and report the result. If a check fails, stop and tell the
+  owner.**
+- **Baseline 2026-10-01: ALL PASS.** `/releases/latest` → `v1.0.2`.
+
 ## 1. Project overview
 
 Depth Wizard turns satellite RGB into 3D terrain visualization for SIH26175. There are
