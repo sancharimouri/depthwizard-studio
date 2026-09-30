@@ -616,13 +616,48 @@ Records: `docs/container-measurements.md` (BEFORE / AFTER, dated per part) and `
   - fix the CDSE bug separately;
   - report-only on the DFC2019 paths already in git.
 - **§6 open items / decisions waiting on the owner:**
-  - Choose the Maxar DISPLAY preset ("medium" is a placeholder in the static library).
+  - ~~Choose the Maxar DISPLAY preset~~ Done 2026-09-30: subtle (§5z+3).
   - The cleanup of the 3,691 `dfc2019` paths in public git history: all on origin/main, including 47,500 anchor pixel
     samples. It waits for the backup repo.
   - Measure the real Cloud Run cold start after the first deploy.
   - A `/tmp` cap on long-lived instances.
   - `/api/facts` is still called for georeferenced tiles (the Facts panel; not tile data).
   - The Vercel limits page still lists 100 MB for CLI uploads: re-check it before the first deploy.
+
+### 5z+3. Facts research + Maxar preset (2026-09-30): LOCAL ONLY, branch `facts-research-2026-09-30`
+
+Branched from `slim-container-2026-09-30`. Full record: `docs/facts-research.md` (Parts A–F, dated). No deploy, no
+push, no GCP, no API sign-ups.
+
+- **Done:**
+  - **Maxar preset is SUBTLE.** The static library was re-baked (52.5 MB), and the placeholder flag is cleared. The
+    manifest already said `subtle`, so it was not edited. The Vercel upload is 73.0 MB, leaving **27.0 MB of
+    headroom**.
+  - **Facts diagnosed.** It gives postal-address and point-elevation content, not geography, and a 250 km radius.
+    Landslides and volcanoes were permanently "unavailable". On Render: a 64 s cold call and Open-Meteo 429.
+  - **Sources researched**, with live calls at 3 points, and costed designs (C3).
+  - **Earthquake overlay recommendation:** a hazard card plus USGS epicentres, not a mesh tint. Mock-up in
+    `docs/screenshots/`.
+  - **347 draft facts** for 76 tiles in the gitignored `data/library_v2_2026-09-30/facts_drafts.{json,md}`.
+  - **The curated-facts slot**, built and verified with 0 backend calls.
+  - Protected data: SHA-256 identical, 1,864 / 1,864 files.
+- **Changed behaviour (web build only):** while nothing is curated, **library tiles show no Facts panel.** CDSE scenes
+  and uploads still call `/api/facts`. Desktop is unchanged.
+- **Decisions waiting on the owner:**
+  1. **Curate facts.** In `facts_drafts.json`, set `status: "curated"` (optionally edit `text`), then run
+     `scripts/bake_static_library.py`. Review `facts_drafts.md`.
+  2. **Pick a C3 option** for CDSE scenes and uploads. The recommendation is option 3 plus the bundled ThinkHazard
+     grid (+~9 MB image, $0). Drop Nominatim and Open-Meteo.
+  3. **Licences before any commercial use:**
+     - FABDEM is CC BY-NC-SA, and the DEM-derived facts inherit it;
+     - GEM is NC;
+     - the World Bank landslide licence is unverified;
+     - GDACS has no explicit licence.
+  4. **Keys not obtained, per the rules:** a NASA FIRMS MAP_KEY and a GeoNames username (both free). Needed only if
+     wildfire or GeoNames facts are wanted.
+  5. **Earthquake placeholder:** replace it per Part D, or remove it.
+  6. `vhr-a_valley` opens at ×10 and looks spiky with subtle: consider a lower `default_exaggeration`.
+  7. Still deferred (unchanged): the `/tmp` cap, the DFC2019 git-history cleanup, GCP, and the data/ backup.
 
 ## 6. Credentials/access inventory (`.env`)
 

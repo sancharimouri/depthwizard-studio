@@ -337,3 +337,13 @@ It is a static matplotlib sketch; nothing is wired.
 - **Tests:** frontend 96 passed; backend 64 passed, 1 skipped (+2 new).
 - **Consequence to note:** while nothing is curated, **the web build shows no Facts panel for any library tile.**
   Before, it made the live `/api/facts` call. CDSE scenes and uploads are unchanged and still call `/api/facts`.
+
+## Part F: docs and checksums (2026-09-30)
+
+- **Docs:** this file (Parts A–F) and `docs/HANDOFF.md` §5z+3 (open items and decisions waiting on the owner). The
+  §6 Maxar-preset item is marked done.
+- **Protected data:** `data/library/`, `data/library_v2_2026-09-29/` (except `_qa/`), `data/dfc2019/terrain_packs/`,
+  `data/display_test_2026-09-29/` and `data/sentinel2/`.
+  - SHA-256 before vs after: **identical, 1,864 of 1,864 files**, and the file list is unchanged.
+  - The only new data folder is `data/library_v2_2026-09-30/` (the drafts, gitignored).
+- **Pre-commit hook:** active (`core.hooksPath = scripts/git-hooks`), and it passed on every commit.
