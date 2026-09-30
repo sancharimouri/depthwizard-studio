@@ -24,7 +24,7 @@ USGS = {"radius_km": 100, "count_since_1973": 47, "largest": {"mag": 6.9, "year"
 @pytest.fixture(autouse=True)
 def fake_sources(monkeypatch):
     sources._cache.clear()
-    monkeypatch.setattr(thinkhazard, "lookup", lambda lat, lon: DISTRICT)
+    monkeypatch.setattr(thinkhazard, "lookup", lambda lat, lon, bbox=None: DISTRICT)
     monkeypatch.setattr(sources, "wikidata_features", lambda c, lat, lon: FEATURES)
     monkeypatch.setattr(sources, "usgs", lambda c, lat, lon, bbox=None: USGS)
     monkeypatch.setattr(sources, "jrc_flood", lambda lat, lon, bbox=None: {"pct": 0.0, "max_depth_m": 0.0} if bbox else {"inside": False})
@@ -114,7 +114,7 @@ def test_source_past_the_deadline_is_dropped(monkeypatch):
 
 
 def test_missing_district_bundle_omits_district_lines(monkeypatch):
-    monkeypatch.setattr(thinkhazard, "lookup", lambda lat, lon: None)
+    monkeypatch.setattr(thinkhazard, "lookup", lambda lat, lon, bbox=None: None)
     d = client.get("/api/facts", params={"bbox": BBOX}).json()
     assert d["where"]["district"] is None and d["status"]["thinkhazard"] == "empty"
     assert not {"wildfire", "landslide_district", "earthquake_district"} & set(kinds(d))
@@ -152,3 +152,6 @@ def test_bundled_thinkhazard_lookup_real_file():
     d = th.lookup(27.045, 88.26)
     assert d and d["code"] == 17948 and d["levels"].get("LS") == "H"
     assert th.lookup(0.0, -30.0) is None  # open Atlantic: no division
+    # a coastal tile whose centre is in the sea takes the division covering most of its box (Chennai)
+    assert th.lookup(13.05, 80.28) is None
+    assert th.lookup(13.05, 80.28, [80.23, 13.005, 80.33, 13.095])["name"] == "Chennai"
