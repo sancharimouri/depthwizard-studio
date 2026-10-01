@@ -111,9 +111,38 @@ function rows(lines) {
             + `<span class="xp-fact-value">${valueParts(l.text)}</span></div>`).join("");
 }
 
+// The closing "Flood · Earthquake · Landslide → Scenario Analysis" line is sized to span the box's width
+// exactly (one line). Re-fitted when the box changes width.
+const fitObserved = new WeakSet();
+export function fitFactsMore(root) {
+    const line = root?.querySelector(".xp-facts-more");
+    if (!line) {
+        return;
+    }
+    const fit = () => {
+        const parent = line.parentElement;
+        const cs = parent ? getComputedStyle(parent) : null;
+        const width = parent ? parent.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) : 0;
+        if (!width) {
+            return;
+        }
+        line.style.fontSize = "10px";
+        const natural = line.scrollWidth;
+        if (natural) {
+            line.style.fontSize = `${Math.min(10 * width / natural, 15).toFixed(2)}px`;
+        }
+    };
+    fit();
+    if (root && !fitObserved.has(root) && typeof ResizeObserver !== "undefined") {
+        fitObserved.add(root);
+        new ResizeObserver(() => fitFactsMore(root)).observe(root);
+    }
+}
+
 // Value left-aligned under its label when, on one line, it would be wider than half the row. Needs layout,
 // so it runs on visible content (again whenever a box opens).
 export function fitFactRows(root) {
+    fitFactsMore(root);
     root?.querySelectorAll(".xp-fact-row").forEach(row => {
         const value = row.querySelector(".xp-fact-value");
         if (!value || !row.clientWidth) {

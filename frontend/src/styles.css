@@ -5137,8 +5137,10 @@ kbd {
 
 .xp-facts-more {
     margin: 16px 0 0;
-    font-size: 7.5px;
+    font-size: 7.5px; /* geo-info.js fitFactsMore sizes it to the box width */
     white-space: nowrap;
+    width: max-content;
+    max-width: none;
     color: rgba(var(--text-rgb), 0.5);
 }
 
@@ -6702,9 +6704,7 @@ kbd {
    LOADING / COLD-START MESSAGES (input view)
    Thumbnails show a quiet label until they arrive ("Waking the server…" when
    the backend is cold). The preview shows what it's fetching, plus a
-   keep-this-window-open note, over the stage until the image loads.
-   ============================================================ */
-.iv-card-loading {
+   keep-this-window-open note, .iv-card-loading {
     position: absolute;
     inset: 0;
     display: flex;
@@ -6779,82 +6779,13 @@ kbd {
 }
 
 
-/* ============================================================
-   INPUT PAGE BACKGROUND ICONS (icons/2.svg; motion in src/bg-icons.js)
-   Only while the input view shows. The icons sit BEHIND the two boxes (the
-   boxes are opaque, so an icon drifting under one is hidden there) and may run
-   past the page edge. Sizes follow the page (cqw/cqh). The position/rotation
-   transform is written by JS every frame.
-   ============================================================ */
-.input-bg-icons {
-    /* a more vibrant version of the site green (--neon-rgb 94,152,114): ~40% more
-       saturation, same hue, for the background icons and star dots only (2026-09-29) */
-    --bg-green-rgb: 84, 171, 115;
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    display: none;
-    overflow: hidden;
-    container-type: size;
-    pointer-events: none;
-    color: rgb(var(--bg-green-rgb));
-}
-
-.bgi-stars {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-#page-workbench:has(#input-view:not([hidden])) .input-bg-icons {
-    display: block;
-}
-
 #page-workbench .input-view {
     z-index: 1;
 }
 
-/* opaque (same colour as before over the page background), so icons hide behind them */
+/* opaque panels */
 #page-workbench .iv-pane {
     background: rgb(var(--bg-alt-rgb));
-}
-
-.bgi-defs {
-    position: absolute;
-}
-
-.bgi {
-    position: absolute;
-    display: block;
-    /* --k: per-icon scale set by src/bg-icons.js (1.4 for the very small icons on the left) */
-    width: calc(var(--s) * var(--k, 1));
-    height: calc(var(--s) * var(--k, 1));
-    transform: translate(-50%, -50%);
-    will-change: transform;
-}
-
-.bgi svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    fill: currentColor;
-    overflow: visible;
-}
-
-/* satellite and earth + satellite: 1.7x their earlier size */
-.bgi-big {
-    --s: min(224px, 17cqw, 29cqh);
-    opacity: 0.25;
-}
-
-.bgi-normal {
-    --s: min(70px, 7cqw, 12cqh);
-    opacity: 0.23;
-}
-
-.bgi-small-normal {
-    --s: min(52px, 5cqw, 9cqh);
-    opacity: 0.21;
 }
 
 /* a job whose generation failed (e.g. the inference host was down) */
@@ -7191,19 +7122,9 @@ kbd {
    ~40% more saturated than the site green) becomes an equally vivid orange,
    223, 118, 32 (~40% more saturated than the site orange).
    ============================================================ */
-:root[data-theme="light"] .input-bg-icons {
-    --bg-green-rgb: 223, 118, 32;
-}
-
 :root[data-theme="light"] #page-workbench .input-view {
     --glow-rgb: 223, 118, 32;
 }
-
-/* on the pale background the icons need a little more presence to look as they
-   do on the dark one */
-:root[data-theme="light"] .bgi-big { opacity: 0.28; }
-:root[data-theme="light"] .bgi-normal { opacity: 0.26; }
-:root[data-theme="light"] .bgi-small-normal { opacity: 0.24; }
 
 /* crisper outlines on the main surfaces (roughly double the dark theme's alphas,
    which read faint on beige) */
@@ -7235,4 +7156,1239 @@ kbd {
 :root[data-theme="light"] #page-workbench .iv-pane {
     border-color: rgba(var(--glow-rgb), 0.6);
     box-shadow: 0 0 3px rgba(var(--glow-rgb), 0.38);
+}
+
+
+/* input page + sidebar: all fonts 2 px smaller (generated from the rules above) */
+.iv-tab { font-size: 8px; }
+.iv-hint { font-size: 8px; }
+.iv-chip { font-size: 7px; }
+.iv-card-download { font-size: 8px; }
+.iv-card-title { font-size: 9px; }
+.iv-card-sub { font-size: 7.5px; }
+.iv-card-tags { font-size: 7px; }
+.iv-rules { font-size: 8px; }
+.iv-status { font-size: 8px; }
+.iv-key-toggle { font-size: 8px; }
+.iv-quota { font-size: 7.5px; }
+.iv-link { font-size: 7.5px; }
+.iv-preview-empty { font-size: 8px; }
+.iv-meta { font-size: 7.5px; }
+.iv-routing-label { font-size: 8.5px; }
+.iv-routing-summary, .iv-routing-note { font-size: 8px; }
+.iv-dem-text { font-size: 7.5px; }
+.iv-placeholder-note { font-size: 7px; }
+.sb-tab { font-size: 10px; }
+.sb-page-link { font-size: 11px; }
+.sb-muted { font-size: 9px; }
+.iv-pane > .panel-title { font-size: 14px; }
+.iv-tab { font-size: 8.5px; }
+.iv-hint, .iv-placeholder-note { font-size: 8px; }
+.iv-card-title { font-size: 9.5px; }
+.iv-card-sub { font-size: 8px; }
+.iv-meta { font-size: 8px; }
+.iv-routing-label { font-size: 9px; }
+.iv-rules { font-size: 8px; }
+.iv-card-loading { font-size: 7px; }
+.iv-preview-loading-text { font-size: 8px; }
+.iv-preview-loading-note { font-size: 7px; }
+.iv-filter-count { font-size: 11px; }
+.iv-filter-btn { font-size: 7px; }
+.iv-filter-option { font-size: 8px; }
+.iv-filter-option-count { font-size: 7px; }
+.iv-filter-notice { font-size: 8px; }
+.iv-filter-notice-close { font-size: 13px; }
+.iv-gsd-title { font-size: 8.5px; }
+.iv-gsd-icon { font-size: 7px; }
+.iv-gsd-text { font-size: 8px; }
+.iv-gsd-input { font-size: 9px; }
+.iv-gsd-unit { font-size: 8px; }
+
+
+/* ============================================================
+   INPUT PAGE + SIDEBAR REFRESH, 2026-10-01 (UI/4 style sheet, UI/claude_ui.png)
+   Scope: the Scene Input / Preview screen and the global sidebar only. The page
+   background is deliberately untouched (separate pass); the 3D viewer is unchanged.
+   Fonts: Outfit stands in for Nourd (not a hosted web font), DM Sans for body.
+   Colours are dark theme only; bright theme keeps its palette, just the new layout.
+   ============================================================ */
+
+@font-face {
+    font-family: "Outfit";
+    src: url("/fonts/Outfit-Variable.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "DM Sans";
+    src: url("/fonts/DMSans-Variable.woff2") format("woff2");
+    font-weight: 100 1000;
+    font-display: swap;
+}
+
+.input-view,
+.app-sidebar {
+    --font-head: "Outfit", "Nourd", "DM Sans", system-ui, sans-serif;
+    --font-body: "DM Sans", Inter, system-ui, sans-serif;
+    font-family: var(--font-body);
+}
+
+:root:not([data-theme="light"]) .input-view,
+:root:not([data-theme="light"]) .app-sidebar {
+    /* new accent #88D0AE: lightness 0.64 -> 0.80, same chroma, hue nudged toward mint */
+    --neon-rgb: 136, 208, 174;
+    --accent-rgb: 136, 208, 174;
+    --accent-bright-rgb: 170, 226, 198;
+    --accent-text: #e6ece8;
+    --text-rgb: 230, 236, 232;
+    --panel-fill: #0b0e0d; /* #131715 darkened 40% */
+    --panel-border: rgba(57, 64, 62, 0.43); /* #2a4c42 muted 80% (#39403e), 70% less intense, then +20% twice */
+    --hairline: #262d2a;
+    --muted-line: #353b38;
+}
+
+/* ---------- panels: opaque, grain, top sheen, 1 px muted teal border */
+.iv-pane {
+    gap: 16px;
+    padding: 22px 24px 24px;
+    border-radius: 16px;
+}
+
+:root:not([data-theme="light"]) #page-workbench .iv-pane {
+    border: 1px solid var(--panel-border);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 38%),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.055'/></feComponentTransfer></filter><rect width='256' height='256' filter='url(%23n)'/></svg>"),
+        var(--panel-fill);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022), 0 18px 48px rgba(0, 0, 0, 0.45);
+    backdrop-filter: none;
+}
+
+/* ---------- headers: left-aligned, icon + title + subtitle */
+.iv-pane-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+}
+
+.iv-pane-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--hairline, rgba(var(--text-rgb), 0.12));
+    border-radius: 12px;
+    background: rgba(var(--accent-rgb), 0.06);
+    color: rgb(var(--accent-rgb));
+}
+
+.iv-icon {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.iv-pane-heading {
+    min-width: 0;
+}
+
+.iv-pane-heading .panel-title {
+    margin: 0;
+    font-family: var(--font-head);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-align: left;
+    color: rgb(var(--neon-rgb));
+}
+
+.iv-pane-sub {
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: #93a39b;
+}
+
+/* ---------- tabs: icons, thin dividers */
+.iv-tabs {
+    gap: 0;
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid #252d29;
+}
+
+.iv-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    position: relative;
+    padding: 10px 8px;
+    border-radius: 9px;
+    font-family: var(--font-head);
+    font-size: 11.5px;
+    font-weight: 500;
+    color: rgba(var(--text-rgb), 0.62);
+}
+
+.iv-tab + .iv-tab::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 1px;
+    height: 22px;
+    margin-top: -11px;
+    background: #2b3430;
+}
+
+.iv-tab[aria-selected="true"] + .iv-tab::before {
+    opacity: 0;
+}
+
+.iv-tab[aria-selected="true"] {
+    font-weight: 600;
+    background: #1f2723;
+    color: rgb(var(--text-rgb));
+}
+
+.iv-tab[aria-selected="true"] .iv-icon {
+    color: rgb(var(--accent-rgb));
+}
+
+.iv-tab[aria-selected="true"]::before {
+    opacity: 0;
+}
+
+/* ---------- body copy, chips, dropdown */
+.iv-hint {
+    font-size: 11px;
+    line-height: 1.55;
+    color: #a9b3ae;
+}
+
+.iv-placeholder-note {
+    font-size: 11px;
+    line-height: 18.5px; /* was 26px: the gap between lines (15 px) halved */
+    color: #a9b3ae;
+}
+
+.iv-chip,
+.iv-filter-btn {
+    font-family: var(--font-body);
+    font-size: 10.5px;
+    font-weight: 500;
+    border: 1px solid var(--muted-line, rgba(var(--text-rgb), 0.16));
+    border-radius: 18px;
+}
+
+.iv-filter-btn {
+    border-radius: 9px;
+    font-size: 10.5px;
+}
+
+.iv-chip[aria-pressed="true"],
+.iv-filter-btn.is-active {
+    font-weight: 600;
+    border-color: rgba(var(--accent-rgb), 0.5);
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
+/* ---------- cards: landscape thumbnails (two full rows fit), nothing truncated */
+.iv-card {
+    border: 1px solid var(--hairline, rgba(var(--text-rgb), 0.12));
+    border-radius: 10px;
+}
+
+.iv-card:hover {
+    border-color: rgba(var(--accent-rgb), 0.6);
+    transform: none;
+}
+
+.iv-card[aria-pressed="true"] {
+    border-color: rgb(var(--accent-rgb));
+    box-shadow: 0 0 0 1px rgb(var(--accent-rgb)), 0 0 18px rgba(var(--accent-rgb), 0.22);
+}
+
+.iv-card-thumb {
+    aspect-ratio: 16 / 9;
+}
+
+.iv-card-body {
+    flex: 1;
+    gap: 3px;
+    padding: 10px 12px 10px;
+}
+
+.iv-card-title {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.iv-card-sub {
+    font-size: 9px;
+    line-height: 1.4;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    color: #93a39b;
+}
+
+.iv-card-tags {
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 9px;
+}
+
+.iv-card-details {
+    flex: 1;
+    min-width: 0;
+    color: #a9b3ae;
+}
+
+.iv-card-tier {
+    flex: none;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.iv-card.tier-1 .iv-card-tier {
+    background: #e0a54b;
+    color: #231705;
+}
+
+.iv-card.tier-2 .iv-card-tier {
+    background: #6fd39b;
+    color: #0b2016;
+}
+
+/* ---------- preview: framed stage, viewfinder empty state */
+.iv-preview-stage {
+    border: 1px solid var(--hairline, rgba(var(--text-rgb), 0.12));
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.iv-preview-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 0 24px;
+    text-align: center;
+    color: #7c8782;
+}
+
+.iv-viewfinder {
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    margin-bottom: 14px;
+    color: #7c8782;
+    --b: linear-gradient(currentColor, currentColor);
+    background:
+        var(--b) 0 0 / 18px 1.5px no-repeat, var(--b) 0 0 / 1.5px 18px no-repeat,
+        var(--b) 100% 0 / 18px 1.5px no-repeat, var(--b) 100% 0 / 1.5px 18px no-repeat,
+        var(--b) 0 100% / 18px 1.5px no-repeat, var(--b) 0 100% / 1.5px 18px no-repeat,
+        var(--b) 100% 100% / 18px 1.5px no-repeat, var(--b) 100% 100% / 1.5px 18px no-repeat;
+}
+
+.iv-viewfinder .iv-icon {
+    stroke-width: 1.4;
+}
+
+.iv-empty-title {
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--text-rgb));
+}
+
+.iv-empty-sub {
+    font-size: 11.5px;
+    color: #93a39b;
+}
+
+/* ---------- start button */
+.iv-start {
+    font-family: var(--font-head);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    border-radius: 10px;
+}
+
+:root:not([data-theme="light"]) .iv-start:disabled {
+    opacity: 1;
+    border: 1px solid #2e3532;
+    background: transparent;
+    color: #7c8782;
+    box-shadow: none;
+}
+
+:root:not([data-theme="light"]) .iv-start:not(:disabled) {
+    border: 1px solid rgb(var(--accent-rgb));
+    background: rgba(var(--accent-rgb), 0.12);
+    color: rgb(var(--text-rgb));
+}
+
+:root:not([data-theme="light"]) .iv-start:not(:disabled):hover {
+    background: rgba(var(--accent-rgb), 0.2);
+}
+
+/* ---------- sidebar: same logo size/position as before (D beside the name, name hidden when collapsed) */
+.sb-brand {
+    color: rgb(var(--accent-rgb));
+}
+
+:root:not([data-theme="light"]) .app-sidebar {
+    background: #0f1211;
+    border-right-color: #1e2723;
+}
+
+:root:not([data-theme="light"]) .app-sidebar .sb-head {
+    border-bottom-color: #1e2723;
+}
+
+:root:not([data-theme="light"]) .app-sidebar .sb-icon {
+    color: #6e9c87;
+}
+
+:root:not([data-theme="light"]) .app-sidebar .sb-page-link.active {
+    /* soft diagonal wash, brightest top-left, fading out (UI/new_ui.png), in the accent palette */
+    background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.24), rgba(var(--accent-rgb), 0.05) 75%);
+    box-shadow: none;
+    border-radius: 12px;
+    color: rgb(var(--text-rgb));
+}
+
+:root:not([data-theme="light"]) .app-sidebar .sb-page-link.active .sb-icon {
+    color: rgb(var(--text-rgb));
+}
+
+/* ---------- sidebar spacing and sizes (2026-10-01) */
+/* Depth Wizard logo 20% smaller: D 30 -> 24 px, wordmark 17 -> 13.6 px */
+.sb-logo {
+    width: 26px;
+    height: 26px;
+}
+
+.sb-logo img {
+    width: 24px;
+    height: 24px;
+}
+
+.sb-brand {
+    font-size: 13.6px;
+}
+
+/* the three page links sit 2 mm further apart */
+.app-sidebar:not(.is-collapsed) .sb-pages {
+    gap: calc(4px + 2mm);
+}
+
+/* JOBS tab: 3 mm more between JOBS / SAVED / PINNED / RECENT; headings +1 pt;
+   the job rows under PINNED and RECENT one point below the headings */
+.sb-jobs-head {
+    margin-bottom: calc(10px + 3mm);
+}
+
+.sb-panel-jobs .jobs-section-title {
+    margin-top: calc(4px + 3mm);
+}
+
+.sb-jobs-head .panel-title,
+.sb-panel-jobs .jobs-section-title {
+    font-size: 10px;
+}
+
+.sb-panel-jobs .job-head,
+.sb-panel-jobs .job-saved,
+.sb-panel-jobs .job-save {
+    font-size: 9px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .iv-card,
+    .iv-tab {
+        transition: none;
+    }
+}
+
+
+/* card headings stay on one line (input-view.js shortens them to fit); the detail line never wraps */
+.iv-card-title {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.iv-card-title.is-wrap {
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere; /* a single long word ("Bhitarkanika/Kendrapara") wraps instead of being cut */
+}
+
+.iv-card-details {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* sidebar: page names +1 pt, "No jobs running" +2 pt */
+.sb-page-link {
+    font-size: 12px;
+}
+
+.sb-muted {
+    font-size: 11px;
+}
+
+/* the pane's scrollbar appearing must not change the cards' width (it re-triggered the heading fit) */
+.iv-pane {
+    scrollbar-gutter: stable;
+}
+
+/* Sidebar logo: its own compositor layer + a 2x-sized asset (48 px for a 24 px mark), so it is not
+   re-rasterised/resampled every frame while the sidebar's width animates open and closed */
+.sb-logo img {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.sb-head {
+    contain: paint;
+}
+
+/* Sentinel-2 and Maxar tile headings are 1 pt larger than the DFC2019 ones */
+.iv-card.is-named .iv-card-title {
+    font-size: 11.5px;
+}
+
+/* tile headings half a point smaller (DFC2019 11 -> 10.5; Sentinel-2 / Maxar 12 -> 11.5 above) */
+.iv-card:not(.is-named) .iv-card-title {
+    font-size: 10.5px;
+}
+
+
+/* ============================================================
+   INPUT PAGE BACKGROUND (2026-10-01): plain black with one static picture
+   (public/final_static_bg_ui.webp, a lossless copy of UI/final_static_bg_ui.png, 6968x3612). The picture starts where the collapsed sidebar
+   ends (56 px), is fitted to the window's height only, and whatever runs past the right edge is
+   cropped. Fixed to the window, so opening/closing the sidebar never moves it.
+   ============================================================ */
+.input-bg-static {
+    position: fixed;
+    inset: 0 0 0 56px; /* --sb-rail-w */
+    z-index: 0;
+    display: none;
+    pointer-events: none;
+    background: #101010; /* base under the picture: neutral dark grey (~#171717 after the brightness filter) */
+    filter: brightness(1.4); /* the whole background (black + picture) 40% brighter */
+}
+
+/* the picture is 40% opaque (60% transparent) over the black */
+.input-bg-static::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.4;
+    background: url("/final_static_bg_ui.webp") no-repeat -2mm 0 / auto 100%; /* shifted 2 mm left */
+}
+
+body:has(#page-workbench.active #input-view:not([hidden])) .input-bg-static {
+    display: block;
+}
+
+#page-workbench:has(#input-view:not([hidden])) {
+    background: transparent;
+}
+
+/* upload rules list larger (8 -> 11 px); "Nothing selected yet" and the selected tab label 28% dimmer */
+.iv-rules {
+    font-size: 11px;
+}
+
+:root:not([data-theme="light"]) .iv-empty-title,
+:root:not([data-theme="light"]) .iv-tab[aria-selected="true"] {
+    color: rgb(var(--text-rgb)); /* 0.72 -> 1.0: 40% brighter, solid so the text stays crisp */
+    text-shadow: none;
+}
+
+/* "Use your own Copernicus API key" 3 pt larger (8 -> 11 px) */
+.iv-key-toggle {
+    font-size: 11px;
+}
+
+
+/* Grid, measured from UI/claude_ui.png: 120 px cells in window coordinates, 1 px accent (#88D0AE) lines.
+   Strength 2.2% everywhere, rising to about 6% toward the corners (about 2.2% + 4.7% x |u|x|v|, u and v
+   being the distance from the window centre). Both layers are divided by 1.4 to cancel the layer's
+   brightness filter. The picture itself carries no grid. */
+.input-bg-static::after,
+.ibs-grid {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-size: 120px 120px;
+    background-position: -56px 0; /* the layer starts 56 px in; lines stay on the window's 120 px multiples */
+}
+
+.input-bg-static::after {
+    background-image:
+        linear-gradient(to right, rgba(136, 208, 174, 0.0157) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(136, 208, 174, 0.0157) 1px, transparent 1px);
+}
+
+.ibs-grid {
+    background-image:
+        linear-gradient(to right, rgba(136, 208, 174, 0.0336) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(136, 208, 174, 0.0336) 1px, transparent 1px);
+    -webkit-mask-image: linear-gradient(to right, #000, transparent 50%, #000), linear-gradient(to bottom, #000, transparent 50%, #000);
+    mask-image: linear-gradient(to right, #000, transparent 50%, #000), linear-gradient(to bottom, #000, transparent 50%, #000);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+}
+
+/* Tile info under START GENERATION (details, tier/routing, DEM card): 3 pt larger.
+   The closing "Everything generated is this input's own..." note is left as it was. */
+.iv-meta {
+    font-size: 12px; /* Source / Location / Tile / GSD / Size / CRS / Centre / Acquired: +1 pt more */
+}
+
+.iv-routing-label {
+    font-size: 12px;
+}
+
+.iv-routing-summary,
+.iv-routing-note {
+    font-size: 11px;
+}
+
+.iv-dem .panel-title {
+    font-size: 12px;
+}
+
+.iv-dem-text {
+    font-size: 10.5px;
+}
+
+.iv-dem .iv-hint,
+.iv-dem .iv-status {
+    font-size: 11px;
+}
+
+.iv-dem .iv-choice {
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   INPUT PAGE HUD (2026-10-02; src/hud.js): live coordinate readout (top left), full-height latitude ruler
+   (right edge), WGS84 footnote under the Scene Input box. Dark theme, input view only. IBM Plex Mono per the
+   style sheet: readouts 500 13 px / 400 12 px #8FB3A2, labels #74978A, ruler labels 400 11.5 px #7FA394.
+   ============================================================ */
+@font-face {
+    font-family: "IBM Plex Mono";
+    src: url("/fonts/IBMPlexMono-400.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IBM Plex Mono";
+    src: url("/fonts/IBMPlexMono-500.woff2") format("woff2");
+    font-weight: 500;
+    font-display: swap;
+}
+
+.hud {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    pointer-events: none;
+    font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+#page-workbench:has(#input-view:not([hidden])) .hud {
+    display: block;
+}
+
+.hud-readout {
+    position: absolute;
+    top: calc(20px + 1cm - 0.4mm - 3mm); /* down 1 cm, up 0.4 mm, then up another 3 mm */
+    left: calc(90px - 2mm); /* clear of the sidebar toggle; moved 2 mm left */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hud-lat,
+.hud-lon {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: #8fb3a2;
+    font-variant-numeric: tabular-nums;
+}
+
+.hud-ruler {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 130px;
+    height: 100%;
+}
+
+.hud-foot {
+    position: absolute;
+    top: calc(87.5% + 22px); /* just under the Scene Input box */
+    left: 12.5%;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    color: #8fb3a2; /* as bright as the live readouts */
+}
+
+.hud-lat span,
+.hud-lon span {
+    display: inline-block;
+    white-space: pre;
+}
+
+.hud-foot span {
+    display: inline-block;
+    white-space: pre;
+}
+
+/* "Nothing selected yet": regular weight */
+.iv-empty-title {
+    font-weight: 400;
+}
+
+
+/* ============================================================
+   DESIGN SYSTEM ACROSS ALL PAGES (2026-10-02): the input page's refresh carried to the processing page,
+   the 3D viewer, Demo and Home. Same fonts everywhere (Outfit for titles, labels and buttons, DM Sans for
+   body text). In dark mode the same palette as the input page: mint accent #88D0AE, text #E6ECE8 /
+   #A9B3AE, a neutral grey page ground, near-black panels with the same muted border, sheen and grain,
+   and the same tier badge colours. Bright mode keeps its own palette. Sizes and layouts are untouched.
+   ============================================================ */
+body {
+    --font-head: "Outfit", "Nourd", "DM Sans", system-ui, sans-serif;
+    --font-body: "DM Sans", Inter, system-ui, sans-serif;
+    font-family: var(--font-body);
+}
+
+:root:not([data-theme="light"]) {
+    --bg-rgb: 22, 22, 22;                 /* page ground: the input page's grey base under its picture */
+    --bg-alt-rgb: 15, 18, 17;             /* #0F1211, the sidebar */
+    --bg-strong-rgb: 31, 39, 35;          /* #1F2723 */
+    --bg-strong-hover-rgb: 40, 50, 45;
+    --text-rgb: 230, 236, 232;            /* #E6ECE8 */
+    /* #8BD19A: the input page's #88D0AE made a little warmer, with a tinge of emerald
+       (same lightness, oklch hue 163 -> 150, chroma 0.087 -> 0.105). The input page and the sidebar keep #88D0AE. */
+    --neon-rgb: 139, 209, 154;
+    --accent-bright-rgb: 172, 228, 186;
+    --accent-text: #e6ece8;
+    --border-accent-soft-rgb: 139, 209, 154;
+    --border-accent-soft-hover-rgb: 172, 228, 186;
+    --tier2-rgb: 111, 211, 155;           /* #6FD39B */
+    --tier1-rgb: 224, 165, 75;            /* #E0A54B */
+    --panel-fill: #0b0e0d;
+    --panel-border: rgba(57, 64, 62, 0.43);
+    --hairline: #262d2a;
+    --muted-line: #353b38;
+    --text-secondary: #a9b3ae;
+    --text-subtitle: #93a39b;
+}
+
+/* titles, section labels, tabs and buttons: Outfit */
+.panel-title,
+.xp-head,
+.docs h1,
+.docs h2,
+.docs h3,
+#page-docs h1,
+#page-docs h2,
+#page-docs h3,
+.secondary-button,
+.layer-button,
+.run-reconstruction-button,
+.confirm-button,
+.danger-button,
+.sb-tab,
+.sb-page-link,
+.stat-label,
+.region-name,
+.flat-warning-title,
+.confirm-title {
+    font-family: var(--font-head);
+}
+
+/* ---------- dark mode: the input page's surfaces and states */
+:where(:root:not([data-theme="light"])) .panel-title:not(.input-view *),
+:where(:root:not([data-theme="light"])) .xp-head:not(.input-view *) {
+    color: rgb(var(--neon-rgb));
+    letter-spacing: 0.2em;
+}
+
+:where(:root:not([data-theme="light"])) #page-docs h1:not(.input-view *),
+:where(:root:not([data-theme="light"])) #page-docs h2:not(.input-view *),
+:where(:root:not([data-theme="light"])) #page-docs h3:not(.input-view *) {
+    color: rgb(var(--text-rgb));
+}
+
+:where(:root:not([data-theme="light"])) #page-docs h2:not(.input-view *) {
+    color: rgb(var(--neon-rgb));
+}
+
+:where(:root:not([data-theme="light"])) #page-docs p:not(.input-view *),
+:where(:root:not([data-theme="light"])) #page-docs li:not(.input-view *),
+:where(:root:not([data-theme="light"])) .xp-note:not(.input-view *),
+:where(:root:not([data-theme="light"])) .xp-meta dd:not(.input-view *),
+:where(:root:not([data-theme="light"])) .staged-caption:not(.input-view *) {
+    color: var(--text-secondary);
+}
+
+/* panels: near-black fill, top sheen, fine grain, muted border, soft drop shadow */
+:where(:root:not([data-theme="light"])) .workbench-box:not(.wb-cell):not(.input-view *),
+:where(:root:not([data-theme="light"])) .docs-card:not(.input-view *),
+:where(:root:not([data-theme="light"])) .docs-tier:not(.input-view *),
+:where(:root:not([data-theme="light"])) .upload-panel:not(.input-view *),
+:where(:root:not([data-theme="light"])) .region-card:not(.input-view *) {
+    border-color: var(--panel-border);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 38%),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.055'/></feComponentTransfer></filter><rect width='256' height='256' filter='url(%23n)'/></svg>"),
+        var(--panel-fill);
+}
+
+:where(:root:not([data-theme="light"])) .workbench-box:not(.wb-cell):not(.input-view *),
+:where(:root:not([data-theme="light"])) .docs-card:not(.input-view *),
+:where(:root:not([data-theme="light"])) .docs-tier:not(.input-view *),
+:where(:root:not([data-theme="light"])) .upload-panel:not(.input-view *) {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022), 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+/* the 3D viewer's floating boxes stay see-through over the terrain, in the same near-black */
+:where(:root:not([data-theme="light"])) .xp-box:not(.xp-box-danger):not(.input-view *) {
+    border-color: var(--panel-border);
+    background: rgba(11, 14, 13, 0.82);
+}
+
+:where(:root:not([data-theme="light"])) .final-demo-box:not(.input-view *) {
+    border-color: var(--panel-border);
+}
+
+/* the processing page's black screen gets the muted border too */
+:where(:root:not([data-theme="light"])) .wb-screen:not(.input-view *) {
+    box-shadow: 0 0 0 1px var(--panel-border), 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+/* buttons: muted outline, accent on hover / active; the primary action in accent */
+:where(:root:not([data-theme="light"])) .secondary-button:not(.input-view *) {
+    border-color: var(--muted-line);
+    background: transparent;
+    color: rgb(var(--text-rgb));
+}
+
+:where(:root:not([data-theme="light"])) .secondary-button:hover:not(:disabled):not(.input-view *) {
+    border-color: rgba(var(--neon-rgb), 0.5);
+    background: rgba(var(--neon-rgb), 0.08);
+}
+
+:where(:root:not([data-theme="light"])) .layer-button:not(.input-view *) {
+    border-color: var(--muted-line);
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+:where(:root:not([data-theme="light"])) .layer-button:hover:not(.input-view *) {
+    background: rgba(var(--neon-rgb), 0.06);
+    color: rgb(var(--text-rgb));
+}
+
+:where(:root:not([data-theme="light"])) .layer-button.active:not(.input-view *) {
+    border-color: rgba(var(--neon-rgb), 0.5);
+    background: rgba(var(--neon-rgb), 0.12);
+    color: rgb(var(--text-rgb));
+}
+
+:where(:root:not([data-theme="light"])) .run-reconstruction-button:not(.iv-start):not(.input-view *) {
+    border-color: rgb(var(--neon-rgb));
+    background: rgba(var(--neon-rgb), 0.12);
+    color: rgb(var(--text-rgb));
+    letter-spacing: 0.14em;
+}
+
+:where(:root:not([data-theme="light"])) .run-reconstruction-button:not(.iv-start):hover:not(.input-view *) {
+    background: rgba(var(--neon-rgb), 0.2);
+}
+
+/* the selected region card / stat values use the accent */
+:where(:root:not([data-theme="light"])) .region-card.active:not(.input-view *) {
+    border-color: rgb(var(--neon-rgb));
+    box-shadow: 0 0 0 1px rgb(var(--neon-rgb)), 0 0 18px rgba(var(--neon-rgb), 0.22);
+}
+
+:where(:root:not([data-theme="light"])) .stat-value:not(.input-view *) {
+    color: rgb(var(--text-rgb));
+}
+
+:where(:root:not([data-theme="light"])) .stat-label:not(.input-view *) {
+    color: var(--text-subtitle);
+}
+
+
+/* the input page keeps exactly the surfaces it was signed off with */
+:root:not([data-theme="light"]) .input-view,
+:root:not([data-theme="light"]) .app-sidebar,
+:root:not([data-theme="light"]) .hud {
+    --bg-rgb: 17, 15, 14;
+    --bg-alt-rgb: 15, 14, 13;
+    --bg-strong-rgb: 20, 18, 16;
+    --bg-strong-hover-rgb: 36, 31, 26;
+    --tier2-rgb: 74, 196, 118;
+    --tier1-rgb: 232, 146, 58;
+    --border-accent-soft-rgb: 180, 220, 190;
+    --border-accent-soft-hover-rgb: 190, 230, 200;
+}
+
+
+/* ============================================================
+   BRIGHT MODE PASS (2026-10-02): the input page and its HUD in the bright scheme (beige ground, orange
+   accent, brown text), plus fixes for colours that were hard-coded for dark mode.
+   ============================================================ */
+.hud {
+    --hud-line-rgb: 143, 179, 162;
+    --hud-label-rgb: 127, 163, 148;
+    --hud-mark-rgb: 136, 208, 174;
+}
+
+:root[data-theme="light"] .hud {
+    --hud-line-rgb: 150, 92, 44;
+    --hud-label-rgb: 132, 84, 44;
+    --hud-mark-rgb: 196, 110, 40;
+}
+
+:root[data-theme="light"] .hud-lat,
+:root[data-theme="light"] .hud-lon,
+:root[data-theme="light"] .hud-foot {
+    color: rgb(122, 74, 34);
+}
+
+/* background: the same picture redrawn in the bright scheme (lines in deep orange on beige) */
+:root[data-theme="light"] .input-bg-static {
+    background: #f1e6cf;
+    filter: none;
+}
+
+:root[data-theme="light"] .input-bg-static::before {
+    opacity: 1;
+    background-image: url("/final_static_bg_ui_light.webp");
+}
+
+:root[data-theme="light"] .input-bg-static::after {
+    background-image:
+        linear-gradient(to right, rgba(150, 92, 44, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(150, 92, 44, 0.05) 1px, transparent 1px);
+}
+
+:root[data-theme="light"] .ibs-grid {
+    background-image:
+        linear-gradient(to right, rgba(150, 92, 44, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(150, 92, 44, 0.1) 1px, transparent 1px);
+}
+
+/* panels: cream, a touch lighter than the page, same sheen + grain, warm soft shadow */
+:root[data-theme="light"] #page-workbench .iv-pane {
+    border: 1px solid rgba(150, 92, 44, 0.28);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 38%),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.04'/></feComponentTransfer></filter><rect width='256' height='256' filter='url(%23n)'/></svg>"),
+        #f8efdd;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 18px 44px rgba(90, 60, 30, 0.16);
+}
+
+/* text that was set in dark-mode greys: brown-greys with enough contrast on cream */
+:root[data-theme="light"] .iv-pane-sub,
+:root[data-theme="light"] .iv-card-sub,
+:root[data-theme="light"] .iv-empty-sub {
+    color: rgba(var(--text-rgb), 0.66);
+}
+
+:root[data-theme="light"] .iv-hint,
+:root[data-theme="light"] .iv-placeholder-note,
+:root[data-theme="light"] .iv-card-details,
+:root[data-theme="light"] .iv-filter-count,
+:root[data-theme="light"] .iv-rules,
+:root[data-theme="light"] .iv-meta dt {
+    color: rgba(var(--text-rgb), 0.74);
+}
+
+:root[data-theme="light"] .iv-viewfinder,
+:root[data-theme="light"] .iv-preview-empty {
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+:root[data-theme="light"] .iv-empty-title {
+    color: rgba(var(--text-rgb), 0.85);
+}
+
+/* tabs: hairlines and the selected tab in the bright palette (was a near-black fill) */
+:root[data-theme="light"] .iv-tabs {
+    border-color: rgba(150, 92, 44, 0.24);
+    background: rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme="light"] .iv-tab {
+    color: rgba(var(--text-rgb), 0.66);
+}
+
+:root[data-theme="light"] .iv-tab + .iv-tab::before {
+    background: rgba(150, 92, 44, 0.22);
+}
+
+:root[data-theme="light"] .iv-tab[aria-selected="true"] {
+    background: rgba(var(--accent-rgb), 0.16);
+    color: rgb(var(--text-rgb));
+}
+
+/* the preview's inner stage: a light inset instead of a dark well */
+:root[data-theme="light"] .iv-preview-stage {
+    border-color: rgba(150, 92, 44, 0.2);
+    background: rgba(150, 92, 44, 0.06);
+}
+
+/* cards and chips */
+:root[data-theme="light"] .iv-card {
+    border-color: rgba(150, 92, 44, 0.22);
+    background: rgba(255, 255, 255, 0.55);
+}
+
+:root[data-theme="light"] .iv-card:hover {
+    border-color: rgba(var(--accent-rgb), 0.6);
+}
+
+:root[data-theme="light"] .iv-chip,
+:root[data-theme="light"] .iv-filter-btn {
+    border-color: rgba(150, 92, 44, 0.3);
+    color: rgba(var(--text-rgb), 0.8);
+}
+
+:root[data-theme="light"] .iv-chip[aria-pressed="true"],
+:root[data-theme="light"] .iv-filter-btn.is-active {
+    border-color: rgba(var(--accent-rgb), 0.6);
+    background: rgba(var(--accent-rgb), 0.12);
+    color: rgb(var(--text-rgb));
+}
+
+/* START GENERATION in the bright palette */
+:root[data-theme="light"] .iv-start:disabled {
+    opacity: 1;
+    border: 1px solid rgba(150, 92, 44, 0.25);
+    background: transparent;
+    color: rgba(var(--text-rgb), 0.45);
+    box-shadow: none;
+}
+
+:root[data-theme="light"] .iv-start:not(:disabled) {
+    border: 1px solid rgb(var(--accent-rgb));
+    background: rgba(var(--accent-rgb), 0.14);
+    color: rgb(var(--text-rgb));
+}
+
+/* sidebar: the selected page gets the same soft diagonal wash as in dark mode, in orange (was solid orange) */
+:root[data-theme="light"] .app-sidebar .sb-page-link.active {
+    background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.26), rgba(var(--accent-rgb), 0.06) 75%);
+    box-shadow: none;
+    border-radius: 12px;
+    color: rgb(var(--text-rgb));
+}
+
+:root[data-theme="light"] .app-sidebar .sb-page-link.active .sb-icon {
+    color: rgb(var(--text-rgb));
+}
+
+:root[data-theme="light"] .sb-brand {
+    color: rgb(var(--accent-rgb));
+}
+
+/* ============================================================
+   VERTICAL EXAGGERATION SLIDER (3D viewer, Terrain Statistics), after UI/example.png: a rounded gradient
+   track, a white thumb with an accent ring and halo, the value in a small framed chip, and spaced end labels.
+   Dark mode in the emerald accent, bright mode in the site orange.
+   ============================================================ */
+.xp-slider-row:has(#xp-vex-slider) {
+    --sl-from: rgba(var(--neon-rgb), 0.16);
+    --sl-to: rgb(var(--neon-rgb));
+    --sl-ring: rgb(var(--neon-rgb));
+    --sl-halo: rgba(var(--neon-rgb), 0.22);
+    margin-top: 16px;
+}
+
+.xp-slider-row:has(#xp-vex-slider) .xp-slider-label {
+    align-items: center;
+    font-family: var(--font-head);
+    font-size: 12px;
+    font-weight: 500;
+    color: rgb(var(--text-rgb));
+}
+
+#xp-vex-value {
+    padding: 2px 8px;
+    border: 1px solid rgba(var(--neon-rgb), 0.45);
+    border-radius: 6px;
+    background: rgba(var(--neon-rgb), 0.1);
+    color: rgb(var(--neon-rgb));
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+}
+
+#xp-vex-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 8px;
+    margin: 14px 0 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--sl-from), var(--sl-to));
+    box-shadow: inset 0 0 0 1px rgba(var(--neon-rgb), 0.18);
+    outline: none;
+    cursor: pointer;
+}
+
+#xp-vex-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 3px solid var(--sl-ring);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 5px var(--sl-halo), 0 2px 8px rgba(0, 0, 0, 0.35);
+    cursor: grab;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+#xp-vex-slider:active::-webkit-slider-thumb {
+    cursor: grabbing;
+    transform: scale(1.08);
+    box-shadow: 0 0 0 7px var(--sl-halo), 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+#xp-vex-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 3px solid var(--sl-ring);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 5px var(--sl-halo), 0 2px 8px rgba(0, 0, 0, 0.35);
+    cursor: grab;
+}
+
+#xp-vex-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--sl-from), var(--sl-to));
+}
+
+#xp-vex-slider:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 5px var(--sl-halo), 0 0 0 8px rgba(var(--neon-rgb), 0.45);
+}
+
+.xp-slider-row:has(#xp-vex-slider) .xp-slider-ends {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    color: rgba(var(--text-rgb), 0.5);
+}
+
+:root[data-theme="light"] .xp-slider-row:has(#xp-vex-slider) {
+    --sl-from: rgba(196, 120, 58, 0.18);
+    --sl-to: rgb(196, 120, 58);
+    --sl-ring: rgb(196, 120, 58);
+    --sl-halo: rgba(196, 120, 58, 0.2);
+}
+
+:root[data-theme="light"] #xp-vex-slider::-webkit-slider-thumb {
+    box-shadow: 0 0 0 5px var(--sl-halo), 0 2px 6px rgba(90, 60, 30, 0.25);
+}
+
+/* the sidebar's D in the bright scheme: the same mark, tinted to the site orange */
+:root[data-theme="light"] .sb-logo img {
+    content: url("/brand-d-sidebar-light.png");
+}
+
+/* ============================================================
+   EMPTY PREVIEW STAGE (after UI/new_ui.png): while nothing is selected, the inner box shows new_ui's own
+   texture: a fine square grid (24-32 px cells) with small dots at its intersections, a little
+   fainter in the middle, and the contour lines traced from new_ui.png (public/preview_contours.png)
+   in the corners. Grey-white in dark mode, brown in bright mode.
+   ============================================================ */
+.iv-preview-stage {
+    container-type: inline-size;
+}
+
+.iv-preview-stage:has(.iv-preview-empty:not([hidden]))::before,
+.iv-preview-stage:has(.iv-preview-empty:not([hidden]))::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* contour lines: new_ui's own, as a mask filled with the line colour */
+.iv-preview-stage:has(.iv-preview-empty:not([hidden]))::before {
+    background: rgba(118, 168, 146, 0.2);
+    -webkit-mask: url("/preview_contours.png") no-repeat center / cover, radial-gradient(ellipse at center, transparent 30%, #000 85%);
+    -webkit-mask-composite: source-in;
+    mask: url("/preview_contours.png") no-repeat center / cover, radial-gradient(ellipse at center, transparent 30%, #000 85%);
+    mask-composite: intersect;
+}
+
+/* grid + intersection dots, fading a little toward the middle */
+.iv-preview-stage:has(.iv-preview-empty:not([hidden]))::after {
+    --cell: clamp(24px, calc(100cqw / 15), 32px);
+    background-image:
+        radial-gradient(circle at 0.5px 0.5px, rgba(150, 200, 178, 0.2) 1px, transparent 1.6px),
+        linear-gradient(to right, rgba(130, 180, 160, 0.055) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(130, 180, 160, 0.055) 1px, transparent 1px);
+    background-size: var(--cell) var(--cell);
+    background-position: calc(var(--cell) / 2) calc(var(--cell) / 2);
+    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.25) 35%, #000 90%);
+    mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.25) 35%, #000 90%);
+}
+
+.iv-preview-empty {
+    position: relative;
+    z-index: 1;
+}
+
+:root[data-theme="light"] .iv-preview-stage:has(.iv-preview-empty:not([hidden]))::before {
+    background: rgba(140, 84, 38, 0.2);
+}
+
+:root[data-theme="light"] .iv-preview-stage:has(.iv-preview-empty:not([hidden]))::after {
+    background-image:
+        radial-gradient(circle at 0.5px 0.5px, rgba(140, 84, 38, 0.2) 1px, transparent 1.6px),
+        linear-gradient(to right, rgba(150, 92, 44, 0.055) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(150, 92, 44, 0.055) 1px, transparent 1px);
 }
