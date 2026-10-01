@@ -362,6 +362,13 @@ export function renderFacts(job) {
         if (factsJob !== job || res.key !== queryKey(infoQuery(job))) {
             return;
         }
+        if (res.unsupported) {
+            // the backend can't answer this lookup (an older deployment): the box stays out of the way
+            box.hidden = true;
+            body.innerHTML = "";
+            renderScenarioCard(job, scenarioKey);
+            return;
+        }
         // the whole lookup failed (offline, backend asleep): say so plainly, never an error text, never "no hazards"
         body.innerHTML = res.failed
             ? `<p class="xp-fact-empty">Couldn't look this place up just now.</p>`

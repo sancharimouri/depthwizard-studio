@@ -30,6 +30,11 @@ export function normaliseInfo(raw) {
     return out;
 }
 
+// The facts payload this frontend reads: { facts: [...], scenario: {...} }.
+export function isFactsPayload(data) {
+    return Boolean(data) && (Array.isArray(data.facts) || (data.scenario && typeof data.scenario === "object"));
+}
+
 function isLine(x) {
     return x && typeof x === "object" && typeof x.kind === "string";
 }
@@ -87,13 +92,18 @@ export function loadGeoInfo(job, fetchImpl = globalThis.fetch) {
     const ctrl = typeof AbortController === "function" ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS) : null;
     const promise = fetchImpl(apiUrl(`/api/facts?${params}`), ctrl ? { signal: ctrl.signal } : undefined)
-        .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-        .then(data => ({ key, info: normaliseInfo(data), source: "live", failed: false }))
-        .catch(() => {
+        .then(r => (r.ok ? r.json() : Promise.reject(Object.assign(new Error(`HTTP ${r.status}`), { status: r.status }))))
+        .then(data => (isFactsPayload(data)
+            ? { key, info: normaliseInfo(data), source: "live", failed: false }
+            // a backend that doesn't speak this facts format (an older deployment): no box, no error
+            : { key, info: emptyInfo(), source: "live", failed: false, unsupported: true }))
+        .catch(error => {
             if (job.geoInfo?.key === key) {
                 job.geoInfo = null; // let the next open retry
             }
-            return { key, info: emptyInfo(), source: "live", failed: true };
+            // 4xx = the backend doesn't accept this query (e.g. an older one without bbox support): hide quietly
+            const unsupported = error?.status >= 400 && error?.status < 500;
+            return { key, info: emptyInfo(), source: "live", failed: !unsupported, unsupported };
         })
         .finally(() => timer && clearTimeout(timer));
     job.geoInfo = { key, promise };
