@@ -560,3 +560,30 @@ scored against real LiDAR (the GAMUS test set, as in 07 Part B). §7.3's FAIL re
 
 **Production decision** (owner's plan): the full model `method6_full_dfc2019_hb_seed42.pt` becomes the
 production Method 6, and the plan continues with §7.10–7.11 (ONNX, HF).
+
+### 7.10 ONNX export, parity and model-service numbers (2026-10-01; scratch only, not shipped)
+
+**Export:** `scripts/method6_onnx_export.py` → `build/method6_onnx/method6_full_dfc2019_hb_seed42.onnx`.
+- 99.1 MB, opset 17, input 1 × 3 × 518 × 518, outputs `mu` (AGL m) + `log_var`.
+- `height_scale` 16.427 is baked in; `onnx.checker` passes.
+
+**Parity vs PyTorch (CPU float32)**, 3 tiles × 4 quadrants (JAX_004_006, JAX_505_018, OMA_376_038):
+- **max |diff| 0.00084 m**, mean |diff| 9.6e-6 m;
+- **Pearson 0.99999999999** (≥ 0.9999 required). ✅
+- Data: `build/method6_onnx/parity.json`.
+
+**CPU latency and memory:** amd64 `python:3.11-slim` + onnxruntime 1.30.0, `--cpus 1`, 1 intra-op thread. Under
+Rosetta on Apple Silicon, so **the timings are indicative**. Data: `build/method6_onnx/service_measure.jsonl`.
+
+| Service | Idle after load | Peak, ORT arena on | Peak, arena off | Latency |
+|---|---|---|---|---|
+| Method 6 alone | 214 MiB | 459 MiB | **366 MiB** | **3.2 s** per 518 pass; **12.5–12.8 s per 1024² image** (4 quadrants, the DFC2019 / GAMUS protocol) |
+| DAv2-Small alone (measured earlier) | 214 MiB | 432 MiB | 354 MiB | 3.0 s per pass |
+| **DAv2-Small + Method 6 in one process** | **320–325 MiB** | 668 MiB | **467 MiB** | DAv2 3.3–3.5 s + Method 6 12.5–13.6 s per 1024² image |
+
+**Model-service estimate, now measured:**
+- Both models fit **512 MiB only with the arena disabled, and only just** (467 MiB peak, ~45 MiB spare).
+- **Plan 1 GiB** for margin (request overhead, concurrency 1).
+- Image ≈ 105 MB runtime + 99 MB DAv2-Small + 99 MB Method 6 ≈ **303 MB unpacked**.
+- A 1024² VHR image with the VHR pipeline's overlapping windows (~9 passes) is about 29 s of Method 6 on 1 vCPU
+  (Rosetta).
