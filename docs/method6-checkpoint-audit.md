@@ -505,3 +505,58 @@ scored against real LiDAR (the GAMUS test set, as in 07 Part B). §7.3's FAIL re
   max |diff| 0.0 over the first 896 per-quadrant values (smoke test + the first 56 tiles).
 - The full run was launched in the background (`nohup`, `build/gamus_fulltest/run.log`) at about 2.5 s/tile on MPS
   (queue full, so GPU-bound), an ETA of about 2 h.
+
+### 7.9 Fair re-test result (2026-10-01): **PASS** (applied mechanically)
+
+- **Run:** `build/gamus_fulltest/tiles.jsonl`, giving **2,848 scored / 2,861 tiles** (the same 13 skipped as Part B).
+  **0 tiles share a block with DFC2019.**
+- **Parity:** the recomputed seed-42 ensemble vs. Part B's saved `m6_s42` gives max |diff| **1.3e-5 over 45,520
+  values**, so the protocol is identical. The tiny residual is Part B's Kaggle (CUDA) rows against this MPS run.
+- **Summary:** `build/gamus_fulltest/summary.json`.
+
+**Mean of tiles with tile-bootstrap 95% CIs** (10,000, seed 0), and the pixel-pooled variance ratio:
+
+| Pooled (2,848 tiles) | MAE | RMSE | Pearson | Spearman | VR (pooled) |
+|---|---|---|---|---|---|
+| **full** | **3.156** [3.038, 3.278] | **4.692** [4.539, 4.853] | **0.624** [0.616, 0.631] | 0.574 [0.567, 0.581] | 0.300 |
+| f0 | 3.128 [3.017, 3.243] | 4.597 [4.451, 4.751] | 0.628 | 0.573 | 0.305 |
+| f1 | 3.208 [3.093, 3.328] | 4.716 [4.566, 4.875] | 0.614 | 0.566 | 0.308 |
+| f2 | 3.178 [3.065, 3.294] | 4.649 [4.501, 4.804] | 0.628 | 0.571 | 0.325 |
+| f3 | 3.187 [3.075, 3.304] | 4.677 [4.531, 4.831] | 0.634 | 0.582 | 0.328 |
+| **F** (mean of f0–f3) | **3.175** | **4.660** | **0.626** | 0.573 | 0.317 |
+| ens (reference) | 3.130 [3.017, 3.246] | 4.583 [4.435, 4.739] | 0.638 | 0.583 | 0.305 |
+| oracle (Part B, context) | 3.474 [3.387, 3.564] | **4.426** [4.319, 4.536] | 0.491 | 0.425 | — |
+
+**Rule** (thresholds from F):
+
+| Subset | n | MAE full ≤ 1.05 F | RMSE full ≤ 1.05 F | Pearson full ≥ F − 0.02 | all three |
+|---|---|---|---|---|---|
+| **pooled** | 2,848 | 3.156 ≤ 3.334 ✅ | 4.692 ≤ 4.893 ✅ | 0.624 ≥ 0.606 ✅ | ✅ |
+| DC | 361 | 5.185 ≤ 5.343 ✅ | 7.255 ≤ 7.412 ✅ | 0.610 ≥ 0.598 ✅ | ✅ |
+| NYC | 987 | 4.088 ≤ 4.274 ✅ | 5.683 ≤ 5.869 ✅ | 0.479 ≥ 0.458 ✅ | ✅ |
+| PHL | 1,500 | 2.054 ≤ 2.232 ✅ | 3.423 ≤ 3.645 ✅ | 0.722 ≥ 0.705 ✅ | ✅ |
+
+**Verdict: PASS.** The pooled set meets all three conditions, and 3 of 3 cities do (≥ 2 required).
+
+**Paired per-tile differences, full − F** (information only; Wilcoxon):
+
+| Subset | MAE | RMSE | Pearson | Spearman |
+|---|---|---|---|---|
+| pooled | **−0.019** [−0.028, −0.010], p = 1e-17 (full better on 1,709 / 2,848) | +0.032 [+0.021, +0.043], p = 8e-8 | −0.002 [−0.003, −0.001], p = 2e-12 | +0.001, p = 0.15 |
+| DC | +0.096, p = 5e-15 | +0.196, p = 3e-39 | −0.008, p = 2e-13 | −0.003, p = 9e-5 |
+| NYC | +0.018, p = 0.06 | +0.094, p = 7e-19 | +0.002, p = 0.18 | +0.007, p = 9e-18 |
+| PHL | −0.071, p = 7e-88 | −0.048, p = 6e-22 | −0.004, p = 1e-15 | −0.002, p = 2e-5 |
+
+- **Reading:**
+  - On unseen LiDAR the full model behaves like one more fold model.
+  - Its metrics sit inside the spread of f0–f3: MAE between f0 and f1, RMSE between f3 and f1, Pearson between f1
+    and f0.
+  - The paired differences are tiny (a few cm; Pearson ±0.008), and "significant" only because n is large. The
+    signs are mixed across cities.
+- **§7.3 revisited:** the earlier agreement FAIL reflected memorisation of the DFC2019 evaluation quadrants, not a
+  different function. **The §7.3 FAIL stays on record.**
+- **Out of domain:** all Method 6 variants lose RMSE to the oracle on GAMUS. Method 6's claim stays: **"validated on
+  DFC2019 (US cities, satellite imagery); did not generalize to GAMUS by RMSE"**.
+
+**Production decision** (owner's plan): the full model `method6_full_dfc2019_hb_seed42.pt` becomes the
+production Method 6, and the plan continues with §7.10–7.11 (ONNX, HF).
