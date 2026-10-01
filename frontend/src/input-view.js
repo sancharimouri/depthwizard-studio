@@ -74,13 +74,6 @@ export const LOADING_COPY = {
     thumb: "Loading…",
     thumbCold: "Waking the server…",
     thumbError: "Preview unavailable",
-    preview: {
-        library: "Retrieving the image from the library…",
-        upload: "Loading your image…",
-        search: "Loading the Sentinel-2 scene…",
-    },
-    previewCold: "The server is waking up, so this takes a little longer the first time.",
-    keepOpen: "Don't close this window.",
 };
 
 // The catalog's terrain class; older manifests carry only Sentinel-2's `category`.
@@ -345,31 +338,28 @@ export function createInputView(root, { onStart }) {
         ...Object.values(panels));
 
     // preview pane
-    const previewImg = el("img", { class: "iv-preview-img", alt: "" });
+    const previewImg = el("img", { class: "iv-preview-img", alt: "", hidden: true });
     const previewEmpty = el("div", { class: "iv-preview-empty" },
         el("span", { class: "iv-viewfinder" }, icon("image", 44)),
         el("div", { class: "iv-empty-title", text: "Nothing selected yet" }),
         el("div", { class: "iv-empty-sub", text: "Pick a scene on the left to load its imagery and details." }));
-    const previewLoadingText = el("div", { class: "iv-preview-loading-text" });
-    const previewLoadingNote = el("div", { class: "iv-preview-loading-note" });
-    const previewLoading = el("div", { class: "iv-preview-loading", role: "status", hidden: true },
-        el("span", { class: "scene-search-spinner" }), previewLoadingText, previewLoadingNote);
-    const previewStage = el("div", { class: "iv-preview-stage" }, previewEmpty, previewImg, previewLoading);
-    let previewColdTimer = null;
-    function hidePreviewLoading() {
-        clearTimeout(previewColdTimer);
-        previewLoading.hidden = true;
-    }
-    previewImg.addEventListener("load", hidePreviewLoading);
-    previewImg.addEventListener("error", hidePreviewLoading);
-    function showPreviewLoading(sel) {
-        previewLoadingText.textContent = LOADING_COPY.preview[sel.source] ?? LOADING_COPY.preview.library;
-        previewLoadingNote.textContent = LOADING_COPY.keepOpen;
-        previewLoading.hidden = false;
-        clearTimeout(previewColdTimer);
-        previewColdTimer = setTimeout(() => {
-            previewLoadingNote.textContent = `${LOADING_COPY.previewCold} ${LOADING_COPY.keepOpen}`;
-        }, COLD_AFTER_MS);
+    const previewStage = el("div", { class: "iv-preview-stage" }, previewEmpty, previewImg);
+    // A newly selected image is loaded off-screen; the current frame (the empty state or the previous image)
+    // stays until it has fully loaded, then the new one fades in. No loading text, no flash.
+    let previewWanted = null;
+    function showPreviewWhenLoaded(url) {
+        previewWanted = url;
+        const loader = new Image();
+        loader.onload = () => {
+            if (previewWanted !== url) {
+                return;                                     // another selection came in meanwhile
+            }
+            previewImg.src = url;
+            previewImg.hidden = false;
+            previewEmpty.hidden = true;
+            previewImg.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: "ease-out" });
+        };
+        loader.src = url;
     }
     // same magnifying-glass inspector as the 3D viewer's Image Inspection box
     const previewReadout = el("div", { class: "xp-inspect-readout iv-preview-readout numeric-mono" });
@@ -437,10 +427,10 @@ export function createInputView(root, { onStart }) {
     function renderSelection() {
         const sel = state.selection;
         hud.setAnchor(sel?.geo ?? null, Boolean(sel));
-        previewEmpty.hidden = Boolean(sel);
-        previewImg.hidden = !sel;
         if (!sel) {
-            hidePreviewLoading();
+            previewWanted = null;
+            previewEmpty.hidden = false;
+            previewImg.hidden = true;
         }
         metaList.replaceChildren();
         routingCard.hidden = !sel;
@@ -454,11 +444,8 @@ export function createInputView(root, { onStart }) {
             return;
         }
 
-        if (previewImg.getAttribute("src") !== sel.previewUrl) {
-            previewImg.src = sel.previewUrl;
-            if (!previewImg.complete) {
-                showPreviewLoading(sel);
-            }
+        if (previewImg.getAttribute("src") !== sel.previewUrl && previewWanted !== sel.previewUrl) {
+            showPreviewWhenLoaded(sel.previewUrl);
         }
         previewImg.alt = `${sel.title} preview`;
 
