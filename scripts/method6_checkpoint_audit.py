@@ -50,7 +50,8 @@ SETS = {
 }
 FULL = EXP / "method6_full_checkpoint/method6_full_dfc2019.pt"
 HF_REPO = "sancharimouri/depthwizard2-method6"
-HF_MAP = {"full_dfc2019/method6_full_dfc2019.pt": FULL,
+FULL_HB = EXP / "method6_full_checkpoint/method6_full_dfc2019_hb_seed42.pt"
+HF_MAP = {"archive/method6_full_dfc2019_pre_height_balanced.pt": FULL,
           **{f"height_balanced_seed43/fold{q}.pt": SETS["hb_seed43"] / f"fold{q}.pt" for q in range(4)}}
 
 

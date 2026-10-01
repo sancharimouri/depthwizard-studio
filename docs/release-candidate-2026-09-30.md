@@ -358,3 +358,15 @@ once in section 0. It covers:
   - Protected data: SHA-256 identical, 1,865 of 1,865 files.
   - `scripts/check_protected_links.sh`: ALL PASS. It was run as a status check; no upload happened.
   - Backend tests: 90 passed, 1 skipped.
+
+## Session 2026-10-01 (continued): fair GAMUS re-test and the production Method 6
+
+- **Owner decision logged before running** (`821746d`). Pre-registration committed before inference (`6e76878`).
+- **GAMUS re-test: PASS** (`697fd25`).
+- **ONNX parity:** max 0.00084 m, r 0.99999999999. Service: DAv2 + Method 6 peaks at 467 MiB with the arena off;
+  plan 1 GiB (`b7ccd76`).
+- **HF (private):** the old model archived (`07c9ed8`), the production model uploaded and SHA-256 verified
+  (`d7bea1c`). The protected-links check passed first.
+- **Code references updated;** tests 90 + 104; desktop smoke test PASS.
+- **Details:** `docs/method6-checkpoint-audit.md` §7.7–7.12 and HANDOFF §5z+8.
+- **Protected data:** SHA-256 identical, 1,865 of 1,865 files.

@@ -18,7 +18,7 @@ Bucket layout (keys):
   library/thumbnails/{item_id}.jpg
   library/previews/{item_id}.jpg
   checkpoints/method6/height_balanced_seed43/fold{0..3}.pt
-  checkpoints/method6/full_dfc2019/method6_full_dfc2019.pt
+  checkpoints/method6/full_dfc2019/method6_full_dfc2019_hb_seed42.pt
 
 When R2 is configured, the library is served only from R2 (manifest, images,
 tile links); the local data/library files are just the one-time upload
@@ -47,8 +47,8 @@ MANIFEST_KEY = "library/manifest.json"
 CHECKPOINTS = {
     **{f"checkpoints/method6/height_balanced_seed43/fold{q}.pt":
        f"data/dfc2019/experiments/method6_height_balanced_seed43/fold{q}.pt" for q in range(4)},
-    "checkpoints/method6/full_dfc2019/method6_full_dfc2019.pt":
-        "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019.pt",
+    "checkpoints/method6/full_dfc2019/method6_full_dfc2019_hb_seed42.pt":
+        "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019_hb_seed42.pt",
 }
 
 CACHE_DIR = Path(os.environ.get("DW2_CACHE_DIR", Path.home() / ".cache" / "depthwizard2"))

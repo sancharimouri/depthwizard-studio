@@ -38,7 +38,8 @@ if not CKPT.exists():  # not on this machine: the private HF Hub copy (docs/STOR
     import sys as _sys
     _sys.path.insert(0, str(PROJECT_ROOT))
     from backend.storage import hf_checkpoints as _hc
-    CKPT = _hc.checkpoint("full_dfc2019/method6_full_dfc2019.pt")
+    # historical C4 check of the PRE-height-balanced full model: archived on HF on 2026-10-01
+    CKPT = _hc.checkpoint("archive/method6_full_dfc2019_pre_height_balanced.pt")
 OUT_DIR = PROJECT_ROOT / "data/maxar_sanity/method6_inference"
 
 CROPS = {

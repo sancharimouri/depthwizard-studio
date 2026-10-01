@@ -587,3 +587,70 @@ Rosetta on Apple Silicon, so **the timings are indicative**. Data: `build/method
 - Image ≈ 105 MB runtime + 99 MB DAv2-Small + 99 MB Method 6 ≈ **303 MB unpacked**.
 - A 1024² VHR image with the VHR pipeline's overlapping windows (~9 passes) is about 29 s of Method 6 on 1 vCPU
   (Rosetta).
+
+### 7.11 Private HF repo and code references (2026-10-01)
+
+**Before touching the repo:**
+- `scripts/check_protected_links.sh` gave **ALL PROTECTED LINKS OK**, exit 0 (`/releases/latest` → v1.0.2).
+- The repo `sancharimouri/depthwizard2-method6` was confirmed **PRIVATE**.
+- The training commit is `821792e`: the training scripts are unchanged since then.
+
+**Repo changes, two commits:**
+
+| HF commit | Change | Verification |
+|---|---|---|
+| `07c9ed8` | **server-side copy** of `full_dfc2019/method6_full_dfc2019.pt` → `archive/method6_full_dfc2019_pre_height_balanced.pt` | the archive's LFS SHA-256 `24d69822…94ab7f` equals the original's (and the local file's) |
+| `d7bea1c` | **removed** `full_dfc2019/method6_full_dfc2019.pt`; **uploaded** `full_dfc2019/method6_full_dfc2019_hb_seed42.pt`; **new model card** (`README.md`) | the uploaded LFS SHA-256 **`69a29e10…7d7d63` = the local file** (99,260,030 bytes); still private |
+
+- **Repo state now** (revision `d7bea1c`, private):
+  - `README.md`;
+  - `full_dfc2019/method6_full_dfc2019_hb_seed42.pt` (**production**);
+  - `height_balanced_seed43/fold0–3.pt`;
+  - `archive/method6_full_dfc2019_pre_height_balanced.pt`.
+- **Not uploaded, per the owner:** the seed-42 folds.
+- **The model card** covers:
+  - the recipe and base revision;
+  - seed 42, the training commit and SHA-256;
+  - the CV estimate 1.990 / 3.504 / 0.743 / 0.656;
+  - the GAMUS comparison (PASS, with numbers);
+  - "validated on DFC2019 (US cities, satellite imagery); did not generalize to GAMUS cities by RMSE";
+  - the archive note and the DFC2019 non-redistribution note.
+
+**Code references to the old filename** (no reference to the old HF path is left; `grep` verified):
+- `backend/storage/hf_checkpoints.py`: `FILES` gains the production model plus the archive path; a new constant is
+  `FULL_MODEL`.
+- `backend/storage/r2.py` (dormant): the checkpoint key and local path point to the production model.
+- `scripts/vhr_dsm_pipeline.py`: the full-data *cross-check* now loads the production model (fold-style checkpoint,
+  strict load; `load_models()` verified).
+  - The pack AGL is still the seed-43 fold ensemble.
+  - Packs built before today used the archived model only for the side output `agl_fullckpt.tif`.
+- `scripts/method6_vhr_sanity_check.py`: the historical C4 check of the old model now resolves its HF fallback to the
+  **archive** path. The local path is unchanged.
+- `scripts/method6_checkpoint_audit.py`: `HF_MAP` maps the archive path ↔ the old local file; `FULL_HB` is added.
+- `scripts/hf_upload_checkpoints.py`: the model card text matches the uploaded README. Re-running it uploads the
+  production model + the archive, not the old path.
+- `scripts/train_method6_full_dfc2019.py` (legacy): still names its *local* output `method6_full_dfc2019.pt`, and now
+  refuses to overwrite it.
+
+**Checks:**
+- Backend tests: 90 passed, 1 skipped. Frontend: 104 passed.
+- **Desktop smoke test PASS:**
+  - self-test 200 (ONNX 518 × 518) and the GeoTIFF reads EPSG:32645;
+  - serve: health ok; library 89 items, 25 local; `generate/library/{darjeeling, a_valley}` 200; `/api/facts` 200;
+  - Tauri build with no `library-static/`.
+
+### 7.12 Production model decision (2026-10-01)
+
+**Production Method 6:** `method6_full_dfc2019_hb_seed42.pt`.
+- Adopted recipe, seed 42, trained on all 50 DFC2019 tiles.
+- On HF (private) as `full_dfc2019/method6_full_dfc2019_hb_seed42.pt`, SHA-256 `69a29e10…`.
+
+**Evidence:**
+- every recipe parameter matches, and it loads exactly;
+- **the pre-registered GAMUS fair re-test PASSES**;
+- ONNX parity max 0.00084 m.
+
+**The earlier agreement FAIL (§7.3) stays on record**, superseded by the owner's decision (§7.7).
+
+**Claim:** "validated on DFC2019 (US cities, satellite imagery); did not generalize to GAMUS by RMSE". The expected
+accuracy is the 3-seed CV result, 1.990 / 3.504 / 0.743 / 0.656.

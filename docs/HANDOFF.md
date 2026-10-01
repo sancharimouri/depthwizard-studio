@@ -691,6 +691,35 @@ push, no GCP, no API sign-ups.
   6. `vhr-a_valley` opens at ×10 and looks spiky with subtle: consider a lower `default_exaggeration`.
   7. Still deferred (unchanged): the `/tmp` cap, the DFC2019 git-history cleanup, GCP, and the data/ backup.
 
+### 5z+8. Method 6 production model (2026-10-01): fair GAMUS re-test PASSED; uploaded (private HF)
+
+- **Owner decision:** the §5z+7 agreement rule was flawed (it measured memorisation). It is superseded by a
+  pre-registered GAMUS accuracy test; the original FAIL stays on record.
+- **Fair re-test:** 2,848 GAMUS test tiles vs LiDAR, the Part B protocol, with exact parity to Part B's saved m6_s42.
+  - Full model **MAE 3.156 / RMSE 4.692 / r 0.624** vs F (mean of the seed-42 folds) **3.175 / 4.660 / 0.626**.
+  - **PASS** pooled and in 3 of 3 cities.
+- **Production Method 6 = `method6_full_dfc2019_hb_seed42.pt`** (SHA-256 `69a29e10…`).
+  - On the private HF repo at `full_dfc2019/`; the old model is archived at
+    `archive/method6_full_dfc2019_pre_height_balanced.pt` (HF revision `d7bea1c`).
+  - Code references are updated; tests and the desktop smoke test pass.
+- **ONNX** (scratch, `build/method6_onnx/`, not shipped): parity max |diff| 0.00084 m, r 0.99999999999.
+- **Model-service readiness (measured, amd64, 1 vCPU, Rosetta timings indicative):**
+
+  | | Idle | Peak (ORT arena off) | Peak (arena on) |
+  |---|---|---|---|
+  | Method 6 alone | 214 MiB | 366 MiB | 459 MiB |
+  | DAv2 + Method 6 | 320 MiB | 467 MiB | 668 MiB |
+
+  Method 6 takes 3.2 s per pass, 12.5–12.8 s per 1024² image (4 quadrants). **Plan a 1 GiB model service** (512
+  MiB fits only with the arena off and ~45 MiB spare). Image ≈ 303 MB unpacked. **Not built or deployed:** it is
+  future work.
+- **Open items:**
+  - **the model service itself** (design, build, deploy): owner decision;
+  - an ONNX export into a shipped location: owner decision;
+  - **UI wording** (`index.html:1246-1247, 1251`): during the redesign;
+  - the Maxar packs: no rebuild needed (they use the seed-43 fold ensemble).
+  - Still open from §5z+5/6: the GCP setup, the cold start, the cutover, and the desktop sidecar rebuild.
+
 ### 5z+7. Method 6 full-model retrain (2026-10-01): FAILED the pre-registered agreement rule; nothing uploaded
 
 - **Retrain:** `--train-on-all` was added to the adopted script (only the data split changes; tested). Seed 42

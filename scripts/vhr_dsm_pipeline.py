@@ -80,11 +80,14 @@ def load_models(device):
                                log_var_min=-8.0, enable_gsd_film=False)
         m.load_state_dict(ck["state_dict"])
         folds.append(m.to(device).eval())
-    ck = torch.load(_checkpoint(ROOT / "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019.pt",
-                                "full_dfc2019/method6_full_dfc2019.pt"),
+    # full-data cross-check: the production full model (adopted recipe, seed 42; 2026-10-01). Packs built before
+    # this date used the archived pre-height-balanced model here; the pack AGL itself is the fold ensemble above.
+    ck = torch.load(_checkpoint(ROOT / "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019_hb_seed42.pt",
+                                "full_dfc2019/method6_full_dfc2019_hb_seed42.pt"),
                     map_location="cpu", weights_only=False)
-    full = TwinHeadDav2(height_scale=ck["height_scale"], **ck["config"])
-    full.load_state_dict(ck["model"])
+    full = hb.TwinHeadDav2GSD(height_scale=ck["height_scale"], init_sigma_m=5.0, log_var_max=7.0,
+                              log_var_min=-8.0, enable_gsd_film=False)
+    full.load_state_dict(ck["state_dict"], strict=True)
     return folds, full.to(device).eval()
 
 
