@@ -25,9 +25,14 @@ REPO_TYPE = "model"
 FILES = {
     **{f"height_balanced_seed43/fold{q}.pt":
        ROOT / f"data/dfc2019/experiments/method6_height_balanced_seed43/fold{q}.pt" for q in range(4)},
-    "full_dfc2019/method6_full_dfc2019.pt":
+    # the production full model (adopted height-balanced recipe, seed 42; docs/method6-checkpoint-audit.md §7)
+    "full_dfc2019/method6_full_dfc2019_hb_seed42.pt":
+        ROOT / "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019_hb_seed42.pt",
+    # superseded pre-height-balanced full model, archived 2026-10-01 (reproducibility only)
+    "archive/method6_full_dfc2019_pre_height_balanced.pt":
         ROOT / "data/dfc2019/experiments/method6_full_checkpoint/method6_full_dfc2019.pt",
 }
+FULL_MODEL = "full_dfc2019/method6_full_dfc2019_hb_seed42.pt"
 
 
 def token() -> str | None:
