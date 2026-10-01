@@ -14,6 +14,7 @@ import { LIBRARY_SOURCE, staticLibraryListing } from "./library-source.js";
 import { bboxFromCentre } from "./geo-info.js";
 import { apiUrl } from "./api-base.js";
 import { attachMagnifier } from "./magnifier.js";
+import { hud } from "./hud.js";
 import { footprintKmFromBbox } from "./flat-warning.js";
 
 const TIER2_MAX_GSD_M = 2.4;
@@ -85,6 +86,48 @@ export const LOADING_COPY = {
 // The catalog's terrain class; older manifests carry only Sentinel-2's `category`.
 export function itemTerrain(item) {
     return item.terrain ?? item.category ?? (item.collection === "dfc2019" ? "urban" : "hilly");
+}
+
+// Tile card text. The heading is the title without its state ("…, Odisha", which moves to the
+// subheading); if that still does not fit one line it also loses any bracketed part
+// ("(Godavari delta)"). The subheading is the
+// full location (+ ", India" for Indian scenes) minus whatever the heading already shows.
+export function titleCandidates(title) {
+    const noState = title.replace(/,\s*[^,()]+$/, "").trim();
+    const noBracket = noState.replace(/\s*\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim();
+    // the state always moves to the subheading; brackets go only if the heading still won't fit
+    return [...new Set([noState, noBracket].filter(Boolean))];
+}
+
+export function cardSubtitle(item, shownTitle) {
+    const base = item.collection === "dfc2019" || /india$/i.test(item.location) ? item.location : `${item.location}, India`;
+    let rest = base.startsWith(shownTitle) ? base.slice(shownTitle.length).replace(/^[\s,;\u2014-]+/, "") : base;
+    if (rest.startsWith("(")) {
+        rest = rest.replace(/^\(([^)]*)\)/, "$1").replace(/^[\s,;]+/, "");
+    }
+    return rest.charAt(0).toUpperCase() + rest.slice(1);
+}
+
+const TERRAIN_SHORT = { agricultural: "Argi", coastal: "Coast" };
+
+export function cardTerrain(item) {
+    const terrain = itemTerrain(item);
+    const short = TERRAIN_SHORT[terrain] ?? terrain;
+    return short.charAt(0).toUpperCase() + short.slice(1);
+}
+
+// Display names for the Maxar VHR crops (the catalog's raw titles are the crop codes, "a forest", "c town"...).
+export const VHR_DISPLAY_TITLES = {
+    "vhr-a_valley": "Sikkim Valley",
+    "vhr-c_town": "Sikkim Town",
+    "vhr-c_terraces": "Sikkim Terraces",
+    "vhr-a_forest": "Sikkim Forest",
+    "vhr-c_river": "Sikkim River",
+    "vhr-b_glacier": "Sikkim Glacier",
+};
+
+export function withDisplayTitles(listing) {
+    return { ...listing, items: listing.items.map(item => (VHR_DISPLAY_TITLES[item.id] ? { ...item, title: VHR_DISPLAY_TITLES[item.id] } : item)) };
 }
 
 export function orderLibraryItems(items) {
@@ -188,6 +231,34 @@ function el(tag, attrs = {}, ...children) {
     return node;
 }
 
+// Small line icons for the pane headers, tabs and the preview's empty state (stroke = currentColor).
+const ICONS = {
+    grid: '<rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 9.2h17M3.5 14.8h17M9.2 3.5v17M14.8 3.5v17"/>',
+    eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
+    image: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="m4 17.5 5-5 3.5 3.5 3-3 4 4"/>',
+    cloud: '<path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.9 9.2 4.7 4.7 0 0 1 17.5 18.5Z"/><path d="M12 15.5V10m0 0-2.2 2.2M12 10l2.2 2.2"/>',
+    search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+};
+
+function icon(name, size = 18) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("width", String(size));
+    svg.setAttribute("height", String(size));
+    svg.setAttribute("aria-hidden", "true");
+    svg.classList.add("iv-icon");
+    svg.innerHTML = ICONS[name];
+    return svg;
+}
+
+function paneHeader(iconName, title, subtitle) {
+    return el("header", { class: "iv-pane-head" },
+        el("span", { class: "iv-pane-icon" }, icon(iconName, 20)),
+        el("div", { class: "iv-pane-heading" },
+            el("div", { class: "panel-title", text: title }),
+            el("div", { class: "iv-pane-sub", text: subtitle })));
+}
+
 async function api(url, options = {}) {
     const response = await fetch(apiUrl(url), options);
     if (!response.ok) {
@@ -221,9 +292,9 @@ export function createInputView(root, { onStart }) {
 
     // ---------- layout
     const tabDefs = [
-        { key: "library", label: "Choose from Library" },
-        { key: "upload", label: "Upload" },
-        { key: "search", label: "Search Online" },
+        { key: "library", label: "Choose from Library", icon: "image" },
+        { key: "upload", label: "Upload", icon: "cloud" },
+        { key: "search", label: "Search Online", icon: "search" },
     ];
 
     const tabBar = el("div", { class: "iv-tabs", role: "tablist", "aria-label": "Input source" });
@@ -237,9 +308,8 @@ export function createInputView(root, { onStart }) {
             role: "tab",
             id: `iv-tab-${def.key}`,
             "aria-controls": `iv-panel-${def.key}`,
-            text: def.label,
             onclick: () => setTab(def.key),
-        });
+        }, icon(def.icon, 16), el("span", { text: def.label }));
         tabButtons[def.key] = button;
         tabBar.append(button);
         panels[def.key] = el("div", {
@@ -267,13 +337,16 @@ export function createInputView(root, { onStart }) {
     });
 
     const inputPane = el("section", { class: "iv-pane iv-input-pane" },
-        el("div", { class: "panel-title", text: "SCENE INPUT" }),
+        paneHeader("grid", "SCENE INPUT", "Choose a scene to generate relative depth and terrain"),
         tabBar,
         ...Object.values(panels));
 
     // preview pane
     const previewImg = el("img", { class: "iv-preview-img", alt: "" });
-    const previewEmpty = el("div", { class: "iv-preview-empty", text: "Nothing selected yet — pick a scene on the left." });
+    const previewEmpty = el("div", { class: "iv-preview-empty" },
+        el("span", { class: "iv-viewfinder" }, icon("image", 44)),
+        el("div", { class: "iv-empty-title", text: "Nothing selected yet" }),
+        el("div", { class: "iv-empty-sub", text: "Pick a scene on the left to load its imagery and details." }));
     const previewLoadingText = el("div", { class: "iv-preview-loading-text" });
     const previewLoadingNote = el("div", { class: "iv-preview-loading-note" });
     const previewLoading = el("div", { class: "iv-preview-loading", role: "status", hidden: true },
@@ -297,7 +370,20 @@ export function createInputView(root, { onStart }) {
     }
     // same magnifying-glass inspector as the 3D viewer's Image Inspection box
     const previewReadout = el("div", { class: "xp-inspect-readout iv-preview-readout numeric-mono" });
-    attachMagnifier({ stage: previewStage, img: previewImg, readout: previewReadout, zoom: 3 });
+    // the magnifier also drives the HUD readout/ruler: the coordinates under the pointer, from the tile's footprint
+    function coordAt(u, v) {
+        const bbox = state.selection?.geo?.bbox;
+        if (!bbox) {
+            return null;
+        }
+        const [w, s, e, n] = bbox;
+        return { lat: n - v * (n - s), lon: w + u * (e - w) };
+    }
+    attachMagnifier({
+        stage: previewStage, img: previewImg, readout: previewReadout, zoom: 3,
+        onHover: (u, v) => hud.magnify(coordAt(u, v)),
+        onLeave: () => hud.magnify(null),
+    });
     const metaList = el("dl", { class: "iv-meta" });
     const routingCard = el("div", { class: "iv-routing", hidden: true });
     const demCard = el("div", { class: "iv-dem", hidden: true });
@@ -321,7 +407,7 @@ export function createInputView(root, { onStart }) {
     });
 
     const previewPane = el("section", { class: "iv-pane iv-preview-pane" },
-        el("div", { class: "panel-title", text: "PREVIEW" }),
+        paneHeader("eye", "PREVIEW", "Selected scene will appear here"),
         // image first, then START GENERATION, then everything else
         previewStage, previewReadout, gsdCard, startButton, metaList, routingCard, demCard, startNote);
 
@@ -347,6 +433,7 @@ export function createInputView(root, { onStart }) {
     // ---------- preview / routing rendering
     function renderSelection() {
         const sel = state.selection;
+        hud.setAnchor(sel?.geo ?? null, Boolean(sel));
         previewEmpty.hidden = Boolean(sel);
         previewImg.hidden = !sel;
         if (!sel) {
@@ -568,7 +655,7 @@ export function createInputView(root, { onStart }) {
         el("div", { class: "iv-filter-notice-anchor" }, notice), cardGrid);
 
     panels.library.append(
-        el("p", { class: "iv-hint", text: "Curated scenes with real imagery. Selecting one loads it into the preview." }),
+        el("p", { class: "iv-hint", text: "Curated scenes with real imagery." }),
         chipRow, filterBar, libraryStatus, cardsWrap);
 
     function filterIcon() {
@@ -687,7 +774,8 @@ export function createInputView(root, { onStart }) {
             libraryStatus.replaceChildren(el("span", { class: "scene-search-spinner" }), LOADING_COPY.coldStart);
         }, COLD_AFTER_MS);
         try {
-            state.library = LIBRARY_SOURCE === "static" ? await staticLibraryListing() : await (await api("/api/library")).json();
+            const listing = LIBRARY_SOURCE === "static" ? await staticLibraryListing() : await (await api("/api/library")).json();
+            state.library = withDisplayTitles(listing);
             clearTimeout(coldTimer);
             libraryStatus.hidden = true;
             chipRow.querySelectorAll(".iv-chip").forEach(chip => {
@@ -712,25 +800,86 @@ export function createInputView(root, { onStart }) {
         // order); on-demand desktop tiles stay in place with their download overlay.
         const items = orderLibraryItems(filterLibrary(state.library.items, state.filter, state.terrain));
         cardGrid.replaceChildren(...items.map(item => el("button", {
-            class: `iv-card ${tierClass(item.routing)}${item.available === false ? " is-remote" : ""}`,
+            class: `iv-card ${tierClass(item.routing)}${item.available === false ? " is-remote" : ""}${item.collection === "dfc2019" ? "" : " is-named"}`,
             type: "button",
             "data-id": item.id,
             "aria-pressed": String(state.selection?.id === item.id),
             "aria-label": item.available === false ? `${item.title}: not downloaded yet, download` : null,
             onclick: event => (item.available === false ? downloadLibraryItem(item, event.currentTarget) : selectLibraryItem(item)),
+            onpointerenter: () => hud.hoverTile(item.geo),
+            onpointerleave: () => hud.hoverTile(null),
         },
         thumbMedia(item),
         el("div", { class: "iv-card-body" },
             el("div", { class: "iv-card-title", text: item.title }),
-            el("div", { class: "iv-card-sub", text: item.location }),
+            el("div", { class: "iv-card-sub", text: cardSubtitle(item, item.title) }),
             el("div", { class: "iv-card-tags" },
-                el("span", { class: "numeric-mono", text: formatGsd(item.gsd_m) }),
-                el("span", { text: item.collection === "vhr" ? "Maxar" : item.collection === "dfc2019" ? "DFC2019" : "Sentinel-2" }),
-                el("span", { class: "iv-card-terrain", text: itemTerrain(item) }),
+                el("span", {
+                    class: "iv-card-details",
+                    text: [
+                        formatGsd(item.gsd_m),
+                        item.collection === "vhr" ? "Maxar" : item.collection === "dfc2019" ? "DFC2019" : "Sentinel-2",
+                        cardTerrain(item),
+                    ].join(" \u2022 "),
+                }),
                 el("span", { class: "iv-card-tier", text: `T${item.routing.tier}` })),
         ))));
+        cardItems = items;
+        fitCardText();
         watchForColdThumbs();
     }
+
+    // One-line headings and detail lines: shorten the heading step by step, then (only if the
+    // detail line still overflows) nudge its size down. Needs layout, so it waits for a visible grid.
+    let cardItems = [];
+    function fitCardText() {
+        if (!cardGrid.clientWidth) {
+            return;
+        }
+        cardGrid.querySelectorAll(".iv-card").forEach(card => {
+            const item = cardItems.find(candidate => candidate.id === card.dataset.id);
+            const titleEl = card.querySelector(".iv-card-title");
+            const subEl = card.querySelector(".iv-card-sub");
+            const detailsEl = card.querySelector(".iv-card-details");
+            if (!item || !titleEl) {
+                return;
+            }
+            const candidates = titleCandidates(item.title);
+            let shown = candidates[candidates.length - 1];
+            for (const candidate of candidates) {
+                titleEl.textContent = candidate;
+                if (titleEl.scrollWidth <= titleEl.clientWidth + 0.5) {
+                    shown = candidate;
+                    break;
+                }
+            }
+            titleEl.textContent = shown;
+            titleEl.classList.toggle("is-wrap", titleEl.scrollWidth > titleEl.clientWidth + 0.5);
+            subEl.textContent = cardSubtitle(item, shown);
+            if (detailsEl) {
+                detailsEl.style.fontSize = "";
+                let size = parseFloat(getComputedStyle(detailsEl).fontSize);
+                while (detailsEl.scrollWidth > detailsEl.clientWidth + 0.5 && size > 6) {
+                    size -= 0.5;
+                    detailsEl.style.fontSize = `${size}px`;
+                }
+            }
+        });
+    }
+    // Refit only once the grid's width has settled. The sidebar's 0.2 s open/close animation resizes the
+    // grid every frame, and measuring ~76 cards per frame (forced layout) made it stutter.
+    let fittedWidth = 0;
+    let fitTimer = null;
+    new ResizeObserver(() => {
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(() => {
+            if (cardGrid.clientWidth !== fittedWidth) {
+                fittedWidth = cardGrid.clientWidth;
+                fitCardText();
+            }
+        }, 150);
+    }).observe(cardGrid);
+    document.fonts?.ready.then(fitCardText);
 
     // A card's thumbnail with a message in its place until it arrives. If no
     // thumbnail has arrived COLD_AFTER_MS after the cards first render, the

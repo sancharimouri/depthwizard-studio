@@ -100,3 +100,44 @@ test("readiness: an upload with no geotransform waits for its GSD", () => {
     assert.equal(isReady(upload), false);
     assert.equal(isReady({ ...upload, gsdRequired: false }), true);
 });
+
+test("card heading shortens: state first, then brackets", async () => {
+    const { titleCandidates } = await import("../src/input-view.js");
+    assert.deepEqual(titleCandidates("Kakinada (Godavari delta), AP"), ["Kakinada (Godavari delta)", "Kakinada"]);
+    assert.deepEqual(titleCandidates("Darjeeling, West Bengal"), ["Darjeeling"]);
+    assert.deepEqual(titleCandidates("OMA_269_035"), ["OMA_269_035"]);
+});
+
+test("card subheading drops what the heading shows, unbrackets a leading bracket", async () => {
+    const { cardSubtitle, cardTerrain } = await import("../src/input-view.js");
+    const k = { collection: "sentinel2", location: "Kakinada (Godavari delta), AP" };
+    assert.equal(cardSubtitle(k, "Kakinada (Godavari delta), AP"), "India");
+    assert.equal(cardSubtitle(k, "Kakinada (Godavari delta)"), "AP, India");
+    assert.equal(cardSubtitle(k, "Kakinada"), "Godavari delta, AP, India");
+    assert.equal(cardSubtitle({ collection: "dfc2019", location: "Omaha, Nebraska, USA" }, "OMA_269_035"), "Omaha, Nebraska, USA");
+    assert.equal(cardTerrain({ terrain: "agricultural" }), "Argi");
+    assert.equal(cardTerrain({ terrain: "coastal" }), "Coast");
+    assert.equal(cardTerrain({ terrain: "hilly" }), "Hilly");
+});
+
+test("Maxar crops get display names; others untouched", async () => {
+    const { withDisplayTitles, VHR_DISPLAY_TITLES } = await import("../src/input-view.js");
+    const ids = Object.keys(VHR_DISPLAY_TITLES);
+    assert.equal(ids.length, 6);
+    const out = withDisplayTitles({ items: [...ids.map(id => ({ id, title: "x" })), { id: "sentinel2-kochi", title: "Kochi, Kerala" }] });
+    assert.deepEqual(out.items.slice(0, 6).map(i => i.title), ["Sikkim Valley", "Sikkim Town", "Sikkim Terraces", "Sikkim Forest", "Sikkim River", "Sikkim Glacier"]);
+    assert.equal(out.items[6].title, "Kochi, Kerala");
+});
+
+test("every card text helper handles every catalog item", async () => {
+    const { titleCandidates, cardSubtitle, cardTerrain } = await import("../src/input-view.js");
+    const { readFileSync } = await import("node:fs");
+    const { items } = JSON.parse(readFileSync(new URL("../public/library-static/index.json", import.meta.url), "utf8"));
+    assert.ok(items.length > 50);
+    for (const item of items) {
+        const [first] = titleCandidates(item.title);
+        assert.ok(first, item.id);
+        assert.ok(cardSubtitle(item, first).length > 0, item.id);
+        assert.ok(cardTerrain(item).length > 0, item.id);
+    }
+});

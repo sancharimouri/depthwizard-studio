@@ -9,6 +9,7 @@ import { createViewerHistory } from "./viewer-history.js";
 import { createFlythrough } from "./flythrough.js";
 import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderScenarioCard, renderSource, renderTerrainStats, setInspectionHandlers, setInspectionSelected } from "./side-panels.js";
 import { createSurfacePoints } from "./surface-point.js";
+import { initHud } from "./hud.js";
 import { createInputView } from "./input-view.js";
 import {
     STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobLabel, jobsExport, savedRecord, unsavedCopy,
@@ -20,7 +21,6 @@ import { LIBRARY_SOURCE, staticTileResponse } from "./library-source.js";
 import { PAGE_ROUTES, resolveHash, hashMatchesPage } from "./routes.js";
 import { flatTerrainWarning, footprintKmFromBbox } from "./flat-warning.js";
 import { createDurationMemory, trackWork } from "./progress-sync.js";
-import { startBackgroundIcons } from "./bg-icons.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -570,7 +570,6 @@ function markSceneSelected() {
 
 const inputViewEl = document.getElementById("input-view");
 const workbenchGridEl = document.querySelector("#page-workbench .workbench-grid");
-const workbenchPageEl = document.getElementById("page-workbench");
 const jobsListEl = document.getElementById("jobs-list");
 const jobsCountEl = document.getElementById("jobs-count");
 const generateNewButton = document.getElementById("generate-new-button");
@@ -1749,7 +1748,7 @@ if (import.meta.env.DEV) {
 
 if (inputViewEl) {
     inputView = createInputView(inputViewEl, { onStart: startFromInput });
-    startBackgroundIcons(document.querySelector("#page-workbench .input-bg-icons"), workbenchPageEl);
+    initHud(document.querySelector("#page-workbench .hud"));
 }
 
 renderJobs(); // shows the panel on load if there is saved work to reopen
