@@ -209,6 +209,9 @@ export function quotaLines(q) {
     return lines;
 }
 
+const DEM_UNAVAILABLE = "The elevation service isn't available right now, so terrain can't be fetched for this image. "
+    + "Please try again later, or pick a scene from the library.";
+
 // ---------------------------------------------------------------- DOM helpers
 
 function el(tag, attrs = {}, ...children) {
@@ -576,6 +579,9 @@ export function createInputView(root, { onStart }) {
                         onclick: () => fetchFabdem(sel) }),
                 ),
             );
+        }
+        if (sel.demNote) {
+            children.push(el("div", { class: "iv-status", text: sel.demNote }));
         }
         if (sel.demError) {
             children.push(el("div", { class: "iv-status is-error", text: sel.demError }));
@@ -1163,12 +1169,16 @@ export function createInputView(root, { onStart }) {
     }
 
     async function fetchFabdem(sel) {
-        updateIfCurrent(sel, { demBusy: "Fetching FABDEM (30 m bare-earth) for this footprint from Google Earth Engine…", demError: null });
+        updateIfCurrent(sel, { demBusy: "Fetching FABDEM (30 m bare-earth) for this footprint from Google Earth Engine…", demError: null, demNote: null });
         try {
             const meta = await (await api(`/api/input/${sel.id}/fabdem`, { method: "POST" })).json();
             updateIfCurrent(sel, { demBusy: null, dem: meta.dem, demPreviewUrl: `${apiUrl(meta.dem_preview_url)}?t=${Date.now()}` });
         } catch (error) {
-            updateIfCurrent(sel, { demBusy: null, demError: `FABDEM fetch failed: ${error.message}` });
+            // a server-side outage (5xx, e.g. the elevation service missing on the host) is not the user's doing:
+            // a calm note instead of the raw error text
+            updateIfCurrent(sel, error.status >= 500
+                ? { demBusy: null, demError: null, demNote: DEM_UNAVAILABLE }
+                : { demBusy: null, demError: `FABDEM fetch failed: ${error.message}` });
         }
     }
 
