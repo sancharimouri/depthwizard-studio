@@ -600,9 +600,10 @@ function applyDepthBox(job) {
             alt: `Relative depth of ${job.input.title}`,
             lines: [
                 "Depth Anything V2 (ViT-Small)",
-                d.baked ? "Inference: precomputed" : `Inference: ${d.infer_s}s (${where.replace(/[()]/g, "")})`,
+                // a library tile's depth is baked in: no inference line for it
+                d.baked ? null : `Inference: ${d.infer_s}s (${where.replace(/[()]/g, "")})`,
                 `Generation: ${gen.roundTripS.toFixed(1)}s`,
-            ],
+            ].filter(Boolean),
         });
     } else {
         setBoxView("depth-preview-box", {
