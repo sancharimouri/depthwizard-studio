@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { inundationIndex } from "../src/flood-sim.js";
+import { inundationIndex, floodRange } from "../src/flood-sim.js";
 
 // 4 cells at 100, 110, 120, 200 m (heights normalized to [100, 200])
 const grid = { heights: [0, 0.1, 0.2, 1], elevationMin: 100, elevationMax: 200 };
@@ -24,4 +24,8 @@ test("does not mutate the grid", () => {
     const heights = [0.5, 0, 1];
     inundationIndex({ heights, elevationMin: 0, elevationMax: 10 });
     assert.deepEqual(heights, [0.5, 0, 1]);
+});
+
+test("flood slider range: lowest ground to 2 m above the highest, default half way", () => {
+    assert.deepEqual(floodRange(554.3, 2477.6), { min: 554, max: 2480, half: 1517 });
 });

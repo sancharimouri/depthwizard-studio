@@ -7,7 +7,7 @@ import * as THREE from "three";
 
 import { createTerrain } from "../src/terrain.js";
 import { raycastHeightfield, surfaceAt, gridToLocalXY } from "../src/heightfield.js";
-import { createGeoGrid, measureSegment, measureChain } from "../src/measure-metrics.js";
+import { createGeoGrid, measureSegment, measureChain, slopeAt } from "../src/measure-metrics.js";
 import { createMeasureModel, MODES } from "../src/measure-model.js";
 
 // ---------------------------------------------------------------- helpers
@@ -105,6 +105,17 @@ function syntheticGeo(heightFn) {
         elevationMin: 0, elevationMax: 100,
     });
 }
+
+// ---------------------------------------------------------------- live probe slope
+
+test("slopeAt: flat ground is 0°, a uniform east-facing ramp matches atan(rise/run), edges included", () => {
+    assert.equal(slopeAt(syntheticGeo(() => 0.5), 5, 5), 0);
+    const ramp = syntheticGeo(c => c / 10); // 0 → 100 m across 10 pixels
+    const expected = Math.atan(10 / ramp.pixelSizeX) * 180 / Math.PI;
+    for (const [c, r] of [[5, 5], [0, 3], [10, 10]]) {
+        assert.ok(Math.abs(slopeAt(ramp, c, r) - expected) < 1e-4, `${c},${r}`);
+    }
+});
 
 // ---------------------------------------------------------------- heightfield
 

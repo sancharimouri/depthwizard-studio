@@ -58,21 +58,36 @@ test("export: real job content, marked as a session export", () => {
     assert.equal(exportFilename([job], now), "depthwizard-job1-2026-09-25-10-11-12.json");
 });
 
-import { createSavedStore, savedRecord } from "../src/jobs.js";
+import { createSavedStore, jobIconLabels, jobListLabel, jobPlace, savedRecord, splitListLabel } from "../src/jobs.js";
+
+test("sidebar label: job number + short place; renaming replaces the whole label", () => {
+    assert.equal(jobPlace({ source: "library", title: "Ooty (Nilgiris), Tamil Nadu" }), "Ooty (Nilgiris), TN");
+    assert.equal(jobPlace({ source: "search", geo: { lat: 27.045, lon: -88.26 } }), "27.05°N 88.26°W");
+    assert.equal(jobPlace({ source: "upload" }), "");
+    const store = createJobStore();
+    const j = store.add({ source: "library", title: "Darjeeling, West Bengal" });
+    assert.equal(jobListLabel(j), "Job 1 (Darjeeling, WB)");
+    assert.deepEqual(splitListLabel("Job 1 (Ooty (Nilgiris), TN)"), { head: "Job 1", place: "Ooty (Nilgiris), TN" });
+    assert.deepEqual(splitListLabel("Hills"), { head: "Hills", place: "" });
+    store.rename(j.id, "Job 1 (Darjeeling, WB)");
+    assert.equal(j.name, null);
+    store.rename(j.id, "Job 1");
+    assert.equal(jobListLabel(j), "Job 1");
+});
 
 function memoryStorage() {
     const data = new Map();
     return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, String(v)) };
 }
 
-test("a pinned job shows in the pinned section AND stays in recent; remove re-activates the newest remaining job", () => {
+test("a pinned job shows only in the pinned section; remove re-activates the newest remaining job", () => {
     const store = createJobStore();
     const a = store.add(input("A", 2));
     const b = store.add(input("B", 1));
     const c = store.add(input("C", 1));
     store.togglePin(a.id);
     assert.deepEqual(store.pinnedOrder().map(j => j.input.title), ["A"]);
-    assert.deepEqual(store.panelOrder().map(j => j.input.title), ["C", "B", "A"]);
+    assert.deepEqual(store.panelOrder().map(j => j.input.title), ["C", "B"]);
     assert.equal(store.remove(c.id), b);
     assert.equal(store.remove(b.id), a);
     assert.equal(store.remove(a.id), null);
@@ -106,4 +121,11 @@ test("saved store: broken or blocked storage degrades to an empty list", () => {
     assert.equal(createSavedStore(blocked).put({ uid: "x", savedAt: "" }), false);
     const junk = { getItem: () => "{not json", setItem() {} };
     assert.deepEqual(createSavedStore(junk).list(), []);
+});
+
+test("job icons: J<n> by default, two letters when renamed, first differing letter on a clash", () => {
+    const j = (n, name = null) => ({ n, name });
+    assert.deepEqual(jobIconLabels([j(1), j(2, "Darjeeling hills"), j(3, "Hills"), j(4, "Himalaya"), j(5, "hills"), j(6, "Ooty")]),
+        ["J1", "Da", "H3", "Hm", "H5", "Oo"]);
+    assert.deepEqual(jobIconLabels([j(1, "Hills"), j(2, "Himalaya")]), ["Hl", "Hm"]);
 });
