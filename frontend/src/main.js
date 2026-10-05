@@ -12,7 +12,7 @@ import { createSurfacePoints } from "./surface-point.js";
 import { initHud } from "./hud.js";
 import { createInputView } from "./input-view.js";
 import {
-    STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobLabel, jobsExport, savedRecord, unsavedCopy,
+    STORAGE_NOTE, createJobStore, createSavedStore, exportFilename, jobIconLabels, jobLabel, jobListLabel, jobsExport, savedRecord, splitListLabel, unsavedCopy,
 } from "./jobs.js";
 import { installCloseGuard } from "./desktop-close.js";
 import { apiUrl } from "./api-base.js";
@@ -139,6 +139,7 @@ function activateLayer(layer) {
     }
 
     currentTerrain.setLayer(layer);
+    exploreProbe?.invalidate();
 
     // Scoped to #page-explore — Final Demo's box 8 reuses the same .layer-button
     // class for visual parity with Explore, and has its own independent
@@ -151,63 +152,15 @@ function activateLayer(layer) {
     setLayerDescription(layer);
 }
 
-// Selecting a layer by hand (as opposed to the flood toggle switching to
-// it itself) always clears the flood overlay — it only makes sense on
-// top of the DSM layer.
-function selectLayer(layer) {
-    if (floodActive) {
-        setFloodActive(false);
-    }
-
-    activateLayer(layer);
-}
-
-function updateStatsAndLabels(regionKey, terrain, terrainData) {
-    const region = REGIONS[regionKey];
-
-    const elevationElement = document.getElementById("elevation-value");
-    if (elevationElement) {
-        elevationElement.textContent = `${Math.round(terrain.elevationMin)}–${Math.round(terrain.elevationMax)} m`;
-    }
-
-    const sourceElement = document.getElementById("terrain-source-value");
-    if (sourceElement) {
-        sourceElement.textContent = region.elevationSource;
-    }
-
-    const inferenceStat = document.getElementById("stat-inference");
-    if (inferenceStat) {
-        inferenceStat.textContent = region.inferenceTime;
-    }
-
-    const resolutionStat = document.getElementById("stat-resolution");
-    if (resolutionStat) {
-        resolutionStat.textContent = region.resolution;
-    }
-
-    const gridStat = document.getElementById("stat-grid");
-    if (gridStat) {
-        gridStat.textContent = `${terrainData.width}×${terrainData.height}`;
-    }
-
-    const epsgStat = document.getElementById("stat-epsg");
-    if (epsgStat) {
-        epsgStat.textContent = region.crsEpsg;
-    }
-}
-
 async function loadRegion(regionKey) {
     const { terrain, terrainData } = await exploreViewer.loadRegion(regionKey);
 
     currentTerrain = terrain;
     currentRegionKey = regionKey;
 
-
-    // --------------------------------------------------------
-    // Stats, labels, region rail, default layer
-    // --------------------------------------------------------
-
-    updateStatsAndLabels(regionKey, terrain, terrainData);
+    // Terrain statistics (same numbers as the Studio viewer's box) + vertical exaggeration
+    renderTerrainStats(terrainData, "demo-elev");
+    syncExaggerationSlider(terrain, "demo-vex");
 
     document.querySelectorAll("#page-explore .region-card").forEach(card => {
         card.classList.toggle("active", card.dataset.region === regionKey);
@@ -225,12 +178,13 @@ async function loadRegion(regionKey) {
 // ============================================================
 
 document.querySelectorAll("#page-explore .layer-button").forEach(button => {
-    button.addEventListener("click", () => { selectLayer(button.dataset.layer); });
+    button.addEventListener("click", () => { activateLayer(button.dataset.layer); });
 });
 
 
 // ============================================================
-// REGION RAIL — switching
+// REGION RAIL — switching. Every region runs its reconstruction and
+// fly-through on its own, like the first one on opening the page.
 // ============================================================
 
 // [data-region] excludes the "Build Your Own" card — it reuses
@@ -239,106 +193,174 @@ document.querySelectorAll("#page-explore .region-card[data-region]").forEach(car
     card.addEventListener("click", async () => {
         const region = card.dataset.region;
 
-        if (running || region === currentRegionKey) {
+        if (region === currentRegionKey) {
             return;
         }
 
+        resetRunState(); // cancels a run in progress
         await loadRegion(region);
+        runReconstruction();
     });
 });
 
 
 // ============================================================
-// RECONSTRUCTION SEQUENCE
-// (shared by the RUN RECONSTRUCTION button and the mock upload
-// flow — both step through all 6 visualization states in order,
-// flat row first, then the extruded 3D row)
+// RECONSTRUCTION SEQUENCE (Demo page)
+// Steps through all 6 visualization states in order, flat row first,
+// then the extruded 3D row, and hands over to the fly-through. It starts
+// by itself; while it runs the button pauses / resumes it.
 // ============================================================
 
+// each layer holds 1.5× the original 0.8–1.3 s (2× on 2026-10-05, then 0.75× of that on 2026-10-06)
 const STAGES = [
-    { layer: "satellite-flat", caption: "Satellite", duration: 800 },
-    { layer: "depth-flat", caption: "Relative Depth", duration: 900 },
-    { layer: "elevation-flat", caption: "Elevation", duration: 900 },
-    { layer: "dsm-3d", caption: "DSM", duration: 1000 },
-    { layer: "elevation-3d", caption: "DEM Elevation", duration: 1000 },
-    { layer: "satellite-3d", caption: "True Color", duration: 1300 },
+    { layer: "satellite-flat", caption: "Satellite", duration: 1200 },
+    { layer: "depth-flat", caption: "Relative Depth", duration: 1350 },
+    { layer: "elevation-flat", caption: "Elevation", duration: 1350 },
+    { layer: "dsm-3d", caption: "DSM", duration: 1500 },
+    { layer: "elevation-3d", caption: "DEM Elevation", duration: 1500 },
+    { layer: "satellite-3d", caption: "True Color", duration: 1950 },
 ];
 
 const STAGE_TOTAL_MS = STAGES.reduce((sum, s) => sum + s.duration, 0);
 
 const progressBar = document.getElementById("pipeline-progress");
 const progressFill = document.getElementById("pipeline-progress-fill");
-
-const runPanel = document.getElementById("run-panel");
 const runButton = document.getElementById("run-button");
-const postRunPanel = document.getElementById("post-run-panel");
-const runAgainButton = document.getElementById("run-again-button");
-const flythroughButton = document.getElementById("flythrough-button");
-const floodButton = document.getElementById("flood-button");
+
+let runPaused = false;
+let runToken = 0; // bumped to cancel a run (region switch)
+
+// Waits `ms` of un-paused time; false if the run was cancelled meanwhile.
+async function runFor(ms, token) {
+    let left = ms;
+    while (left > 0) {
+        const t0 = performance.now();
+        await sleep(Math.min(left, 50));
+        if (token !== runToken) {
+            return false;
+        }
+        if (!runPaused) {
+            left -= performance.now() - t0;
+        }
+    }
+    return true;
+}
+
+function syncRunButton() {
+    if (runButton) {
+        runButton.textContent = running ? (runPaused ? "▶ RESUME RECONSTRUCTION" : "❚❚ PAUSE RECONSTRUCTION") : "↻ RUN AGAIN";
+        runButton.setAttribute("aria-pressed", String(running && !runPaused));
+    }
+}
 
 function resetRunState() {
+    runToken += 1;
     running = false;
-
-    if (runPanel) {
-        runPanel.hidden = false;
-    }
-    if (postRunPanel) {
-        postRunPanel.hidden = true;
-    }
-    if (runButton) {
-        runButton.disabled = false;
-        runButton.textContent = "▶ RUN RECONSTRUCTION";
-    }
+    runPaused = false;
+    syncRunButton();
     if (progressBar) {
         progressBar.hidden = true;
     }
     if (progressFill) {
         progressFill.style.width = "0%";
     }
-
-    setFloodActive(false);
-    resetFlythrough();
+    exploreFlythrough.stop();
+    hideStudioCallout();
 }
 
-async function runReconstruction() {
+const DEMO_HOME_MS = 1600;
+const easeInOutCubic = t => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+
+// Run again: one eased move back to the Demo page's default view (its own home pose, not the fly-through's):
+// the camera slides round the target (orbit angles + distance, the short way round) while the structure turns
+// the short way back to its default orientation. Auto-rotation is held off meanwhile, so nothing fights the move.
+function returnDemoToDefaultView() {
+    exploreFlythrough.stop();
+    const c = controls;
+    const fromT = c.getTarget(new THREE.Vector3(), false);
+    const fromP = c.getPosition(new THREE.Vector3(), false);
+    const toT = c._target0.clone(); // the framing saved by controls.saveState() (controls.js)
+    const toP = c._position0.clone();
+    const a = new THREE.Spherical().setFromVector3(fromP.clone().sub(fromT));
+    const b = new THREE.Spherical().setFromVector3(toP.clone().sub(toT));
+    const shortest = d => Math.atan2(Math.sin(d), Math.cos(d));
+    const dTheta = shortest(b.theta - a.theta);
+    const yaw0 = exploreViewer.getStructureYaw();
+    const dYaw = shortest(-yaw0);
+    c.setExternallyDriven(true);
+    const t = new THREE.Vector3();
+    const p = new THREE.Vector3();
+    const sph = new THREE.Spherical();
+    return new Promise(resolve => {
+        const start = performance.now();
+        let done = false;
+        const finish = () => {
+            if (done) {
+                return;
+            }
+            done = true;
+            exploreViewer.setStructureYaw(0, false);
+            c.setLookAt(toP.x, toP.y, toP.z, toT.x, toT.y, toT.z, false);
+            c.setExternallyDriven(false); // auto-rotation eases back in (controls.js ramp)
+            resolve();
+        };
+        const guard = setTimeout(finish, DEMO_HOME_MS + 600); // a background tab may not paint at all
+        const step = now => {
+            if (done) {
+                return;
+            }
+            const k = Math.min(1, (now - start) / DEMO_HOME_MS);
+            const e = easeInOutCubic(k);
+            t.lerpVectors(fromT, toT, e);
+            sph.set(a.radius + (b.radius - a.radius) * e, a.phi + (b.phi - a.phi) * e, a.theta + dTheta * e);
+            p.setFromSpherical(sph).add(t);
+            c.setLookAt(p.x, p.y, p.z, t.x, t.y, t.z, false);
+            exploreViewer.setStructureYaw(yaw0 + dYaw * e, false);
+            if (k < 1) {
+                requestAnimationFrame(step);
+            } else {
+                clearTimeout(guard);
+                finish();
+            }
+        };
+        requestAnimationFrame(step);
+    });
+}
+
+async function runReconstruction({ fromRunAgain = false } = {}) {
     if (running) {
+        runPaused = !runPaused; // the button pauses / resumes a run in progress
+        syncRunButton();
         return;
     }
-
+    resetRunState();
+    const token = runToken;
+    if (fromRunAgain) {
+        running = true; // the button stays a pause control from here on
+        syncRunButton();
+        await returnDemoToDefaultView();
+        if (token !== runToken) {
+            return;
+        }
+    }
     running = true;
-
-    setFloodActive(false);
-    resetFlythrough();
-
-    if (postRunPanel) {
-        postRunPanel.hidden = true;
-    }
-    if (runPanel) {
-        runPanel.hidden = false;
-    }
-    if (runButton) {
-        runButton.disabled = true;
-        runButton.textContent = "PROCESSING…";
-    }
+    syncRunButton();
     if (progressBar) {
         progressBar.hidden = false;
     }
 
     const description = document.getElementById("layer-description");
-
     let elapsed = 0;
 
     for (const stage of STAGES) {
         activateLayer(stage.layer);
-
         if (description) {
             description.textContent = stage.caption;
         }
-
-        await sleep(stage.duration);
-
+        if (!(await runFor(stage.duration, token))) {
+            return;
+        }
         elapsed += stage.duration;
-
         if (progressFill) {
             progressFill.style.width = `${Math.round((elapsed / STAGE_TOTAL_MS) * 100)}%`;
         }
@@ -347,171 +369,92 @@ async function runReconstruction() {
     if (description) {
         description.textContent = "Reconstruction complete";
     }
-
+    running = false;
+    syncRunButton();
+    // the structure glides straight into the fly-through's start pose (one smooth move)
+    exploreFlythrough.start();
     setTimeout(() => {
-        if (progressBar) {
+        if (token === runToken && progressBar) {
             progressBar.hidden = true;
-        }
-        if (progressFill) {
             progressFill.style.width = "0%";
-        }
-
-        running = false;
-
-        if (runPanel) {
-            runPanel.hidden = true;
-        }
-        if (postRunPanel) {
-            postRunPanel.hidden = false;
         }
     }, 800);
 }
 
-runButton?.addEventListener("click", runReconstruction);
-runAgainButton?.addEventListener("click", runReconstruction);
+runButton?.addEventListener("click", () => runReconstruction({ fromRunAgain: !running }));
 
 
 // ============================================================
-// FLYTHROUGH
-// (one-shot camera dolly-in — no loop back out — auto-rotate keeps
-// spinning the camera around the terrain underneath it via controls' own
-// render-loop update)
-//
-// Factored into a reusable controller so Workbench's Final Demo box
-// (box 8) can offer the same feature on its own independent viewer and
-// controls without sharing state with Explore's.
+// DEMO PAGE: fly-through (the Studio's, src/flythrough.js), live
+// terrain probe + elevation beside the pointer (measure-tool.js in
+// pointer mode), vertical exaggeration, and the "Try the Studio"
+// callout once a run has finished.
 // ============================================================
 
-const FLYTHROUGH_ROTATE_SPEED_MULTIPLIER = 2;
-const FLYTHROUGH_DURATION_MS = 9500;
-
-// The flythrough drives its OWN rotation + zoom, independent of base
-// auto-rotate: it runs the same whether auto-rotate is on, user-paused
-// (the ⏸ button), held (measuring) or idle-paused after a drag. While it
-// runs, base auto-rotate is suspended (setExternallyDriven) so the two never
-// add up; afterwards the camera returns to whatever base state was set.
-// Grabbing the camera ends it.
-function createFlythroughController({ controls: flControls, button }) {
-    let flythrough = null;
-    const rotateRadPerSec = flControls.AUTO_ROTATE_RADIANS_PER_SEC * FLYTHROUGH_ROTATE_SPEED_MULTIPLIER;
-
-    function finish(label = "✓ FLYTHROUGH") {
-        flythrough = null;
-        flControls.setExternallyDriven(false);
-        if (button) {
-            button.textContent = label;
-        }
-    }
-
-    function reset() {
-        flythrough = null;
-        flControls.setExternallyDriven(false);
-        flControls.setSpeedMultiplier(1);
-
-        if (button) {
-            button.disabled = false;
-            button.textContent = "◎ FLYTHROUGH";
-        }
-    }
-
-    function start() {
-        // The button is optional: the final demo's toolbar icon starts it too.
-        if (flythrough || button?.disabled) {
-            return;
-        }
-
-        const startDistance = flControls.distance;
-        const endDistance = Math.max(flControls.minDistance, startDistance * 0.5);
-
-        flythrough = {
-            startDistance,
-            endDistance,
-            startTime: performance.now(),
-            lastTime: performance.now(),
-            duration: FLYTHROUGH_DURATION_MS,
+const exploreFlythrough = createFlythrough({
+    viewer: exploreViewer,
+    canvas,
+    getTerrain: () => currentTerrain,
+    getObstacles: () => {
+        const rectOf = sel => {
+            const r = document.querySelector(`#page-explore ${sel}`)?.getBoundingClientRect();
+            return r && r.width > 0 && r.height > 0 ? r : null;
         };
-        flControls.setExternallyDriven(true);
-
-        if (button) {
-            button.disabled = true;
-            button.textContent = "FLYING THROUGH…";
-        }
-    }
-
-    function update() {
-        if (!flythrough) {
-            return;
-        }
-
-        const now = performance.now();
-        const t = Math.min(1, (now - flythrough.startTime) / flythrough.duration);
-        const dt = Math.min((now - flythrough.lastTime) / 1000, 0.1);
-        flythrough.lastTime = now;
-        const eased = 1 - Math.pow(1 - t, 3);
-
-        const distance = flythrough.startDistance + (flythrough.endDistance - flythrough.startDistance) * eased;
-
-        // Immediate (no transition): this loop already supplies its own
-        // cubic ease, and letting controls' own damping smooth it too
-        // would double up and lag behind the intended curve.
-        flControls.dollyTo(distance, false);
-        // Own rotation, same sign as base auto-rotate.
-        flControls.azimuthAngle += rotateRadPerSec * dt;
-
-        if (t >= 1) {
-            finish();
-        }
-    }
-
-    // User grabbed the camera: stop driving it.
-    flControls.addEventListener("control", () => {
-        if (flythrough) {
-            finish(button ? "◎ FLYTHROUGH" : undefined);
-            if (button) {
-                button.disabled = false;
-            }
-        }
-    });
-
-    button?.addEventListener("click", start);
-
-    return { start, update, reset, isRunning: () => Boolean(flythrough) };
-}
-
-const exploreFlythrough = createFlythroughController({
-    controls,
-    button: flythroughButton,
+        const left = rectOf(".left-rail");
+        const right = rectOf(".right-rail");
+        const top = rectOf(".topbar");
+        return {
+            left: left ? left.right + 12 : null,
+            right: right ? right.left - 12 : null,
+            top: top ? top.bottom + 12 : null,
+            bottom: null,
+        };
+    },
+    onReset: () => {
+        controls.resetView();
+        exploreViewer.setStructureYaw(0, false);
+    },
+    onDone: () => showStudioCallout(),
+    leadMs: 1800,
+    els: {
+        toggle: document.getElementById("demo-fly-toggle"),
+        again: document.getElementById("demo-fly-again"),
+        reset: document.getElementById("demo-fly-reset"),
+    },
 });
 
-function resetFlythrough() {
-    exploreFlythrough.reset();
-}
+const exploreProbe = createMeasureTool({ viewer: exploreViewer, box: exploreViewerEl, canvas, hoverReadout: () => true });
+exploreProbe.onHover(probeWriter("demo-probe-elev", "demo-probe-slope"));
+bindExaggerationSlider("demo-vex", () => currentTerrain, () => exploreProbe.invalidate());
 
-function updateFlythrough() {
-    exploreFlythrough.update();
-}
+const studioCallout = document.getElementById("demo-studio-callout");
 
-
-// ============================================================
-// DANGER ZONES — FLOOD (toggle) / EARTHQUAKE (coming soon)
-// ============================================================
-
-let floodActive = false;
-
-function setFloodActive(active) {
-    floodActive = active;
-
-    floodButton?.classList.toggle("active", floodActive);
-    currentTerrain?.setFloodOverlay(floodActive);
-}
-
-floodButton?.addEventListener("click", () => {
-    if (!floodActive) {
-        activateLayer("dsm-3d");
+function showStudioCallout() {
+    if (studioCallout && activePageId === "page-explore") {
+        studioCallout.hidden = false; // centred on the page (styles.css .demo-callout)
     }
+}
 
-    setFloodActive(!floodActive);
+function hideStudioCallout() {
+    if (studioCallout) {
+        studioCallout.hidden = true;
+    }
+}
+
+studioCallout?.querySelector(".demo-callout-close")?.addEventListener("click", hideStudioCallout);
+studioCallout?.querySelector(".demo-callout-cta")?.addEventListener("click", () => {
+    hideStudioCallout();
+    navigateToPage("page-workbench");
 });
+
+// The first visit to the Demo page runs the reconstruction (then the fly-through) on its own.
+let demoAutoRunDone = false;
+function maybeAutoRunDemo() {
+    if (!demoAutoRunDone && activePageId === "page-explore" && currentTerrain) {
+        demoAutoRunDone = true;
+        runReconstruction();
+    }
+}
 
 
 const previewEmpty = document.getElementById("preview-empty");
@@ -1033,7 +976,22 @@ function selectJob(id) {
 }
 
 async function generateNew() {
-    if (jobStore.generating() || choosingNewInput()) {
+    // From Demo / Home: go to the current job's page first, so the save prompt shows over that job
+    if (activePageId !== "page-workbench") {
+        setActivePage("page-workbench");
+        const active = jobStore.active();
+        if (active && jobStore.unsaved().length && !choosingNewInput() && !jobStore.generating()) {
+            selectJob(active.id);
+            if (active.status === "complete") {
+                await expandFinalDemo();
+            }
+        }
+    }
+    if (jobStore.generating()) {
+        return;
+    }
+    if (choosingNewInput()) {
+        collapseFinalDemoInstantly(); // already choosing: just show the input page
         return;
     }
     if (jobStore.unsaved().length) {
@@ -1178,7 +1136,26 @@ function jobItem(job, { running, active, choosing }, section = "recent") {
     head.className = "job-head";
     const num = document.createElement("span");
     num.className = "job-num";
-    num.textContent = jobLabel(job);
+    // green dot: the job on screen; yellow: open but not on screen
+    const dot = document.createElement("span");
+    dot.className = `job-dot${job === active && !choosing ? " is-current" : ""}`;
+    dot.setAttribute("aria-hidden", "true");
+    // "Job 1" stays readable; the place follows in brackets, shortened with dots when it doesn't fit
+    const { head: headText, place } = splitListLabel(jobListLabel(job));
+    const name = document.createElement("span");
+    name.className = "job-num-text";
+    name.textContent = headText;
+    num.title = jobListLabel(job);
+    num.append(dot, name);
+    if (place) {
+        const where = document.createElement("span");
+        where.className = "job-num-place";
+        const text = document.createElement("span");
+        text.className = "job-num-place-text";
+        text.textContent = place;
+        where.append("(", text, ")");
+        num.append(where);
+    }
     const status = document.createElement("span");
     status.className = `job-status${job.status === "generating" ? " is-running" : job.status === "failed" ? " is-failed" : ""}`;
     status.textContent = job.status === "generating" ? `Generating ${job.progress}%` : job.status === "failed" ? "Failed" : "Complete";
@@ -1217,7 +1194,7 @@ function jobItem(job, { running, active, choosing }, section = "recent") {
     foot.append(saved, actions);
     li.append(button, foot);
     // inline rename: the field sits above the (still clickable) job button, never inside it
-    if (renaming?.id === job.id && renaming.where === "list" && section !== "pinned") {
+    if (renaming?.id === job.id && renaming.where === "list") {
         li.prepend(renameField(job, "job-rename-row"));
     }
     return li;
@@ -1249,10 +1226,11 @@ function renderJobs() {
         jobsCountEl.textContent = `${jobStore.count()} · ${unsavedCount} unsaved`;
     }
     if (generateNewButton) {
-        generateNewButton.disabled = Boolean(running) || choosing;
+        // usable whenever nothing is generating: while the input page is already open it just goes there
+        generateNewButton.disabled = Boolean(running);
         generateNewButton.title = running
             ? "Available when the current generation finishes"
-            : choosing ? "Already choosing a new input" : "Choose a new input; current jobs stay open";
+            : "Choose a new input; current jobs stay open";
     }
 
     const pinned = jobStore.pinnedOrder();
@@ -1302,8 +1280,9 @@ function startRename(id, where) {
     if (!job) {
         return;
     }
-    renaming = { id, where };
-    renameInput.value = jobLabel(job);
+    // the sidebar edits its whole label (number + place); the tabs edit the tab name
+    renaming = { id, where, initial: where === "list" ? jobListLabel(job) : jobLabel(job) };
+    renameInput.value = renaming.initial;
     renderJobs();
     renameInput.focus();
     renameInput.select();
@@ -1313,10 +1292,10 @@ function endRename(commit) {
     if (!renaming) {
         return;
     }
-    const { id } = renaming;
+    const { id, initial } = renaming;
     renaming = null;
-    // Enter/blur save; Esc cancels; an empty input keeps the previous name
-    if (commit && renameInput.value.trim()) {
+    // Enter/blur save (only a real edit); Esc cancels; an empty input keeps the previous name
+    if (commit && renameInput.value.trim() && renameInput.value.trim() !== initial) {
         jobStore.rename(id, renameInput.value); // emits → renderJobs
     }
     renderJobs();
@@ -1417,7 +1396,7 @@ function renderJobTabs() {
         tab.title = jobLabel(job);
 
         const dot = document.createElement("span");
-        dot.className = "job-tab-dot";
+        dot.className = `job-tab-dot${job === active ? " is-current" : ""}`;
         dot.setAttribute("aria-hidden", "true");
         const label = document.createElement("span");
         label.className = "job-tab-label";
@@ -1434,6 +1413,12 @@ function renderJobTabs() {
         }
         return tab;
     }));
+
+    const order = jobStore.creationOrder();
+    const icons = jobIconLabels(order);
+    sidebar.renderJobIcons(order.map((job, i) => ({
+        id: job.id, label: icons[i], title: jobListLabel(job), active: job === active,
+    })), id => selectJob(id));
 
     renderSource(active);
     renderFacts(active);
@@ -1811,6 +1796,10 @@ function setActivePage(pageId) {
     if (pageId === "page-workbench") {
         requestAnimationFrame(initWorkbenchGrid);
     }
+    if (pageId !== "page-explore") {
+        hideStudioCallout();
+    }
+    maybeAutoRunDemo();
     syncSidebarDefault();
 }
 
@@ -1821,10 +1810,7 @@ function syncSidebarDefault() {
     const viewing3d = activePageId === "page-workbench"
         && document.getElementById("final-demo-box")?.classList.contains("is-expanded");
     sidebar.setTab(viewing3d ? "jobs" : "pages");
-    if (viewing3d) {
-        // open by default in the 3D view, even if it was collapsed earlier this session
-        sidebar.setCollapsed(false);
-    }
+    sidebar.setInViewer(viewing3d); // the closed rail lists the jobs there (no auto-open on any page)
 }
 
 // Open the page the URL names (#/docs, #/demo, #demo-video); Workbench otherwise.
@@ -2205,14 +2191,30 @@ function updateFinalDemoStats(regionKey, terrain, terrainData) {
     }
 }
 
+// Live Terrain Probe (Studio viewer and Demo page): elevation and slope of the point under the pointer,
+// a dash when the pointer isn't on the terrain.
+function probeWriter(elevId, slopeId) {
+    return sample => {
+        const elev = document.getElementById(elevId);
+        const slope = document.getElementById(slopeId);
+        if (elev) {
+            elev.textContent = sample ? `${Math.round(sample.elevation).toLocaleString()} m` : "—";
+        }
+        if (slope) {
+            slope.textContent = sample ? `${sample.slope.toFixed(1)}°` : "—";
+        }
+    };
+}
+
 // Vertical exaggeration slider (Details box): display-only mesh scale, range
 // computed per terrain in terrain.js; measurements/stats read the raw grid.
 function formatExaggeration(value) {
     return `x${value < 10 ? value.toFixed(value < 1 ? 2 : 1) : Math.round(value)}`;
 }
 
-function syncExaggerationSlider(terrain) {
-    const slider = document.getElementById("xp-vex-slider");
+// prefix: "xp-vex" (Studio viewer) or "demo-vex" (Demo page) → <prefix>-slider / -min / -max / -value
+function syncExaggerationSlider(terrain, prefix = "xp-vex") {
+    const slider = document.getElementById(`${prefix}-slider`);
     if (!slider || !terrain?.setDisplayExaggeration) {
         return;
     }
@@ -2220,21 +2222,27 @@ function syncExaggerationSlider(terrain) {
     slider.max = String(terrain.maxDisplayExaggeration);
     slider.step = String((terrain.maxDisplayExaggeration - terrain.minDisplayExaggeration) / 400);
     slider.value = String(terrain.displayExaggeration());
-    document.getElementById("xp-vex-min").textContent = formatExaggeration(terrain.minDisplayExaggeration);
-    document.getElementById("xp-vex-max").textContent = formatExaggeration(terrain.maxDisplayExaggeration);
-    document.getElementById("xp-vex-value").textContent = formatExaggeration(terrain.displayExaggeration());
+    document.getElementById(`${prefix}-min`).textContent = formatExaggeration(terrain.minDisplayExaggeration);
+    document.getElementById(`${prefix}-max`).textContent = formatExaggeration(terrain.maxDisplayExaggeration);
+    document.getElementById(`${prefix}-value`).textContent = formatExaggeration(terrain.displayExaggeration());
+}
+
+function bindExaggerationSlider(prefix, getTerrain, onChange) {
+    const slider = document.getElementById(`${prefix}-slider`);
+    slider?.addEventListener("input", () => {
+        const terrain = getTerrain();
+        if (!terrain?.setDisplayExaggeration) {
+            return;
+        }
+        const value = terrain.setDisplayExaggeration(Number(slider.value));
+        document.getElementById(`${prefix}-value`).textContent = formatExaggeration(value);
+        onChange?.();
+    });
 }
 
 function initExaggerationSlider() {
-    const slider = document.getElementById("xp-vex-slider");
-    slider?.addEventListener("input", () => {
-        if (!finalDemoCurrentTerrain) {
-            return;
-        }
-        const value = finalDemoCurrentTerrain.setDisplayExaggeration(Number(slider.value));
-        document.getElementById("xp-vex-value").textContent = formatExaggeration(value);
-        finalDemoMeasureTool?.invalidate(); // markers/pins re-project onto the rescaled surface
-    });
+    // markers/pins re-project onto the rescaled surface
+    bindExaggerationSlider("xp-vex", () => finalDemoCurrentTerrain, () => finalDemoMeasureTool?.invalidate());
 }
 
 function activateFinalDemoLayer(layer) {
@@ -2259,6 +2267,12 @@ function activateFinalDemoLayer(layer) {
     }
 }
 
+// Scenarios show on the DSM view by default (the View menu can still change it while one is on);
+// closing the last one returns to true colour.
+function setScenarioView(on) {
+    activateFinalDemoLayer(on ? "dsm-3d" : "satellite-3d");
+}
+
 function setFinalDemoFloodActive(active) {
     finalDemoFloodActive = active;
     if (active) {
@@ -2274,12 +2288,6 @@ function setFinalDemoFloodActive(active) {
 // One scenario at a time. Each shows a card of real hazard data for this place (src/geo-info.js); flood also
 // runs the water-plane simulation. Earthquake and landslide change nothing on the mesh: at tile scale a hazard
 // tint would be a single colour, so the earthquake card shows the recorded epicentres on an inset map instead.
-const SCENARIO_NOTES = {
-    flood: "Flood (illustrative): a flat water plane at the chosen level, filling every DEM cell below it (a 'bathtub' fill). "
-        + "It ignores flow and connectivity. It is not a hydrological flood model.",
-    earthquake: "Earthquake: the district hazard level and the recorded M4.5+ earthquakes nearby. No shaking model runs on the terrain.",
-    landslide: "Landslide: the mapped hazard class and the district level. No landslide model runs on the terrain.",
-};
 
 let finalDemoLandslideInfo = false;
 
@@ -2288,15 +2296,9 @@ function activeScenarioKey() {
 }
 
 function syncScenarioNote() {
-    const note = document.getElementById("final-demo-scenario-note");
-    if (!note) {
-        return;
-    }
     const key = activeScenarioKey();
     document.getElementById("final-demo-landslide-button")?.classList.toggle("active", key === "landslide");
     document.getElementById("final-demo-landslide-button")?.setAttribute("aria-pressed", String(key === "landslide"));
-    note.hidden = !key;
-    note.textContent = key ? SCENARIO_NOTES[key] : "";
     renderScenarioCard(jobStore.active(), key);
 }
 
@@ -2309,13 +2311,8 @@ function setFinalDemoEarthquakeActive(active) {
     syncScenarioNote();
 }
 
+// A view change keeps the scenario on (flood water stays on any 3D view).
 function selectFinalDemoLayer(layer) {
-    if (finalDemoFloodActive) {
-        setFinalDemoFloodActive(false);
-    }
-    if (finalDemoEarthquakeActive) {
-        setFinalDemoEarthquakeActive(false);
-    }
     activateFinalDemoLayer(layer);
 }
 
@@ -2545,7 +2542,10 @@ function initFinalDemoViewer(job) {
             get: () => finalDemoSurfacePoints?.selectedGrid() ?? null,
             onUsed: () => clearPointSelection(),
         },
+        hoverReadout: () => finalDemoBoxEl?.classList.contains("is-expanded") ?? false,
+        dblclickToggle: true,
     });
+    finalDemoMeasureTool.onHover(probeWriter("xp-probe-elev", "xp-probe-slope"));
     // Toolbar, library, terrain context menu, notes, screenshots, play/pause, theme.
     finalDemoChrome = createExpandedChrome({
         box: document.getElementById("final-demo-box"),
@@ -2655,17 +2655,25 @@ function initFinalDemoViewer(job) {
     document.getElementById("final-demo-run-again-button")?.addEventListener("click", runFinalDemoReconstruction);
 
     document.getElementById("final-demo-flood-button")?.addEventListener("click", () => {
-        if (!finalDemoFloodActive) {
-            if (finalDemoEarthquakeActive) {
-                setFinalDemoEarthquakeActive(false);
-            }
-            activateFinalDemoLayer("dsm-3d");
+        const on = !finalDemoFloodActive;
+        if (on && finalDemoEarthquakeActive) {
+            setFinalDemoEarthquakeActive(false);
         }
-        setFinalDemoFloodActive(!finalDemoFloodActive);
+        if (on && !activeScenarioKey()) {
+            setScenarioView(true);
+        }
+        setFinalDemoFloodActive(on);
+        if (!on) {
+            setScenarioView(false);
+        }
     });
 
     document.getElementById("final-demo-landslide-button")?.addEventListener("click", () => {
-        if (!finalDemoLandslideInfo) {
+        const on = !finalDemoLandslideInfo;
+        if (on) {
+            if (!activeScenarioKey()) {
+                setScenarioView(true);
+            }
             if (finalDemoFloodActive) {
                 setFinalDemoFloodActive(false);
             }
@@ -2673,15 +2681,25 @@ function initFinalDemoViewer(job) {
                 setFinalDemoEarthquakeActive(false);
             }
         }
-        finalDemoLandslideInfo = !finalDemoLandslideInfo;
+        finalDemoLandslideInfo = on;
         syncScenarioNote();
+        if (!on) {
+            setScenarioView(false);
+        }
     });
 
     document.getElementById("final-demo-earthquake-button")?.addEventListener("click", () => {
-        if (!finalDemoEarthquakeActive && finalDemoFloodActive) {
+        const on = !finalDemoEarthquakeActive;
+        if (on && !activeScenarioKey()) {
+            setScenarioView(true);
+        }
+        if (on && finalDemoFloodActive) {
             setFinalDemoFloodActive(false);
         }
-        setFinalDemoEarthquakeActive(!finalDemoEarthquakeActive);
+        setFinalDemoEarthquakeActive(on);
+        if (!on) {
+            setScenarioView(false);
+        }
     });
 
     const fullscreenToggle = document.getElementById("final-demo-fullscreen");
@@ -3001,7 +3019,7 @@ function initViewerHistory(canvas) {
             finalDemoHistory.commitCamera(wheelBefore, cam());
             wheelBefore = null;
         }, 350);
-    }, { passive: true });
+    }, { passive: true, capture: true }); // capture: runs before the zoom itself (controls.js), so "before" is pre-zoom
 
     // The change itself is the feedback; only an empty stack gets a toast
     // (the buttons are disabled then, so that's keyboard-only).
@@ -3594,9 +3612,10 @@ function animate() {
         return;
     }
 
-    updateFlythrough();
-    controls.update();
+    exploreFlythrough.update();
+    exploreViewer.update(); // controls + structure yaw (Reset)
     renderer.render(scene, camera);
+    exploreProbe.update();
 }
 
 
@@ -3613,6 +3632,7 @@ function animate() {
 loadRegion("darjeeling")
     .then(() => {
         console.log("DepthWizard2 viewer ready.");
+        maybeAutoRunDemo();
         animate();
     })
     .catch(error => {

@@ -42,22 +42,25 @@
          to an icon rail. The toggle sits just outside the bar and moves with its edge. Page icons are
          option 1 from icons/1.svg; the brand mark is the "D" from icon.png. -->
     <aside id="app-sidebar" class="app-sidebar" aria-label="Depth Wizard">
-        <button id="sb-toggle" class="sb-toggle" type="button" aria-expanded="true" aria-controls="sb-body"
-                aria-label="Collapse sidebar" title="Collapse sidebar">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
-                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M9 3v18" />
-            </svg>
-        </button>
-
         <div class="sb-inner">
             <div class="sb-head">
                 <button class="sb-logo" type="button" data-page="page-docs" aria-label="Depth Wizard: open Home"
-                        title="Home"><img src="/brand-d-sidebar.png" alt="" width="30" height="30" /></button>
+                        title="Home"><img src="/brand-d-desktop.png" alt="" width="30" height="30" /></button>
                 <span class="sb-brand-text">
                     <span class="sb-brand">Depth Wizard</span>
                 </span>
+                <!-- Lock: locked = stays open; unlocked = opens on hover, closes when the pointer leaves -->
+                <button id="sb-toggle" class="sb-toggle sb-lock" type="button" aria-pressed="false"
+                        aria-label="Lock sidebar open" title="Lock sidebar open">
+                    <svg class="sb-lock-open" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 7.5-2" />
+                    </svg>
+                    <svg class="sb-lock-closed" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                    </svg>
+                </button>
             </div>
 
             <div id="sb-body" class="sb-body">
@@ -102,12 +105,11 @@
                     <div id="jobs-pinned-empty" class="jobs-empty">No pinned tabs currently</div>
                     <div class="jobs-section-title">RECENT</div>
                     <ol id="jobs-list" class="jobs-list"></ol>
-                    <p class="jobs-note">
-                        Jobs live in this tab’s memory; there’s no server-side storage yet, so reloading or closing the tab
-                        loses unsaved jobs. Save downloads a job as JSON and keeps a copy under Saved in this browser.
-                    </p>
                 </div>
             </div>
+
+            <!-- closed sidebar inside the 3D viewer: one square per open job (J1, J2… or the name's letters) -->
+            <div id="sb-job-icons" class="sb-job-icons" role="list" aria-label="Open jobs"></div>
             </div>
 
             <div class="sb-foot" aria-label="Links">
@@ -151,38 +153,7 @@
          TOP BAR
     ====================================================== -->
 
-    <header class="topbar">
-
-        <div class="brand">
-
-            <div class="brand-mark">
-                DW
-            </div>
-
-            <div>
-
-                <div class="brand-name">
-                    DEPTH WIZARD 2.0
-                </div>
-
-                <div class="brand-subtitle">
-                    Satellite → 3D Terrain Visualization
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="status">
-
-            <span class="status-dot"></span>
-
-            DEMO MODE
-
-        </div>
-
-    </header>
+    <!-- (the brand / DEMO MODE header was removed 2026-10-05: nothing sits above the Regions box) -->
 
 
     <!-- =====================================================
@@ -262,45 +233,28 @@
 
             </div>
 
-
-            <div class="stats-strip">
-
-                <div class="stat-tile">
-                    <div id="stat-inference" class="stat-value">1.17s</div>
-                    <div class="stat-label">DAv2 INFERENCE</div>
-                </div>
-
-                <div class="stat-tile">
-                    <div id="stat-resolution" class="stat-value">10m</div>
-                    <div class="stat-label">RESOLUTION</div>
-                </div>
-
-                <div class="stat-tile">
-                    <div id="stat-grid" class="stat-value">361×325</div>
-                    <div class="stat-label">MESH GRID</div>
-                </div>
-
-                <div class="stat-tile">
-                    <div id="stat-epsg" class="stat-value">32645</div>
-                    <div class="stat-label">EPSG</div>
-                </div>
-
+            <!-- Reconstruction runs on its own (page open, region click); the button pauses / resumes
+                 it, then becomes Run again. -->
+            <div id="run-panel" class="run-panel">
+                <button
+                    id="run-button"
+                    class="secondary-button demo-run-button"
+                >
+                    ▶ RUN RECONSTRUCTION
+                </button>
             </div>
 
-
-            <div class="terrain-card">
-
-                <div class="metric">
-                    <span class="metric-label">ELEVATION RANGE</span>
-                    <span id="elevation-value">—</span>
+            <!-- Same fly-through as the Studio viewer (src/flythrough.js): start / pause / resume,
+                 Run again, Reset. Starts by itself once the reconstruction finishes. -->
+            <div class="layer-panel demo-box">
+                <div class="panel-title">FLY-THROUGH</div>
+                <div class="xp-fly-actions">
+                    <button id="demo-fly-toggle" class="xp-tour-start xp-fly-main" type="button">◎ Fly-through</button>
+                    <button id="demo-fly-again" class="xp-tour-close" type="button" disabled>↻ Run again</button>
+                    <button id="demo-fly-reset" class="xp-tour-close" type="button" disabled>Reset</button>
                 </div>
-
-                <div class="metric metric-stacked">
-                    <span class="metric-label">TERRAIN SOURCE</span>
-                    <span id="terrain-source-value">OpenTopography DSM</span>
-                </div>
-
             </div>
+
 
         </div>
 
@@ -309,67 +263,72 @@
 
         <div class="overlay right-rail">
 
+            <!-- Same Live Terrain Probe and Terrain Statistics as the Studio viewer, as fixed
+                 (non-collapsible) boxes. Wiring: main.js (Demo page). -->
+            <div class="layer-panel demo-box">
+                <div class="panel-title">LIVE TERRAIN PROBE</div>
+                <div class="stats-strip xp-inline-strip xp-probe">
+                    <div class="stat-tile">
+                        <div class="stat-label">ELEVATION</div>
+                        <div id="demo-probe-elev" class="stat-value">—</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-label">SLOPE</div>
+                        <div id="demo-probe-slope" class="stat-value">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layer-panel demo-box">
+                <div class="panel-title">TERRAIN STATISTICS</div>
+                <div class="stats-strip xp-inline-strip xp-stat-grid">
+                    <div class="stat-tile">
+                        <div class="stat-label">MIN ELEVATION</div>
+                        <div id="demo-elev-min" class="stat-value">—</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-label">MAX ELEVATION</div>
+                        <div id="demo-elev-max" class="stat-value">—</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-label">MEAN ELEVATION</div>
+                        <div id="demo-elev-mean" class="stat-value">—</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-label">RELIEF</div>
+                        <div id="demo-elev-relief" class="stat-value">—</div>
+                    </div>
+                </div>
+                <div class="xp-slider-row">
+                    <label for="demo-vex-slider" class="xp-slider-label">
+                        Vertical exaggeration <span id="demo-vex-value" class="numeric-mono">x1.0</span>
+                    </label>
+                    <input id="demo-vex-slider" class="xp-slider" type="range" min="0.25" max="2" step="0.01" value="1">
+                    <div class="xp-slider-ends numeric-mono"><span id="demo-vex-min">x0.25</span><span id="demo-vex-max">x2</span></div>
+                </div>
+            </div>
+
             <div class="layer-panel">
 
                 <div class="panel-title">
                     VISUALIZATION LAYER
                 </div>
 
-
+                <!-- two per row, so the box matches the two boxes above -->
                 <div class="layer-buttons-grid">
-
                     <div class="layer-buttons-row">
-
-                        <button
-                            class="layer-button"
-                            data-layer="satellite-flat"
-                        >
-                            SATELLITE
-                        </button>
-
-                        <button
-                            class="layer-button"
-                            data-layer="depth-flat"
-                        >
-                            RELATIVE DEPTH
-                        </button>
-
-                        <button
-                            class="layer-button"
-                            data-layer="elevation-flat"
-                        >
-                            ELEVATION
-                        </button>
-
+                        <button class="layer-button" data-layer="satellite-flat">SATELLITE</button>
+                        <button class="layer-button" data-layer="depth-flat">RELATIVE DEPTH</button>
                     </div>
-
                     <div class="layer-buttons-row">
-
-                        <button
-                            class="layer-button"
-                            data-layer="dsm-3d"
-                        >
-                            DSM
-                        </button>
-
-                        <button
-                            class="layer-button"
-                            data-layer="elevation-3d"
-                        >
-                            DEM ELEVATION
-                        </button>
-
-                        <button
-                            class="layer-button active"
-                            data-layer="satellite-3d"
-                        >
-                            TRUE COLOR
-                        </button>
-
+                        <button class="layer-button" data-layer="elevation-flat">ELEVATION</button>
+                        <button class="layer-button" data-layer="dsm-3d">DSM</button>
                     </div>
-
+                    <div class="layer-buttons-row">
+                        <button class="layer-button" data-layer="elevation-3d">DEM ELEVATION</button>
+                        <button class="layer-button active" data-layer="satellite-3d">TRUE COLOR</button>
+                    </div>
                 </div>
-
 
                 <div
                     id="layer-description"
@@ -377,7 +336,6 @@
                 >
                     Sentinel-2 RGB draped on extruded terrain
                 </div>
-
 
                 <div
                     id="pipeline-progress"
@@ -392,77 +350,6 @@
 
             </div>
 
-
-            <div id="run-panel" class="run-panel">
-
-                <button
-                    id="run-button"
-                    class="run-reconstruction-button"
-                >
-                    ▶ RUN RECONSTRUCTION
-                </button>
-
-            </div>
-
-
-            <div
-                id="post-run-panel"
-                class="post-run-panel"
-                hidden
-            >
-
-                <button
-                    id="run-again-button"
-                    class="run-reconstruction-button"
-                >
-                    ↻ RUN AGAIN
-                </button>
-
-            </div>
-
-
-            <!-- Always visible/usable regardless of reconstruction state —
-                 not gated behind post-run-panel's [hidden]. -->
-            <div class="always-on-controls">
-
-                <button
-                    id="flythrough-button"
-                    class="secondary-button"
-                >
-                    ◎ FLYTHROUGH
-                </button>
-
-
-                <div class="danger-zone-panel">
-
-                    <div class="panel-title">
-                        DANGER ZONES
-                    </div>
-
-                    <div class="danger-zone-buttons">
-
-                        <button
-                            id="flood-button"
-                            class="danger-button"
-                        >
-                            FLOOD
-                        </button>
-
-                        <button
-                            id="earthquake-button"
-                            class="danger-button"
-                            disabled
-                        >
-                            EARTHQUAKE
-                            <span class="coming-soon-tag">SOON</span>
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
         </div>
 
 
@@ -471,32 +358,25 @@
         <div class="overlay bottom-right">
 
             <div class="controls-hint">
-
-                <div>
-
-                    <kbd>drag</kbd>
-                    <kbd>scroll</kbd>
-
-                </div>
-
-                <span>
-                    Rotate
-                </span>
-
-                <div>
-
-                    <kbd>pinch</kbd>
-
-                </div>
-
-                <span>
-                    Zoom
-                </span>
-
+                <div><kbd>drag</kbd></div>
+                <span>Rotate</span>
+                <div><kbd>scroll</kbd><kbd>pinch</kbd></div>
+                <span>Zoom</span>
             </div>
 
         </div>
 
+
+        <!-- Shown once a demo run (reconstruction + fly-through) finishes; points at Build Your Own. -->
+        <div id="demo-studio-callout" class="demo-callout" role="dialog" aria-labelledby="demo-callout-title" hidden>
+            <button class="demo-callout-close" type="button" aria-label="Close">✕</button>
+            <div id="demo-callout-title" class="demo-callout-title">There’s much more in the Studio</div>
+            <p class="demo-callout-body">
+                Depth Wizard Studio goes far beyond this demo: your own scenes from the library, an upload or a
+                live satellite search, plus measurements, scenario analysis, notes and screenshots.
+            </p>
+            <button class="demo-callout-cta" type="button">Try Depth Wizard Studio →</button>
+        </div>
 
     </main>
 
@@ -843,6 +723,27 @@
                             <!-- Layer switching, RUN RECONSTRUCTION and FLYTHROUGH were removed from
                                  this pop-up (user request, 2026-09-25): the icon toolbar's View ▾ and
                                  Flythrough cover them. -->
+                            <!-- Live Terrain Probe: elevation and slope of the terrain point under the pointer
+                                 (measure-tool.js onHover; DEM bilinear + central-difference slope). -->
+                            <section class="xp-box" data-box="probe" data-default-open>
+                                <button class="xp-head" type="button" aria-expanded="true">
+                                    <span class="xp-title">LIVE TERRAIN PROBE</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
+                                    <div class="stats-strip xp-inline-strip xp-probe" aria-live="off">
+                                        <div class="stat-tile">
+                                            <div class="stat-label">ELEVATION</div>
+                                            <div id="xp-probe-elev" class="stat-value">—</div>
+                                        </div>
+                                        <div class="stat-tile">
+                                            <div class="stat-label">SLOPE</div>
+                                            <div id="xp-probe-slope" class="stat-value">—</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
                             <section class="xp-box xp-box-danger" data-box="scenario">
                                 <button class="xp-head" type="button" aria-expanded="false">
                                     <span class="xp-title">SCENARIO ANALYSIS</span>
@@ -860,7 +761,6 @@
                                             LANDSLIDE
                                         </button>
                                     </div>
-                                    <div id="final-demo-scenario-note" class="scenario-note" hidden></div>
                                     <div id="xp-scenario-card" class="xp-scenario-card" aria-live="polite" hidden></div>
 
                                     <div id="xp-flood-panel" class="xp-flood-panel" hidden>
@@ -871,8 +771,8 @@
                                             <input id="xp-flood-slider" class="xp-slider" type="range">
                                         </div>
                                         <div class="xp-flood-actions">
-                                            <button id="xp-flood-play" class="xp-tour-start" type="button" aria-pressed="false">▶ Play flood simulation</button>
-                                            <button id="xp-flood-reset" class="xp-tour-close" type="button" title="Return the water to the slider level">↺ Reset</button>
+                                            <button id="xp-flood-play" class="xp-tour-start" type="button" aria-pressed="false">▶ Simulate</button>
+                                            <button id="xp-flood-reset" class="xp-tour-close" type="button" title="Back to the default level (half way)">↺ Reset</button>
                                         </div>
                                         <div class="stats-strip xp-inline-strip">
                                             <div class="stat-tile">
@@ -912,9 +812,11 @@
                                 <div class="xp-body">
                                     <table class="xp-gestures">
                                         <tbody>
-                                            <tr><td><kbd>drag</kbd></td><td>Rotate the terrain</td></tr>
-                                            <tr><td><kbd>scroll</kbd></td><td>Rotate (mouse wheel or two-finger trackpad scroll)</td></tr>
+                                            <tr><td><kbd>drag</kbd></td><td>Rotate the terrain (it follows the drag)</td></tr>
+                                            <tr><td><kbd>scroll</kbd></td><td>Up / down: zoom in / out (mouse wheel or two-finger trackpad scroll)</td></tr>
+                                            <tr><td><kbd>side scroll</kbd></td><td>Rotate (two-finger sideways scroll)</td></tr>
                                             <tr><td><kbd>pinch</kbd></td><td>Zoom in / out (trackpad or touch)</td></tr>
+                                            <tr><td><kbd>double-click</kbd></td><td>Switch between Pointer and Measuring mode</td></tr>
                                             <tr><td><kbd>1 finger</kbd></td><td>Rotate (touch screens)</td></tr>
                                             <tr><td><kbd>right-click</kbd></td><td>Terrain menu: save a point, add a note</td></tr>
                                             <tr><td><kbd>esc</kbd></td><td>Cancel a measurement or close a menu</td></tr>

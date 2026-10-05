@@ -13,7 +13,7 @@
 
 import * as THREE from "three";
 import { raycastHeightfield, surfaceAt, gridToLocalXY } from "./heightfield.js";
-import { createGeoGrid, measureChain } from "./measure-metrics.js";
+import { createGeoGrid, measureChain, slopeAt } from "./measure-metrics.js";
 import { createMeasureModel, MODES } from "./measure-model.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -44,7 +44,9 @@ function el(tag, attrs = {}, parent = null, ns = null) {
 // places the point exactly there (the Image Inspection "selected point").
 const SNAP_PX = 14;
 
-export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
+// hoverReadout: () => bool — show the live elevation beside the pointer in plain pointer mode too.
+// dblclickToggle: double-click on the terrain switches pointer ↔ measuring (the Studio viewer only).
+export function createMeasureTool({ viewer, box, canvas, snapTarget = null, hoverReadout = () => false, dblclickToggle = false }) {
     const model = createMeasureModel({ onChange: () => { dirty = true; } });
     let dirty = true;
 
@@ -153,12 +155,24 @@ export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
 
     // ---------------------------------------------------------------- feedback
     let toastTimer = null;
-    function showToast(message, kind = "error") {
+    function showToast(message, kind = "error", ms = TOAST_MS) {
         toast.textContent = message;
         toast.dataset.kind = kind;
         toast.hidden = false;
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => { toast.hidden = true; }, TOAST_MS);
+        toastTimer = setTimeout(() => { toast.hidden = true; }, ms);
+    }
+
+    // Live point under the pointer ({ x, y, elevation, slope } or null), for the Live Terrain Probe box.
+    const hoverListeners = [];
+    let lastSample;
+    function emitHover(hit) {
+        const sample = hit && geo ? { x: hit.x, y: hit.y, elevation: geo.elevation(hit.x, hit.y), slope: slopeAt(geo, hit.x, hit.y) } : null;
+        if (!sample && lastSample === null) {
+            return;
+        }
+        lastSample = sample;
+        hoverListeners.forEach(fn => fn(sample));
     }
 
     function handleOutcome(r) {
@@ -355,8 +369,12 @@ export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
         }
     }
 
+    let lastMeasureMode = MODES.TWO_POINT;
     function setMode(mode) {
         closeMenu();
+        if (mode !== MODES.NORMAL) {
+            lastMeasureMode = mode;
+        }
         const had = model.pointCount();
         const r = model.setMode(mode);
         if (mode !== MODES.NORMAL && had > 0 && model.pointCount() === 0) {
@@ -488,29 +506,37 @@ export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
         if (!hoverFrame) {
             hoverFrame = requestAnimationFrame(() => {
                 hoverFrame = 0;
-                if (!lastMove || !editable()) {
+                if (!lastMove || (!editable() && !hoverReadout())) {
                     readout.hidden = true;
+                    emitHover(null);
                     return;
                 }
                 const onUi = !(lastMove.target === canvas || overlay.contains(lastMove.target));
-                updateReadout(lastMove, onUi ? null : pick(lastMove.clientX, lastMove.clientY), onUi);
+                const hit = onUi ? null : pick(lastMove.clientX, lastMove.clientY);
+                updateReadout(lastMove, hit, onUi);
+                emitHover(hit);
             });
         }
     });
 
-    box.addEventListener("pointerleave", () => { readout.hidden = true; });
+    box.addEventListener("pointerleave", () => {
+        readout.hidden = true;
+        emitHover(null);
+    });
 
     function updateReadout(e, hit, hide = false) {
-        if (hide || !editable()) {
+        const measuring = editable();
+        // pointer mode: just the elevation, and nothing off the terrain
+        if (hide || (!measuring && (!hoverReadout() || !hit))) {
             readout.hidden = true;
             return;
         }
         const r = box.getBoundingClientRect();
         readout.hidden = false;
         readout.classList.toggle("is-off", !hit);
-        readout.textContent = hit
-            ? `X ${hit.x.toFixed(1)} · Y ${hit.y.toFixed(1)} px · ${Math.round(geo.elevation(hit.x, hit.y)).toLocaleString()} m`
-            : "Off terrain";
+        const elevation = hit ? `${Math.round(geo.elevation(hit.x, hit.y)).toLocaleString()} m` : "";
+        readout.textContent = !hit ? "Off terrain"
+            : measuring ? `X ${hit.x.toFixed(1)} · Y ${hit.y.toFixed(1)} px · ${elevation}` : elevation;
         readout.style.left = `${e.clientX - r.left + 16}px`;
         readout.style.top = `${e.clientY - r.top + 16}px`;
     }
@@ -530,6 +556,7 @@ export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
             dirty = true;
             if (!d.moved && r.type === "unchanged") {
                 // A click (no drag) on an existing point.
+                noteClickForDblclick();
                 handleOutcome(model.click(pick(e.clientX, e.clientY), ref));
             }
             return;
@@ -537,6 +564,7 @@ export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
         if (d.moved || e.button !== 0 || !editable()) {
             return; // an orbit, not a click
         }
+        noteClickForDblclick();
         const snap = snapTarget?.get?.();
         if (snap && syncTerrain()) {
             const sp = project(snap.x, snap.y, 0);
@@ -549,6 +577,38 @@ export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
         }
         handleOutcome(model.click(pick(e.clientX, e.clientY), null));
     });
+
+    // Double-click on the terrain: pointer ↔ measuring (last measure type, Two points by default), with a
+    // short prompt under the job tabs. The double-click's own two clicks are taken back first, so switching
+    // out of measuring never leaves a stray point behind.
+    let dblStart = null; // { t, snap }: the selection before the first click of a possible double-click
+    function noteClickForDblclick() {
+        const now = performance.now();
+        if (!dblStart || now - dblStart.t > 500) {
+            dblStart = { t: now, snap: model.snapshot() };
+        }
+    }
+    if (dblclickToggle) {
+        box.addEventListener("dblclick", e => {
+            // on the terrain: the canvas, the measurement overlay, or the box itself (a click on a measure point
+            // captures the pointer to the box, so the double-click's target is the box)
+            const onTerrain = e.target === canvas || e.target === box || overlay.contains(e.target);
+            if (!box.classList.contains("is-expanded") || !onTerrain) {
+                return;
+            }
+            if (model.mode === MODES.NORMAL) {
+                setMode(lastMeasureMode);
+                showToast("Measuring mode", "info", 1500);
+            } else {
+                if (dblStart && performance.now() - dblStart.t < 800) {
+                    model.restore(dblStart.snap);
+                }
+                setMode(MODES.NORMAL);
+                showToast("Pointer mode", "info", 1500);
+            }
+            dblStart = null;
+        });
+    }
 
     box.addEventListener("contextmenu", e => {
         if (!box.classList.contains("is-expanded")) {
@@ -686,6 +746,7 @@ export function createMeasureTool({ viewer, box, canvas, snapTarget = null }) {
         startSelectionAt,
         invalidate: () => { dirty = true; },
         onRender: fn => renderListeners.push(fn),
+        onHover: fn => hoverListeners.push(fn),
         get geo() {
             return geo;
         },

@@ -17,8 +17,6 @@ import { attachMagnifier } from "./magnifier.js";
 import { hud } from "./hud.js";
 import { footprintKmFromBbox } from "./flat-warning.js";
 
-const TIER2_MAX_GSD_M = 2.4;
-
 const COLLECTIONS = [
     { key: "all", label: "All" },
     { key: "vhr", label: "Maxar VHR" },
@@ -181,27 +179,6 @@ export function isReady(selection) {
     return Boolean(selection.dem);
 }
 
-// Quota panel text — the documented limits plus this server's own spend.
-// Never a "remaining" count: CDSE doesn't publish one.
-export function quotaLines(q) {
-    if (!q) {
-        return [];
-    }
-    const lim = q.documented_limits;
-    const use = q.this_server_usage;
-    const lines = [
-        `Account: ${q.account?.typology ?? "unknown"} (${q.credentials === "user" ? "your key" : "project key"})`,
-        `Documented limits: ${lim.requests_per_minute} req/min · ${lim.requests_per_month.toLocaleString("en-US")} req/month · `
-            + `${lim.processing_units_per_minute} PU/min · ${lim.processing_units_per_month.toLocaleString("en-US")} PU/month`,
-        `This server since ${use.since.replace("T", " ").replace("Z", " UTC")}: ${use.catalog_requests} searches, `
-            + `${use.process_requests} image requests, ${use.processing_units} PU`,
-    ];
-    lines.push(use.throttled
-        ? `Throttled ${use.throttled}× (last ${use.last_throttle}${use.retry_after ? `, retry after ${use.retry_after}s` : ""})`
-        : "Not throttled");
-    return lines;
-}
-
 const DEM_UNAVAILABLE = "The elevation service isn't available right now, so terrain can't be fetched for this image. "
     + "Please try again later, or pick a scene from the library.";
 
@@ -234,6 +211,8 @@ const ICONS = {
     image: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="m4 17.5 5-5 3.5 3.5 3-3 4 4"/>',
     cloud: '<path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.9 9.2 4.7 4.7 0 0 1 17.5 18.5Z"/><path d="M12 15.5V10m0 0-2.2 2.2M12 10l2.2 2.2"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
+    // a tray with an arrow rising out of it (the upload box's quiet glyph)
+    upload: '<path d="M12 15V4.5m0 0-4 4m4-4 4 4"/><path d="M4.5 14.5v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3"/>',
 };
 
 function icon(name, size = 18) {
@@ -316,6 +295,23 @@ export function createInputView(root, { onStart }) {
         });
     });
 
+    // the selected tab's backdrop slides from tab to tab (one element, moved under the selected tab)
+    const tabSlider = el("span", { class: "iv-tab-slider", "aria-hidden": "true" });
+    tabBar.prepend(tabSlider);
+    function placeTabSlider() {
+        const tab = tabButtons[state.tab];
+        if (!tab?.offsetWidth) {
+            return;
+        }
+        tabSlider.style.width = `${tab.offsetWidth}px`;
+        tabSlider.style.transform = `translateX(${tab.offsetLeft}px)`;
+    }
+    new ResizeObserver(() => {
+        tabSlider.classList.add("no-anim"); // a resize just follows, no slide
+        placeTabSlider();
+        requestAnimationFrame(() => tabSlider.classList.remove("no-anim"));
+    }).observe(tabBar);
+
     tabBar.addEventListener("keydown", event => {
         const order = tabDefs.map(def => def.key);
         const index = order.indexOf(state.tab);
@@ -393,16 +389,11 @@ export function createInputView(root, { onStart }) {
             }
         },
     });
-    const startNote = el("div", {
-        class: "iv-placeholder-note",
-        text: "Everything generated is this input's own: relative depth from the image, elevation and the 3D terrain "
-            + "from a real elevation model for its footprint (none if it has no georeference).",
-    });
-
     const previewPane = el("section", { class: "iv-pane iv-preview-pane" },
         paneHeader("eye", "PREVIEW", "Selected scene will appear here"),
         // image first, then START GENERATION, then everything else
-        previewStage, previewReadout, gsdCard, startButton, metaList, routingCard, demCard, startNote);
+        // (the routing card, i.e. the tier, isn't shown here: 2026-10-05)
+        previewStage, previewReadout, gsdCard, startButton, metaList, demCard);
 
     root.replaceChildren(inputPane, previewPane);
 
@@ -415,11 +406,12 @@ export function createInputView(root, { onStart }) {
             tabButtons[def.key].tabIndex = active ? 0 : -1;
             panels[def.key].hidden = !active;
         });
+        placeTabSlider();
         if (key === "library" && !state.library) {
             loadLibrary();
         }
         if (key === "search") {
-            refreshQuota();
+            requestAnimationFrame(ensureMap);
         }
     }
 
@@ -466,7 +458,7 @@ export function createInputView(root, { onStart }) {
         renderDem(sel);
         renderGsd(sel);
 
-        startButton.className = `run-reconstruction-button iv-start ${tierClass(routing)}`;
+        startButton.className = "run-reconstruction-button iv-start tier-none"; // no tier colour either
         startButton.textContent = startLabel(routing);
         startButton.disabled = !isReady(sel);
         startButton.title = sel.gsdRequired ? "Enter the image's GSD first" : "";
@@ -1042,19 +1034,11 @@ export function createInputView(root, { onStart }) {
     // ================================================================ UPLOAD
     const uploadInput = el("input", { type: "file", accept: ".tif,.tiff,.png,.jpg,.jpeg", hidden: true });
     const dropzone = el("label", { class: "upload-dropzone iv-dropzone" },
-        el("div", { class: "upload-dropzone-glyph", text: "⇧" }),
+        el("span", { class: "iv-drop-icon" }, icon("upload", 44)),
         el("div", { class: "upload-dropzone-text", text: "Drop a GeoTIFF, PNG or JPG — or click to browse" }),
         uploadInput);
     const uploadStatus = el("div", { class: "iv-status", hidden: true });
-    panels.upload.append(
-        dropzone,
-        uploadStatus,
-        el("ul", { class: "iv-rules" },
-            el("li", { text: `GeoTIFF ≤ ${TIER2_MAX_GSD_M} m/pixel → Tier 2 (height prediction). You upload a DEM, or FABDEM is fetched for you.` }),
-            el("li", { text: `GeoTIFF > ${TIER2_MAX_GSD_M} m/pixel → Tier 1 (DEM only). FABDEM is fetched automatically.` }),
-            el("li", { text: "PNG / JPG (no georeference) → relative preview only. There is no location to fetch a DEM for." })),
-        el("p", { class: "iv-hint", text: "GSD is read from the file's geotransform, not assumed." }),
-    );
+    panels.upload.append(dropzone, uploadStatus);
 
     uploadInput.addEventListener("change", () => uploadFile(uploadInput.files?.[0]));
     dropzone.addEventListener("dragover", event => {
@@ -1182,10 +1166,24 @@ export function createInputView(root, { onStart }) {
     }
 
     // ================================================================ SEARCH ONLINE
+    // A place name (Nominatim), exact coordinates, or a click on the map picks the search centre; the map
+    // shows it with the AOI square, like the Copernicus Browser.
     const locInput = el("input", { class: "scene-input", type: "text", placeholder: "Search a place name…", autocomplete: "off",
         "aria-label": "Location" });
     const locDropdown = el("div", { class: "geocode-dropdown", hidden: true });
-    const locReadout = el("div", { class: "iv-hint numeric-mono", hidden: true });
+    const latInput = el("input", { class: "scene-input numeric-mono", type: "number", step: "any", min: "-90", max: "90",
+        placeholder: "e.g. 27.0450", "aria-label": "Latitude" });
+    const lonInput = el("input", { class: "scene-input numeric-mono", type: "number", step: "any", min: "-180", max: "180",
+        placeholder: "e.g. 88.2600", "aria-label": "Longitude" });
+    const mapEl = el("div", { class: "iv-map", role: "application", "aria-label": "Map: click to pick the search centre" });
+    // expand ⤢ / collapse: the map (with the place and coordinate fields above it) in a larger window
+    const mapExpandBtn = el("button", { class: "iv-map-expand", type: "button", "aria-label": "Expand the map", title: "Expand the map" });
+    const MAP_ICON = path => `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
+    const EXPAND_PATH = "M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7";
+    const COLLAPSE_PATH = "M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7";
+    mapExpandBtn.innerHTML = MAP_ICON(EXPAND_PATH);
+    const mapWrap = el("div", { class: "iv-map-wrap" }, mapEl, mapExpandBtn);
+    const mapHint = el("div", { class: "iv-hint iv-map-hint", text: "Click the map to pick the search centre." });
     const aoiSelect = el("select", { class: "scene-input", "aria-label": "Area of interest" },
         el("option", { value: "5", text: "5 × 5 km" }),
         el("option", { value: "10", selected: true, text: "10 × 10 km" }),
@@ -1193,7 +1191,8 @@ export function createInputView(root, { onStart }) {
     const dateFrom = el("input", { class: "scene-input", type: "date", value: "2025-11-01", "aria-label": "From" });
     const dateTo = el("input", { class: "scene-input", type: "date", value: "2026-01-31", "aria-label": "To" });
     const cloudInput = el("input", { class: "scene-input", type: "number", min: "0", max: "100", value: "20", "aria-label": "Max cloud %" });
-    const searchButton = el("button", { class: "secondary-button iv-search-button", type: "button", text: "SEARCH SENTINEL-2", disabled: true });
+    const searchButton = el("button", { class: "secondary-button iv-search-button", type: "button", text: "SEARCH SATELLITE IMAGERY", disabled: true });
+    const clearButton = el("button", { class: "secondary-button iv-clear-button", type: "button", text: "CLEAR SELECTION", disabled: true });
     const searchStatus = el("div", { class: "iv-status", hidden: true });
     const results = el("div", { class: "iv-results" });
 
@@ -1208,23 +1207,187 @@ export function createInputView(root, { onStart }) {
         el("p", { class: "iv-hint",
             text: "Create an OAuth client under your Copernicus Data Space account (Sentinel Hub dashboard → User settings → OAuth clients). "
                 + "The key stays in this tab's memory only: it's sent with each request and never saved." }));
-    const quotaBox = el("div", { class: "iv-quota" });
 
+    const locField = el("div", { class: "geocode-field iv-field" }, el("span", { class: "scene-field-label", text: "Location" }), locInput, locDropdown);
+    const latLonRow = el("div", { class: "iv-field-row iv-latlon-row" },
+        el("label", { class: "iv-field" }, el("span", { class: "scene-field-label", text: "Latitude" }), latInput),
+        el("label", { class: "iv-field" }, el("span", { class: "scene-field-label", text: "Longitude" }), lonInput));
     panels.search.append(
-        el("p", { class: "iv-hint", text: "Live Sentinel-2 L2A search (Copernicus Data Space Ecosystem). Sentinel-2 is 10 m, so it always runs as Tier 1: FABDEM terrain, fetched automatically." }),
-        el("div", { class: "geocode-field iv-field" }, el("span", { class: "scene-field-label", text: "Location" }), locInput, locDropdown),
-        locReadout,
+        locField,
+        latLonRow,
+        mapWrap, mapHint,
         el("div", { class: "iv-field-row" },
             el("label", { class: "iv-field" }, el("span", { class: "scene-field-label", text: "AOI" }), aoiSelect),
             el("label", { class: "iv-field" }, el("span", { class: "scene-field-label", text: "From" }), dateFrom),
             el("label", { class: "iv-field" }, el("span", { class: "scene-field-label", text: "To" }), dateTo),
             el("label", { class: "iv-field" }, el("span", { class: "scene-field-label", text: "Max cloud %" }), cloudInput)),
-        searchButton, searchStatus, results,
+        el("div", { class: "iv-search-actions" }, searchButton, clearButton),
+        searchStatus, results,
         el("label", { class: "iv-key-toggle" }, keyToggle, "Use your own Copernicus API key"),
         keyFields,
-        el("div", { class: "panel-title iv-quota-title", text: "CDSE QUOTA" }),
-        quotaBox,
     );
+
+    // ---------- expanded map window: the place and coordinate fields side by side over a large map
+    const mapModalHead = el("div", { class: "iv-map-modal-head" });
+    const mapModalBody = el("div", { class: "iv-map-modal-body" });
+    const mapModal = el("div", { class: "iv-map-modal", role: "dialog", "aria-modal": "true", "aria-label": "Map", hidden: true },
+        el("div", { class: "iv-map-modal-backdrop", onclick: () => setMapExpanded(false) }),
+        el("div", { class: "iv-map-modal-panel" }, mapModalHead, mapModalBody));
+    document.body.append(mapModal);
+    const homeMarker = document.createComment("map home");
+    let mapExpanded = false;
+    function setMapExpanded(on) {
+        if (on === mapExpanded) {
+            return;
+        }
+        mapExpanded = on;
+        if (on) {
+            locField.before(homeMarker);
+            mapModalHead.append(locField, latLonRow);
+            mapModalBody.append(mapWrap);
+        } else {
+            homeMarker.after(locField, latLonRow);
+            mapHint.before(mapWrap);
+            homeMarker.remove();
+        }
+        mapModal.hidden = !on;
+        mapWrap.classList.toggle("is-expanded", on);
+        mapExpandBtn.setAttribute("aria-label", on ? "Collapse the map" : "Expand the map");
+        mapExpandBtn.title = on ? "Collapse the map" : "Expand the map";
+        mapExpandBtn.innerHTML = MAP_ICON(on ? COLLAPSE_PATH : EXPAND_PATH);
+        requestAnimationFrame(() => {
+            map?.invalidateSize();
+            fitAoi(false);
+        });
+    }
+    mapExpandBtn.addEventListener("click", () => setMapExpanded(!mapExpanded));
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && mapExpanded) {
+            setMapExpanded(false);
+        }
+    });
+
+    // ---------- map (Leaflet + OpenStreetMap tiles), created the first time the tab is shown
+    // Leaflet is loaded on first use (not part of the page's initial bundle).
+    let map = null;
+    let mapMarker = null;
+    let mapAoi = null;
+    let L = null;
+    let mapLoading = false;
+    async function ensureMap() {
+        if (map) {
+            map.invalidateSize();
+            return;
+        }
+        if (!mapEl.clientWidth || mapLoading) {
+            return; // tab not laid out yet, or already loading
+        }
+        mapLoading = true;
+        try {
+            [{ default: L }] = await Promise.all([import("leaflet"), import("leaflet/dist/leaflet.css")]);
+        } catch {
+            mapLoading = false;
+            mapHint.textContent = "The map couldn't load; use a place name or coordinates.";
+            return;
+        }
+        // no wheel zoom: the wheel keeps scrolling the panel (buttons, pinch and double-click zoom)
+        map = L.map(mapEl, { zoomControl: true, attributionControl: true, worldCopyJump: true, scrollWheelZoom: false }).setView([22.5, 80], 4);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 18,
+            attribution: "© OpenStreetMap contributors",
+        }).addTo(map);
+        map.on("click", event => setCentre(event.latlng.lat, event.latlng.lng, null, false));
+        new ResizeObserver(() => map.invalidateSize()).observe(mapEl);
+        syncMap(true);
+    }
+
+    function syncMap(fly = false) {
+        if (!map) {
+            return;
+        }
+        const g = state.geocode;
+        if (!g) {
+            mapMarker?.remove();
+            mapAoi?.remove();
+            mapMarker = mapAoi = null;
+            return;
+        }
+        const lat = Number(g.lat);
+        const lon = Number(g.lon);
+        const km = Number(aoiSelect.value);
+        const [w, s, e, n] = bboxFromCentre(lat, lon, [km, km]);
+        if (!mapMarker) {
+            mapMarker = L.circleMarker([lat, lon], { radius: 5, color: "#7dff9c", weight: 2, fillOpacity: 0.9 }).addTo(map);
+            mapAoi = L.rectangle([[s, w], [n, e]], { color: "#7dff9c", weight: 1.5, fillOpacity: 0.08 }).addTo(map);
+        } else {
+            mapMarker.setLatLng([lat, lon]);
+            mapAoi.setBounds([[s, w], [n, e]]);
+        }
+        if (fly) {
+            fitAoi();
+        }
+    }
+
+    // zoom so the AOI square fits the map (expanded or not) with room to breathe around it
+    function fitAoi(animate = true) {
+        if (map && mapAoi) {
+            map.fitBounds(mapAoi.getBounds(), { padding: [28, 28], animate });
+        }
+    }
+
+    // One search centre, from any of the three inputs; the others follow it.
+    function setCentre(lat, lon, name = null, fly = true) {
+        if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+            return;
+        }
+        state.geocode = { lat, lon, display_name: name ?? `${lat.toFixed(4)}, ${lon.toFixed(4)}` };
+        if (document.activeElement !== latInput) {
+            latInput.value = lat.toFixed(4);
+        }
+        if (document.activeElement !== lonInput) {
+            lonInput.value = lon.toFixed(4);
+        }
+        if (!name) {
+            locInput.value = "";
+        }
+        locDropdown.hidden = true;
+        searchButton.disabled = false;
+        clearButton.disabled = false;
+        syncMap(fly);
+    }
+
+    const fromLatLon = () => {
+        if (latInput.value.trim() && lonInput.value.trim()) { // an empty field is not 0
+            setCentre(Number(latInput.value), Number(lonInput.value), null, true);
+        }
+    };
+    [latInput, lonInput].forEach(input => {
+        input.addEventListener("change", fromLatLon);
+        input.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                fromLatLon();
+            }
+        });
+    });
+    aoiSelect.addEventListener("change", () => syncMap(false));
+
+    // Clear selection: the search centre, its results and a selected scene.
+    clearButton.addEventListener("click", () => {
+        state.geocode = null;
+        state.searchAoi = null;
+        locInput.value = "";
+        latInput.value = "";
+        lonInput.value = "";
+        results.replaceChildren();
+        searchStatus.hidden = true;
+        searchButton.disabled = true;
+        clearButton.disabled = true;
+        syncMap();
+        if (state.selection?.source === "search") {
+            select(null);
+        }
+    });
 
     function cdseHeaders(extra = {}) {
         return state.userKey
@@ -1239,7 +1402,6 @@ export function createInputView(root, { onStart }) {
             keyId.value = "";
             keySecret.value = "";
             keyStatus.textContent = "";
-            refreshQuota();
         }
     });
     keyApply.addEventListener("click", async () => {
@@ -1251,24 +1413,19 @@ export function createInputView(root, { onStart }) {
         }
         state.userKey = { id, secret };
         keyStatus.textContent = "Checking key…";
-        const ok = await refreshQuota();
+        const ok = await checkKey();
         keyStatus.textContent = ok ? "Key accepted — searches now use your account's quota." : "Key rejected — still using it would fail; clear it or fix it.";
         if (!ok) {
             state.userKey = null;
         }
     });
 
-    async function refreshQuota() {
+    // The quota endpoint authenticates with the key, so it doubles as the key check.
+    async function checkKey() {
         try {
-            const q = await (await api("/api/cdse/quota", { headers: cdseHeaders() })).json();
-            quotaBox.replaceChildren(
-                ...quotaLines(q).map(line => el("div", { text: line })),
-                el("div", { class: "iv-hint", text: "No 'remaining' count is shown: CDSE doesn't publish one. It throttles by volume (HTTP 429) once a limit is hit, and monthly limits reset on the 1st." }),
-                el("a", { class: "iv-link", href: q.documented_limits.source, target: "_blank", rel: "noopener", text: "Copernicus quota documentation" }),
-            );
+            await api("/api/cdse/quota", { headers: cdseHeaders() });
             return true;
-        } catch (error) {
-            quotaBox.replaceChildren(el("div", { class: "iv-status is-error", text: `Quota unavailable: ${error.message}` }));
+        } catch {
             return false;
         }
     }
@@ -1279,9 +1436,6 @@ export function createInputView(root, { onStart }) {
     locInput.addEventListener("input", () => {
         const query = locInput.value.trim();
         const requestId = ++geoRequest;
-        state.geocode = null;
-        searchButton.disabled = true;
-        locReadout.hidden = true;
         clearTimeout(geoTimer);
         if (query.length < 3) {
             locDropdown.hidden = true;
@@ -1306,12 +1460,8 @@ export function createInputView(root, { onStart }) {
                     type: "button",
                     text: place.display_name,
                     onclick: () => {
-                        state.geocode = place;
                         locInput.value = place.display_name;
-                        locDropdown.hidden = true;
-                        locReadout.hidden = false;
-                        locReadout.textContent = `📍 ${Number(place.lat).toFixed(4)}, ${Number(place.lon).toFixed(4)}`;
-                        searchButton.disabled = false;
+                        setCentre(Number(place.lat), Number(place.lon), place.display_name, true);
                     },
                 })));
             } catch (error) {
@@ -1341,7 +1491,10 @@ export function createInputView(root, { onStart }) {
         }
         searchButton.disabled = true;
         results.replaceChildren();
+        syncMap(false);
+        fitAoi();
         showSearchStatus("Querying the Sentinel Hub Catalog…", false, true);
+        searchStatus.classList.add("is-big");
         try {
             const data = await (await api("/api/cdse/search", {
                 method: "POST",
@@ -1366,7 +1519,6 @@ export function createInputView(root, { onStart }) {
             showSearchStatus(`Search failed: ${cdseErrorText(error)}`, true);
         } finally {
             searchButton.disabled = false;
-            refreshQuota();
         }
     });
 
@@ -1414,7 +1566,6 @@ export function createInputView(root, { onStart }) {
             showSearchStatus(`Couldn't load that scene: ${cdseErrorText(error)}`, true);
         } finally {
             card.classList.remove("is-loading");
-            refreshQuota();
         }
     }
 

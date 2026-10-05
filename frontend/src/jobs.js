@@ -69,7 +69,8 @@ export function createJobStore() {
                 return;
             }
             const clean = String(name ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
-            const next = clean && clean !== `Job ${job.n}` ? clean : null;
+            // the default sidebar label ("Job N <place>") stays the default (null)
+            const next = clean && clean !== jobListLabel({ ...job, name: null }) ? clean : null;
             if (next !== job.name) {
                 job.name = next;
                 emit();
@@ -117,10 +118,9 @@ export function createJobStore() {
         creationOrder() {
             return jobs.slice();
         },
-        // newest first (side panel). Pinned jobs stay here too (and also
-        // appear in the PINNED section).
+        // newest first (side panel). Pinned jobs show only in the PINNED section.
         panelOrder() {
-            return jobs.slice().reverse();
+            return jobs.slice().reverse().filter(job => !job.pinned);
         },
         pinnedOrder() {
             return jobs.slice().reverse().filter(job => job.pinned);
@@ -143,6 +143,72 @@ export function createJobStore() {
 
 export function jobLabel(job) {
     return job.name || `Job ${job.n}`;
+}
+
+// Indian state / UT names as their usual short codes, for the one-line sidebar label.
+const STATE_CODES = {
+    "Andhra Pradesh": "AP", "Arunachal Pradesh": "AR", Assam: "AS", Bihar: "BR", Chhattisgarh: "CG", Delhi: "DL",
+    Goa: "GA", Gujarat: "GJ", Haryana: "HR", "Himachal Pradesh": "HP", "Jammu and Kashmir": "J&K", Jharkhand: "JH",
+    Karnataka: "KA", Kerala: "KL", Ladakh: "LA", "Madhya Pradesh": "MP", Maharashtra: "MH", Manipur: "MN",
+    Meghalaya: "ML", Mizoram: "MZ", Nagaland: "NL", Odisha: "OD", Punjab: "PB", Rajasthan: "RJ", Sikkim: "SK",
+    "Tamil Nadu": "TN", Telangana: "TS", Tripura: "TR", "Uttar Pradesh": "UP", Uttarakhand: "UK", "West Bengal": "WB",
+};
+
+// Where the job's input is, as short as possible: "Ooty (Nilgiris), TN"; a searched or uploaded scene by
+// its centre ("27.05°N 88.26°E"); "" when the input has no location.
+export function jobPlace(input) {
+    if (!input) {
+        return "";
+    }
+    if (input.source === "library" && input.title) {
+        return input.title.split(", ").filter(part => part !== "India").map(part => STATE_CODES[part] ?? part).join(", ");
+    }
+    const g = input.geo;
+    if (g && Number.isFinite(g.lat) && Number.isFinite(g.lon)) {
+        return `${Math.abs(g.lat).toFixed(2)}°${g.lat >= 0 ? "N" : "S"} ${Math.abs(g.lon).toFixed(2)}°${g.lon >= 0 ? "E" : "W"}`;
+    }
+    return "";
+}
+
+// The sidebar's job name: the job number plus its place in brackets, editable as a whole. The 3D view's tabs
+// keep jobLabel() (just "Job N" unless renamed).
+export function jobListLabel(job) {
+    const place = jobPlace(job.input);
+    return job.name || (place ? `Job ${job.n} (${place})` : `Job ${job.n}`);
+}
+
+// A sidebar label split for display: "Job 1 (Darjeeling, WB)" → { head: "Job 1", place: "Darjeeling, WB" };
+// a label without a trailing "(…)" is all head.
+export function splitListLabel(label) {
+    const m = /^(.*?)\s*\((.*)\)$/.exec(label);
+    return m && m[1] ? { head: m[1], place: m[2] } : { head: label, place: "" };
+}
+
+// Two-character squares for the closed sidebar inside the 3D viewer, in the jobs' order: "J1", "J2"… for
+// unnamed jobs; a renamed job's first two letters ("Hi"), or, when another renamed job starts the same way,
+// its first letter plus its first letter that differs from those others ("Hills" / "Himalaya" → "Hl" / "Hm").
+export function jobIconLabels(jobs) {
+    const letters = job => String(job.name ?? "").replace(/[^\p{L}\p{N}]/gu, "");
+    const named = jobs.filter(job => job.name && letters(job));
+    return jobs.map(job => {
+        const s = job.name ? letters(job) : "";
+        if (!s) {
+            return `J${job.n}`;
+        }
+        const head = s[0].toUpperCase();
+        const rivals = named.filter(other => other !== job && letters(other).slice(0, 2).toLowerCase() === s.slice(0, 2).toLowerCase())
+            .map(other => letters(other).toLowerCase());
+        if (!rivals.length) {
+            return head + (s[1] ?? "").toLowerCase();
+        }
+        const lower = s.toLowerCase();
+        for (let i = 1; i < lower.length; i += 1) {
+            if (rivals.every(other => other[i] !== lower[i])) {
+                return head + lower[i];
+            }
+        }
+        return head + String(job.n); // identical names: the job number tells them apart
+    });
 }
 
 // The unsaved-work modal's copy, per action. Always states the count; never

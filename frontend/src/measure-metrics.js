@@ -61,6 +61,18 @@ export function createGeoGrid(grid) {
     return geo;
 }
 
+// Terrain slope (degrees) at a fractional grid position: central differences of the DEM one grid pixel
+// either side (one-sided at the tile's edge).
+export function slopeAt(geo, col, row) {
+    const x0 = Math.max(0, col - 1);
+    const x1 = Math.min(geo.width - 1, col + 1);
+    const y0 = Math.max(0, row - 1);
+    const y1 = Math.min(geo.height - 1, row + 1);
+    const dzdx = x1 > x0 ? (geo.elevation(x1, row) - geo.elevation(x0, row)) / ((x1 - x0) * geo.pixelSizeX) : 0;
+    const dzdy = y1 > y0 ? (geo.elevation(col, y1) - geo.elevation(col, y0)) / ((y1 - y0) * geo.pixelSizeY) : 0;
+    return Math.atan(Math.hypot(dzdx, dzdy)) * (180 / Math.PI);
+}
+
 // One straight segment between two grid points.
 //   horizontal: ground distance, ignoring height (m)
 //   rise:       end elevation − start elevation (m; negative = descent)

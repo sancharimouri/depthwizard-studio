@@ -26,8 +26,8 @@ const ICONS = {
     chevronDown: '<path d="M6 9l6 6 6-6"/>',
     chevronRight: '<path d="M9 6l6 6-6 6"/>',
     // classic arrow cursor with its stem (not just the head)
-    // shifted ~1 mm right so it sits centred in its square
-    cursor: '<path d="M9 3v15.5l4.2-4 2.9 6.6 2.6-1.1-2.9-6.5H21.5z"/>',
+    // 1 mm left, then 0.5 mm back right, of the earlier position (user requests, 2026-10-05)
+    cursor: '<path d="M7 3v15.5l4.2-4 2.9 6.6 2.6-1.1-2.9-6.5H19.5z"/>',
     notes: '<path d="M4 4h16v10l-6 6H4z"/><path d="M14 20v-6h6"/><path d="M8 9h8M8 13h4"/>',
     trash: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/>',
     play: '<path d="M7 4.5v15l12.5-7.5z"/>',
@@ -369,7 +369,7 @@ export function createExpandedChrome({
     optCont.addEventListener("click", () => { closeAll(); tool.setMode(MODES.CONTINUOUS); });
 
     const viewMenu = popover(viewWrap, "xv-menu xv-above");
-    for (const [layer, label] of [["satellite-3d", "True colour"], ["dsm-3d", "DSM (relative depth)"], ["elevation-3d", "DEM elevation"], ["wireframe-3d", "Wireframe"]]) {
+    for (const [layer, label] of [["satellite-3d", "RGB (True Colour)"], ["dsm-3d", "DSM (relative depth)"], ["elevation-3d", "DEM elevation"], ["wireframe-3d", "Wireframe"]]) {
         const b = el("button", { type: "button", role: "menuitemradio", "data-layer": layer, text: label }, viewMenu);
         b.addEventListener("click", () => { closeAll(); setLayer(layer); syncToolbar(); });
     }

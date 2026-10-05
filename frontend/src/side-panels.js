@@ -102,10 +102,11 @@ export function terrainStats(terrainData) {
     return { min: lo, max: hi, mean, relief: hi - lo };
 }
 
-export function renderTerrainStats(terrainData) {
+// prefix: "xp-elev" (Studio viewer) or "demo-elev" (Demo page)
+export function renderTerrainStats(terrainData, prefix = "xp-elev") {
     const s = terrainStats(terrainData);
     const fmt = v => (v == null ? "—" : `${Math.round(v).toLocaleString()} m`);
-    [["xp-elev-min", s.min], ["xp-elev-max", s.max], ["xp-elev-mean", s.mean], ["xp-elev-relief", s.relief]]
+    [[`${prefix}-min`, s.min], [`${prefix}-max`, s.max], [`${prefix}-mean`, s.mean], [`${prefix}-relief`, s.relief]]
         .forEach(([id, v]) => {
             const node = document.getElementById(id);
             if (node) {
@@ -180,6 +181,7 @@ const TOUR_STEPS = [
     { sel: '[data-box="terrain"]', title: "Terrain statistics", text: "Elevation range, mean, relief and mesh grid of the terrain shown, plus the vertical exaggeration control." },
     { sel: '[data-box="details"]', title: "Details", text: "Where the image and the terrain come from: sensor, tile, date, GSD, CRS." },
     { sel: '[data-box="inspect"]', title: "Image inspection", text: "The job's source image. Hover it to magnify; click to select that point on the 3D surface." },
+    { sel: '[data-box="probe"]', title: "Live terrain probe", text: "Elevation and slope of the terrain point under the pointer." },
     { sel: '[data-box="scenario"]', title: "Scenario analysis", text: "Illustrative flood and (placeholder) slope overlays, and a Landslide option that is coming soon. Not hazard models." },
     { sel: '[data-box="flythrough"]', title: "Fly-through", text: "One full orbit while zooming in, with pause/resume, Run again and Reset." },
     { sel: '[data-box="facts"]', title: "Facts", text: "Hazards not covered by Scenario Analysis, and named peaks, rivers and glaciers near this place." },
@@ -400,7 +402,69 @@ export function renderScenarioCard(job, key) {
         card.hidden = !html;
         card.innerHTML = html;
         fitFactRows(card);
+        attachEpicentreHover(card.querySelector(".xp-epi"));
     });
+}
+
+// The earthquake card's epicentre map, interactive: hovering picks the nearest epicentre, which grows and
+// gets a ring while the others fade, and a small label beside it gives its magnitude, year and distance.
+function attachEpicentreHover(fig) {
+    const svg = fig?.querySelector("svg");
+    const caption = fig?.querySelector("figcaption");
+    if (!svg || !caption) {
+        return;
+    }
+    const stage = document.createElement("div");
+    stage.className = "xp-epi-stage";
+    svg.before(stage);
+    stage.append(svg);
+    const tip = document.createElement("div");
+    tip.className = "xp-epi-tip";
+    tip.hidden = true;
+    stage.append(tip);
+    const dots = [...svg.querySelectorAll(".xp-epi-dot")];
+    const viewSize = svg.viewBox.baseVal.width || 220;
+    let hot = null;
+
+    function setHot(dot) {
+        if (dot === hot) {
+            return;
+        }
+        hot?.classList.remove("is-hot");
+        hot = dot;
+        svg.classList.toggle("has-hot", Boolean(dot));
+        if (!dot) {
+            tip.hidden = true;
+            return;
+        }
+        dot.classList.add("is-hot");
+        dot.parentNode.append(dot); // drawn on top of its neighbours
+        tip.textContent = dot.dataset.info;
+        tip.hidden = false;
+        const r = svg.getBoundingClientRect();
+        const s = stage.getBoundingClientRect();
+        const k = r.width / viewSize;
+        const x = r.left - s.left + dot.cx.baseVal.value * k;
+        const y = r.top - s.top + dot.cy.baseVal.value * k;
+        tip.style.left = `${Math.min(Math.max(x, tip.offsetWidth / 2 + 2), s.width - tip.offsetWidth / 2 - 2)}px`;
+        tip.style.top = `${y - dot.r.baseVal.value * k - 8}px`;
+    }
+
+    stage.addEventListener("pointermove", e => {
+        const r = svg.getBoundingClientRect();
+        const ux = ((e.clientX - r.left) / r.width) * viewSize;
+        const uy = ((e.clientY - r.top) / r.height) * viewSize;
+        let best = null;
+        for (const dot of dots) {
+            const d = Math.hypot(dot.cx.baseVal.value - ux, dot.cy.baseVal.value - uy) - dot.r.baseVal.value;
+            if (d < 6 && (!best || d < best.d)) {
+                best = { d, dot };
+            }
+        }
+        setHot(best?.dot ?? null);
+    });
+    stage.addEventListener("pointerleave", () => setHot(null));
+    caption.textContent += " · hover an epicentre for details";
 }
 
 export function initFacts(getActiveJob) {

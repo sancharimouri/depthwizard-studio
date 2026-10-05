@@ -5996,14 +5996,14 @@ kbd {
 ============================================================ */
 
 .final-demo-box.is-expanded .final-demo-left-rail {
-    /* 0.7 cm lower than before; scrollable region 1 cm taller */
+    /* 0.7 cm lower than before; scrollable region 1 cm (+5 mm, 2026-10-05) taller */
     top: calc(64px + 0.7cm);
-    max-height: calc(100% - 64px - 150px + 1.5cm);
+    max-height: calc(100% - 64px - 150px + 2cm);
 }
 
 .final-demo-box.is-expanded .final-demo-right-rail {
     top: calc(70px + 0.7cm);
-    max-height: calc(100% - 70px - 150px + 1.5cm);
+    max-height: calc(100% - 70px - 150px + 2cm);
 }
 
 .final-demo-box.is-expanded .final-demo-left-rail,
@@ -6127,9 +6127,41 @@ kbd {
     border-top: 1px solid rgba(var(--text-rgb), 0.1);
 }
 
-/* 3D viewer header tile: the dot is green (mode accent), no tier colouring */
-.job-tab .job-tab-dot {
+/* Job dots (3D viewer tabs and sidebar job cards): green = the job on screen,
+   yellow = open but not on screen. No tier colouring. */
+.job-tab .job-tab-dot,
+.job-dot {
+    background: #e8c547;
+}
+
+.job-tab .job-tab-dot.is-current,
+.job-dot.is-current {
     background: var(--accent-solid);
+}
+
+.job-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+/* sidebar job name: "Job N <place>" on one line, shortened with an ellipsis */
+.job-num {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.job-num-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.job-head .job-status {
+    flex: none;
 }
 
 
@@ -8234,7 +8266,8 @@ body {
    track, a white thumb with an accent ring and halo, the value in a small framed chip, and spaced end labels.
    Dark mode in the emerald accent, bright mode in the site orange.
    ============================================================ */
-.xp-slider-row:has(#xp-vex-slider) {
+.xp-slider-row:has(#xp-vex-slider),
+.xp-slider-row:has(#demo-vex-slider) {
     --sl-from: rgba(var(--neon-rgb), 0.16);
     --sl-to: rgb(var(--neon-rgb));
     --sl-ring: rgb(var(--neon-rgb));
@@ -8242,7 +8275,8 @@ body {
     margin-top: 16px;
 }
 
-.xp-slider-row:has(#xp-vex-slider) .xp-slider-label {
+.xp-slider-row:has(#xp-vex-slider) .xp-slider-label,
+.xp-slider-row:has(#demo-vex-slider) .xp-slider-label {
     align-items: center;
     font-family: var(--font-head);
     font-size: 12px;
@@ -8250,7 +8284,8 @@ body {
     color: rgb(var(--text-rgb));
 }
 
-#xp-vex-value {
+#xp-vex-value,
+#demo-vex-value {
     padding: 2px 8px;
     border: 1px solid rgba(var(--neon-rgb), 0.45);
     border-radius: 6px;
@@ -8261,7 +8296,8 @@ body {
     font-weight: 500;
 }
 
-#xp-vex-slider {
+#xp-vex-slider,
+#demo-vex-slider {
     -webkit-appearance: none;
     appearance: none;
     display: block;
@@ -8275,7 +8311,8 @@ body {
     cursor: pointer;
 }
 
-#xp-vex-slider::-webkit-slider-thumb {
+#xp-vex-slider::-webkit-slider-thumb,
+#demo-vex-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
@@ -8288,13 +8325,15 @@ body {
     transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-#xp-vex-slider:active::-webkit-slider-thumb {
+#xp-vex-slider:active::-webkit-slider-thumb,
+#demo-vex-slider:active::-webkit-slider-thumb {
     cursor: grabbing;
     transform: scale(1.08);
     box-shadow: 0 0 0 7px var(--sl-halo), 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
-#xp-vex-slider::-moz-range-thumb {
+#xp-vex-slider::-moz-range-thumb,
+#demo-vex-slider::-moz-range-thumb {
     width: 12px;
     height: 12px;
     border: 3px solid var(--sl-ring);
@@ -8304,37 +8343,42 @@ body {
     cursor: grab;
 }
 
-#xp-vex-slider::-moz-range-track {
+#xp-vex-slider::-moz-range-track,
+#demo-vex-slider::-moz-range-track {
     height: 8px;
     border-radius: 999px;
     background: linear-gradient(90deg, var(--sl-from), var(--sl-to));
 }
 
-#xp-vex-slider:focus-visible::-webkit-slider-thumb {
+#xp-vex-slider:focus-visible::-webkit-slider-thumb,
+#demo-vex-slider:focus-visible::-webkit-slider-thumb {
     box-shadow: 0 0 0 5px var(--sl-halo), 0 0 0 8px rgba(var(--neon-rgb), 0.45);
 }
 
-.xp-slider-row:has(#xp-vex-slider) .xp-slider-ends {
+.xp-slider-row:has(#xp-vex-slider) .xp-slider-ends,
+.xp-slider-row:has(#demo-vex-slider) .xp-slider-ends {
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 9.5px;
     letter-spacing: 0.12em;
     color: rgba(var(--text-rgb), 0.5);
 }
 
-:root[data-theme="light"] .xp-slider-row:has(#xp-vex-slider) {
+:root[data-theme="light"] .xp-slider-row:has(#xp-vex-slider),
+:root[data-theme="light"] .xp-slider-row:has(#demo-vex-slider) {
     --sl-from: rgba(196, 120, 58, 0.18);
     --sl-to: rgb(196, 120, 58);
     --sl-ring: rgb(196, 120, 58);
     --sl-halo: rgba(196, 120, 58, 0.2);
 }
 
-:root[data-theme="light"] #xp-vex-slider::-webkit-slider-thumb {
+:root[data-theme="light"] #xp-vex-slider::-webkit-slider-thumb,
+:root[data-theme="light"] #demo-vex-slider::-webkit-slider-thumb {
     box-shadow: 0 0 0 5px var(--sl-halo), 0 2px 6px rgba(90, 60, 30, 0.25);
 }
 
 /* the sidebar's D in the bright scheme: the same mark, tinted to the site orange */
 :root[data-theme="light"] .sb-logo img {
-    content: url("/brand-d-sidebar-light.png");
+    content: url("/brand-d-desktop.png"); /* the desktop app's black/white D reads on both themes */
 }
 
 /* ============================================================
@@ -8391,4 +8435,652 @@ body {
         radial-gradient(circle at 0.5px 0.5px, rgba(140, 84, 38, 0.2) 1px, transparent 1.6px),
         linear-gradient(to right, rgba(150, 92, 44, 0.055) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(150, 92, 44, 0.055) 1px, transparent 1px);
+}
+
+
+/* ============================================================
+   DEMO PAGE (2026-10-05): both rails the width of the Studio viewer's side
+   boxes; fixed (non-collapsible) Live Terrain Probe / Terrain Statistics /
+   Fly-through boxes on the right; a brighter green Build Your Own; the
+   "Try the Studio" callout after a run.
+============================================================ */
+#page-explore .left-rail,
+#page-explore .right-rail {
+    width: calc(272px - 0.7cm);
+}
+
+#page-explore .right-rail {
+    gap: 10px;
+    max-height: calc(100vh - 160px); /* stops above the gestures hint */
+}
+
+/* the header above Regions is gone: both rails start on the same line, under the theme button */
+#page-explore .left-rail,
+#page-explore .right-rail {
+    top: 62px;
+}
+
+#page-explore .demo-run-button {
+    width: 100%;
+    background: rgb(var(--bg-alt-rgb, var(--bg-rgb))); /* opaque over the terrain */
+}
+
+#page-explore .demo-run-button:hover:not(:disabled) {
+    background: rgb(var(--bg-strong-hover-rgb, var(--bg-rgb)));
+}
+
+#page-explore .demo-box {
+    padding: 14px 16px;
+}
+
+#page-explore .demo-box .stats-strip {
+    padding: 0;
+    border: 0;
+    background: none;
+    backdrop-filter: none;
+}
+
+#page-explore .demo-box .xp-slider-row {
+    margin-top: 12px;
+}
+
+#page-explore .xp-fly-actions,
+#page-explore .run-panel {
+    pointer-events: auto;
+}
+
+#page-explore .run-reconstruction-button {
+    padding: 12px 14px;
+    font-size: 11px;
+}
+
+#page-explore .layer-buttons-row .layer-button {
+    padding: 9px 6px;
+}
+
+/* always the green fill and glow it used to show only on hover (an id beats the dark theme's panel texture
+   on .region-card); a straight top-to-bottom fill, so the card doesn't read as tilted */
+#build-your-own-card {
+    border-color: rgba(var(--accent-rgb), 0.7);
+    background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.38), rgba(var(--accent-rgb), 0.26));
+    box-shadow: 0 0 24px rgba(var(--accent-rgb), 0.32);
+    text-align: center;
+}
+
+#build-your-own-card:hover {
+    filter: brightness(1.1);
+}
+
+.build-your-own-card .region-name {
+    color: rgb(var(--accent-rgb));
+}
+
+.build-your-own-card .region-meta {
+    color: rgba(var(--text-rgb), 0.75);
+}
+
+.demo-callout {
+    position: fixed;
+    z-index: 30;
+    top: 50%;
+    left: 50%;
+    width: min(440px, calc(100% - 48px));
+    padding: 26px 28px 24px;
+    transform: translate(-50%, -50%);
+
+    border: 1px solid rgba(var(--accent-rgb), 0.45);
+    border-radius: 18px;
+    /* dewy glass: translucent, blurred, a soft green sheen from the top */
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(var(--accent-rgb), 0.22), transparent 70%),
+        rgba(var(--bg-rgb), 0.55);
+    backdrop-filter: blur(18px) saturate(1.3);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 40px rgba(var(--accent-rgb), 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    text-align: center;
+
+    animation: demo-callout-in 0.4s ease-out;
+}
+
+.demo-callout[hidden] {
+    display: none;
+}
+
+.demo-callout-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(var(--accent-rgb));
+}
+
+.demo-callout-body {
+    margin: 10px auto 18px;
+    max-width: 360px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(var(--text-rgb), 0.85);
+}
+
+.demo-callout-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    border: 0;
+    background: none;
+    color: rgba(var(--text-rgb), 0.6);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.demo-callout-cta {
+    padding: 11px 22px;
+    border: 1px solid rgba(var(--accent-rgb), 0.7);
+    border-radius: 10px;
+    background: rgba(var(--accent-rgb), 0.26);
+    box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.25);
+    color: rgb(var(--text-rgb));
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+
+.demo-callout-cta:hover {
+    background: rgba(var(--accent-rgb), 0.38);
+}
+
+@keyframes demo-callout-in {
+    from { opacity: 0; transform: translate(-50%, -46%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .demo-callout {
+        animation: none;
+    }
+}
+
+/* Scenario Analysis buttons: EARTHQUAKE fits inside its own outline */
+.final-demo-right-rail .danger-zone-buttons .danger-button {
+    flex: 1 1 auto; /* each starts from its own text width, so EARTHQUAKE gets the room it needs */
+    min-width: 0;
+    padding: 10px 4px;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+/* Live Terrain Probe: two values side by side on one line */
+.xp-probe {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Earthquake epicentre map: hover highlight + label (side-panels.js attachEpicentreHover) */
+.xp-epi-stage {
+    position: relative;
+    max-width: 220px;
+    margin: 0 auto;
+}
+
+.xp-epi-dot {
+    transition: opacity 0.15s ease, stroke-width 0.15s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.xp-epi svg.has-hot .xp-epi-dot:not(.is-hot) {
+    opacity: 0.3;
+}
+
+.xp-epi-dot.is-hot {
+    stroke: #fff;
+    stroke-width: 1.4;
+    transform: scale(1.6);
+    filter: drop-shadow(0 0 4px rgba(255, 190, 90, 0.8));
+}
+
+.xp-epi-tip {
+    position: absolute;
+    z-index: 2;
+    transform: translate(-50%, -100%);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(var(--text-rgb), 0.18);
+    background: rgba(var(--bg-alt-rgb, var(--bg-rgb)), 0.95);
+    color: rgb(var(--text-rgb));
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.xp-epi-tip[hidden] {
+    display: none;
+}
+
+/* Terrain filter dropdown: option text 2.5 pt larger */
+.iv-filter-option { font-size: calc(8px + 2.5pt); }
+.iv-filter-option-count { font-size: calc(7px + 2.5pt); }
+
+/* ---------- Search Online (2026-10-05): map picker, lat/lon, Search + Clear */
+.iv-latlon-row {
+    grid-template-columns: 1fr 1fr;
+}
+
+.iv-map {
+    flex: none;
+    height: 190px;
+    border-radius: 10px;
+    border: 1px solid rgba(var(--text-rgb), 0.12);
+    overflow: hidden;
+    z-index: 0; /* Leaflet's panes stay under the page's popovers */
+    cursor: crosshair;
+}
+
+.iv-map .leaflet-container,
+.iv-map.leaflet-container {
+    background: rgba(var(--text-rgb), 0.05);
+    font-family: inherit;
+}
+
+.iv-map .leaflet-control-attribution {
+    font-size: 8px;
+}
+
+.iv-map-hint {
+    margin-top: -4px;
+}
+
+.iv-search-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.iv-search-button {
+    border-color: rgba(var(--accent-rgb), 0.6);
+    background: rgba(var(--accent-rgb), 0.22);
+    color: rgb(var(--text-rgb));
+}
+
+.iv-search-button:hover:not(:disabled) {
+    background: rgba(var(--accent-rgb), 0.34);
+    border-color: rgba(var(--accent-rgb), 0.8);
+}
+
+/* long scene ids wrap inside their card instead of running out of it */
+.scene-result-card > div {
+    min-width: 0;
+}
+
+.scene-result-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* "Querying the Sentinel Hub Catalog…" 3 pt larger */
+.iv-status.is-big {
+    font-size: calc(8px + 3pt);
+}
+
+/* ---------- sliding selection (2026-10-05): the input tabs' backdrop and the
+   sidebar tabs' underline move to the newly selected option */
+.iv-tabs {
+    position: relative;
+}
+
+.iv-tab-slider {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: 0;
+    border-radius: 9px;
+    background: #1f2723;
+    transition: transform 0.28s cubic-bezier(0.3, 0.7, 0.2, 1), width 0.28s cubic-bezier(0.3, 0.7, 0.2, 1);
+    pointer-events: none;
+}
+
+.iv-tab-slider.no-anim {
+    transition: none;
+}
+
+:root[data-theme="light"] .iv-tab-slider {
+    background: rgba(var(--accent-rgb), 0.16);
+}
+
+.iv-tabs .iv-tab,
+:root[data-theme="light"] .iv-tabs .iv-tab[aria-selected="true"],
+.iv-tabs .iv-tab[aria-selected="true"] {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+.iv-tab {
+    transition: color 0.2s ease;
+}
+
+.sb-tabs {
+    position: relative;
+}
+
+.sb-tab[aria-selected="true"]::after {
+    content: none;
+}
+
+.sb-tab-underline {
+    position: absolute;
+    bottom: -1px;
+    left: 9%;
+    width: 32%;
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(var(--neon-rgb), 0.6);
+    transition: transform 0.28s cubic-bezier(0.3, 0.7, 0.2, 1);
+    pointer-events: none;
+}
+
+.sb-tab-underline.is-jobs {
+    transform: translateX(156.25%); /* 50% of the bar = 50/32 of its own width */
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .iv-tab-slider,
+    .sb-tab-underline {
+        transition: none;
+    }
+}
+
+/* ============================================================
+   SIDEBAR (2026-10-05): closed by default; hovering opens it over the page,
+   the lock (inside the bar, in its header) keeps it open and pushing the page.
+   Inside the 3D viewer the closed rail lists the open jobs as squares.
+============================================================ */
+.sb-toggle.sb-lock {
+    position: static;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    margin-left: auto;
+    background: transparent;
+    backdrop-filter: none;
+    transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.sb-lock .sb-lock-closed,
+.sb-lock[aria-pressed="true"] .sb-lock-open {
+    display: none;
+}
+
+.sb-lock[aria-pressed="true"] .sb-lock-closed {
+    display: block;
+}
+
+.sb-lock[aria-pressed="true"] {
+    color: var(--sb-green);
+    border-color: rgba(var(--neon-rgb), 0.45);
+}
+
+.app-sidebar.is-collapsed .sb-lock {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* hover-opened: full width over the page, while the layout keeps the rail's width */
+.app-sidebar.is-peek {
+    margin-right: calc(var(--sb-rail-w) - var(--sb-open-w));
+    z-index: 60;
+    box-shadow: 12px 0 32px rgba(0, 0, 0, 0.35);
+}
+
+.app-sidebar {
+    transition: flex-basis 0.2s ease, width 0.2s ease, margin-right 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* the toggle no longer floats outside the bar: the page's top-left needs less room */
+.topbar {
+    padding-left: 24px;
+}
+
+.final-demo-expanded-bar {
+    left: 14px;
+}
+
+/* job squares (closed rail, 3D viewer only) */
+.sb-job-icons {
+    display: none;
+}
+
+.app-sidebar.is-collapsed.in-viewer #sb-panel-pages {
+    display: none;
+}
+
+.app-sidebar.is-collapsed.in-viewer .sb-job-icons {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.sb-job-icons::-webkit-scrollbar {
+    display: none;
+}
+
+.sb-job-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+
+    border: 1px solid rgba(var(--text-rgb), 0.16);
+    border-radius: 8px;
+    background: rgba(var(--text-rgb), 0.05);
+    color: rgba(var(--text-rgb), 0.78);
+
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.sb-job-icon:hover {
+    background: rgba(var(--text-rgb), 0.1);
+    color: rgb(var(--text-rgb));
+}
+
+.sb-job-icon.is-active {
+    border-color: rgba(var(--neon-rgb), 0.9);
+    background: rgb(var(--neon-rgb));
+    color: #0b0e0d;
+    box-shadow: 0 0 12px rgba(var(--neon-rgb), 0.45);
+}
+
+.sb-job-icon:focus-visible {
+    outline: 2px solid var(--sb-green);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-sidebar {
+        transition: none;
+    }
+}
+
+/* dark theme: a dark map (OSM tiles inverted), so it doesn't glare in the panel */
+:root:not([data-theme="light"]) .iv-map .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9);
+}
+
+/* Upload: the drop box is as big as the preview's image box, with a quiet line glyph */
+.iv-dropzone {
+    flex: 0 0 auto;
+    height: clamp(300px, 40vh, 480px);
+    padding: 24px;
+    gap: 14px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.iv-drop-icon {
+    color: rgba(var(--text-rgb), 0.45);
+}
+
+.iv-dropzone:hover .iv-drop-icon,
+.iv-dropzone.drag-over .iv-drop-icon {
+    color: rgb(var(--accent-rgb));
+}
+
+.iv-dropzone .upload-dropzone-text {
+    font-size: 12.5px;
+}
+
+/* Search Online: breathing room under "Use your own Copernicus API key" (a spacer: the panel's content
+   overflows its box into the scrolling pane, which swallows margins and padding at the end) */
+#iv-panel-search::after {
+    content: "";
+    display: block;
+    flex: none;
+    height: 28px;
+}
+
+/* sidebar job card: "Job 1" larger, the place in brackets after a small gap, dotted when it doesn't fit */
+.sb-panel-jobs .job-head .job-num {
+    flex: 1 1 auto;
+    gap: 6px;
+}
+
+.sb-panel-jobs .job-num-text {
+    flex: none;
+    font-size: 11.5px;
+    overflow: visible;
+}
+
+.job-num-place {
+    display: flex;
+    min-width: 0;
+    margin-left: 4px;
+    font-weight: 500;
+    font-size: 10px;
+    color: rgba(var(--text-rgb), 0.62);
+}
+
+.job-num-place-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* map: expand button (top-right) and the expanded window (at most 65% of the screen each way) */
+.iv-map-wrap {
+    position: relative;
+    flex: none;
+}
+
+.iv-map-expand {
+    position: absolute;
+    z-index: 500; /* above Leaflet's panes and controls */
+    top: 8px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid rgba(var(--text-rgb), 0.2);
+    border-radius: 7px;
+    background: rgba(var(--bg-rgb), 0.85);
+    color: rgb(var(--text-rgb));
+    cursor: pointer;
+}
+
+.iv-map-expand:hover {
+    border-color: rgba(var(--accent-rgb), 0.7);
+    color: rgb(var(--accent-rgb));
+}
+
+.iv-map-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: grid;
+    place-items: center;
+}
+
+.iv-map-modal[hidden] {
+    display: none;
+}
+
+.iv-map-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+}
+
+.iv-map-modal-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 65vw;
+    height: 60vh;
+    padding: 16px;
+    border: 1px solid rgba(var(--text-rgb), 0.14);
+    border-radius: 14px;
+    background: rgb(var(--bg-alt-rgb, var(--bg-rgb)));
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+    --font-body: "DM Sans", Inter, system-ui, sans-serif;
+    font-family: var(--font-body);
+}
+
+.iv-map-modal-head {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 12px;
+}
+
+.iv-map-modal-head .iv-latlon-row {
+    display: contents;
+}
+
+.iv-map-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.iv-map-wrap.is-expanded,
+.iv-map-wrap.is-expanded .iv-map {
+    height: 100%;
+}
+
+.iv-drop-icon {
+    display: grid;
+    place-items: center;
+}
+
+.iv-drop-icon .iv-icon {
+    stroke-width: 1.4;
+}
+
+/* The measuring readout (mode, hint or result, with its Undo button) sits at the top, centred under the
+   job tabs, instead of above the bottom toolbars; short prompts (Pointer / Measuring mode…) appear below it. */
+.final-demo-box.is-expanded .measure-status {
+    top: 64px;
+    bottom: auto;
+}
+
+.final-demo-box:has(.measure-status:not([hidden])) .measure-toast {
+    top: 116px;
 }

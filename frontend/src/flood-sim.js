@@ -1,7 +1,9 @@
 // Flood scenario for the expanded 3D view: a semi-transparent water plane at
-// a chosen water level, a snappy tween when the level slider moves, a "Play
-// flood simulation" playback from the lowest ground up to the slider level,
-// and inundation stats for the water level actually shown at that moment.
+// a chosen water level, a snappy tween when the level slider moves, a
+// "Simulate" playback from the lowest ground up to the slider's maximum (a
+// couple of metres above the highest point), and inundation stats for the
+// water level actually shown at that moment. The level starts, and Reset
+// returns it, half way up the slider.
 //
 // ILLUSTRATIVE "bathtub" fill, not a hydrological model: every DEM cell whose
 // real elevation is below the level counts as inundated, whether or not
@@ -16,6 +18,14 @@ import * as THREE from "three";
 
 const TWEEN_TAU_MS = 70; // exponential approach: ~95% settled after ~210 ms
 const PLAY_MS = 4000;
+const TOP_MARGIN_M = 2; // the slider tops out this far above the highest ground
+
+// The slider's range for a terrain: lowest ground → highest ground + TOP_MARGIN_M; default half way.
+export function floodRange(elevationMin, elevationMax) {
+    const min = Math.floor(elevationMin);
+    const max = Math.ceil(elevationMax) + TOP_MARGIN_M;
+    return { min, max, half: (min + max) / 2 };
+}
 const STATS_INTERVAL_MS = 100;
 
 const easeInOut = t => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
@@ -67,6 +77,7 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
     let frame = 0;
     let lastT = 0;
     let lastStats = 0;
+    let range = null; // floodRange() of the attached terrain
 
     function attach() {
         const t = getTerrain();
@@ -87,11 +98,11 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
         }
         index = inundationIndex(t.grid);
         const { elevationMin: lo, elevationMax: hi } = t.grid;
-        slider.min = String(Math.floor(lo));
-        slider.max = String(Math.ceil(hi));
+        range = floodRange(lo, hi);
+        slider.min = String(range.min);
+        slider.max = String(range.max);
         slider.step = String(Math.max(0.1, Number(((hi - lo) / 400).toPrecision(1))));
-        // Default: the 30th-percentile elevation (what the old flood tint marked).
-        target = shown = index.percentile(0.3);
+        target = shown = range.half;
         slider.value = String(target);
 
         water = new THREE.Mesh(
@@ -199,6 +210,7 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
         if (play) {
             const k = Math.min(1, (t - play.start) / PLAY_MS);
             level = play.from + (play.to - play.from) * easeInOut(k);
+            slider.value = String(level); // the slider follows the rising water
             if (k >= 1) {
                 play = null;
                 syncPlayButton();
@@ -228,7 +240,7 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
     }
 
     function syncPlayButton() {
-        playBtn.textContent = play ? "■ Stop" : "▶ Play flood simulation";
+        playBtn.textContent = play ? "■ Stop" : "▶ Simulate";
         playBtn.setAttribute("aria-pressed", String(Boolean(play)));
     }
 
@@ -256,11 +268,12 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
             cancelAnimationFrame(frame);
             frame = 0;
             target = shown;
+            slider.value = String(shown);
             syncPlayButton();
             draw(shown, true);
             return;
         }
-        play = { from: terrain.grid.elevationMin, to: Number(slider.value), start: performance.now() };
+        play = { from: range.min, to: range.max, start: performance.now() };
         target = play.to;
         syncPlayButton();
         draw(play.from, true);
@@ -271,9 +284,11 @@ export function createFloodSim({ getTerrain, onChange = () => {}, els }) {
         if (!attach()) {
             return;
         }
+        // back to the default: half way up the slider
         play = null;
         syncPlayButton();
-        target = Number(slider.value);
+        target = range.half;
+        slider.value = String(target);
         cancelAnimationFrame(frame);
         frame = 0;
         draw(target, true);

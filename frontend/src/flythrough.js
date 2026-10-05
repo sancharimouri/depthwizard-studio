@@ -136,7 +136,8 @@ function profileAt(profile, az) {
     return Math.max(profile[i], profile[(i + 1) % n]);
 }
 
-export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onReset, els }) {
+// leadMs: length of the eased move into the start pose; onDone: called when a run completes.
+export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onReset, onDone, leadMs = LEAD_MS, els }) {
     const controls = viewer.controls;
     const { toggle, again, reset } = els;
     let state = "idle"; // idle | running | paused | done
@@ -195,15 +196,15 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
     // time (ms since the run began) → camera: lead-in, then the orbit.
     // Both phases ease in and out, so the joins are at rest (no jolt).
     function applyAt(ms) {
-        if (ms < LEAD_MS) {
-            const e = easeInOutCubic(ms / LEAD_MS);
+        if (ms < leadMs) {
+            const e = easeInOutCubic(ms / leadMs);
             target.lerpVectors(plan.from.target, plan.center, e);
             const polar = plan.from.polar + (plan.polar - plan.from.polar) * e;
             const dist = plan.from.dist + (plan.startDist - plan.from.dist) * e;
             pose(target, polar, plan.az0, dist);
             return false;
         }
-        const k = Math.min(1, (ms - LEAD_MS) / ORBIT_MS);
+        const k = Math.min(1, (ms - leadMs) / ORBIT_MS);
         const az = plan.az0 + ORBIT * easeInOutSine(k);
         const dist = plan.startDist + (plan.endDist - plan.startDist) * easeInOutCubic(k);
         pose(plan.center, plan.polar, az, dist);
@@ -310,7 +311,14 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
                 rate = 0;
                 releaseCamera();
                 sync();
+                onDone?.();
             }
+        },
+        // start a run from the code (the Demo page after its reconstruction), like pressing Run again
+        start() {
+            everPressed = true;
+            stop();
+            begin();
         },
         stop,
         get state() {

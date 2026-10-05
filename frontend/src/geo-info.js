@@ -216,7 +216,12 @@ export function epicentreSvg(data, size = 220) {
     const dots = [...events].sort((a, b) => a[2] - b[2]).map(([lon, lat, mag, year]) => {
         const [x, y] = px(lat, lon);
         const r = 1.6 + Math.max(0, mag - 4.5) * 2.2;
-        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" class="xp-epi-dot${mag >= 6 ? " is-strong" : ""}">`
+        // great-circle distance from the centre, as the card's "largest" line (backend/facts haversine_km)
+        const rad = Math.PI / 180;
+        const h = Math.sin((lat - lat0) * rad / 2) ** 2 + Math.cos(lat0 * rad) * Math.cos(lat * rad) * Math.sin((lon - lon0) * rad / 2) ** 2;
+        const km = 6371 * 2 * Math.asin(Math.sqrt(h));
+        const info = `M${Number(mag).toFixed(1)} · ${year} · ${Math.round(km)} km away`;
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" data-info="${esc(info)}" class="xp-epi-dot${mag >= 6 ? " is-strong" : ""}">`
             + `<title>M${Number(mag).toFixed(1)} · ${esc(year)}</title></circle>`;
     }).join("");
     return `<figure class="xp-epi"><svg viewBox="0 0 ${size} ${size}" width="100%" role="img" `

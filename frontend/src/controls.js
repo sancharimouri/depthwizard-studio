@@ -49,21 +49,12 @@ export function createControls(camera, domElement, target, homePosition = new TH
     controls.minDistance = 5 * (100 / 60);
     controls.maxDistance = 140 * (100 / 60);
 
-    // Negative: camera-controls' default azimuth sign is a "camera orbit"
-    // feel (drag right → camera swings right → the terrain's near face
-    // slides left on screen). The old rig instead rotated the terrain
-    // itself, a direct-manipulation feel (drag right → the surface under
-    // the cursor follows the cursor right) — confirmed by dispatching
-    // synthetic drags and comparing the rendered result before/after.
-    // Negating azimuthRotateSpeed restores that same feel here, for both
-    // drag and wheel-rotate (both route through the same internal call).
-    controls.azimuthRotateSpeed = -1;
-
-    // Same reasoning, vertical axis: camera-controls' default polar sign
-    // tilts the opposite way from the old rig's pitch for a given
-    // drag/scroll-down — confirmed backwards in actual use. Negating
-    // polarRotateSpeed fixes drag and wheel-rotate together (both use it).
-    controls.polarRotateSpeed = -1;
+    // Direct manipulation (user report, 2026-10-05: the negated speeds moved
+    // the structure opposite to the drag): camera-controls' own signs, so the
+    // surface under the cursor follows a drag, and a sideways scroll, in the
+    // direction the hand moves.
+    controls.azimuthRotateSpeed = 1;
+    controls.polarRotateSpeed = 1;
 
     // Weighted coast: tighter follow while actively dragging so the camera
     // doesn't feel laggy mid-gesture, a longer glide once released so a
@@ -92,11 +83,9 @@ export function createControls(camera, domElement, target, homePosition = new TH
     controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
     controls.mouseButtons.right = CameraControls.ACTION.NONE;
     controls.mouseButtons.middle = CameraControls.ACTION.NONE;
-    // Plain two-finger trackpad scroll = rotate. camera-controls hardcodes
-    // ctrlKey wheel events (trackpad pinch) to its own zoom action
-    // regardless of this setting, so it never conflicts with the pinch
-    // handling below.
-    controls.mouseButtons.wheel = CameraControls.ACTION.ROTATE;
+    // Every wheel event is handled by onWheel below (scroll up/down and pinch
+    // zoom, sideways scroll rotates), so the library's own wheel action is off.
+    controls.mouseButtons.wheel = CameraControls.ACTION.NONE;
 
     // Real touch: one finger rotates, two-finger pinch dollies (distance),
     // not the lens-style zoom.
@@ -154,33 +143,40 @@ export function createControls(camera, domElement, target, homePosition = new TH
     // its own handler (radians this frame) to spin the structure instead.
     controls.autoRotateHandler = null;
 
-    // camera-controls always treats a ctrlKey wheel event (trackpad pinch,
-    // or the ctrl-scroll a mouse+keyboard user substitutes for it) as its
-    // own ACTION.ZOOM — a camera.zoom lens scale — no matter how
-    // mouseButtons.wheel is configured. That's a different mechanism than
-    // the old distance-based zoom (min/maxDistance), so claim the gesture
-    // ourselves ahead of the library's listener and dolly instead, keeping
-    // the same zoom range and feel as before. Plain two-finger scroll (no
-    // ctrlKey) is left alone for the library's own ACTION.ROTATE handling.
+    // Wheel gestures (2026-10-05): scroll up/down and pinch (ctrlKey) zoom by
+    // dollying the camera (distance, min/maxDistance); a mostly sideways
+    // scroll rotates like a sideways drag. Handled here rather than by
+    // camera-controls, whose wheel zoom is a camera.zoom lens scale.
     function onWheel(event) {
-        if (!event.ctrlKey) {
+        event.preventDefault();
+        if (inputLocked) {
+            return; // Lock View: no zoom or rotation either
+        }
+        // a user gesture, like a drag: pauses auto-rotation and ends a fly-through
+        controls.dispatchEvent({ type: "control" });
+
+        if (!event.ctrlKey && Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+            // same formula and sign as camera-controls' drag/wheel rotate
+            const height = domElement.clientHeight || 1;
+            const px = event.deltaMode === 1 ? event.deltaX * 33 : event.deltaX;
+            controls.rotate((2 * Math.PI * controls.azimuthRotateSpeed * px) / height, 0, true);
             return;
         }
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (inputLocked) {
-            return; // Lock View: no zoom either
-        }
-        pauseAutoRotate();
-
-        // Sign only, not scaled by |deltaY| — see PINCH_DOLLY_SCALE above.
-        // Pinch-out / scroll-up (deltaY < 0) zooms in (closer), matching
-        // the standard ctrl-scroll page-zoom convention and the old
-        // OrbitControls-based zoom it replaces.
         if (event.deltaY === 0) {
             return;
         }
+        if (!event.ctrlKey) {
+            // scroll: up (deltaY < 0) zooms in; a mouse notch (~100 px) ≈ 10 %, a
+            // trackpad's small deltas a fraction of that, so neither crawls nor jumps
+            const px = Math.min(Math.abs(event.deltaMode === 1 ? event.deltaY * 33 : event.deltaY), 150);
+            const scale = PINCH_DOLLY_SCALE ** (px / 50);
+            const next = controls._sphericalEnd.radius * (event.deltaY < 0 ? scale : 1 / scale);
+            controls.dollyTo(THREE.MathUtils.clamp(next, controls.minDistance, controls.maxDistance), true);
+            return;
+        }
+
+        // Pinch: sign only, not scaled by |deltaY| — see PINCH_DOLLY_SCALE above.
+        // Pinch-out (deltaY < 0) zooms in (closer).
         // Based on the pending target radius (_sphericalEnd), not the
         // public `distance` getter (the damped, currently-rendered value,
         // which lags behind during a fast multi-event pinch/scroll under
