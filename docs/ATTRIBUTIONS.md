@@ -16,16 +16,16 @@ same credits.
 
 | Source | Used for | Attribution | Licence |
 |---|---|---|---|
-| Copernicus DEM GLO-30 | Terrain surface for every region and live searches | © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA | Copernicus DEM licence (GLO-30: free) |
+| Copernicus DEM GLO-30 | Surface for the four demo regions, the Darjeeling library tile, searched scenes and uploads | © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA | Copernicus DEM licence (GLO-30: free) |
 | OpenTopography | Serves the Darjeeling GLO-30 DSM | OpenTopography (opentopography.org), NSF | As the underlying GLO-30 |
-| FABDEM v1-2 (via the awesome-gee-community-catalog, `projects/sat-io/open-datasets/FABDEM`) | Bare-earth terrain for library tiles and the Maxar surface model | Hawker et al. (2022), Environ. Res. Lett. 17 024016; University of Bristol / Fathom | CC BY-NC-SA 4.0 |
+| FABDEM v1-2 (via the awesome-gee-community-catalog, `projects/sat-io/open-datasets/FABDEM`) | Terrain (calibrated to ICESat-2 for the Sentinel-2 library tiles) for library tiles, searched scenes and uploads; base of the Maxar surface | Hawker et al. (2022), Environ. Res. Lett. 17 024016; University of Bristol / Fathom | CC BY-NC-SA 4.0 |
 
 ## Models
 
 | Model | Used for | Attribution | Licence |
 |---|---|---|---|
-| Depth Anything V2 Large (`depth-anything/Depth-Anything-V2-Large-hf`) | Backend relative-depth layer | Yang et al. (2024), *Depth Anything V2* | CC BY-NC 4.0 |
-| Depth Anything V2 Small (`depth-anything/Depth-Anything-V2-Small-hf`) | Hugging Face Space, desktop ONNX build, Colab bridge | Yang et al. (2024), *Depth Anything V2* | Apache-2.0 |
+| Depth Anything V2 Large (`depth-anything/Depth-Anything-V2-Large-hf`) | Offline only: the four demo regions' precomputed relative-depth images (not run by the app) | Yang et al. (2024), *Depth Anything V2* | CC BY-NC 4.0 |
+| Depth Anything V2 Small (`depth-anything/Depth-Anything-V2-Small-hf`) | The relative-depth layer: Hugging Face Space (web), ONNX (desktop app) | Yang et al. (2024), *Depth Anything V2* | Apache-2.0 |
 
 ## Facts and scenario cards
 

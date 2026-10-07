@@ -36,6 +36,9 @@ The tiers exist because of a research result: a learned height model works at ~0
 
 The four demo regions (Darjeeling, Kolkata, Bardhaman, Sundarbans) are pre-built assets in `frontend/public/data/`.
 
+The Maxar crops' 3D mesh uses a cosmetic display surface (flattened ground, boosted objects); statistics and readouts
+show the real elevations.
+
 ## Routes that must keep working
 
 The home page carries `id="demo-video"`, and the app is reached at the hash route `#/demo`

@@ -6,8 +6,10 @@
   scored against ICESat-2 ground photons and canopy segments and against GEDI, all independent lidar. Where a product
   used a reference in its own making (FABDEM used GEDI canopy height; ETH canopy height was trained on GEDI), that
   pairing is flagged as non-independent.
-- **Held-out data only.** DFC2019 methods are scored on held-out spatial quadrants (4-fold), against a per-tile OLS
-  oracle fitted on the other three quadrants of the same tile.
+- **Held-out data only.** DFC2019 methods are scored on held-out spatial quadrants (4-fold). The comparator is the
+  per-tile OLS oracle: height above ground = a · (frozen Depth Anything V2) + b, fitted on all valid lidar pixels of the
+  other three quadrants of the same tile and scored on the held-out quadrant. It is an upper-bound-style reference: the
+  best a single affine rescale of the depth model can do with dense truth from the same tile.
 - **Uncertainty.** Tile-bootstrap 95% confidence intervals, paired per-tile Wilcoxon tests, Holm correction where
   several are made.
 - **Pre-registration.** Each decision rule was committed to the audit log before its test ran. Decisions made after
@@ -20,7 +22,7 @@
 | Test | Rule | Result |
 |---|---|---|
 | Method 6 seeds | The headline stands only if every seed beats the oracle on all four metrics | Held: 3 of 3 seeds |
-| Method 6 on GAMUS (2,861 aerial tiles, 0 leakage) | Must beat the oracle, including on RMSE | **Does not generalize:** better MAE, Pearson and Spearman; worse RMSE (4.583 vs. 4.426 m) in every city and seed, because it compresses tall objects |
+| Method 6 on GAMUS (2,861 aerial test tiles, 0 leakage; 2,848 scored, 13 skipped for too few valid lidar pixels) | Must beat the oracle, including on RMSE | **Does not generalize:** better MAE, Pearson and Spearman; worse RMSE (4.583 vs. 4.426 m) in every city and seed, because it compresses tall objects |
 | GAMUS fine-tune | Run only if a city is leaf-on | Stopped: no GAMUS city is leaf-on |
 | RDAH-Net on Sentinel-2 | Rank correlation against ICESat-2 and GEDI | Closed: Spearman ≈ 0 against both |
 | FABDEM residual model (random forest) | Must beat raw FABDEM against ICESat-2 | Not adopted |
@@ -47,3 +49,5 @@ These are recorded, not hidden:
   the failure stays on record, and a fair re-test on unseen data passed.
 - Several of the project's own earlier claims were overturned, among them a vertical-datum bug and an input-scale bug.
   Each correction is logged.
+
+The full audit log is kept in our private research repository and can be shared with the jury on request.

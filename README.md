@@ -5,7 +5,8 @@ Built for Smart India Hackathon 2026 (problem SIH26175).
 
 - **Live demo:** https://depthwizard-studio.vercel.app (open the app at https://depthwizard-studio.vercel.app/#/demo)
 - **Demo video:** https://depthwizard-studio.vercel.app/#demo-video
-- **Desktop app:** https://github.com/sancharimouri/depthwizard2-desktop/releases/latest
+- **Desktop app (macOS, Apple Silicon):** https://github.com/sancharimouri/depthwizard2-desktop/releases/latest.
+  Linux and Windows builds are not available yet.
 
 ## What it is
 
@@ -15,14 +16,15 @@ measurement and hazard facts for the area.
 
 **What it is not:** it does not compute elevation from a single image at 10 m. The terrain always comes from a DEM.
 Depth Anything V2's output is shown as a labelled *relative-depth* layer, not as height. Our research found that at
-10 m Sentinel-2 no model added value over a plain DEM against independent lidar, so the product uses calibrated
-FABDEM. A learned height model (Method 6) is used only for very-high-resolution crops; it is validated on DFC2019
+10 m Sentinel-2 no model added value over a plain DEM against independent lidar, so the product uses plain DEMs:
+FABDEM (calibrated to ICESat-2 for the Sentinel-2 library tiles) and Copernicus GLO-30. A learned height model (Method 6) is used only for very-high-resolution crops; it is validated on DFC2019
 (US cities, satellite imagery) and did not generalize to GAMUS by RMSE.
 
 ## Imagery tiers
 
 - **Tier 1, always:** Sentinel-2 (10 m), searched live through the Copernicus Data Space Ecosystem.
-- **Tier 2, where available:** very-high-resolution imagery (~0.3 m): Maxar Open Data crops or your own upload.
+- **Tier 2, where available:** very-high-resolution imagery (~0.3 m): Maxar Open Data crops (height prediction baked
+  offline). Your own uploads get the DEM terrain and a labelled relative-depth layer.
 
 ## Documentation
 
@@ -56,14 +58,15 @@ Code: MIT. Datasets and models keep their own licences, several are non-commerci
 
 ## Data and model credits
 
-The code is MIT-licensed (`LICENSE`); data and models keep their own licences. Full table: `docs/ATTRIBUTIONS.md`.
+Full table: `docs/ATTRIBUTIONS.md`.
 
 - **Imagery:** Copernicus Sentinel-2 (contains modified Copernicus Sentinel data, via the Copernicus Data Space
   Ecosystem); Maxar (now Vantor) Open Data Program (CC BY-NC 4.0); IEEE GRSS Data Fusion Contest 2019 Track 1 / JHU/APL US3D (library tiles,
   display resolution).
 - **Elevation:** Copernicus DEM GLO-30 (© DLR e.V. / © Airbus Defence and Space GmbH, provided under COPERNICUS by the EU
   and ESA), served for Darjeeling by OpenTopography; FABDEM (Hawker et al. 2022, CC BY-NC-SA 4.0).
-- **Models:** Depth Anything V2 Large (CC BY-NC 4.0) and Small (Apache-2.0), Yang et al. 2024.
+- **Models:** Depth Anything V2 Small (Apache-2.0), run by the app; Depth Anything V2 Large (CC BY-NC 4.0), used offline
+  only for the four demo regions' precomputed relative-depth images. Yang et al. 2024.
 - **Facts and scenario cards:** ThinkHazard! (GFDRR), FAO GAUL 2015, Wikidata, Copernicus EMS / GloFAS, JRC Global
   Surface Water, World Bank / ARUP landslide map, USGS ComCat, NOAA IBTrACS, NOAA SPC.
 - **Map tiles:** © OpenStreetMap contributors.
