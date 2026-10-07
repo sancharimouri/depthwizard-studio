@@ -12,7 +12,7 @@ from backend.main import app
 from backend.storage import library_store as ls
 
 client = TestClient(app)
-pytestmark = pytest.mark.skipif(not catalog.MANIFEST.exists(), reason="library manifest not generated")
+pytestmark = pytest.mark.skipif(not catalog.MANIFEST.exists(), reason=f"library manifest {catalog.MANIFEST} not present (private data/, not in this checkout)")
 
 
 @pytest.fixture

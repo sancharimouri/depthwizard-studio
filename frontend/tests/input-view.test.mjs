@@ -113,10 +113,14 @@ test("Maxar crops get display names; others untouched", async () => {
     assert.equal(out.items[6].title, "Kochi, Kerala");
 });
 
-test("every card text helper handles every catalog item", async () => {
+const STATIC_INDEX = new URL("../public/library-static/index.json", import.meta.url);
+const { existsSync } = await import("node:fs");
+test("every card text helper handles every catalog item", {
+    skip: !existsSync(STATIC_INDEX) && "public/library-static/index.json is private (not in this checkout)",
+}, async () => {
     const { titleCandidates, cardSubtitle, cardTerrain } = await import("../src/input-view.js");
     const { readFileSync } = await import("node:fs");
-    const { items } = JSON.parse(readFileSync(new URL("../public/library-static/index.json", import.meta.url), "utf8"));
+    const { items } = JSON.parse(readFileSync(STATIC_INDEX, "utf8"));
     assert.ok(items.length > 50);
     for (const item of items) {
         const [first] = titleCandidates(item.title);

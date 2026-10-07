@@ -3,8 +3,12 @@
 import importlib.util
 from pathlib import Path
 
-_spec = importlib.util.spec_from_file_location(
-    "bake_static_library", Path(__file__).resolve().parents[2] / "scripts/bake_static_library.py")
+import pytest
+
+_BAKE = Path(__file__).resolve().parents[2] / "scripts/bake_static_library.py"
+if not _BAKE.exists():
+    pytest.skip("scripts/bake_static_library.py is a private ops script, not in this checkout", allow_module_level=True)
+_spec = importlib.util.spec_from_file_location("bake_static_library", _BAKE)
 bake = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(bake)
 

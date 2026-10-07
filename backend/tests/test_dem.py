@@ -21,6 +21,8 @@ def _synthetic_tile(lat0: int, lon0: int, n: int = 120):
 
 def test_glo30_mosaic_has_no_seam_across_a_tile_edge():
     # Darjeeling's footprint: its south edge lies on 27°N, the N26/N27 tile seam (2026-09-28 spikes)
+    import pytest
+    pytest.importorskip("pyproj", reason="pyproj not installed (test-only; requirements.txt omits it on purpose)")
     from pyproj import Transformer
     from backend.dem import glo30
     from backend.generation.pipeline import _grid_from_bounds
