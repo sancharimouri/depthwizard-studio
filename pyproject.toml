@@ -29,3 +29,13 @@ ml = [
 backend = ["fastapi","uvicorn","python-dotenv","httpx","gradio_client==2.7.1"]
 training = ["torchvision","albumentations"]
 dev = ["pytest","ruff"]
+
+# Linux: CPU-only torch (no CUDA wheels). macOS keeps PyPI torch.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
