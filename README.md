@@ -1,10 +1,36 @@
-# DepthWizard2
-SIH 2026 — Single-View Height Estimation and 3D Flythrough.
+# Depth Wizard Studio
 
-Clean rebuild scaffold. Implementation is intentionally deferred.
-Planned architecture: Satellite RGB → frozen DAv2 relative-depth prior → RDAH-Net-style nDSM fusion → sparse-anchor/LoRA correction → CartoDEM terrain → absolute DSM → validation/failure detector → Three.js visualization.
+Real satellite imagery draped over real elevation models, explored in 3D in the browser or on the desktop.
+Built for Smart India Hackathon 2026 (problem SIH26175).
 
-Terrain and nDSM remain separate products. Demo mode is replaceable and must not masquerade as validated ML.
+- **Live demo:** https://depthwizard-studio.vercel.app (open the app at https://depthwizard-studio.vercel.app/#/demo)
+- **Demo video:** https://depthwizard-studio.vercel.app/#demo-video
+- **Desktop app:** https://github.com/sancharimouri/depthwizard2-desktop/releases/latest
+
+## What it is
+
+Pick a library tile, search Sentinel-2 imagery live, or upload a PNG, JPG or GeoTIFF. The app builds a 3D terrain from
+a real elevation model (Copernicus GLO-30, FABDEM) and drapes the imagery over it, with layer switching, flythrough,
+measurement and hazard facts for the area.
+
+**What it is not:** it does not compute elevation from a single image at 10 m. The terrain always comes from a DEM.
+Depth Anything V2's output is shown as a labelled *relative-depth* layer, not as height. Our research found that at
+10 m Sentinel-2 no model added value over a plain DEM against independent lidar, so the product uses calibrated
+FABDEM. A learned height model (Method 6) is used only for very-high-resolution crops; it is validated on DFC2019
+(US cities, satellite imagery) and did not generalize to GAMUS by RMSE.
+
+## Imagery tiers
+
+- **Tier 1, always:** Sentinel-2 (10 m), searched live through the Copernicus Data Space Ecosystem.
+- **Tier 2, where available:** very-high-resolution imagery (~0.3 m): Maxar Open Data crops or your own upload.
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md): tiers, web app, static tile library, backend, depth service, desktop app
+- [ML pipeline](docs/ML_PIPELINE.md): which models and DEMs the product uses
+- [Validation](docs/VALIDATION.md): how results were tested, pre-registered rules, and the negatives
+- [Desktop app](docs/DESKTOP_APP.md)
+- [Attributions](docs/ATTRIBUTIONS.md)
 
 ## Running locally
 
@@ -23,3 +49,21 @@ This starts the backend (FastAPI/uvicorn, port 8000) and frontend (Vite, port
 in one terminal. It runs a preflight check first and exits with a clear error
 — missing `.env` values, an occupied port, missing `node_modules` — instead of
 starting halfway or failing silently. Open http://localhost:5173.
+
+## Licences
+
+Code: MIT. Datasets and models keep their own licences, several are non-commercial; see docs/ATTRIBUTIONS.md.
+
+## Data and model credits
+
+The code is MIT-licensed (`LICENSE`); data and models keep their own licences. Full table: `docs/ATTRIBUTIONS.md`.
+
+- **Imagery:** Copernicus Sentinel-2 (contains modified Copernicus Sentinel data, via the Copernicus Data Space
+  Ecosystem); Maxar (now Vantor) Open Data Program (CC BY-NC 4.0); IEEE GRSS Data Fusion Contest 2019 Track 1 / JHU/APL US3D (library tiles,
+  display resolution).
+- **Elevation:** Copernicus DEM GLO-30 (© DLR e.V. / © Airbus Defence and Space GmbH, provided under COPERNICUS by the EU
+  and ESA), served for Darjeeling by OpenTopography; FABDEM (Hawker et al. 2022, CC BY-NC-SA 4.0).
+- **Models:** Depth Anything V2 Large (CC BY-NC 4.0) and Small (Apache-2.0), Yang et al. 2024.
+- **Facts and scenario cards:** ThinkHazard! (GFDRR), FAO GAUL 2015, Wikidata, Copernicus EMS / GloFAS, JRC Global
+  Surface Water, World Bank / ARUP landslide map, USGS ComCat, NOAA IBTrACS, NOAA SPC.
+- **Map tiles:** © OpenStreetMap contributors.
