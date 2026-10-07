@@ -9,7 +9,10 @@
 # static library folder frontend/public/library-static/.
 # Allowed: deletions (so `git rm --cached` clean-ups work), and modifications to .py / .md / .sh files that are
 # ALREADY tracked (code and docs about DFC2019, e.g. scripts/dfc2019_build_packs.py; never data).
+# Also rejected: any staged path matching .git/private-patterns (local, never pushed; one path, folder/ or glob per
+# line, # comments). Written by make_studio_folder.sh from product_private.txt.
 STATIC="frontend/public/library-static/"
+PRIVATE="$(git rev-parse --git-common-dir)/private-patterns"
 bad=""
 git diff --cached --name-status -z --diff-filter=ACMR | {
   while IFS= read -r -d '' status; do
@@ -19,6 +22,13 @@ git diff --cached --name-status -z --diff-filter=ACMR | {
     hit=""
     case "$path" in "$STATIC"*) hit="static library folder" ;; esac
     case "$lower" in *dfc2019*) [ -z "$hit" ] && hit="dfc2019 in path" ;; esac
+    if [ -z "$hit" ] && [ -f "$PRIVATE" ]; then
+      while IFS= read -r pat || [ -n "$pat" ]; do
+        case "$pat" in ''|'#'*) continue ;; esac
+        pat="${pat%/}"
+        case "$path" in $pat|$pat/*) hit="private pattern $pat"; break ;; esac
+      done < "$PRIVATE"
+    fi
     [ -z "$hit" ] && continue
     if [ "$hit" = "dfc2019 in path" ] && [ "$status" = "M" ]; then
       case "$path" in *.py|*.md|*.sh) git cat-file -e "HEAD:$path" 2>/dev/null && continue ;; esac
@@ -28,6 +38,6 @@ git diff --cached --name-status -z --diff-filter=ACMR | {
   done
   [ -z "$bad" ]
 } || {
-  echo "pre-commit: DFC2019 data and the static library must never be committed (see scripts/git-hooks/pre-commit)." >&2
+  echo "pre-commit: DFC2019 data, the static library and private files must never be committed (see scripts/git-hooks/pre-commit)." >&2
   exit 1
 }
