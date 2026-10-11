@@ -1027,8 +1027,11 @@
                         <div class="docs-card-num">2</div>
                         <h3>Demo</h3>
                         <ul>
-                            <li>Four real 10 × 10 km regions in West Bengal — Darjeeling, Kolkata, Bardhaman and
-                                Sundarbans — each with Sentinel-2 imagery, DAv2 relative depth and a DEM.</li>
+                            <li>Four regions: a 500 m block of central Bangalore, 20 × 20 km around Darjeeling, 1 × 1 km
+                                of the Lavaux vineyard terraces (Switzerland) and 14 × 14 km of the Gulf of Kutch mudflats,
+                                each with imagery, DAv2 relative depth and an elevation model. Bangalore's imagery is a synthetic
+                                0.25 m top view rendered from its building, road and vegetation data, and its
+                                true-colour layer is a 3D model of its buildings.</li>
                             <li>Layers: satellite, relative depth and elevation (flat); DSM, DEM elevation and true
                                 colour (3D). The stats strip shows each region’s real numbers.</li>
                             <li><strong>Run reconstruction</strong> replays the pipeline log, including real research
@@ -1059,10 +1062,10 @@
                             <tr><th>Region</th><th>Terrain source</th><th>Elevation range</th><th>Landscape</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td>Darjeeling</td><td>OpenTopography DSM (Copernicus GLO-30)</td><td>557–2478 m</td><td>hilly, forested</td></tr>
-                            <tr><td>Kolkata</td><td>Copernicus GLO-30</td><td>−8–35 m</td><td>urban</td></tr>
-                            <tr><td>Bardhaman</td><td>Copernicus GLO-30</td><td>18–50 m</td><td>agricultural</td></tr>
-                            <tr><td>Sundarbans</td><td>Copernicus GLO-30</td><td>0–10 m</td><td>coastal, mangrove</td></tr>
+                            <tr><td>Bangalore</td><td>FABDEM + Open Buildings 2023 heights</td><td>902–1000 m</td><td>dense urban</td></tr>
+                            <tr><td>Darjeeling</td><td>Copernicus GLO-30</td><td>240–2614 m</td><td>hilly, forested</td></tr>
+                            <tr><td>Lavaux</td><td>swissSURFACE3D / swissALTI3D 0.5 m</td><td>372–712 m</td><td>terraced vineyards, lakeshore</td></tr>
+                            <tr><td>Gulf of Kutch</td><td>FABDEM, offset-calibrated to ICESat-2</td><td>0–6 m</td><td>tidal mudflats</td></tr>
                         </tbody>
                     </table>
                 </div>
