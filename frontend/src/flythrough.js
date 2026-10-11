@@ -321,6 +321,17 @@ export function createFlythrough({ viewer, getTerrain, getObstacles, canvas, onR
             begin();
         },
         stop,
+        // the Demo page's rotation Pause / Play button holds a flight where it is and resumes it
+        pause() {
+            if (state === "running") {
+                pause();
+            }
+        },
+        resume() {
+            if (state === "paused") {
+                resume();
+            }
+        },
         get state() {
             return state;
         },

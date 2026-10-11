@@ -221,6 +221,10 @@ export function createTerrainViewer(canvas, options = {}) {
 
         currentTerrain = terrain;
         currentRegionKey = regionKey;
+        // upload all three layer textures now, not on a layer's first use mid-run (a visible hitch)
+        for (const texture of [satelliteTexture, depthTexture, elevationTexture]) {
+            renderer.initTexture(texture);
+        }
 
         // ~18 degrees above the horizon, same distance regardless of
         // region — createTerrain() always builds at a fixed 100-unit

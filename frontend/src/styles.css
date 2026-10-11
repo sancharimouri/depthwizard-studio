@@ -774,6 +774,15 @@ kbd {
 }
 
 
+/* the regions box ends 3 mm below its last card while the note is empty */
+.region-panel:has(.region-list) {
+    padding-bottom: 3mm;
+}
+
+.region-note:empty {
+    display: none;
+}
+
 .region-note {
     min-height: 14px;
     margin-top: 10px;

@@ -663,35 +663,44 @@ export function createTerrain(
     }
 
 
+    // Flat and extruded states are kept as separate attribute sets (positions, normals, index, bounds), each
+    // built and uploaded to the GPU once: a layer switch only points the geometry at the other set, so it costs
+    // nothing in that frame (rewriting and re-normalling every vertex on each switch made the run stutter).
+    // `positions` stays the extruded set and always holds shownZ.
+    const fullIndex = geometry.index;
+    const erodedIndex = erodedIndexArray ? new THREE.BufferAttribute(erodedIndexArray, 1) : null;
+    const extrudedNormals = geometry.attributes.normal;
+    geometry.setIndex(erodedIndex ?? fullIndex);
+    geometry.computeVertexNormals(); // the extruded normals over the mesh actually drawn
+    geometry.computeBoundingSphere();
+    let extrudedSphere = geometry.boundingSphere;
+    geometry.setIndex(fullIndex);
+    const flatPositions = positions.clone();
+    for (let index = 0; index < flatPositions.count; index++) {
+        flatPositions.setZ(index, 0);
+    }
+    const flatNormals = new THREE.Float32BufferAttribute(positions.count * 3, 3);
+    for (let index = 0; index < flatNormals.count; index++) {
+        flatNormals.setZ(index, 1);
+    }
+    const flatSphere = new THREE.Box3().setFromBufferAttribute(flatPositions).getBoundingSphere(new THREE.Sphere());
+    let extrudedStale = false; // heights changed while flat (setDisplayExaggeration): normals/bounds redone on return
+
     function setExtruded(extruded) {
-
         isExtrudedNow = extruded;
-
-        for (
-            let index = 0;
-            index < positions.count;
-            index++
-        ) {
-
-            positions.setZ(
-                index,
-                extruded ? shownZ[index] : 0
-            );
+        geometry.setAttribute("position", extruded ? positions : flatPositions);
+        geometry.setAttribute("normal", extruded ? extrudedNormals : flatNormals);
+        const index = extruded && erodedIndex ? erodedIndex : fullIndex;
+        if (geometry.index !== index) {
+            geometry.setIndex(index);
         }
-
-        positions.needsUpdate = true;
-
-        if (erodedIndexArray) {
-            geometry.setIndex(
-                new THREE.BufferAttribute(
-                    extruded ? erodedIndexArray : fullIndexArray,
-                    1
-                )
-            );
+        if (extruded && extrudedStale) {
+            geometry.computeVertexNormals();
+            geometry.computeBoundingSphere();
+            extrudedSphere = geometry.boundingSphere;
+            extrudedStale = false;
         }
-
-        geometry.computeVertexNormals();
-        geometry.computeBoundingSphere();
+        geometry.boundingSphere = extruded ? extrudedSphere : flatSphere;
     }
 
 
@@ -700,8 +709,8 @@ export function createTerrain(
         material.map =
             LAYER_TEXTURES[layer] ?? satelliteTexture;
 
-        material.color.set(0xffffff);
-        material.needsUpdate = true;
+        material.color.set(0xffffff); // no needsUpdate: swapping the map needs no new shader (the layers' maps
+        // differ only in texture data / colour space, which the GPU format handles), so no recompile stall
 
         const isWire = layer === "wireframe-3d";
         if (isWire && !wireframe) {
@@ -818,13 +827,16 @@ export function createTerrain(
         // Baked into the vertices, so picking/Measure (which read them) stay exact.
         if (outlierLimits) {
             limitOutliers(extrudedZ, shownZ, outlierLimits, scale);
+            for (let index = 0; index < positions.count; index++) {
+                positions.setZ(index, shownZ[index]);
+            }
+            positions.needsUpdate = true;
             if (isExtrudedNow) {
-                for (let index = 0; index < positions.count; index++) {
-                    positions.setZ(index, shownZ[index]);
-                }
-                positions.needsUpdate = true;
                 geometry.computeVertexNormals();
                 geometry.computeBoundingSphere();
+                extrudedSphere = geometry.boundingSphere;
+            } else {
+                extrudedStale = true;
             }
             if (wireframe) {
                 const wasVisible = wireframe.visible;

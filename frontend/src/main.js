@@ -236,7 +236,6 @@ async function loadRegion(regionKey) {
         card.classList.toggle("active", card.dataset.region === regionKey);
     });
 
-    activateLayer("satellite-3d");
     resetRunState();
 
     return terrain;
@@ -350,6 +349,7 @@ const STAGES = [
 ];
 
 const STAGE_TOTAL_MS = STAGES.reduce((sum, s) => sum + s.duration, 0);
+const RUN_ROTATION_SPEED = 2; // the idle rotation turns 2× faster while the layers step through, 1× otherwise
 
 const progressBar = document.getElementById("pipeline-progress");
 const progressFill = document.getElementById("pipeline-progress-fill");
@@ -393,6 +393,7 @@ function resetRunState() {
         progressFill.style.width = "0%";
     }
     exploreFlythrough.stop();
+    controls.setSpeedMultiplier(1); // a cancelled run's 2× rotation ends with it
     hideStudioCallout();
 }
 
@@ -479,6 +480,7 @@ async function runReconstruction({ fromRunAgain = false } = {}) {
 
     const description = document.getElementById("layer-description");
     let elapsed = 0;
+    controls.setSpeedMultiplier(RUN_ROTATION_SPEED);
 
     for (const stage of STAGES) {
         activateLayer(stage.layer);
@@ -498,6 +500,7 @@ async function runReconstruction({ fromRunAgain = false } = {}) {
         description.textContent = "Reconstruction complete";
     }
     running = false;
+    controls.setSpeedMultiplier(1); // the normal rotation speed again, for the fly-through and after
     syncRunButton();
     // the structure glides straight into the fly-through's start pose (one smooth move)
     exploreFlythrough.start();
@@ -510,6 +513,26 @@ async function runReconstruction({ fromRunAgain = false } = {}) {
 }
 
 runButton?.addEventListener("click", () => runReconstruction({ fromRunAgain: !running }));
+
+// Rotation Pause / Play: stops or resumes the idle rotation only. A fly-through in progress is held too and
+// resumes with Play; a reconstruction run carries on either way.
+const rotateToggle = document.getElementById("demo-rotate-toggle");
+let flightHeldByRotateToggle = false;
+rotateToggle?.addEventListener("click", () => {
+    const pause = !controls.isAutoRotatePaused();
+    controls.setAutoRotatePaused(pause);
+    if (pause && exploreFlythrough.state === "running") {
+        exploreFlythrough.pause();
+        flightHeldByRotateToggle = true;
+    } else if (!pause && flightHeldByRotateToggle) {
+        exploreFlythrough.resume();
+    }
+    if (!pause) {
+        flightHeldByRotateToggle = false;
+    }
+    rotateToggle.textContent = pause ? "▶ Play rotation" : "❚❚ Pause rotation";
+    rotateToggle.setAttribute("aria-pressed", String(pause));
+});
 
 
 // ============================================================
