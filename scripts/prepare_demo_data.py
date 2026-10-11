@@ -15,6 +15,7 @@ DSM_FILENAMES = {
     "kolkata": "Kolkata_Copernicus_GLO30_DSM_cropped.tif",
     "bardhaman": "Bardhaman_Copernicus_GLO30_DSM_cropped.tif",
     "sundarbans": "Sundarbans_Copernicus_GLO30_DSM_cropped.tif",
+    "bangalore": "Bangalore_DSM.tif",  # FABDEM + city-model buildings (bake_bangalore_tile.py)
 }
 
 DSM_PATH = (

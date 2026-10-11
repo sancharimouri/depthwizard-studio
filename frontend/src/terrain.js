@@ -340,7 +340,8 @@ export function createTerrain(
         ? (MIN_RELIEF_FRACTION * terrainHeight) / (meshRange * baseVerticalScale)
         : 1;
 
-    const exaggerationFactor =
+    // terrain.json `exaggeration` sets a region's default outright (Bangalore: 14x); otherwise it is derived
+    const exaggerationFactor = terrainData.exaggeration ??
         Math.min(
             MAX_AUTO_EXAGGERATION,
             Math.max(
@@ -433,6 +434,20 @@ export function createTerrain(
     // Per-region: erode the 3D-mesh boundary (see the block comment at
     // the top of this file). Everywhere else, erodedIndexArray stays null
     // and setExtruded() never touches the index buffer.
+
+    // A masked region (terrain `inside`, src/terrain-data.js): only triangles whose three corners are inside the
+    // outline are kept, in every layer, so the tile ends at its circle / outline instead of a square.
+    const maskOutside = terrainData.inside ? terrainData.inside.map(v => 1 - v) : null;
+    if (maskOutside) {
+        const all = geometry.index.array;
+        const kept = [];
+        for (let i = 0; i < all.length; i += 3) {
+            if (!maskOutside[all[i]] && !maskOutside[all[i + 1]] && !maskOutside[all[i + 2]]) {
+                kept.push(all[i], all[i + 1], all[i + 2]);
+            }
+        }
+        geometry.setIndex(new THREE.BufferAttribute(new all.constructor(kept), 1));
+    }
 
     const fullIndexArray = geometry.index.array.slice();
     let erodedIndexArray = null;
@@ -698,9 +713,23 @@ export function createTerrain(
         if (wireframe) {
             wireframe.visible = isWire;
         }
-        material.visible = !isWire;
+        // a region with a 3D model (attachStructure) shows it as its TRUE COLOR layer, in place of the surface
+        const showStructure = structure !== null && layer === "satellite-3d";
+        if (structure) {
+            structure.visible = showStructure;
+        }
+        material.visible = !isWire && !showStructure;
 
         setExtruded(EXTRUDED_LAYERS.has(layer));
+    }
+
+    // Optional 3D model for the TRUE COLOR layer, given in the mesh's local frame (x east, y north, z up, in mesh
+    // units), so it follows the display exaggeration like the surface. Picking and Measure still read the height grid.
+    let structure = null;
+    function attachStructure(object) {
+        structure = object;
+        structure.visible = false;
+        terrain.add(structure);
     }
 
 
@@ -841,6 +870,9 @@ export function createTerrain(
 
         setLayer,
 
+        attachStructure,
+        structure: () => structure,
+
         setFloodOverlay,
 
 
@@ -869,7 +901,8 @@ export function createTerrain(
 
         // Mask only while the eroded index buffer is the one actually drawn
         // (it's swapped in by setExtruded(true), not at construction).
+        // (a masked region's cut cells always)
         erodedVertexMask: () =>
-            (erodedIndexArray && geometry.index?.array === erodedIndexArray ? erodedVertexMask : null)
+            (erodedIndexArray && geometry.index?.array === erodedIndexArray ? erodedVertexMask : maskOutside)
     };
 }

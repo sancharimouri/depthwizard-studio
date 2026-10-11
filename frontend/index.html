@@ -166,6 +166,12 @@
             id="terrain-canvas"
         ></canvas>
 
+        <!-- the current region's data credit (the showcase regions); main.js -->
+        <p id="region-credit" class="region-credit" hidden></p>
+
+        <!-- Pauses / resumes the idle rotation only (and a fly-through in progress); main.js -->
+        <button id="demo-rotate-toggle" class="demo-rotate-toggle" type="button" aria-pressed="false">❚❚ Pause rotation</button>
+
 
         <!-- Left rail: regions + stats -->
 
@@ -181,34 +187,34 @@
 
                     <button
                         class="region-card active"
-                        data-region="darjeeling"
+                        data-region="bangalore"
+                    >
+                        <div class="region-name">Bangalore</div>
+                        <div class="region-meta">Karnataka · 0.5×0.5 km</div>
+                    </button>
+
+                    <button
+                        class="region-card"
+                        data-region="darjeeling-wide"
                     >
                         <div class="region-name">Darjeeling</div>
-                        <div class="region-meta">West Bengal · 10×10 km</div>
+                        <div class="region-meta">West Bengal · 20×20 km</div>
                     </button>
 
                     <button
                         class="region-card"
-                        data-region="kolkata"
+                        data-region="lavaux"
                     >
-                        <div class="region-name">Kolkata</div>
-                        <div class="region-meta">West Bengal · 10×10 km</div>
+                        <div class="region-name">Lavaux</div>
+                        <div class="region-meta">Vaud, Switzerland · 1×1 km</div>
                     </button>
 
                     <button
                         class="region-card"
-                        data-region="bardhaman"
+                        data-region="kutch-wide"
                     >
-                        <div class="region-name">Bardhaman</div>
-                        <div class="region-meta">West Bengal · 10×10 km</div>
-                    </button>
-
-                    <button
-                        class="region-card"
-                        data-region="sundarbans"
-                    >
-                        <div class="region-name">Sundarbans</div>
-                        <div class="region-meta">West Bengal · 10×10 km</div>
+                        <div class="region-name">Gulf of Kutch</div>
+                        <div class="region-meta">Gujarat · 14×14 km</div>
                     </button>
 
                 </div>

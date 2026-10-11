@@ -88,18 +88,25 @@ export function renderSource(job) {
 }
 
 export function terrainStats(terrainData) {
-    const { heights, elevationMin: lo, elevationMax: hi } = terrainData;
+    const { heights, elevationMin: lo, elevationMax: hi, inside } = terrainData;
     let sum = 0;
     let n = 0;
+    let min = Infinity;
+    let max = -Infinity;
     for (let i = 0; i < heights.length; i += 1) {
         const h = heights[i];
-        if (Number.isFinite(h)) {
+        if (Number.isFinite(h) && (!inside || inside[i])) { // a masked region: only the cells inside its outline
             sum += h;
             n += 1;
+            min = Math.min(min, h);
+            max = Math.max(max, h);
         }
     }
-    const mean = n ? lo + (sum / n) * (hi - lo) : null;
-    return { min: lo, max: hi, mean, relief: hi - lo };
+    if (!n) {
+        return { min: null, max: null, mean: null, relief: null };
+    }
+    const at = v => lo + v * (hi - lo);
+    return { min: at(min), max: at(max), mean: at(sum / n), relief: (max - min) * (hi - lo) };
 }
 
 // prefix: "xp-elev" (Studio viewer) or "demo-elev" (Demo page)

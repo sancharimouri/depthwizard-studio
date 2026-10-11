@@ -123,7 +123,64 @@ const REGIONS = {
         resolution: "10m",
         inferenceTime: "0.66s",
     },
+    // UB City / Vittal Mallya Road, 500 m: scripts/bake_bangalore_tile.py. TRUE COLOR is the city model.
+    // imagery: a synthetic HD top view rendered from the region's own data (no free HD imagery may be redistributed)
+    bangalore: {
+        label: "Bangalore",
+        elevationSource: "DSM (FABDEM + Open Buildings 2023 heights)",
+        imagery: "Synthetic top view (Open Buildings, OpenStreetMap, Sentinel-2 vegetation)",
+        crsEpsg: "4326",
+        resolution: "0.25m",
+        inferenceTime: "23.17s",
+    },
+    // Showcase regions (scripts/bake_showcase_tiles.py): their own file names (JPEG imagery, compact terrain) and a
+    // data credit shown under the view. Nanda Devi and Kangchenjunga are Studio library tiles
+    // (scripts/add_showcase_to_library.py).
+    lavaux: {
+        label: "Lavaux",
+        elevationSource: "swissSURFACE3D 0.5 m DSM",
+        terrainSource: "swissALTI3D 0.5 m",
+        imagery: "SWISSIMAGE 10 cm imagery (shown at 0.39 m)",
+        crsEpsg: "4326",
+        resolution: "1m",
+        inferenceTime: "24.0s",
+        credit: "© swisstopo (swissALTI3D, swissSURFACE3D, SWISSIMAGE)",
+        assets: showcaseAssets("lavaux"),
+    },
+    // the Darjeeling demo card: the original Darjeeling region's centre, 20 x 20 km (that region was ~10 x 10 km)
+    "darjeeling-wide": {
+        label: "Darjeeling",
+        elevationSource: "Copernicus GLO-30 DSM",
+        terrainSource: "Copernicus GLO-30 (a surface model; no separate terrain model)",
+        crsEpsg: "4326",
+        resolution: "30m",
+        inferenceTime: "21.1s",
+        credit: "Copernicus DEM GLO-30 © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA · Contains modified Copernicus Sentinel data 2025, colour-adjusted (blue tones shifted to green)",
+        assets: showcaseAssets("darjeeling-wide"),
+    },
+    // the Studio library tile "Gulf of Kutch (Koteshwar mudflats)" widened from 10 x 10 to 14 x 14 km, same sources
+    "kutch-wide": {
+        label: "Gulf of Kutch",
+        elevationSource: "FABDEM (ICESat-2 offset-calibrated)",
+        terrainSource: "FABDEM v1-2 + 0.32 m (the library tile's ICESat-2 offset)",
+        imagery: "Sentinel-2 imagery, 28 Dec 2025",
+        crsEpsg: "4326",
+        resolution: "30m",
+        inferenceTime: "23.3s",
+        credit: "FABDEM v1-2 (Hawker et al. 2022), University of Bristol / Fathom, CC BY-NC-SA 4.0 · Contains modified Copernicus Sentinel data 2025",
+        assets: showcaseAssets("kutch-wide"),
+    },
 };
+
+function showcaseAssets(key) {
+    const base = `/data/${key}`;
+    return {
+        terrain: `${base}/terrain.u16.gz`,
+        satellite: `${base}/satellite.jpg`,
+        depth: `${base}/relative_depth.png`,
+        elevation: `${base}/elevation.png`,
+    };
+}
 
 
 // ============================================================
@@ -141,6 +198,7 @@ function activateLayer(layer) {
 
     currentTerrain.setLayer(layer);
     exploreProbe?.invalidate();
+    syncCityLighting();
 
     // Scoped to #page-explore — Final Demo's box 8 reuses the same .layer-button
     // class for visual parity with Explore, and has its own independent
@@ -154,10 +212,21 @@ function activateLayer(layer) {
 }
 
 async function loadRegion(regionKey) {
-    const { terrain, terrainData } = await exploreViewer.loadRegion(regionKey);
-
+    const { terrain, terrainData } = await exploreViewer.loadRegion(regionKey, REGIONS[regionKey]?.assets ?? null);
     currentTerrain = terrain;
     currentRegionKey = regionKey;
+    const credit = document.getElementById("region-credit");
+    if (credit) {
+        credit.textContent = REGIONS[regionKey]?.credit ?? "";
+        credit.hidden = !credit.textContent;
+    }
+    // Every tile opens on its flat satellite image (the run's first stage), set before anything else is awaited:
+    // a new terrain is built extruded, and opening on TRUE COLOR flashed the 3D view (Bangalore: the city model)
+    // for a moment before the run's first stage.
+    activateLayer("satellite-flat");
+    if (terrainData.structure) {
+        await attachCityStructure(terrain, terrainData.structure);
+    }
 
     // Terrain statistics (same numbers as the Studio viewer's box) + vertical exaggeration
     renderTerrainStats(terrainData, "demo-elev");
@@ -171,6 +240,64 @@ async function loadRegion(regionKey) {
     resetRunState();
 
     return terrain;
+}
+
+
+// ============================================================
+// CITY MODEL (Bangalore's TRUE COLOR layer: terrain.json `structure`, scripts/bake_bangalore_tile.py)
+// ============================================================
+
+const exploreLights = scene.children.filter(object => object.isLight);
+const exploreToneMapping = renderer.toneMapping;
+
+// The model brings its own sunset lights and tone mapping; the scene's own lights stay off while it shows.
+function syncCityLighting() {
+    const cityOn = currentTerrain?.structure()?.visible === true;
+    exploreLights.forEach(light => { light.visible = !cityOn; });
+    renderer.toneMapping = cityOn ? THREE.NeutralToneMapping : exploreToneMapping;
+}
+
+async function attachCityStructure(terrain, { url, affine, groundMedian }) {
+    const [{ buildCityStructure }, res] = await Promise.all([
+        import("./cityscape.js"),
+        fetch(`${import.meta.env.BASE_URL}${url}`),
+    ]);
+    if (!res.ok) {
+        throw new Error(`city model: HTTP ${res.status}`);
+    }
+    // model metres (x east, y up, z = -north) -> the mesh's local frame (x east, y north, z up, mesh units):
+    // horizontally the baked affine to degrees from the tile centre, vertically the terrain's own metres-to-units
+    const [a, b, c, d, e, f] = affine;
+    const kx = terrain.terrainWidth / terrain.geographicWidth;
+    const ky = terrain.terrainHeight / terrain.geographicHeight;
+    const v = terrain.localZForElevation(1) - terrain.localZForElevation(0);
+    const city = buildCityStructure(await res.json(), Math.hypot(kx * a, ky * d));
+    const frame = new THREE.Group();
+    frame.matrixAutoUpdate = false;
+    frame.matrix.set(
+        kx * a, 0, -kx * b, kx * c,
+        ky * d, 0, -ky * e, ky * f,
+        0, v, 0, terrain.localZForElevation(groundMedian),
+        0, 0, 0, 1,
+    );
+    frame.add(city.object);
+    terrain.attachStructure(frame);
+    // Warm up in the exact TRUE COLOR state (its lights only, its tone mapping), so the first time the run reaches
+    // that layer nothing is compiled or allocated mid-run: one off-screen render builds the shadow map and its
+    // depth shaders, compile() builds the on-screen shaders.
+    frame.visible = true;
+    exploreLights.forEach(light => { light.visible = false; });
+    const toneMapping = renderer.toneMapping;
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    const warmTarget = new THREE.WebGLRenderTarget(16, 16);
+    renderer.setRenderTarget(warmTarget);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    warmTarget.dispose();
+    renderer.compile(scene, camera);
+    renderer.toneMapping = toneMapping;
+    frame.visible = false;
+    syncCityLighting();
 }
 
 
