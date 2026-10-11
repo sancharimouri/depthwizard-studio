@@ -7,6 +7,8 @@
 // object-fit: contain, so the element box can be letterboxed; positions in
 // the letterbox margin count as "not on the image".
 
+import { zoomOf } from "./ui-scale.js";
+
 export function attachMagnifier({ stage, img, readout = null, zoom = 3, onHover, onLeave, onPick }) {
     let lens = stage.querySelector(".mag-lens");
     if (!lens) {
@@ -57,9 +59,10 @@ export function attachMagnifier({ stage, img, readout = null, zoom = 3, onHover,
             return;
         }
         const s = stage.getBoundingClientRect();
+        const z = zoomOf(stage); // client px -> the stage's own px when the panel is UI-scaled
         marker.hidden = false;
-        marker.style.left = `${c.left - s.left + selected.u * c.width}px`;
-        marker.style.top = `${c.top - s.top + selected.v * c.height}px`;
+        marker.style.left = `${(c.left - s.left + selected.u * c.width) / z}px`;
+        marker.style.top = `${(c.top - s.top + selected.v * c.height) / z}px`;
     }
 
     function leave() {
@@ -80,13 +83,15 @@ export function attachMagnifier({ stage, img, readout = null, zoom = 3, onHover,
         }
         const { u, v, c } = hit;
         const s = stage.getBoundingClientRect();
+        const z = zoomOf(stage); // client px -> the stage's own px when the panel is UI-scaled
         const size = lens.offsetWidth || 96;
+        const cw = c.width / z, ch = c.height / z;
         lens.hidden = false;
-        lens.style.left = `${e.clientX - s.left - size / 2}px`;
-        lens.style.top = `${e.clientY - s.top - size / 2}px`;
+        lens.style.left = `${(e.clientX - s.left) / z - size / 2}px`;
+        lens.style.top = `${(e.clientY - s.top) / z - size / 2}px`;
         lens.style.backgroundImage = `url("${img.src}")`;
-        lens.style.backgroundSize = `${c.width * zoom}px ${c.height * zoom}px`;
-        lens.style.backgroundPosition = `${size / 2 - u * c.width * zoom}px ${size / 2 - v * c.height * zoom}px`;
+        lens.style.backgroundSize = `${cw * zoom}px ${ch * zoom}px`;
+        lens.style.backgroundPosition = `${size / 2 - u * cw * zoom}px ${size / 2 - v * ch * zoom}px`;
         const px = Math.floor(u * (img.naturalWidth - 1));
         const py = Math.floor(v * (img.naturalHeight - 1));
         if (readout) {

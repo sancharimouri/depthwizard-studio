@@ -21,6 +21,7 @@ import { LIBRARY_SOURCE, staticTileResponse } from "./library-source.js";
 import { PAGE_ROUTES, resolveHash, hashMatchesPage } from "./routes.js";
 import { flatTerrainWarning, footprintKmFromBbox } from "./flat-warning.js";
 import { createDurationMemory, trackWork } from "./progress-sync.js";
+import { initUiScale } from "./ui-scale.js";
 
 const canvas = document.getElementById("terrain-canvas");
 
@@ -3630,7 +3631,10 @@ function animate() {
 // START
 // ============================================================
 
-loadRegion("darjeeling")
+initUiScale(); // the UI layer shrinks to fit small windows (src/ui-scale.js)
+
+// the page opens on the first card of the region rail (Bangalore)
+loadRegion(document.querySelector("#page-explore .region-card[data-region]")?.dataset.region ?? "bangalore")
     .then(() => {
         console.log("DepthWizard2 viewer ready.");
         maybeAutoRunDemo();
@@ -3639,3 +3643,4 @@ loadRegion("darjeeling")
     .catch(error => {
         console.error("DepthWizard2 startup error:", error);
     });
+

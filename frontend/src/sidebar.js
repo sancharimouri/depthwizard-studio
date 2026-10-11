@@ -24,6 +24,8 @@
 // (width animates over 200 ms); hover-opened, it overlays it instead (the
 // layout keeps the rail's width), so the page never reflows under the pointer.
 
+import { zoomOf } from "./ui-scale.js";
+
 const LOCKED_KEY = "dw2.sidebarLocked";
 const PEEK_OPEN_MS = 90;
 const PEEK_CLOSE_MS = 220;
@@ -216,7 +218,7 @@ export function createSidebar({ onNavigate }) {
                 root.classList.add("is-resizing");
             }
             // past the minimum by a margin -> close (unlock); back out -> locked open at that width
-            const target = railDragTarget(event.clientX - drag.left);
+            const target = railDragTarget((event.clientX - drag.left) / zoomOf(root)); // own px when UI-scaled
             if (target.collapsed === locked) {
                 setCollapsed(target.collapsed);
             }
@@ -242,7 +244,7 @@ export function createSidebar({ onNavigate }) {
         rail.addEventListener("pointercancel", endDrag);
         // keyboard: arrows resize, Enter/Space collapse
         rail.addEventListener("keydown", event => {
-            const current = root.getBoundingClientRect().width;
+            const current = root.offsetWidth; // own px (the UI scale is a zoom)
             if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
                 event.preventDefault();
                 const collapsed = !locked;
