@@ -68,3 +68,6 @@ build/
 
 # Pre-baked static library (scripts/bake_static_library.py): holds DFC2019-derived files. Never commit.
 frontend/public/library-static/
+
+# saved order from the temporary library drag-to-reorder tool (2026-10-12; removed)
+frontend/.tile-order.json

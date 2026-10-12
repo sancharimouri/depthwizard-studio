@@ -13,7 +13,7 @@ import { createMeasureModel, MODES } from "../src/measure-model.js";
 // ---------------------------------------------------------------- helpers
 
 function loadRegion(region) {
-    return JSON.parse(readFileSync(new URL(`../public/data/${region}/terrain.json`, import.meta.url)));
+    return JSON.parse(readFileSync(new URL(`./fixtures/${region}/terrain.json`, import.meta.url)));
 }
 
 function buildTerrain(region) {
