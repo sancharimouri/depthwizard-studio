@@ -119,7 +119,29 @@ export function createSidebar({ onNavigate }) {
             setPeek(true, PEEK_OPEN_MS);
         }
     });
-    root.addEventListener("pointerleave", () => setPeek(false, PEEK_CLOSE_MS));
+    root.addEventListener("pointerleave", event => {
+        if (event.pointerType !== "touch" && event.pointerType !== "pen") { // a lifted finger "leaves" too
+            setPeek(false, PEEK_CLOSE_MS);
+        }
+    });
+    // Touch (no hover): a tap on the closed bar opens it the way hovering does. That first tap only opens it (the
+    // icon under the finger isn't activated); a tap outside closes it, as does picking a page.
+    let swallowClick = false;
+    let touchOpened = false;
+    root.addEventListener("pointerdown", event => {
+        if ((event.pointerType === "touch" || event.pointerType === "pen") && !locked && !peek) {
+            setPeek(true, 0);
+            swallowClick = true;
+            touchOpened = true;
+        }
+    }, true);
+    root.addEventListener("click", event => {
+        if (swallowClick) {
+            swallowClick = false;
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }, true);
     // keyboard focus opens it too (not a focus set from code: a re-render can remove that element
     // without any focusout, which would leave the bar stuck open)
     root.addEventListener("focusin", event => {
@@ -135,6 +157,7 @@ export function createSidebar({ onNavigate }) {
     // a click anywhere else always closes a hover-opened bar
     document.addEventListener("pointerdown", event => {
         if (peek && !root.contains(event.target)) {
+            touchOpened = false;
             setPeek(false, 0);
         }
     });
@@ -276,7 +299,13 @@ export function createSidebar({ onNavigate }) {
         setTab(next.dataset.tab);
         next.focus();
     });
-    links.forEach(link => link.addEventListener("click", () => onNavigate(link.dataset.page)));
+    links.forEach(link => link.addEventListener("click", () => {
+        onNavigate(link.dataset.page);
+        if (touchOpened && !locked) {
+            touchOpened = false;
+            setPeek(false, PEEK_CLOSE_MS); // a touch-opened bar has no pointer to leave it
+        }
+    }));
     // the "D" mark opens the Home page
     root.querySelector(".sb-logo")?.addEventListener("click", event => onNavigate(event.currentTarget.dataset.page));
 

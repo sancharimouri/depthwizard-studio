@@ -1,0 +1,75 @@
+{
+ "_doc": "Close-up city tiles: one entry per model, read by scripts/bake_cityscape.py, scripts/bake_city_glb.mjs, scripts/bake_city_tile.py and scripts/add_cityscape_to_library.py. centre = box centre (lat, lon), snapped to a 10 m UTM grid; half = half the box side (m).",
+ "bengaluru": {
+  "default_exaggeration": 14,
+  "name": "Bengaluru: UB City and Vittal Mallya Road",
+  "title": "UB City, Bengaluru", "location": "UB City and Vittal Mallya Road, Bengaluru, India",
+  "centre": [12.97095, 77.59728], "half": 250, "utm": "EPSG:32643", "buildings": "openbuildings", "ground": "fabdem",
+  "landmarks": {"UB Tower": "UB Tower", "Concorde": "Concorde", "Comet": "Comet", "Canberra": "Canberra",
+                "Prestige Kingfisher Towers": "Kingfisher Towers", "JW Marriott": "JW Marriott",
+                "Bishop Cotton Boys School": "Bishop Cotton Boys' School"}
+ },
+ "connaught_place": {
+  "demo": "connaught",
+  "default_exaggeration": 19,
+  "name": "New Delhi: Connaught Place",
+  "title": "Connaught Place, New Delhi", "location": "Connaught Place (Rajiv Chowk), New Delhi, India",
+  "centre": [28.6328, 77.2197], "half": 500, "utm": "EPSG:32643", "buildings": "openbuildings", "ground": "fabdem",
+  "landmarks": {}
+ },
+ "shinjuku": {
+  "default_exaggeration": 11,
+  "name": "Tokyo: Shinjuku west skyscraper district",
+  "title": "Nishi-Shinjuku, Tokyo", "location": "Nishi-Shinjuku skyscraper district, Tokyo, Japan",
+  "centre": [35.69, 139.692], "half": 600, "utm": "EPSG:32654", "buildings": "plateau", "ground": "gsi",
+  "landmarks": {},
+  "sources": {"buildings": "Project PLATEAU (MLIT) 3D city model, Shinjuku, Shibuya and Nakano wards, FY2025 data (LoD2 with textures; LoD1 where a building has no LoD2)"},
+  "plateau": {
+   "year": 2025,
+   "lod2": ["https://assets.cms.plateau.reearth.io/assets/00/bed0bd-f882-4cde-b942-21d0f8d2ddc2/13104_shinjuku-ku_pref_2025_citygml_1_op_bldg_3dtiles_13104_shinjuku-ku_lod2/tileset.json",
+            "https://assets.cms.plateau.reearth.io/assets/16/b016d3-42ef-4428-ad99-d229310b39fd/13113_shibuya-ku_pref_2025_citygml_1_op_bldg_3dtiles_13113_shibuya-ku_lod2/tileset.json",
+            "https://assets.cms.plateau.reearth.io/assets/69/c68a38-eae5-4a70-b981-497109b3e7f7/13114_nakano-ku_pref_2025_citygml_1_op_bldg_3dtiles_13114_nakano-ku_lod2/tileset.json"],
+   "lod1": ["https://assets.cms.plateau.reearth.io/assets/bd/858f21-55cb-46da-afcf-885d44eee90f/13104_shinjuku-ku_pref_2025_citygml_1_op_bldg_3dtiles_13104_shinjuku-ku_lod1/tileset.json",
+            "https://assets.cms.plateau.reearth.io/assets/cf/26763c-faae-41b3-b110-2a4dd602f250/13113_shibuya-ku_pref_2025_citygml_1_op_bldg_3dtiles_13113_shibuya-ku_lod1/tileset.json",
+            "https://assets.cms.plateau.reearth.io/assets/00/0bafbd-0652-4f11-ab1f-ca88d81a98a7/13114_nakano-ku_pref_2025_citygml_1_op_bldg_3dtiles_13114_nakano-ku_lod1/tileset.json"]
+  }
+ },
+ "mumbai": {
+  "default_exaggeration": 12,
+  "name": "Mumbai: Nariman Point and Marine Drive",
+  "title": "Nariman Point, Mumbai", "location": "Nariman Point and Marine Drive, Mumbai, India",
+  "centre": [18.928, 72.823], "half": 750, "utm": "EPSG:32643", "buildings": "openbuildings", "ground": "fabdem",
+  "landmarks": {}, "areas": true
+ },
+ "kolkata": {
+  "default_exaggeration": 17,
+  "name": "Kolkata: Dalhousie Square and the Hooghly riverfront",
+  "title": "Dalhousie Square, Kolkata", "location": "Dalhousie Square (BBD Bagh) and the Hooghly riverfront, Kolkata, India",
+  "centre": [22.573, 88.3475], "half": 600, "utm": "EPSG:32645", "buildings": "openbuildings", "ground": "fabdem",
+  "landmarks": {}, "areas": true
+ },
+ "hyderabad": {
+  "name": "Hyderabad: Charminar and the old city",
+  "title": "Charminar, Hyderabad", "location": "Charminar and the old city, Hyderabad, India",
+  "centre": [17.3616, 78.4747], "half": 500, "utm": "EPSG:32644", "buildings": "openbuildings", "ground": "fabdem",
+  "landmarks": {}, "areas": true
+ },
+ "amsterdam": {
+  "default_exaggeration": 41,
+  "name": "Amsterdam: the canal ring",
+  "title": "Canal ring, Amsterdam", "location": "Grachtengordel (canal ring), Amsterdam, Netherlands",
+  "centre": [52.367, 4.888], "half": 500, "utm": "EPSG:32631", "buildings": "3dbag", "ground": "dataset",
+  "ground_name": "flat, at the 3D BAG ground level (NAP)", "landmarks": {}, "areas": true,
+  "sources": {"buildings": "3D BAG v2023.10.08, LoD 2.2 (TU Delft 3D geoinformation and 3DGI)"}
+ },
+ "new_york": {
+  "default_exaggeration": 5.4,
+  "name": "New York: Lower Manhattan and the Financial District",
+  "title": "Financial District, New York", "location": "Lower Manhattan (Financial District), New York, United States",
+  "centre": [40.7075, -74.011], "half": 750, "utm": "EPSG:32618", "buildings": "nyc", "ground": "model",
+  "ground_name": "the model's building ground surfaces (NAVD88), interpolated", "landmarks": {}, "areas": true,
+  "sources": {"buildings": "NYC 3-D Building Model (Office of Technology and Innovation), LoD2, 2014 aerial survey"},
+  "nyc": {"zip": "https://s-media.nyc.gov/agencies/oti/DA_WISE_GML.zip",
+          "members": ["DA_WISE_GMLs/DA12_3D_Buildings_Merged.gml", "DA_WISE_GMLs/DA19_3D_Buildings_Merged.gml"]}
+ }
+}

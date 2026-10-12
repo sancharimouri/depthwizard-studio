@@ -41,7 +41,7 @@
          `npx shadcn view sidebar-07`): brand header, icon + label nav, footer, a drag rail. It collapses
          to an icon rail. The toggle sits just outside the bar and moves with its edge. Page icons are
          option 1 from icons/1.svg; the brand mark is the "D" from icon.png. -->
-    <aside id="app-sidebar" class="app-sidebar" aria-label="Depth Wizard">
+    <aside id="app-sidebar" class="app-sidebar is-collapsed" aria-label="Depth Wizard">
         <div class="sb-inner">
             <div class="sb-head">
                 <button class="sb-logo" type="button" data-page="page-docs" aria-label="Depth Wizard: open Home"
@@ -167,7 +167,6 @@
         ></canvas>
 
         <!-- the current region's data credit (the showcase regions); main.js -->
-        <p id="region-credit" class="region-credit" hidden></p>
 
         <!-- Pauses / resumes the idle rotation only (and a fly-through in progress); main.js -->
         <button id="demo-rotate-toggle" class="demo-rotate-toggle" type="button" aria-pressed="false">❚❚ Pause rotation</button>
@@ -187,17 +186,17 @@
 
                     <button
                         class="region-card active"
-                        data-region="bangalore"
+                        data-region="connaught"
                     >
-                        <div class="region-name">Bangalore</div>
-                        <div class="region-meta">Karnataka · 0.5×0.5 km</div>
+                        <div class="region-name">Connaught Place<span class="region-terrain">Urban</span></div>
+                        <div class="region-meta">New Delhi · 1×1 km</div>
                     </button>
 
                     <button
                         class="region-card"
                         data-region="darjeeling-wide"
                     >
-                        <div class="region-name">Darjeeling</div>
+                        <div class="region-name">Darjeeling<span class="region-terrain">Hilly</span></div>
                         <div class="region-meta">West Bengal · 20×20 km</div>
                     </button>
 
@@ -205,7 +204,7 @@
                         class="region-card"
                         data-region="lavaux"
                     >
-                        <div class="region-name">Lavaux</div>
+                        <div class="region-name">Lavaux<span class="region-terrain">Agricultural</span></div>
                         <div class="region-meta">Vaud, Switzerland · 1×1 km</div>
                     </button>
 
@@ -213,7 +212,7 @@
                         class="region-card"
                         data-region="kutch-wide"
                     >
-                        <div class="region-name">Gulf of Kutch</div>
+                        <div class="region-name">Gulf of Kutch<span class="region-terrain">Coastal</span></div>
                         <div class="region-meta">Gujarat · 14×14 km</div>
                     </button>
 
@@ -283,6 +282,12 @@
                         <div id="demo-probe-slope" class="stat-value">—</div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Buildings in the tile (urban tiles only): src/building-count.js -->
+            <div id="demo-buildings" class="layer-panel demo-box" hidden>
+                <div class="panel-title">BUILDINGS IN TILE</div>
+                <div class="stat-value building-count-value">—</div>
             </div>
 
             <div class="layer-panel demo-box">
@@ -745,6 +750,17 @@
                                 </div>
                             </section>
 
+                            <!-- Buildings in the tile (urban tiles only): src/building-count.js -->
+                            <section id="xp-buildings" class="xp-box" data-box="buildings" data-default-open hidden>
+                                <button class="xp-head" type="button" aria-expanded="true">
+                                    <span class="xp-title">BUILDINGS IN TILE</span>
+                                    <span class="xp-chevron" aria-hidden="true"></span>
+                                </button>
+                                <div class="xp-body">
+                                    <div class="stat-value building-count-value">—</div>
+                                </div>
+                            </section>
+
                             <section class="xp-box xp-box-danger" data-box="scenario">
                                 <button class="xp-head" type="button" aria-expanded="false">
                                     <span class="xp-title">SCENARIO ANALYSIS</span>
@@ -1027,11 +1043,12 @@
                         <div class="docs-card-num">2</div>
                         <h3>Demo</h3>
                         <ul>
-                            <li>Four regions: a 500 m block of central Bangalore, 20 × 20 km around Darjeeling, 1 × 1 km
+                            <li>Four regions: 1 × 1 km of Connaught Place (New Delhi), 20 × 20 km around Darjeeling, 1 × 1 km
                                 of the Lavaux vineyard terraces (Switzerland) and 14 × 14 km of the Gulf of Kutch mudflats,
-                                each with imagery, DAv2 relative depth and an elevation model. Bangalore's imagery is a synthetic
-                                0.25 m top view rendered from its building, road and vegetation data, and its
-                                true-colour layer is a 3D model of its buildings.</li>
+                                each with imagery, DAv2 relative depth and an elevation model. Connaught Place's imagery is a
+                                synthetic 0.5 m top view rendered from its building, road and vegetation data, and its
+                                true-colour layer is a 3D model of its buildings. Darjeeling's snow on its highest crests
+                                is cosmetic: its peaks (~2.6 km) are below any snowline.</li>
                             <li>Layers: satellite, relative depth and elevation (flat); DSM, DEM elevation and true
                                 colour (3D). The stats strip shows each region’s real numbers.</li>
                             <li><strong>Run reconstruction</strong> replays the pipeline log, including real research
@@ -1062,7 +1079,7 @@
                             <tr><th>Region</th><th>Terrain source</th><th>Elevation range</th><th>Landscape</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td>Bangalore</td><td>FABDEM + Open Buildings 2023 heights</td><td>902–1000 m</td><td>dense urban</td></tr>
+                            <tr><td>Connaught Place</td><td>FABDEM + Open Buildings 2023 heights</td><td>214–308 m</td><td>dense urban</td></tr>
                             <tr><td>Darjeeling</td><td>Copernicus GLO-30</td><td>240–2614 m</td><td>hilly, forested</td></tr>
                             <tr><td>Lavaux</td><td>swissSURFACE3D / swissALTI3D 0.5 m</td><td>372–712 m</td><td>terraced vineyards, lakeshore</td></tr>
                             <tr><td>Gulf of Kutch</td><td>FABDEM, offset-calibrated to ICESat-2</td><td>0–6 m</td><td>tidal mudflats</td></tr>
@@ -1104,6 +1121,14 @@
                             <tr><td>NOAA NCEI IBTrACS v04r01</td><td>Facts (library tiles): tropical cyclone tracks within 100 km since 1980</td><td>Knapp et al. (2010), IBTrACS v04r01, NOAA NCEI</td><td>Public domain</td></tr>
                             <tr><td>NOAA Storm Prediction Center tornado database</td><td>Facts (US library tiles): tornadoes within 25 km since 1950</td><td>NOAA / NWS Storm Prediction Center</td><td>Public domain</td></tr>
                             <tr><td>DFC2019 (IEEE GRSS Data Fusion Contest 2019, Track 1)</td><td>Library tiles (display resolution)</td><td>IEEE GRSS Data Fusion Contest 2019; JHU/APL Urban Semantic 3D (US3D) dataset</td><td>Contest terms; credited as required</td></tr>
+                            <tr><td>Google Open Buildings v3 and 2.5D Temporal (2023)</td><td>City models: building footprints and heights (Connaught Place demo; Bengaluru, Mumbai, Kolkata, Hyderabad library tiles)</td><td>Google Research, Open Buildings</td><td>CC BY 4.0</td></tr>
+                            <tr><td>Project PLATEAU (MLIT), FY2025 3D city models</td><td>City model: Nishi-Shinjuku buildings and facade textures</td><td>「3D都市モデル（Project PLATEAU）新宿区・渋谷区・中野区（2025年度）」（国土交通省）を加工して作成</td><td>PLATEAU site policy (PDL 1.0, CC BY 4.0 compatible)</td></tr>
+                            <tr><td>GSI elevation tiles (DEM5A)</td><td>City model: Nishi-Shinjuku ground</td><td>地理院タイル（標高タイル）を加工して作成（国土地理院）</td><td>GSI terms of use (PDL 1.0)</td></tr>
+                            <tr><td>3D BAG v2023.10.08</td><td>City model: Amsterdam canal ring buildings</td><td>© 3DBAG by tudelft3d and 3DGI (<a href="https://docs.3dbag.nl/en/copyright/">docs.3dbag.nl</a>)</td><td>CC BY 4.0</td></tr>
+                            <tr><td>NYC 3-D Building Model (Office of Technology and Innovation)</td><td>City model: Lower Manhattan buildings</td><td>NYC 3-D Building Model, NYC Office of Technology and Innovation (NYC Open Data)</td><td>No licence stated by the publisher</td></tr>
+                            <tr><td>FABDEM v1-2</td><td>City models: ground (Connaught Place, Bengaluru, Mumbai, Kolkata, Hyderabad)</td><td>Hawker et al. (2022), University of Bristol / Fathom</td><td>CC BY-NC-SA 4.0</td></tr>
+                            <tr><td>OpenStreetMap</td><td>City models: roads, water and parks</td><td>© OpenStreetMap contributors</td><td>ODbL 1.0</td></tr>
+                            <tr><td>Copernicus Sentinel-2</td><td>City models: where trees are drawn in the rendered top views</td><td>Contains modified Copernicus Sentinel data 2023–24</td><td>Copernicus Sentinel data licence</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1158,7 +1183,7 @@
                         </thead>
                         <tbody>
                             <tr><td>Live Sentinel-2 scene search and preview (anywhere CDSE has scenes)</td><td><span class="docs-pill yes">in the app</span></td></tr>
-                            <tr><td>3D terrain with draped imagery, 4 West Bengal regions</td><td><span class="docs-pill yes">in the app</span></td></tr>
+                            <tr><td>3D terrain with draped imagery: 4 demo regions and a 74-tile library</td><td><span class="docs-pill yes">in the app</span></td></tr>
                             <tr><td>Reconstruction of an uploaded or searched scene</td><td><span class="docs-pill partial">prototype — shows reference results</span></td></tr>
                             <tr><td>DSM from very-high-resolution imagery</td><td><span class="docs-pill partial">research only, offline</span></td></tr>
                             <tr><td>GeoTIFF export of the DSM</td><td><span class="docs-pill no">not in the app</span></td></tr>

@@ -90,8 +90,30 @@ export function titleCandidates(title) {
     return [...new Set([noState, noBracket].filter(Boolean))];
 }
 
+// Short card subtitles (one line, like "West Bengal, India") where the full location is too long; the
+// preview still shows the full location.
+const CARD_SUBTITLES = {
+    "cityscape-new_york": "New York, USA",
+    "cityscape-shinjuku": "Tokyo, Japan",
+    "cityscape-bengaluru": "Bengaluru, India",
+    "cityscape-kolkata": "Kolkata, India",
+    "cityscape-hyderabad": "Hyderabad, India",
+    "cityscape-mumbai": "Mumbai, India",
+    "cityscape-amsterdam": "Amsterdam, Netherlands",
+    "vhr-a_valley": "Eastern Himalaya, India",
+    "vhr-c_town": "Eastern Himalaya, India",
+    "vhr-c_terraces": "Eastern Himalaya, India",
+    "vhr-a_forest": "Eastern Himalaya, India",
+    "vhr-c_river": "Eastern Himalaya, India",
+};
+
 export function cardSubtitle(item, shownTitle) {
-    const base = item.collection === "dfc2019" || /india$/i.test(item.location) ? item.location : `${item.location}, India`;
+    if (CARD_SUBTITLES[item.id]) {
+        return CARD_SUBTITLES[item.id];
+    }
+    // DFC2019 and the city models carry their full location (the city models name their country)
+    const base = item.collection === "dfc2019" || item.collection === "cityscape" || /india$/i.test(item.location)
+        ? item.location : `${item.location}, India`;
     let rest = base.startsWith(shownTitle) ? base.slice(shownTitle.length).replace(/^[\s,;\u2014-]+/, "") : base;
     if (rest.startsWith("(")) {
         rest = rest.replace(/^\(([^)]*)\)/, "$1").replace(/^[\s,;]+/, "");
@@ -803,7 +825,7 @@ export function createInputView(root, { onStart }) {
                     class: "iv-card-details",
                     text: [
                         formatGsd(item.gsd_m),
-                        item.collection === "vhr" ? "Maxar" : item.collection === "dfc2019" ? "DFC2019" : "Sentinel-2",
+                        { vhr: "Maxar", dfc2019: "DFC2019", cityscape: "City model" }[item.collection] ?? "Sentinel-2",
                         cardTerrain(item),
                     ].join(" \u2022 "),
                 }),

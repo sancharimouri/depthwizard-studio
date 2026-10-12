@@ -177,6 +177,8 @@ export function createTerrainViewer(canvas, options = {}) {
 
     let currentTerrain = null;
     let currentRegionKey = null;
+    // the current terrain's city model renderer (src/cityscape.js attachCity), if it has one
+    let cityRenderer = null;
     let lastWidth = 0;
     let lastHeight = 0;
 
@@ -208,6 +210,8 @@ export function createTerrainViewer(canvas, options = {}) {
         const depthTexture = await textureLoader.loadAsync(url.depth);
         const elevationTexture = await textureLoader.loadAsync(url.elevation);
 
+        cityRenderer?.dispose();
+        cityRenderer = null;
         disposeTerrain(currentTerrain);
 
         const terrain = createTerrain(
@@ -284,7 +288,50 @@ export function createTerrainViewer(canvas, options = {}) {
     }
 
     function render() {
-        renderer.render(scene, camera);
+        if (!cityRenderer?.render()) {
+            renderer.render(scene, camera);
+        }
+    }
+
+    // Crossfade: holdFrame() freezes the current picture in a 2D overlay over the canvas (drawn in the same task as a
+    // fresh render, so no preserveDrawingBuffer is needed); whatever changes underneath (a new tile building, the city
+    // model's lights switching on) stays hidden until releaseFrame() fades the overlay out. Holds nest.
+    let overlay = null, holds = 0, releaseTimer = 0;
+    // { fresh: false }: the canvas already holds the frame to keep (drawn earlier in this same task)
+    function holdFrame({ fresh = true } = {}) {
+        holds += 1;
+        if (holds > 1) {
+            return;
+        }
+        clearTimeout(releaseTimer);
+        overlay ??= Object.assign(document.createElement("canvas"), { className: "view-crossfade" });
+        if (!overlay.isConnected) {
+            canvas.after(overlay);
+        }
+        overlay.width = canvas.width;
+        overlay.height = canvas.height;
+        if (fresh) {
+            render();
+        }
+        overlay.getContext("2d").drawImage(canvas, 0, 0);
+        overlay.style.transition = "none";
+        overlay.style.opacity = "1";
+        overlay.hidden = false;
+    }
+    function releaseFrame(ms = 380) {
+        holds = Math.max(0, holds - 1);
+        if (holds || !overlay || overlay.hidden) {
+            return;
+        }
+        // two frames: the canvas has drawn the new picture before the fade starts
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (holds) {
+                return;
+            }
+            overlay.style.transition = `opacity ${ms}ms ease`;
+            overlay.style.opacity = "0";
+            releaseTimer = setTimeout(() => { overlay.hidden = true; }, ms + 30);
+        }));
     }
 
     return {
@@ -302,6 +349,12 @@ export function createTerrainViewer(canvas, options = {}) {
             return currentRegionKey;
         },
         loadRegion,
+        holdFrame,
+        releaseFrame,
+        setCityRenderer: r => { cityRenderer = r; },
+        get cityRenderer() {
+            return cityRenderer;
+        },
         setStructureYaw,
         getStructureYaw: () => yawTarget,
         setLayer,

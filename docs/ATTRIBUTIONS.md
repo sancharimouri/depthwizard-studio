@@ -28,14 +28,14 @@ data is CC BY-NC-SA 4.0; OpenStreetMap-derived data is ODbL 1.0; Google Open Bui
 data is Swiss federal open government data (free use with source credit); Copernicus DEM and Sentinel-2 data are under
 their Copernicus licences.
 
-## Cosmetic urban model (demo page, Bengaluru block)
+## Cosmetic urban model (Bengaluru block: Studio library tile since 2026-10-12, formerly the demo page)
 
 | Source | Used for | Attribution | Licence |
 |---|---|---|---|
 | Google Open Buildings v3 (polygons) and Open Buildings 2.5D Temporal v1 (2023 `building_height`), via Earth Engine | Building footprints and heights of the 500 × 500 m UB City / Vittal Mallya Road block (ML estimates from satellite imagery) | Google Research, Open Buildings (sites.research.google/open-buildings) | CC BY 4.0 |
 | OpenStreetMap (one Overpass query) | Roads, road names and landmark names in the same block | © OpenStreetMap contributors | ODbL 1.0 |
 
-Terrain under the block is FABDEM (listed under Elevation). The same block is the Bangalore demo region: its
+Terrain under the block is FABDEM (listed under Elevation). The same block is the Bengaluru library tile ("UB City, Bengaluru"): its
 imagery is a synthetic top view rendered from these buildings and roads, with trees placed where Copernicus Sentinel-2
 (listed above; Earth Engine `COPERNICUS/S2_SR_HARMONIZED`, a 2023–24 dry-season median NDVI) sees vegetation; its DSM
 is FABDEM plus these building heights, and its true-colour layer is this model.
@@ -54,6 +54,27 @@ library tile's ICESat-2 offset (+0.3214 m) and the Copernicus Sentinel-2 scene o
 
 The Nanda Devi and Kangchenjunga squares were placed from OpenStreetMap peak and glacier positions
 (© OpenStreetMap contributors, ODbL 1.0); no map data is drawn on them.
+
+## Close-up city tiles (Studio library, "City 3D": Connaught Place, Nariman Point & Marine Drive, Dalhousie Square & Hooghly, Charminar, Nishi-Shinjuku, Canal ring Amsterdam, Financial District New York)
+
+DRAFT (2026-10-12). Connaught Place is now a demo region (#/demo, in place of the Bengaluru block, which moved to the
+Studio library with the same sources). The app shows no credit line on the 3D view; its Docs page ("Data sources &
+credits") credits these sources. The "required wording" column quotes each source's own terms.
+
+| Source | Used for | Required wording | Licence |
+|---|---|---|---|
+| Google Open Buildings v3 (polygons) and Open Buildings 2.5D Temporal v1 (2023 `building_height`, median per building), via Earth Engine | Connaught Place, Mumbai, Kolkata, Hyderabad: building footprints and heights (ML estimates from satellite imagery) | Google Research, Open Buildings (sites.research.google/open-buildings). The Temporal dataset's page adds: "We have leveraged Copernicus Sentinel data (2016-2023) processed by the European Space Agency." | CC BY 4.0 (dual-licensed with ODbL 1.0; used under CC BY 4.0) |
+| Project PLATEAU (MLIT) 3D city models, FY2025 data, 3D Tiles: 新宿区, 渋谷区, 中野区 (LoD2 with textures; LoD1 where a building has no LoD2) | Nishi-Shinjuku: buildings (2,044 from Shinjuku, 334 from Shibuya, 21 from Nakano); clipped to the box, re-projected, textures downscaled | 「3D都市モデル（Project PLATEAU）新宿区（2025年度）」「3D都市モデル（Project PLATEAU）渋谷区（2025年度）」「3D都市モデル（Project PLATEAU）中野区（2025年度）」（国土交通省）（https://www.geospatial.jp/ckan/dataset/plateau-13104-shinjuku-ku-2025, …/plateau-13113-shibuya-ku-2025, …/plateau-13114-nakano-ku-2025）を加工して作成 | PLATEAU Site Policy §3 (Public Data License 1.0, compatible with CC BY 4.0) |
+| GSI elevation tiles (地理院タイル 標高タイル DEM5A, 5 m), cyberjapandata.gsi.go.jp | Nishi-Shinjuku: ground | 地理院タイル（標高タイル（基盤地図情報数値標高モデル））を加工して作成 (出典：国土地理院ウェブサイト, https://maps.gsi.go.jp/development/ichiran.html) | GSI terms of use (Public Data License 1.0); attribution only, no application needed for these tiles |
+| FABDEM v1-2 | Connaught Place (flat at its median: relief under 3 m), Mumbai, Kolkata, Hyderabad: ground | Hawker et al. (2022), Environ. Res. Lett. 17 024016; University of Bristol / Fathom | CC BY-NC-SA 4.0 |
+| OpenStreetMap (one Overpass query per tile) | Roads in every tile; water (and the sea, from the coastline) and parks in the five phase-2 tiles; the boxes were placed from OSM positions | © OpenStreetMap contributors (openstreetmap.org/copyright) | ODbL 1.0 |
+| 3D BAG v2023.10.08 (OGC API, LoD 2.2 solids), TU Delft 3D geoinformation group and 3DGI | Canal ring, Amsterdam: buildings (2,724; clipped to the box, re-projected); flat ground at the median 3D BAG ground level (NAP) | © 3DBAG by tudelft3d and 3DGI, with a link to https://docs.3dbag.nl/en/copyright/ | CC BY 4.0 |
+| NYC 3-D Building Model, NYC Office of Technology and Innovation (CityGML LoD2, delivery area 12; DoITT 2014 aerial survey) | Financial District, New York: buildings (626; clipped, re-projected); ground interpolated from the model's building ground surfaces | NYC 3-D Building Model, NYC Office of Technology and Innovation (NYC Open Data, data.cityofnewyork.us/d/tnru-abg2). No wording is prescribed | No licence is stated; used on the owner's decision (2026-10-12) |
+| Copernicus Sentinel-2 (Earth Engine `COPERNICUS/S2_SR_HARMONIZED`, Nov 2023 – Mar 2024 median NDVI) | Where trees are drawn in the synthetic top view | Contains modified Copernicus Sentinel data 2023–24 | Copernicus Sentinel data licence |
+
+Each tile's image is a synthetic top view rendered from these sources (as for the Bengaluru block), not a photograph.
+Its relative depth is Depth Anything V2 on that image (listed under Models).
+
 
 ## Models
 

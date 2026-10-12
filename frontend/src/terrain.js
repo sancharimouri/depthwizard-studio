@@ -263,7 +263,9 @@ export function createTerrain(
         geographicWidth / geographicHeight;
 
 
-    const terrainHeight = 100;
+    // terrain.json `fitLongSide` (a wide demo rectangle, Manali 44 x 20 km): the long side, not the north-south
+    // one, is 100 units, so the whole rectangle stays in the default camera's frame as it rotates
+    const terrainHeight = terrainData.fitLongSide && aspect > 1 ? 100 / aspect : 100;
 
     const terrainWidth =
         terrainHeight * aspect;
@@ -340,7 +342,7 @@ export function createTerrain(
         ? (MIN_RELIEF_FRACTION * terrainHeight) / (meshRange * baseVerticalScale)
         : 1;
 
-    // terrain.json `exaggeration` sets a region's default outright (Bangalore: 14x); otherwise it is derived
+    // terrain.json `exaggeration` sets a region's default outright (Connaught Place: 19x); otherwise it is derived
     const exaggerationFactor = terrainData.exaggeration ??
         Math.min(
             MAX_AUTO_EXAGGERATION,

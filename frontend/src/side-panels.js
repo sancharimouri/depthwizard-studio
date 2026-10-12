@@ -74,10 +74,12 @@ export function renderSource(job) {
     dl.innerHTML = rows.length
         ? rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")
         : `<dt>Source</dt><dd>Reference scene (no job input)</dd>`;
+    // city tiles: no note under the terrain rows, so DAv2 inference is the box's last line
+    const city = job?.input?.landscape?.collection === "cityscape";
     const note = document.getElementById("xp-terrain-note");
     if (note) {
         const m = job?.gen?.status === "ok" ? job.gen.meta : null;
-        note.textContent = !job ? ""
+        note.textContent = !job || city ? ""
             : !m ? "Terrain not generated for this job."
             : [m.has_elevation ? null : m.note,
                m.display_note, // Maxar DISPLAY band: the mesh shape is cosmetic, statistics are real
@@ -155,7 +157,13 @@ function renderInspection(input) {
             onPick: (u, v) => inspectHandlers.onPick?.(u, v),
         });
     }
-    const url = input?.previewUrl ?? "data/darjeeling/satellite.png";
+    const url = input?.previewUrl;
+    if (!url) {
+        img.hidden = true;
+        empty.hidden = false;
+        img.removeAttribute("src");
+        return;
+    }
     if (img.getAttribute("src") !== url) {
         img.hidden = false;
         empty.hidden = true;

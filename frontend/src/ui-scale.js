@@ -10,7 +10,8 @@
 //   height = the tallest column's content + that column's reserved top / bottom areas (--col-reserve)
 // It is re-measured only while every box is in its default state, so expanding a box makes its column scroll
 // instead of shrinking the whole UI. scale = min(MAX_SCALE, window / design), never below MIN_SCALE; below
-// the floor the columns scroll internally.
+// the floor the columns scroll internally. The Studio input page is not scaled: picking a tile filled its preview
+// card and shrank every text and icon to make it fit (2026-10-12); the preview card scrolls instead.
 
 export const MAX_SCALE = 1; // the UI never grows past its designed size; raise to let big screens scale up
 export const MIN_SCALE = 0.68;
@@ -87,31 +88,6 @@ const SCREENS = [
             const toolbar = box.querySelector(".xv-toolbar");
             const middle = Math.max(MIN_3D_WIDTH, (toolbar?.offsetWidth ?? 0) + 32);
             return columnsDesign(left, right, middle);
-        },
-    },
-    {
-        key: "studio-input",
-        active: () => document.getElementById("page-workbench")?.classList.contains("active")
-            && shown(document.getElementById("input-view")),
-        design() {
-            // the cards fill a fixed share of the window (inset 12.5%); the scene list scrolls by design, the
-            // preview card must show everything: design height = window height at which its content fits
-            const view = document.getElementById("input-view");
-            const pane = view.querySelector(".iv-preview-pane");
-            if (!shown(pane) || !pane.clientHeight) {
-                return null;
-            }
-            // its content's own height (children + gaps + padding; scrollHeight can't be used, it never reports
-            // less than the box), over the box's own height: > 1 means it doesn't fit at the current scale
-            const cs = getComputedStyle(pane);
-            const kids = [...pane.children].filter(c => getComputedStyle(c).display !== "none");
-            const content = kids.reduce((sum, c) => sum + c.offsetHeight, 0)
-                + px(pane, "rowGap") * Math.max(0, kids.length - 1)
-                + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-            const need = content / pane.clientHeight;
-            // the card's on-screen height doesn't change with the scale (its own-px height is that / scale), so
-            // the content fits at scale = currentScale / need, i.e. at window height innerHeight * need / scale
-            return { width: 0, height: (window.innerHeight * need) / currentScale };
         },
     },
 ];

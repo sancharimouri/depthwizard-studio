@@ -5,6 +5,7 @@ import { createMeasureTool } from "./measure-tool.js";
 import { createExpandedChrome } from "./expanded-chrome.js";
 import { createFloodSim } from "./flood-sim.js";
 import { createSidebar } from "./sidebar.js";
+import { showBuildingCount } from "./building-count.js";
 import { createViewerHistory } from "./viewer-history.js";
 import { createFlythrough } from "./flythrough.js";
 import { initCollapsibleBoxes, initFacts, initTour, renderFacts, renderScenarioCard, renderSource, renderTerrainStats, setInspectionHandlers, setInspectionSelected } from "./side-panels.js";
@@ -95,43 +96,18 @@ function setLayerDescription(layer) {
 // ============================================================
 
 const REGIONS = {
-    darjeeling: {
-        label: "Darjeeling",
-        elevationSource: "OpenTopography DSM",
-        crsEpsg: "32645",
-        resolution: "10m",
-        inferenceTime: "1.17s",
-    },
-    kolkata: {
-        label: "Kolkata",
-        elevationSource: "Copernicus GLO-30 DSM",
-        crsEpsg: "32645",
-        resolution: "10m",
-        inferenceTime: "1.67s",
-    },
-    bardhaman: {
-        label: "Bardhaman",
-        elevationSource: "Copernicus GLO-30 DSM",
-        crsEpsg: "32645",
-        resolution: "10m",
-        inferenceTime: "0.66s",
-    },
-    sundarbans: {
-        label: "Sundarbans",
-        elevationSource: "Copernicus GLO-30 DSM",
-        crsEpsg: "32645",
-        resolution: "10m",
-        inferenceTime: "0.66s",
-    },
-    // UB City / Vittal Mallya Road, 500 m: scripts/bake_bangalore_tile.py. TRUE COLOR is the city model.
-    // imagery: a synthetic HD top view rendered from the region's own data (no free HD imagery may be redistributed)
-    bangalore: {
-        label: "Bangalore",
-        elevationSource: "DSM (FABDEM + Open Buildings 2023 heights)",
-        imagery: "Synthetic top view (Open Buildings, OpenStreetMap, Sentinel-2 vegetation)",
+    // Connaught Place, 1 km: the city-tile bake (scripts/city_tiles.json "connaught_place"). TRUE COLOR is the city
+    // model; imagery is a synthetic top view rendered from the region's own data (no free HD imagery may be
+    // redistributed). No credit line on the view: the Docs page credits its sources.
+    connaught: {
+        label: "Connaught Place",
+        elevationSource: "3D city model",
+        imagery: "City model top view",
         crsEpsg: "4326",
-        resolution: "0.25m",
-        inferenceTime: "23.17s",
+        resolution: "4m",
+        inferenceTime: "16.91s",
+        assets: showcaseAssets("connaught"),
+        city: true, // a 3D city model (TRUE COLOR): region switches to and from it crossfade
     },
     // Showcase regions (scripts/bake_showcase_tiles.py): their own file names (JPEG imagery, compact terrain) and a
     // data credit shown under the view. Nanda Devi and Kangchenjunga are Studio library tiles
@@ -190,15 +166,28 @@ function showcaseAssets(key) {
 let currentTerrain = null;
 let currentRegionKey = null;
 let running = false;
+let exploreLayer = null;
+
+// Showing or hiding a city model (TRUE COLOR on a city region) swaps lights, tone mapping and haze: crossfade it.
+function swapsCityModel(terrain, from, to) {
+    return Boolean(terrain?.structure?.()) && (from === "satellite-3d") !== (to === "satellite-3d");
+}
 
 function activateLayer(layer) {
     if (!currentTerrain) {
         return;
     }
 
+    const fade = swapsCityModel(currentTerrain, exploreLayer, layer);
+    if (fade) {
+        exploreViewer.holdFrame();
+    }
     currentTerrain.setLayer(layer);
+    exploreLayer = layer;
+    if (fade) {
+        exploreViewer.releaseFrame();
+    }
     exploreProbe?.invalidate();
-    syncCityLighting();
 
     // Scoped to #page-explore — Final Demo's box 8 reuses the same .layer-button
     // class for visual parity with Explore, and has its own independent
@@ -212,20 +201,37 @@ function activateLayer(layer) {
 }
 
 async function loadRegion(regionKey) {
+    // to or from a city region: the old picture holds while the new one (and its model) is built, then crossfades
+    const fade = Boolean(REGIONS[regionKey]?.city || currentTerrain?.structure?.());
+    if (fade) {
+        exploreViewer.holdFrame();
+    }
+    try {
+        return await loadRegionInner(regionKey);
+    } finally {
+        if (fade) {
+            exploreViewer.releaseFrame();
+        }
+    }
+}
+
+async function loadRegionInner(regionKey) {
+    exploreLayer = null;
     const { terrain, terrainData } = await exploreViewer.loadRegion(regionKey, REGIONS[regionKey]?.assets ?? null);
     currentTerrain = terrain;
     currentRegionKey = regionKey;
+    showBuildingCount("demo-buildings", regionKey);
     const credit = document.getElementById("region-credit");
     if (credit) {
         credit.textContent = REGIONS[regionKey]?.credit ?? "";
         credit.hidden = !credit.textContent;
     }
     // Every tile opens on its flat satellite image (the run's first stage), set before anything else is awaited:
-    // a new terrain is built extruded, and opening on TRUE COLOR flashed the 3D view (Bangalore: the city model)
+    // a new terrain is built extruded, and opening on TRUE COLOR flashed the 3D view (Connaught Place: the city model)
     // for a moment before the run's first stage.
     activateLayer("satellite-flat");
     if (terrainData.structure) {
-        await attachCityStructure(terrain, terrainData.structure);
+        await attachCityStructure(exploreViewer, terrain, terrainData.structure);
     }
 
     // Terrain statistics (same numbers as the Studio viewer's box) + vertical exaggeration
@@ -243,60 +249,13 @@ async function loadRegion(regionKey) {
 
 
 // ============================================================
-// CITY MODEL (Bangalore's TRUE COLOR layer: terrain.json `structure`, scripts/bake_bangalore_tile.py)
+// CITY MODEL (terrain.json / terrain.u16.gz `structure`: Connaught Place's TRUE COLOR layer, the Studio's city tiles).
+// src/cityscape.js brings its own lights, tone mapping, haze and ambient occlusion, and renders while it shows.
 // ============================================================
 
-const exploreLights = scene.children.filter(object => object.isLight);
-const exploreToneMapping = renderer.toneMapping;
-
-// The model brings its own sunset lights and tone mapping; the scene's own lights stay off while it shows.
-function syncCityLighting() {
-    const cityOn = currentTerrain?.structure()?.visible === true;
-    exploreLights.forEach(light => { light.visible = !cityOn; });
-    renderer.toneMapping = cityOn ? THREE.NeutralToneMapping : exploreToneMapping;
-}
-
-async function attachCityStructure(terrain, { url, affine, groundMedian }) {
-    const [{ buildCityStructure }, res] = await Promise.all([
-        import("./cityscape.js"),
-        fetch(`${import.meta.env.BASE_URL}${url}`),
-    ]);
-    if (!res.ok) {
-        throw new Error(`city model: HTTP ${res.status}`);
-    }
-    // model metres (x east, y up, z = -north) -> the mesh's local frame (x east, y north, z up, mesh units):
-    // horizontally the baked affine to degrees from the tile centre, vertically the terrain's own metres-to-units
-    const [a, b, c, d, e, f] = affine;
-    const kx = terrain.terrainWidth / terrain.geographicWidth;
-    const ky = terrain.terrainHeight / terrain.geographicHeight;
-    const v = terrain.localZForElevation(1) - terrain.localZForElevation(0);
-    const city = buildCityStructure(await res.json(), Math.hypot(kx * a, ky * d));
-    const frame = new THREE.Group();
-    frame.matrixAutoUpdate = false;
-    frame.matrix.set(
-        kx * a, 0, -kx * b, kx * c,
-        ky * d, 0, -ky * e, ky * f,
-        0, v, 0, terrain.localZForElevation(groundMedian),
-        0, 0, 0, 1,
-    );
-    frame.add(city.object);
-    terrain.attachStructure(frame);
-    // Warm up in the exact TRUE COLOR state (its lights only, its tone mapping), so the first time the run reaches
-    // that layer nothing is compiled or allocated mid-run: one off-screen render builds the shadow map and its
-    // depth shaders, compile() builds the on-screen shaders.
-    frame.visible = true;
-    exploreLights.forEach(light => { light.visible = false; });
-    const toneMapping = renderer.toneMapping;
-    renderer.toneMapping = THREE.NeutralToneMapping;
-    const warmTarget = new THREE.WebGLRenderTarget(16, 16);
-    renderer.setRenderTarget(warmTarget);
-    renderer.render(scene, camera);
-    renderer.setRenderTarget(null);
-    warmTarget.dispose();
-    renderer.compile(scene, camera);
-    renderer.toneMapping = toneMapping;
-    frame.visible = false;
-    syncCityLighting();
+async function attachCityStructure(viewer, terrain, structure) {
+    const { attachCity } = await import("./cityscape.js");
+    return attachCity(viewer, terrain, structure);
 }
 
 
@@ -2402,8 +2361,15 @@ function activateFinalDemoLayer(layer) {
         return;
     }
 
+    const fade = swapsCityModel(finalDemoCurrentTerrain, finalDemoCurrentLayer, layer);
+    if (fade) {
+        finalDemoViewer.holdFrame();
+    }
     finalDemoCurrentTerrain.setLayer(layer);
     finalDemoCurrentLayer = layer;
+    if (fade) {
+        finalDemoViewer.releaseFrame();
+    }
     finalDemoFloodSim?.refresh();
     finalDemoSurfacePoints?.refresh();
     // Wireframe: neon lines on pure black; every other layer uses the theme's background.
@@ -2495,6 +2461,22 @@ async function showJobInFinalDemo(job) {
     if (!finalDemoViewer || job?.gen?.status !== "ok") {
         return null;
     }
+    // a city tile (or leaving one): the old picture holds until the new terrain, its model, default height and
+    // saved view are all in place, then crossfades; nothing half-built (bare imagery, unlit frames) shows
+    const fade = job.input?.landscape?.collection === "cityscape" || Boolean(finalDemoCurrentTerrain?.structure?.());
+    if (fade) {
+        finalDemoViewer.holdFrame();
+    }
+    try {
+        return await showJobInFinalDemoInner(job);
+    } finally {
+        if (fade) {
+            finalDemoViewer.releaseFrame();
+        }
+    }
+}
+
+async function showJobInFinalDemoInner(job) {
     let terrain;
     try {
         terrain = await loadFinalDemoRegion(job.gen.key, job.gen.textures);
@@ -2506,8 +2488,9 @@ async function showJobInFinalDemo(job) {
     // the user switched jobs while this loaded: the on-screen job owns the Studio
     const active = jobStore.active();
     if (active && active !== job) {
-        return active.gen?.status === "ok" && active.status === "complete" ? showJobInFinalDemo(active) : null;
+        return active.gen?.status === "ok" && active.status === "complete" ? showJobInFinalDemoInner(active) : null;
     }
+    showBuildingCount("xp-buildings", job.input?.inputRef?.id);
     applyDefaultExaggeration(job);
     finalDemoHistory?.reset();
     renderSource(job);
@@ -2529,6 +2512,9 @@ function applyDefaultExaggeration(job) {
 
 async function loadFinalDemoRegion(regionKey, assets = null) {
     const { terrain, terrainData } = await finalDemoViewer.loadRegion(regionKey, assets);
+    if (terrainData.structure) { // a city tile: its 3D city model is the TRUE COLOR layer
+        await attachCityStructure(finalDemoViewer, terrain, terrainData.structure);
+    }
 
     finalDemoCurrentTerrain = terrain;
     finalDemoCurrentRegionKey = regionKey;
@@ -3766,7 +3752,7 @@ function animate() {
 
     exploreFlythrough.update();
     exploreViewer.update(); // controls + structure yaw (Reset)
-    renderer.render(scene, camera);
+    exploreViewer.render(); // or the city model's own renderer (src/cityscape.js)
     exploreProbe.update();
 }
 
@@ -3783,8 +3769,8 @@ function animate() {
 
 initUiScale(); // the UI layer shrinks to fit small windows (src/ui-scale.js)
 
-// the page opens on the first card of the region rail (Bangalore)
-loadRegion(document.querySelector("#page-explore .region-card[data-region]")?.dataset.region ?? "bangalore")
+// the page opens on the first card of the region rail (Connaught Place)
+loadRegion(document.querySelector("#page-explore .region-card[data-region]")?.dataset.region ?? "connaught")
     .then(() => {
         console.log("DepthWizard2 viewer ready.");
         maybeAutoRunDemo();

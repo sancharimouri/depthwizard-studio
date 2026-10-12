@@ -261,6 +261,19 @@ body {
     display: block;
 }
 
+/* src/viewer.js holdFrame(): the frozen picture a 3D view crossfades from (tile switches, the city model's layer) */
+.view-crossfade {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.view-crossfade[hidden] {
+    display: none;
+}
+
 
 .overlay {
     position: fixed;
@@ -763,6 +776,19 @@ kbd {
 .region-name {
     font-size: 13px;
     font-weight: 600;
+}
+
+/* the region's landscape, beside its name (Demo page) */
+.region-terrain {
+    margin-left: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgb(var(--neon-rgb));
+}
+
+.building-count-value {
+    text-align: left;
 }
 
 
@@ -3704,6 +3730,11 @@ kbd {
     aspect-ratio: 1;
     object-fit: cover;
     background: rgba(var(--text-rgb), 0.06);
+}
+
+/* Amalapuram: the card crops the thumbnail; keep its top edge so the whole waterbody shows */
+.iv-card[data-id="sentinel2-amalapuram"] .iv-card-thumb {
+    object-position: top;
 }
 
 .iv-card-body {
@@ -8393,60 +8424,23 @@ body {
 }
 
 /* ============================================================
-   EMPTY PREVIEW STAGE (after UI/new_ui.png): while nothing is selected, the inner box shows new_ui's own
-   texture: a fine square grid (24-32 px cells) with small dots at its intersections, a little
-   fainter in the middle, and the contour lines traced from new_ui.png (public/preview_contours.png)
-   in the corners. Grey-white in dark mode, brown in bright mode.
+   EMPTY PREVIEW STAGE: plain, no background motif (the grid and contour lines were removed 2026-10-12).
    ============================================================ */
 .iv-preview-stage {
     container-type: inline-size;
 }
 
-.iv-preview-stage:has(.iv-preview-empty:not([hidden]))::before,
-.iv-preview-stage:has(.iv-preview-empty:not([hidden]))::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
 
 /* contour lines: new_ui's own, as a mask filled with the line colour */
-.iv-preview-stage:has(.iv-preview-empty:not([hidden]))::before {
-    background: rgba(118, 168, 146, 0.2);
-    -webkit-mask: url("/preview_contours.png") no-repeat center / cover, radial-gradient(ellipse at center, transparent 30%, #000 85%);
-    -webkit-mask-composite: source-in;
-    mask: url("/preview_contours.png") no-repeat center / cover, radial-gradient(ellipse at center, transparent 30%, #000 85%);
-    mask-composite: intersect;
-}
 
 /* grid + intersection dots, fading a little toward the middle */
-.iv-preview-stage:has(.iv-preview-empty:not([hidden]))::after {
-    --cell: clamp(24px, calc(100cqw / 15), 32px);
-    background-image:
-        radial-gradient(circle at 0.5px 0.5px, rgba(150, 200, 178, 0.2) 1px, transparent 1.6px),
-        linear-gradient(to right, rgba(130, 180, 160, 0.055) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(130, 180, 160, 0.055) 1px, transparent 1px);
-    background-size: var(--cell) var(--cell);
-    background-position: calc(var(--cell) / 2) calc(var(--cell) / 2);
-    -webkit-mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.25) 35%, #000 90%);
-    mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.25) 35%, #000 90%);
-}
 
 .iv-preview-empty {
     position: relative;
     z-index: 1;
 }
 
-:root[data-theme="light"] .iv-preview-stage:has(.iv-preview-empty:not([hidden]))::before {
-    background: rgba(140, 84, 38, 0.2);
-}
 
-:root[data-theme="light"] .iv-preview-stage:has(.iv-preview-empty:not([hidden]))::after {
-    background-image:
-        radial-gradient(circle at 0.5px 0.5px, rgba(140, 84, 38, 0.2) 1px, transparent 1.6px),
-        linear-gradient(to right, rgba(150, 92, 44, 0.055) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(150, 92, 44, 0.055) 1px, transparent 1px);
-}
 
 
 /* ============================================================
@@ -9199,4 +9193,9 @@ body {
 .final-demo-box.is-expanded .xv-toolbar,
 .final-demo-box.is-expanded .xv-navbar {
     zoom: var(--ui-scale);
+}
+
+#demo-buildings[hidden],
+#xp-buildings[hidden] {
+    display: none !important;
 }
