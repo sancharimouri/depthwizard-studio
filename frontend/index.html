@@ -23,10 +23,6 @@
 
 <body>
 
-<!-- Input page background: one static picture on plain black (styles.css .input-bg-static). Outside #app so it
-     sits still behind the sidebar and the page whatever the sidebar's width. -->
-<div class="input-bg-static" aria-hidden="true"><i class="ibs-grid"></i></div>
-
 <div id="app">
 
 
@@ -137,6 +133,10 @@
          overlays, the expanded 3D window), so they fill this area and are
          pushed by the sidebar instead of sitting under it. -->
     <div id="app-main" class="app-main">
+
+        <!-- Input page background: one picture on plain black (styles.css .input-bg-static). Inside #app-main so it
+             fills exactly the space beside the sidebar and resizes as the sidebar opens or closes. -->
+        <div class="input-bg-static" aria-hidden="true"><i class="ibs-grid"></i></div>
 
         <!-- Global dark / bright switch (all pages, sidebar and the 3D viewer). -->
         <button id="global-theme-toggle" class="xv-icon-btn tip-below global-theme-toggle" type="button"
