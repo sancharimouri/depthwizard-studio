@@ -176,7 +176,7 @@ def baked_depth(item: dict | None, preview: bytes) -> dict | None:
         entry = json.loads(raw)
         if entry.get("preview_sha256") != sha:
             return None
-        return {**entry, "baked": True, "fallback_used": False}
+        return {**entry, "baked": True}
     except Exception as exc:  # noqa: BLE001 - a bad entry must never break generation: the Space answers instead
         logging.getLogger(__name__).warning("baked depth unreadable for %s (%s)", item.get("id"), type(exc).__name__)
         return None
@@ -232,7 +232,7 @@ def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id:
 
     elev = _library_elevation(item) if kind == "library" else _input_elevation(input_meta, input_dir)
     meta = {"job": job_id, "input": {"kind": kind, "id": item_id}, "has_elevation": elev is not None,
-            "depth": {k: depth_resp.get(k) for k in ("model", "device", "infer_s", "encoding", "host", "fallback_used", "baked")}}
+            "depth": {k: depth_resp.get(k) for k in ("model", "device", "infer_s", "encoding", "host", "baked")}}
     if elev is None:
         # no georeference: no elevation model exists for this input; a flat plane carries the textures
         w, h = img.size

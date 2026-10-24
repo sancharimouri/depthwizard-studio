@@ -72,7 +72,7 @@ def test_baked_depth_matches_only_the_exact_preview(tmp_path, monkeypatch):
         w.update_tags(ns=pipeline.DEPTH_NS, **{f"SHA256_{sha}": json.dumps(entry)})
     monkeypatch.setattr(library_store, "local_asset", lambda item, kind: pack)
     got = pipeline.baked_depth({"id": "x", "collection": "sentinel2"}, preview)
-    assert got["baked"] is True and got["data_b64"] == "AAAA" and got["fallback_used"] is False
+    assert got["baked"] is True and got["data_b64"] == "AAAA"
     assert pipeline.baked_depth({"id": "x", "collection": "sentinel2"}, b"other colours") is None  # -> the Space
     monkeypatch.setattr(library_store, "local_asset", lambda item, kind: None)
     monkeypatch.setattr(library_store, "private_pack", lambda item: None)

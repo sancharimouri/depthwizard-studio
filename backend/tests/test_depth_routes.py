@@ -24,7 +24,6 @@ def mock_http(monkeypatch, handler):
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch):
     monkeypatch.delenv("DAV2_INFERENCE_URL", raising=False)
-    monkeypatch.delenv("DAV2_FALLBACK_URL", raising=False)
     depth_routes._clients.clear()
 
 
@@ -35,10 +34,10 @@ def test_space_ids_vs_plain_urls():
     assert depth_routes.space_id("http://127.0.0.1:8020") is None
 
 
-def test_default_primary_is_the_space_and_fallback_is_opt_in(monkeypatch):
-    assert depth_routes.hosts() == ["sancharimouri/DepthWizard2"]
-    monkeypatch.setenv("DAV2_FALLBACK_URL", "https://x.trycloudflare.com/")
-    assert depth_routes.hosts() == ["sancharimouri/DepthWizard2", "https://x.trycloudflare.com"]
+def test_default_host_is_the_space(monkeypatch):
+    assert depth_routes.host() == "sancharimouri/DepthWizard2"
+    monkeypatch.setenv("DAV2_INFERENCE_URL", "http://127.0.0.1:8765/local-dav2/")
+    assert depth_routes.host() == "http://127.0.0.1:8765/local-dav2"
 
 
 def test_space_client_always_sends_the_token_as_a_header(monkeypatch):
@@ -55,7 +54,7 @@ def test_space_client_always_sends_the_token_as_a_header(monkeypatch):
     monkeypatch.setattr(gradio_client, "Client", FakeClient)
     monkeypatch.setattr(depth_routes, "hf_token", lambda: "hf_test")
     r = post()
-    assert r.status_code == 200 and r.json()["host"] == "sancharimouri/DepthWizard2" and r.json()["fallback_used"] is False
+    assert r.status_code == 200 and r.json()["host"] == "sancharimouri/DepthWizard2"
     assert seen["token"] == "hf_test" and seen["headers"] == {"Authorization": "Bearer hf_test"}
 
 
@@ -65,7 +64,7 @@ def test_no_token_means_no_anonymous_space_call(monkeypatch):
     assert r.status_code == 503 and "HF_TOKEN" in r.json()["detail"]
 
 
-def test_plain_http_host_still_works_colab_bridge(monkeypatch):
+def test_plain_http_host_works_desktop_local_server(monkeypatch):
     seen = {}
 
     def handler(request):
@@ -79,32 +78,21 @@ def test_plain_http_host_still_works_colab_bridge(monkeypatch):
     assert r.json()["host"] == "https://a.trycloudflare.com"
 
 
-def test_quota_on_the_space_falls_back_to_the_explicit_bridge(monkeypatch):
-    def quota(*a):
-        raise RuntimeError("You have exceeded your GPU quota (30s requested vs. 12s left).")
-
-    monkeypatch.setattr(depth_routes, "_space_predict", quota)
-    mock_http(monkeypatch, lambda request: httpx.Response(200, json=DEPTH))
-    monkeypatch.setenv("DAV2_FALLBACK_URL", "https://b.trycloudflare.com")
-    r = post()
-    assert r.status_code == 200 and r.json()["fallback_used"] is True and r.json()["host"] == "https://b.trycloudflare.com"
-
-
-def test_quota_without_fallback_is_a_429_with_the_real_message(monkeypatch):
+def test_quota_is_a_429_with_the_real_message(monkeypatch):
     monkeypatch.setattr(depth_routes, "_space_predict",
                         lambda *a: (_ for _ in ()).throw(RuntimeError("You have exceeded your GPU quota")))
     r = post()
     assert r.status_code == 429 and "GPU quota" in r.json()["detail"]
 
 
-def test_unreachable_bridge_is_502(monkeypatch):
+def test_unreachable_plain_http_host_is_502(monkeypatch):
     def handler(request):
         raise httpx.ConnectError("down")
 
     mock_http(monkeypatch, handler)
     monkeypatch.setenv("DAV2_INFERENCE_URL", "https://gone.trycloudflare.com")
     r = post()
-    assert r.status_code == 502 and "Colab bridge" in r.json()["detail"]
+    assert r.status_code == 502 and "unreachable" in r.json()["detail"]
 
 
 def test_by_id_forwards_the_input_preview(monkeypatch, tmp_path):

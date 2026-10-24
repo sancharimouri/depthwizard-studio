@@ -1,23 +1,21 @@
-"""Relative depth (DAv2-Small) via a remote inference host (docs/DEPLOY.md).
+"""Relative depth (DAv2-Small) via an inference host (docs/DEPLOY.md).
 
-Hosts come from the environment, read on every request:
+The host comes from the environment, read on every request:
 
-  DAV2_INFERENCE_URL   primary. Default: the ZeroGPU Space "sancharimouri/DepthWizard2".
+  DAV2_INFERENCE_URL   default: the ZeroGPU Space "sancharimouri/DepthWizard2".
                        Either a Hugging Face Space id ("owner/name", or its
                        huggingface.co/spaces/... URL), called through the Gradio API
                        (gradio_client, api_name="/predict"), or a plain http(s) base URL
-                       serving POST /predict (the Colab bridge, bridge/dav2_server.py).
-  DAV2_FALLBACK_URL    optional, same two forms. Tried only when it is set AND the
-                       primary fails (unreachable, quota, 5xx). Meant for the Colab bridge.
+                       serving POST /predict (the desktop app's local ONNX server,
+                       bridge/dav2_server_onnx.py).
 
 Space calls always carry HF_TOKEN as an explicit Authorization header. gradio_client's
 token= alone only authenticates the huggingface.co API calls, not the requests to
 *.hf.space (checked 2026-09-26), which would make them anonymous for ZeroGPU quota.
 Every request to a Space host is audited (auth_audit(), shown in /api/depth/status).
 
-The response is the host's JSON, plus "host" and "fallback_used": 518x518 relative depth
-(larger = nearer), NOT elevation, "u16-zlib" encoded (older hosts: raw float32 with no
-"encoding" field; frontend/src/depth-result.js decodes both).
+The response is the host's JSON, plus "host": 518x518 relative depth (larger = nearer),
+NOT elevation, "u16-zlib" encoded (older hosts: raw float32 with no "encoding" field).
 """
 
 from __future__ import annotations
@@ -58,10 +56,8 @@ def space_id(host: str) -> str | None:
     return host if _SPACE_ID.fullmatch(host) else None
 
 
-def hosts() -> list[str]:
-    primary = os.environ.get("DAV2_INFERENCE_URL", "").strip().rstrip("/") or DEFAULT_SPACE
-    fallback = os.environ.get("DAV2_FALLBACK_URL", "").strip().rstrip("/")
-    return [primary] + ([fallback] if fallback and fallback != primary else [])
+def host() -> str:
+    return os.environ.get("DAV2_INFERENCE_URL", "").strip().rstrip("/") or DEFAULT_SPACE
 
 
 # ------------------------------------------------------------------ auth audit
@@ -197,14 +193,13 @@ async def _call_space(sid: str, filename: str, body: bytes) -> dict:
     raise AssertionError("unreachable")
 
 
-# ------------------------------------------------------------------ plain HTTP (Colab bridge)
+# ------------------------------------------------------------------ plain HTTP (desktop app's local server)
 async def _call_http(url: str, filename: str, body: bytes, content_type: str) -> dict:
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT_S) as client:
             r = await client.post(f"{url}/predict", files={"file": (filename, body, content_type)})
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Inference host unreachable ({type(exc).__name__}); "
-                                                    "the temporary Colab bridge may be disconnected.") from exc
+        raise HTTPException(status_code=502, detail=f"Inference host unreachable ({type(exc).__name__}).") from exc
     if r.status_code != 200:
         raise HTTPException(status_code=502 if r.status_code >= 500 else r.status_code,
                             detail=f"Inference host returned HTTP {r.status_code}.")
@@ -215,49 +210,36 @@ HOST_CALLS = {"n": 0}  # real depth-host calls made by this process (logged; bak
 
 
 async def _forward(filename: str, body: bytes, content_type: str) -> dict:
-    """Primary host, then the explicit fallback (if configured) on a host-side failure."""
-    errors = []
-    for i, host in enumerate(hosts()):
-        sid = space_id(host)
-        HOST_CALLS["n"] += 1
-        logging.getLogger("uvicorn.error").info("depth host call #%d -> %s (%s)", HOST_CALLS["n"], sid or host, filename)
-        try:
-            out = await (_call_space(sid, filename, body) if sid else _call_http(host, filename, body, content_type))
-            return {**out, "host": sid or host, "fallback_used": i > 0}
-        except HTTPException as exc:
-            if exc.status_code < 429 and exc.status_code != 408:  # a client-side problem: don't retry elsewhere
-                raise
-            errors.append(exc)
-    if len(errors) == 1:
-        raise errors[0]
-    raise HTTPException(status_code=errors[-1].status_code,
-                        detail=" | fallback: ".join(str(e.detail) for e in errors))
+    url = host()
+    sid = space_id(url)
+    HOST_CALLS["n"] += 1
+    logging.getLogger("uvicorn.error").info("depth host call #%d -> %s (%s)", HOST_CALLS["n"], sid or url, filename)
+    out = await (_call_space(sid, filename, body) if sid else _call_http(url, filename, body, content_type))
+    return {**out, "host": sid or url}
 
 
 # ------------------------------------------------------------------ routes
 @router.get("/status")
 def status() -> dict:
-    out = []
-    for i, host in enumerate(hosts()):
-        sid = space_id(host)
-        role = "primary" if i == 0 else "fallback"
-        if sid:
-            try:
-                from huggingface_hub import HfApi
-                rt = HfApi(token=hf_token()).get_space_runtime(sid).raw
-                out.append({"role": role, "kind": "space", "host": sid, "reachable": rt.get("stage") == "RUNNING",
-                            "stage": rt.get("stage"), "hardware": (rt.get("hardware") or {}).get("current"),
-                            "token_configured": bool(hf_token())})
-            except Exception as exc:  # noqa: BLE001
-                out.append({"role": role, "kind": "space", "host": sid, "reachable": False, "error": type(exc).__name__})
-        else:
-            try:
-                r = httpx.get(f"{host}/health", timeout=15)
-                r.raise_for_status()
-                out.append({"role": role, "kind": "http", "host": host, "reachable": True, **r.json()})
-            except httpx.HTTPError as exc:
-                out.append({"role": role, "kind": "http", "host": host, "reachable": False, "error": type(exc).__name__})
-    return {"hosts": out, "space_request_auth": auth_audit()}
+    url = host()
+    sid = space_id(url)
+    if sid:
+        try:
+            from huggingface_hub import HfApi
+            rt = HfApi(token=hf_token()).get_space_runtime(sid).raw
+            out = {"kind": "space", "host": sid, "reachable": rt.get("stage") == "RUNNING",
+                   "stage": rt.get("stage"), "hardware": (rt.get("hardware") or {}).get("current"),
+                   "token_configured": bool(hf_token())}
+        except Exception as exc:  # noqa: BLE001
+            out = {"kind": "space", "host": sid, "reachable": False, "error": type(exc).__name__}
+    else:
+        try:
+            r = httpx.get(f"{url}/health", timeout=15)
+            r.raise_for_status()
+            out = {"kind": "http", "host": url, "reachable": True, **r.json()}
+        except httpx.HTTPError as exc:
+            out = {"kind": "http", "host": url, "reachable": False, "error": type(exc).__name__}
+    return {"hosts": [out], "space_request_auth": auth_audit()}
 
 
 @router.post("/relative")

@@ -825,8 +825,7 @@ async function computeJobGeneration(job) {
         const m = g.meta;
         const d = g.depth ?? {};
         queueCalcLogLine(job, `Relative depth: DAv2-Small on ${String(d.device ?? "?").toUpperCase()}, `
-            + `${(d.shape ?? []).join("×")}, ${d.infer_s}s inference (${d.encoding ?? "float32"}) via ${d.host ?? "inference host"}`
-            + `${d.fallback_used ? " (fallback: primary host failed)" : ""}`);
+            + `${(d.shape ?? []).join("×")}, ${d.infer_s}s inference (${d.encoding ?? "float32"}) via ${d.host ?? "inference host"}`);
         if (m.has_elevation) {
             // measured facts only; no tier or elevation-model names in the processing page
             generationLogLines(m, job.gen.roundTripS).forEach(line => queueCalcLogLine(job, line));

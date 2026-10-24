@@ -615,7 +615,7 @@ export function createInputView(root, { onStart }) {
             geo: sel.geo ?? null,
             staticInfo: sel.staticInfo ?? null,
             landscape: sel.landscape ?? null,
-            // what the backend needs to run relative depth on this exact input (src/depth-result.js)
+            // what the backend needs to run relative depth on this exact input
             inputRef: sel.id ? { source: sel.source, id: sel.id } : null,
             logLines: log,
         };

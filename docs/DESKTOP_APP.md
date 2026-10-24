@@ -93,7 +93,7 @@ The backend here is 800 MB (the earlier 813 MB build also contained `requests` a
 - **Frozen app vs torch, as the UI receives it (u16):** max |diff| 2.95e-5, Pearson 0.9999999998. The torch app itself was 2.64e-5 against the same wire format.
 
 **The swap:**
-- `bridge/dav2_server_onnx.py`: same API and JSON as `bridge/dav2_server.py`, which stays for the Colab bridge and the Space.
+- `bridge/dav2_server_onnx.py`: same API and JSON as the Space (`space/app.py`).
 - The entry mounts it. `build_freeze.py --onnx` bundles `models/dav2_small.onnx` and excludes torch, transformers, tokenizers and safetensors.
 - It is built in a venv **without torch installed** (checked).
 - The bundled HF cache and the offline switch are gone. The HF cache is the per-user one.

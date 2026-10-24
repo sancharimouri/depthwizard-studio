@@ -1,1 +1,0 @@
-# Generate deterministic demo assets.

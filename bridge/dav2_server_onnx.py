@@ -1,7 +1,6 @@
-"""DAv2-Small /predict on ONNX Runtime: the torch-free runtime for the desktop app.
+"""DAv2-Small /predict on ONNX Runtime: the desktop app's local depth server (torch-free).
 
-Same API and JSON as bridge/dav2_server.py (the torch version, still used by the
-Colab bridge and the HF Space). The model is DAv2-Small exported to ONNX by
+Same API and JSON as the HF Space (space/app.py, the torch version). The model is DAv2-Small exported to ONNX by
 desktop/freeze_trial/export_onnx.py; preprocessing is the processor's own recipe
 (PIL bicubic to 518x518, /255, ImageNet mean/std) in numpy.
 
@@ -39,7 +38,7 @@ def preprocess(img: Image.Image) -> np.ndarray:
 
 
 def encode_depth(depth) -> dict:
-    """Identical to bridge/dav2_server.py encode_depth (compact "u16-zlib" wire format)."""
+    """Identical to space/app.py encode_depth (compact "u16-zlib" wire format)."""
     lo, hi = float(depth.min()), float(depth.max())
     q = np.zeros(depth.shape, "<u2") if hi <= lo else np.round((depth - lo) / (hi - lo) * 65535).astype("<u2")
     return {"encoding": "u16-zlib", "shape": list(depth.shape), "min": lo, "max": hi,
