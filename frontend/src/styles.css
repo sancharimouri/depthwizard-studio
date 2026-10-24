@@ -7758,10 +7758,10 @@ kbd {
 
 
 /* ============================================================
-   INPUT PAGE BACKGROUND (2026-10-01): plain black with one static picture
-   (public/final_static_bg_ui.webp, a lossless copy of UI/final_static_bg_ui.png, 6968x3612). The picture starts where the collapsed sidebar
-   ends (56 px), is fitted to the window's height only, and whatever runs past the right edge is
-   cropped. Fixed to the window, so opening/closing the sidebar never moves it.
+   INPUT PAGE BACKGROUND (2026-10-25): plain black with one static picture
+   (public/input_bg_dark.webp, the owner's edited wallpaper, 1672x941), shown at full strength and filling
+   the area right of the collapsed sidebar (56 px), centred and cropped (cover). Fixed to the window, so
+   opening/closing the sidebar never moves it. The light theme keeps its own picture and framing below.
    ============================================================ */
 .input-bg-static {
     position: fixed;
@@ -7769,17 +7769,14 @@ kbd {
     z-index: 0;
     display: none;
     pointer-events: none;
-    background: #101010; /* base under the picture: neutral dark grey (~#171717 after the brightness filter) */
-    filter: brightness(1.4); /* the whole background (black + picture) 40% brighter */
+    background: #000;
 }
 
-/* the picture is 40% opaque (60% transparent) over the black */
 .input-bg-static::before {
     content: "";
     position: absolute;
     inset: 0;
-    opacity: 0.4;
-    background: url("/final_static_bg_ui.webp") no-repeat -2mm 0 / auto 100%; /* shifted 2 mm left */
+    background: url("/input_bg_dark.webp") no-repeat center / cover;
 }
 
 body:has(#page-workbench.active #input-view:not([hidden])) .input-bg-static {
@@ -7809,8 +7806,7 @@ body:has(#page-workbench.active #input-view:not([hidden])) .input-bg-static {
 
 /* Grid, measured from UI/claude_ui.png: 120 px cells in window coordinates, 1 px accent (#88D0AE) lines.
    Strength 2.2% everywhere, rising to about 6% toward the corners (about 2.2% + 4.7% x |u|x|v|, u and v
-   being the distance from the window centre). Both layers are divided by 1.4 to cancel the layer's
-   brightness filter. The picture itself carries no grid. */
+   being the distance from the window centre). The picture itself carries no grid. */
 .input-bg-static::after,
 .ibs-grid {
     content: "";
@@ -7822,14 +7818,14 @@ body:has(#page-workbench.active #input-view:not([hidden])) .input-bg-static {
 
 .input-bg-static::after {
     background-image:
-        linear-gradient(to right, rgba(136, 208, 174, 0.0157) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(136, 208, 174, 0.0157) 1px, transparent 1px);
+        linear-gradient(to right, rgba(136, 208, 174, 0.022) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(136, 208, 174, 0.022) 1px, transparent 1px);
 }
 
 .ibs-grid {
     background-image:
-        linear-gradient(to right, rgba(136, 208, 174, 0.0336) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(136, 208, 174, 0.0336) 1px, transparent 1px);
+        linear-gradient(to right, rgba(136, 208, 174, 0.047) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(136, 208, 174, 0.047) 1px, transparent 1px);
     -webkit-mask-image: linear-gradient(to right, #000, transparent 50%, #000), linear-gradient(to bottom, #000, transparent 50%, #000);
     mask-image: linear-gradient(to right, #000, transparent 50%, #000), linear-gradient(to bottom, #000, transparent 50%, #000);
     -webkit-mask-composite: source-in;
@@ -8173,8 +8169,9 @@ body {
 }
 
 :root[data-theme="light"] .input-bg-static::before {
-    opacity: 1;
     background-image: url("/final_static_bg_ui_light.webp");
+    background-position: -2mm 0; /* shifted 2 mm left */
+    background-size: auto 100%; /* fitted to the window's height */
 }
 
 :root[data-theme="light"] .input-bg-static::after {
