@@ -11,11 +11,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 HF_HOME_DIR = REPO_ROOT / "models"
 
 MODEL_IDS = {
+    "small": "depth-anything/Depth-Anything-V2-Small-hf",
     "large": "depth-anything/Depth-Anything-V2-Large-hf",
     "base": "depth-anything/Depth-Anything-V2-Base-hf",
 }
 
-ACTIVE_MODEL_SIZE = "large"
+# Small: the model the Space and the desktop app's bundled ONNX file run.
+ACTIVE_MODEL_SIZE = "small"
 ACTIVE_MODEL_ID = MODEL_IDS[ACTIVE_MODEL_SIZE]
 
 MODEL_INPUT_SIZE = 518
