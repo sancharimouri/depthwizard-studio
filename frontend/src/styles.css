@@ -7759,7 +7759,7 @@ kbd {
 
 /* ============================================================
    INPUT PAGE BACKGROUND (2026-10-25): plain black with one static picture
-   (public/input_bg_dark.webp, the owner's edited wallpaper, 1672x941), shown at full strength and filling
+   (public/input_bg_dark.webp, the owner's edited wallpaper with its contours redrawn as clean thin lines, 3840x2158), shown at full strength and filling
    the area right of the collapsed sidebar (56 px), centred and cropped (cover). Fixed to the window, so
    opening/closing the sidebar never moves it. The light theme keeps its own picture and framing below.
    ============================================================ */
