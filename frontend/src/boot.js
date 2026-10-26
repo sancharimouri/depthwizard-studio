@@ -24,5 +24,11 @@ const followWorld = () => {
 window.addEventListener("hashchange", followWorld);
 window.addEventListener("popstate", followWorld);
 
-await (world === "home" ? import("./home/main.js") : import("./main.js"));
+// Two separate imports: written as one `a ? import(x) : import(y)`, the bundler gave both the app's preload list
+// (Home got the app's CSS and lost its own).
+if (world === "home") {
+    await import("./home/main.js");
+} else {
+    await import("./main.js");
+}
 document.documentElement.classList.remove("dw-boot");

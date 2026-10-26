@@ -63,7 +63,7 @@ async function visit(hash) {
     const state = await page.evaluate(() => {
         const inView = id => {
             const r = document.getElementById(id)?.getBoundingClientRect();
-            return Boolean(r) && Math.abs(r.top) < 4;
+            return Boolean(r) && r.top > -r.height && r.top < innerHeight / 3; // scrolled to (scroll margins allowed)
         };
         return {
             world: document.documentElement.dataset.world,
