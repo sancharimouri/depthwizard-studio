@@ -80,8 +80,23 @@ Its relative depth is Depth Anything V2 on that image (listed under Models).
 
 | Model | Used for | Attribution | Licence |
 |---|---|---|---|
-| Depth Anything V2 Large (`depth-anything/Depth-Anything-V2-Large-hf`) | Offline only: the four demo regions' precomputed relative-depth images (not run by the app) | Yang et al. (2024), *Depth Anything V2* | CC BY-NC 4.0 |
+| Depth Anything V2 Large (`depth-anything/Depth-Anything-V2-Large-hf`) | Offline only: the four demo regions' precomputed relative-depth images and the Home page's Ribbon House relief (not run by the app) | Yang et al. (2024), *Depth Anything V2* | CC BY-NC 4.0 |
 | Depth Anything V2 Small (`depth-anything/Depth-Anything-V2-Small-hf`) | The relative-depth layer: Hugging Face Space (web), ONNX (desktop app) | Yang et al. (2024), *Depth Anything V2* | Apache-2.0 |
+
+## Home page (the landing page, imported from depthwizard-home)
+
+The four architecture studies are stylised studies referencing the architects' published designs: our own
+approximations of their massing, drawn from published renders and photographs, not survey data or the architects'
+models.
+
+| Study | Architect | Data and credit |
+|---|---|---|
+| Shivalik Curv, GIFT City, Gujarat | INI Design Studio | Neighbouring buildings and roads (around an approximate site): © OpenStreetMap contributors, ODbL 1.0 |
+| Bombay Art Society, Bandra West, Mumbai | Sanjay Puri Architects | Neighbouring buildings, roads and the plot: © OpenStreetMap contributors, ODbL 1.0 |
+| Antilia, Mumbai | Perkins&Will | Neighbouring buildings and roads: © OpenStreetMap contributors, ODbL 1.0 |
+| Ribbon House, Wave Estate, Mohali, Punjab | Studio Ardete | The study image is the author's own; its 3D relief uses a depth map from Depth Anything V2 Large (Yang et al. 2024, CC BY-NC 4.0, non-commercial), computed once offline |
+
+The Connaught Place 3D on the Home page is the Studio's own city model (sources under "Close-up city tiles" above).
 
 ## Facts and scenario cards
 
