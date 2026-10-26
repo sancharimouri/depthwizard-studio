@@ -1,0 +1,240 @@
+{
+ "_sources": {
+  "perTileRmse": "depthwizard2 data/sentinel2_benchmark/dem_baselines_32/per_tile.csv (reference=ground; RMSE vs ICESat-2 ground photons, m)",
+  "wins": "depthwizard2 data/dfc2019/experiments/method6_uncertainty.json (runs.seed1_original.*.tiles_m6_better, of 50)",
+  "blockA": "owner-supplied figures (content script 2026-10-16); not in a depthwizard2 results file"
+ },
+ "blockA": {
+  "metrics": [
+   {
+    "name": "MAE",
+    "unit": "m",
+    "dw": 0.072,
+    "oracle": 3.39,
+    "better": "lower"
+   },
+   {
+    "name": "RMSE",
+    "unit": "m",
+    "dw": 0.1,
+    "oracle": 4.58,
+    "better": "lower"
+   },
+   {
+    "name": "Pearson",
+    "unit": "",
+    "dw": 0.991,
+    "oracle": 0.682,
+    "better": "higher"
+   },
+   {
+    "name": "Spearman",
+    "unit": "",
+    "dw": 0.916,
+    "oracle": 0.609,
+    "better": "higher"
+   }
+  ]
+ },
+ "wins": {
+  "MAE": 49,
+  "RMSE": 47,
+  "Pearson": 47,
+  "Spearman": 47,
+  "of": 50
+ },
+ "perTileRmse": [
+  {
+   "tile": "kurnool",
+   "category": "agricultural",
+   "fabdem": 0.471,
+   "glo30": 0.535
+  },
+  {
+   "tile": "nizamabad",
+   "category": "agricultural",
+   "fabdem": 0.601,
+   "glo30": 0.788
+  },
+  {
+   "tile": "karnal",
+   "category": "agricultural",
+   "fabdem": 0.636,
+   "glo30": 0.869
+  },
+  {
+   "tile": "fatehpur",
+   "category": "agricultural",
+   "fabdem": 0.665,
+   "glo30": 1.299
+  },
+  {
+   "tile": "nagapattinam",
+   "category": "coastal",
+   "fabdem": 0.714,
+   "glo30": 1.132
+  },
+  {
+   "tile": "kota",
+   "category": "agricultural",
+   "fabdem": 0.716,
+   "glo30": 1.027
+  },
+  {
+   "tile": "bathinda",
+   "category": "agricultural",
+   "fabdem": 0.725,
+   "glo30": 1.104
+  },
+  {
+   "tile": "kutch",
+   "category": "coastal",
+   "fabdem": 0.798,
+   "glo30": 0.822
+  },
+  {
+   "tile": "hisar",
+   "category": "agricultural",
+   "fabdem": 0.878,
+   "glo30": 0.978
+  },
+  {
+   "tile": "vidisha",
+   "category": "agricultural",
+   "fabdem": 0.883,
+   "glo30": 0.949
+  },
+  {
+   "tile": "kochi_city",
+   "category": "urban",
+   "fabdem": 1.04,
+   "glo30": 2.078
+  },
+  {
+   "tile": "kakinada",
+   "category": "coastal",
+   "fabdem": 1.189,
+   "glo30": 1.913
+  },
+  {
+   "tile": "vembanad",
+   "category": "coastal",
+   "fabdem": 1.259,
+   "glo30": 2.868
+  },
+  {
+   "tile": "bhitarkanika",
+   "category": "coastal",
+   "fabdem": 1.379,
+   "glo30": 2.39
+  },
+  {
+   "tile": "amalapuram",
+   "category": "coastal",
+   "fabdem": 1.48,
+   "glo30": 2.246
+  },
+  {
+   "tile": "digha",
+   "category": "coastal",
+   "fabdem": 1.559,
+   "glo30": 2.956
+  },
+  {
+   "tile": "goa_estuary",
+   "category": "coastal",
+   "fabdem": 2.006,
+   "glo30": 3.134
+  },
+  {
+   "tile": "chennai",
+   "category": "urban",
+   "fabdem": 2.258,
+   "glo30": 3.624
+  },
+  {
+   "tile": "jaipur",
+   "category": "urban",
+   "fabdem": 2.392,
+   "glo30": 3.448
+  },
+  {
+   "tile": "hyderabad",
+   "category": "urban",
+   "fabdem": 2.698,
+   "glo30": 4.276
+  },
+  {
+   "tile": "delhi",
+   "category": "urban",
+   "fabdem": 3.044,
+   "glo30": 5.206
+  },
+  {
+   "tile": "pune",
+   "category": "urban",
+   "fabdem": 3.417,
+   "glo30": 5.256
+  },
+  {
+   "tile": "bengaluru",
+   "category": "urban",
+   "fabdem": 3.58,
+   "glo30": 5.812
+  },
+  {
+   "tile": "dharamshala",
+   "category": "hilly",
+   "fabdem": 4.504,
+   "glo30": 5.223
+  },
+  {
+   "tile": "ooty",
+   "category": "hilly",
+   "fabdem": 4.899,
+   "glo30": 7.092
+  },
+  {
+   "tile": "kohima",
+   "category": "hilly",
+   "fabdem": 5.029,
+   "glo30": 7.189
+  },
+  {
+   "tile": "mumbai",
+   "category": "urban",
+   "fabdem": 5.052,
+   "glo30": 5.718
+  },
+  {
+   "tile": "almora",
+   "category": "hilly",
+   "fabdem": 5.281,
+   "glo30": 6.435
+  },
+  {
+   "tile": "dehradun",
+   "category": "hilly",
+   "fabdem": 6.424,
+   "glo30": 8.118
+  },
+  {
+   "tile": "shimla",
+   "category": "hilly",
+   "fabdem": 7.853,
+   "glo30": 11.769
+  },
+  {
+   "tile": "nainital",
+   "category": "hilly",
+   "fabdem": 8.638,
+   "glo30": 12.008
+  },
+  {
+   "tile": "manali",
+   "category": "hilly",
+   "fabdem": 9.603,
+   "glo30": 11.271
+  }
+ ]
+}
