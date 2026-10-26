@@ -3,8 +3,8 @@
 Real satellite imagery draped over real elevation models, explored in 3D in the browser or on the desktop.
 Built for Smart India Hackathon 2026 (problem SIH26175).
 
-- **Live demo:** https://depthwizard-studio.vercel.app (the Studio at https://depthwizard-studio.vercel.app/#/studio,
-  the demo at https://depthwizard-studio.vercel.app/#/demo)
+- **Live site:** https://depthwizard-studio.vercel.app (Home; the Studio at https://depthwizard-studio.vercel.app/#/studio,
+  the demo at https://depthwizard-studio.vercel.app/#/demo, credits at https://depthwizard-studio.vercel.app/#credits)
 - **Demo video:** https://depthwizard-studio.vercel.app/#demo-video
 - **Desktop app (macOS, Apple Silicon):** https://github.com/sancharimouri/depthwizard2-desktop/releases/latest.
   Linux and Windows builds are not available yet.

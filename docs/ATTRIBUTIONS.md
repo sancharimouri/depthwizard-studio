@@ -1,8 +1,8 @@
 # Attributions
 
 The MIT licence (`LICENSE`) covers this repository's code only. The data and models below keep their own
-licences. Only sources the shipped app uses are listed. The app's own Docs page ("Data sources & credits") shows the
-same credits.
+licences. Only sources the shipped app uses are listed. The Home page's Credits section (`/#credits`) shows the main
+ones; this file is the full list.
 
 ## Imagery
 
@@ -58,8 +58,8 @@ The Nanda Devi and Kangchenjunga squares were placed from OpenStreetMap peak and
 ## Close-up city tiles (Studio library, "City 3D": Connaught Place, Nariman Point & Marine Drive, Dalhousie Square & Hooghly, Charminar, Nishi-Shinjuku, Canal ring Amsterdam, Financial District New York)
 
 DRAFT (2026-10-12). Connaught Place is now a demo region (#/demo, in place of the Bengaluru block, which moved to the
-Studio library with the same sources). The app shows no credit line on the 3D view; its Docs page ("Data sources &
-credits") credits these sources. The "required wording" column quotes each source's own terms.
+Studio library with the same sources). The app shows no credit line on the 3D view; this file credits these
+sources. The "required wording" column quotes each source's own terms.
 
 | Source | Used for | Required wording | Licence |
 |---|---|---|---|
@@ -119,7 +119,9 @@ The Connaught Place 3D on the Home page is the Studio's own city model (sources 
 | OpenStreetMap tiles (location picker) — © OpenStreetMap contributors | ODbL 1.0 (data); OSMF tile usage policy |
 | three.js, camera-controls | MIT |
 | Leaflet | BSD-2-Clause |
-| DM Sans, Outfit, IBM Plex Mono, Geist Mono | SIL Open Font License 1.1 |
+| DM Sans, Outfit, IBM Plex Mono, Geist Mono; on Home also Geist, Sora and JetBrains Mono (via @fontsource) | SIL Open Font License 1.1 |
+| Phosphor Icons (Home's system diagram icons, inlined) | MIT |
+| DW Lambda (Home's wordmark font) | the project's own font |
 
 The non-commercial terms above (Maxar Open Data, FABDEM, Depth Anything V2 Large, FAO GAUL) apply to the app as shipped. The
 project is a non-commercial Smart India Hackathon entry.

@@ -8,8 +8,8 @@ user-entered lat/lon: point lookups only). Output is short UI lines (backend/fac
              USGS M4.5+ within 100 km (live) + the epicentres for the inset map
 Graceful by construction: every source runs in its own thread with a short timeout; a failed, slow or empty source
 contributes no lines and is recorded in "status" as a short code (never a raw error, never shown in the UI).
-Responses are cached per location in a bounded LRU. Sources, licences and attribution: the Docs page, "Data sources
-& credits" (the UI panels carry none). Nominatim, Open-Meteo and GDACS were dropped on 2026-09-30.
+Responses are cached per location in a bounded LRU. Sources, licences and attribution: docs/ATTRIBUTIONS.md, "Facts
+and scenario cards" (the UI panels carry none). Nominatim, Open-Meteo and GDACS were dropped on 2026-09-30.
 """
 
 from __future__ import annotations

@@ -18,7 +18,7 @@ The tiers exist because of a research result: a learned height model works at ~0
 
 | Part | What it does | Code |
 |---|---|---|
-| Web frontend | Vite + three.js viewer: layer switching, orbit and fly (WASD) controls, measurement, Facts and scenario cards, Docs page | `frontend/` |
+| Web frontend | Vite + three.js viewer: layer switching, orbit and fly (WASD) controls, measurement, Facts and scenario cards; Home (the landing page, imported from depthwizard-home) | `frontend/` |
 | Static tile library | The web build bakes every library tile (listing, meshes, textures, depth) into static files served with the site, so opening a library tile needs no backend call | `frontend/src/library-source.js` |
 | Backend | FastAPI container: uploads, live Sentinel-2 search, DEM fetch (GLO-30, FABDEM), per-job generation of the viewer's assets, Facts lookups | `backend/`, `docker/Dockerfile` |
 | Depth service | A Hugging Face Space running Depth Anything V2 Small on a shared GPU; the backend calls it for relative depth | `space/app.py` |
