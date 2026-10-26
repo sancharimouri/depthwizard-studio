@@ -9,8 +9,9 @@ import { defineConfig } from "vite";
 //
 // VITE_LIBRARY_SOURCE (src/library-source.js): only the web build ("static", npm run build:web) ships the
 // pre-baked library. Every other build (the desktop app's `vite build`) drops public/library-static/ from its
-// output, so the desktop bundle never gains it.
-const STATIC_LIBRARY = "library-static";
+// output, so the desktop bundle never gains it. The same goes for Home's public files (public/home/): the desktop app
+// opens the Studio and never loads Home (src/boot.js).
+const WEB_ONLY = ["library-static", "home"];
 
 function staticLibraryOnlyForWeb() {
     let outDir;
@@ -22,14 +23,26 @@ function staticLibraryOnlyForWeb() {
         },
         closeBundle() {
             if ((process.env.VITE_LIBRARY_SOURCE ?? "").trim() !== "static") {
-                rmSync(resolve(outDir, STATIC_LIBRARY), { recursive: true, force: true });
+                WEB_ONLY.forEach(dir => rmSync(resolve(outDir, dir), { recursive: true, force: true }));
             }
         },
     };
 }
 
+// Home's dev-only ?edit layout mode (its src/edit-mode.js) stays in depthwizard-home, so its import resolves to nothing.
+const homeEditModeStub = {
+    name: "dw2-home-edit-mode-stub",
+    resolveId: (id, importer) => (id === "./edit-mode.js" && importer?.includes("/src/home/") ? "\0home-edit-mode" : null),
+    load: id => (id === "\0home-edit-mode" ? "export {};" : null),
+};
+
 export default defineConfig({
-    plugins: [staticLibraryOnlyForWeb()],
+    plugins: [staticLibraryOnlyForWeb(), homeEditModeStub],
+    // Home's Connaught Place 3D (src/home/demo-city.js) imports './demo/connaught-city.json', a byte-identical copy of
+    // the Studio's cityscape data: it reads the Studio's file instead (scripts/import_home.sh does not copy it).
+    resolve: {
+        alias: [{ find: /^\.\/demo\/connaught-city\.json$/, replacement: resolve("public/cityscape/connaught_place.json") }],
+    },
     server: {
         proxy: {
             "/api": {

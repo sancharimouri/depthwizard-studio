@@ -1,3 +1,4 @@
+import "./styles.css"; // the app's styles load only in the app world (src/boot.js)
 import * as THREE from "three";
 import { createTerrain } from "./terrain.js";
 import { createTerrainViewer } from "./viewer.js";
@@ -636,7 +637,13 @@ const jobStore = createJobStore();
 
 // The one global sidebar (src/sidebar.js). Created before the first
 // renderJobs() so the jobs-running line and the JOBS tab exist from the start.
-const sidebar = createSidebar({ onNavigate: pageId => navigateToPage(pageId) });
+// "home" (the sidebar's Home item and D mark) is the web's landing page, a separate world (src/boot.js). The desktop
+// app has no Home: no Home item, and its D mark opens Docs.
+if (window.__TAURI__) {
+    document.querySelector('.sb-page-link[data-page="home"]')?.remove();
+    document.querySelector(".sb-logo").dataset.page = "page-docs";
+}
+const sidebar = createSidebar({ onNavigate: pageId => (pageId === "home" ? location.assign("/") : navigateToPage(pageId)) });
 
 // Image Inspection ↔ 3D surface markers (see initPointSelection). Declared up
 // here because the first renderJobs() below already clears the selection.
@@ -1923,8 +1930,8 @@ function syncSidebarDefault() {
     sidebar.setInViewer(viewing3d); // the closed rail lists the jobs there (no auto-open on any page)
 }
 
-// Open the page the URL names (#/docs, #/demo, #demo-video); Workbench otherwise.
-// Workbench is the landing page, so its first-show init (grid entrance) runs on load too.
+// Open the page the URL names (#/studio, #/docs, #/demo, #docs-…); Workbench otherwise (the desktop app's bare URL),
+// so Workbench's first-show init (grid entrance) runs on load too.
 applyUrlHash();
 
 document.getElementById("build-your-own-card")?.addEventListener("click", () => {

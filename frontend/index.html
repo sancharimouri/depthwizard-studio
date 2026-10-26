@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dw-boot">
 
 <head>
 
@@ -10,19 +10,373 @@
         content="width=device-width, initial-scale=1.0"
     />
 
-    <title>Depth Wizard 2.0</title>
+    <!-- home:head:begin (Home's title and social preview, written by scripts/import_home.sh) -->
+    <meta name="theme-color" content="#050707" />
+    <meta name="description" content="Turn one satellite or aerial image into a measurable 3D surface, with heights tested against airborne lidar and NASA ICESat-2." />
+    <meta name="author" content="Sanchari Mouri" />
+    <meta name="creator" content="Designed, engineered and built by Sanchari Mouri" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Depth Wizard — Terrain and height from a single image" />
+    <meta property="og:description" content="Turn one satellite or aerial image into a measurable 3D surface, with heights tested against airborne lidar and NASA ICESat-2." />
+    <meta property="og:image" content="https://depthwizard-studio.vercel.app/home/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Wireframe 3D terrain floating above a grid" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>Depth Wizard — Terrain and height from a single image</title>
+    <!-- home:head:end -->
     <link rel="icon" type="image/png" href="/brand-d.png" />
 
-    <link
-        rel="stylesheet"
-        href="/src/styles.css"
-    />
+    <!-- Two worlds in one document (src/boot.js): Home or the app, picked from the URL. Each world's markup is an
+         inert <template> (nothing in it loads) until the boot script inserts it; the page stays hidden until that
+         world's code and styles are in. -->
+    <style>html.dw-boot body { visibility: hidden; }</style>
 
 </head>
 
 
 <body>
 
+<!-- home:body:begin (Home's markup from depthwizard-home, written by scripts/import_home.sh; never edit it here) -->
+<template id="world-home">
+    <div id="intro" class="intro" aria-hidden="true">
+      <canvas id="intro-canvas" class="intro__canvas"></canvas>
+      <canvas id="intro-contours" class="intro__canvas"></canvas>
+      <div class="intro__cloud" id="intro-cloud-layer">
+        <canvas id="intro-cloud" class="intro__canvas"></canvas>
+      </div>
+      <div class="intro__grain"></div>
+      <div class="scan scan--horizontal" id="scan-horizontal"></div>
+      <div class="scan scan--vertical" id="scan-vertical"></div>
+      <div class="intro__crosshair" id="intro-crosshair" aria-hidden="true">
+        <span class="intro__crosshair-line intro__crosshair-line--h"></span>
+        <span class="intro__crosshair-line intro__crosshair-line--v"></span>
+        <div class="intro__readout mono"><span id="readout-lat"></span><span id="readout-lon"></span></div>
+      </div>
+      <div class="intro__shapes" id="intro-shapes" hidden>
+        <span class="intro__shape intro__shape--hollow" style="--x:-20%;--y:160%;--s:30px;--spin:1;--d:0.5s;--dur:3.2s"></span>
+        <span class="intro__bar intro__bar--h"></span>
+        <span class="intro__bar intro__bar--v"></span>
+      </div>
+    </div>
+    <div id="site" class="site" data-intro-ready="false">
+      <main>
+        <section class="hero" id="home">
+          <div class="hero__backdrop" aria-hidden="true">
+            <div class="hero__ridges"></div>
+          </div>
+          <div class="hero__meta mono reveal" style="--i:0">
+            <span data-odo="lat">24.7862° N</span>
+            <span data-odo="lon">85.9412° E</span>
+          </div>
+          <div class="hero__holo" role="img" aria-label="Wireframe 3D terrain floating above a grid">
+            <span class="hero__holo-beam"></span>
+            <canvas class="hero__holo-canvas"></canvas>
+          </div>
+          <div class="hero__copy">
+            <div class="hero__eyebrow mono reveal" style="--i:1">SINGLE IMAGE → METRIC 3D ELEVATION</div>
+            <h1 class="hero__title" id="hero-title" aria-label="Depth Wizard"><span class="logo-d"></span>EPTH WIZARD<span class="text-tint" aria-hidden="true"><span class="logo-d"></span>EPTH WIZARD</span><span class="hero__dust" aria-hidden="true"><span class="logo-d"></span>EPTH WIZARD<canvas></canvas></span></h1>
+            <p class="hero__lead reveal" style="--i:2">
+              Transform a single satellite or aerial image into measurable terrain,<br>
+              geospatial data, and an immersive 3D world.
+            </p>
+            <div class="hero__cta-row reveal" style="--i:3">
+              <button class="hero__cta mono">ENTER STUDIO <span class="hero__cta-icon" aria-hidden="true">↗</span></button>
+              <span class="hero__note mono">NO STEREO / NO LIDAR REQUIRED</span>
+            </div>
+          </div>
+        </section>
+        <section class="statement" aria-label="Why height matters">
+          <p class="statement__text">Topography dictates the flow of water, the stability of slopes, and the potential of urban development. However, the only open-access global elevation dataset remains limited to a coarse <span class="statement__em">30-meter</span> resolution.</p>
+        </section>
+        <section class="problem" aria-labelledby="problem-title">
+          <header class="sec-head sec-head--full">
+            <p class="eyebrow fade-up">01 / The problem</p>
+            <h2 class="h2" id="problem-title" style="--i:1">Height is the missing layer</h2>
+            <p class="lead fade-up" style="--i:2">Satellites photograph the planet every few days. Turning those pictures into reliable height is still slow, expensive or out of reach for most people who need it.</p>
+          </header>
+          <ul class="problem__cards" role="list">
+            <li class="card fade-up" style="--i:3"><p class="card__meta"><span>Coarse</span><span>[01]</span></p><p class="card__body">Open global elevation models are 30 m per pixel, blurring the ground. A building, a terrace or a river bank disappears inside one cell.</p></li>
+            <li class="card fade-up" style="--i:4"><p class="card__meta"><span>Expensive</span><span>[02]</span></p><p class="card__body">Lidar measures height precisely, but every survey needs aircraft, permits and budget. Most of India has no open lidar at all.</p></li>
+            <li class="card fade-up" style="--i:5"><p class="card__meta"><span>Demanding</span><span>[03]</span></p><p class="card__body">Stereo needs a perfect pair. Photogrammetry needs two overlapping images taken at matched angles. Usually you have one.</p></li>
+            <li class="card fade-up" style="--i:6"><p class="card__meta"><span>Unchecked</span><span>[04]</span></p><p class="card__body">Off-the-shelf depth models draw convincing relief, but not in meters, and it is rarely checked against the ground.</p></li>
+          </ul>
+        </section>
+        <section class="puzzle" aria-label="Depth Wizard system architecture">
+          <header class="sec-head"><p class="eyebrow fade-up">02 / The system</p></header>
+          <div class="puzzle__piece">
+            <div class="puzzle__terrain" aria-hidden="true"></div>
+            <div class="puzzle__board">
+              <picture><source type="image/avif" srcset="/home/img/engine-puzzle-a@1x.avif 900w, /home/img/engine-puzzle-a@2x.avif 1800w, /home/img/engine-puzzle-a@3x.avif 2700w" sizes="min(100vw, 80svh, 1230px)"><img src="/home/img/engine-puzzle-a@2x.webp" srcset="/home/img/engine-puzzle-a@1x.webp 900w, /home/img/engine-puzzle-a@2x.webp 1800w, /home/img/engine-puzzle-a@3x.webp 2700w" sizes="min(100vw, 80svh, 1230px)" alt="Four modules joined around the Depth Wizard engine" width="2700" height="2700" decoding="async" loading="lazy"></picture>
+              <div class="pz-text" style="--x:12.51%;--y:9.52%">
+                <svg class="pz-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M128,26C75.29,26,34,49.72,34,80v96c0,30.28,41.29,54,94,54s94-23.72,94-54V80C222,49.72,180.71,26,128,26Zm0,12c44.45,0,82,19.23,82,42s-37.55,42-82,42S46,102.77,46,80,83.55,38,128,38Zm82,138c0,22.77-37.55,42-82,42s-82-19.23-82-42V154.79C62,171.16,92.37,182,128,182s66-10.84,82-27.21Zm0-48c0,22.77-37.55,42-82,42s-82-19.23-82-42V106.79C62,123.16,92.37,134,128,134s66-10.84,82-27.21Z"/></svg>
+                <span class="pz-rule"></span>
+                <h3 class="pz-title">Data<br>manager</h3>
+                <p class="pz-sub">INGEST · REPROJECT</p>
+              </div>
+            </div>
+          </div>
+          <div class="puzzle__piece">
+            <div class="puzzle__board">
+              <picture><source type="image/avif" srcset="/home/img/engine-puzzle-b@1x.avif 900w, /home/img/engine-puzzle-b@2x.avif 1800w, /home/img/engine-puzzle-b@3x.avif 2700w" sizes="min(100vw, 80svh, 1230px)"><img src="/home/img/engine-puzzle-b@2x.webp" srcset="/home/img/engine-puzzle-b@1x.webp 900w, /home/img/engine-puzzle-b@2x.webp 1800w, /home/img/engine-puzzle-b@3x.webp 2700w" sizes="min(100vw, 80svh, 1230px)" alt="" width="2700" height="2700" decoding="async" loading="lazy"></picture>
+              <div class="pz-text pz-text--right" style="--x:87.49%;--y:9.52%">
+                <svg class="pz-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M200,154a29.87,29.87,0,0,0-19.5,7.23L154.88,141.3A29.83,29.83,0,0,0,158,128a30.52,30.52,0,0,0-.22-3.6L174,119a30,30,0,1,0-4-15,30.52,30.52,0,0,0,.22,3.6L154,113a29.91,29.91,0,0,0-32.42-14.31l-8.14-18.3a30,30,0,1,0-11,4.88l8.14,18.3A29.92,29.92,0,0,0,102.06,143L74,168a30.08,30.08,0,1,0,8,9L110,152a29.91,29.91,0,0,0,37.47-1.23l25.62,19.93A30,30,0,1,0,200,154Zm0-68a18,18,0,1,1-18,18A18,18,0,0,1,200,86ZM78,56A18,18,0,1,1,96,74,18,18,0,0,1,78,56ZM56,210a18,18,0,1,1,18-18A18,18,0,0,1,56,210Zm72-64a18,18,0,1,1,18-18A18,18,0,0,1,128,146Zm72,56a18,18,0,1,1,18-18A18,18,0,0,1,200,202Z"/></svg>
+                <span class="pz-rule"></span>
+                <h3 class="pz-title">Training &amp;<br>validation</h3>
+                <p class="pz-sub">DFC2019 · ICESAT-2</p>
+              </div>
+            </div>
+          </div>
+          <div class="puzzle__piece puzzle__piece--engine">
+            <div class="puzzle__board">
+              <picture><source type="image/avif" srcset="/home/img/engine-puzzle-c@1x.avif 900w, /home/img/engine-puzzle-c@2x.avif 1800w, /home/img/engine-puzzle-c@3x.avif 2700w" sizes="min(100vw, 80svh, 1230px)"><img src="/home/img/engine-puzzle-c@2x.webp" srcset="/home/img/engine-puzzle-c@1x.webp 900w, /home/img/engine-puzzle-c@2x.webp 1800w, /home/img/engine-puzzle-c@3x.webp 2700w" sizes="min(100vw, 80svh, 1230px)" alt="" width="2700" height="2700" decoding="async" loading="lazy"></picture>
+              <div class="pz-text pz-text--engine" style="--x:50.00%;--y:38.03%">
+                <svg class="pz-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M128,82a46,46,0,1,0,46,46A46.06,46.06,0,0,0,128,82Zm0,80a34,34,0,1,1,34-34A34,34,0,0,1,128,162Zm108-54.4a6,6,0,0,0-2.92-4L202.64,86.22l-.42-.71L202.1,51.2A6,6,0,0,0,200,46.64a110.12,110.12,0,0,0-36.07-20.31,6,6,0,0,0-4.84.45L128.46,43.86h-1L96.91,26.76a6,6,0,0,0-4.86-.44A109.92,109.92,0,0,0,56,46.68a6,6,0,0,0-2.12,4.55l-.16,34.34c-.14.23-.28.47-.41.71L22.91,103.57A6,6,0,0,0,20,107.62a104.81,104.81,0,0,0,0,40.78,6,6,0,0,0,2.92,4l30.42,17.33.42.71.12,34.31A6,6,0,0,0,56,209.36a110.12,110.12,0,0,0,36.07,20.31,6,6,0,0,0,4.84-.45l30.61-17.08h1l30.56,17.1A6.09,6.09,0,0,0,162,230a5.83,5.83,0,0,0,1.93-.32,109.92,109.92,0,0,0,36-20.36,6,6,0,0,0,2.12-4.55l.16-34.34c.14-.23.28-.47.41-.71l30.42-17.29a6,6,0,0,0,2.92-4.05A104.81,104.81,0,0,0,236,107.6Zm-11.25,35.79L195.32,160.1a6.07,6.07,0,0,0-2.28,2.3c-.59,1-1.21,2.11-1.86,3.14a6,6,0,0,0-.91,3.16l-.16,33.21a98.15,98.15,0,0,1-27.52,15.53L133,200.88a6,6,0,0,0-2.93-.77h-.14c-1.24,0-2.5,0-3.74,0a6,6,0,0,0-3.07.76L93.45,217.43a98,98,0,0,1-27.56-15.49l-.12-33.17a6,6,0,0,0-.91-3.16c-.64-1-1.27-2.08-1.86-3.14a6,6,0,0,0-2.27-2.3L31.3,143.4a93,93,0,0,1,0-30.79L60.68,95.9A6.07,6.07,0,0,0,63,93.6c.59-1,1.21-2.11,1.86-3.14a6,6,0,0,0,.91-3.16l.16-33.21A98.15,98.15,0,0,1,93.41,38.56L123,55.12a5.81,5.81,0,0,0,3.07.76c1.24,0,2.5,0,3.74,0a6,6,0,0,0,3.07-.76l29.65-16.56a98,98,0,0,1,27.56,15.49l.12,33.17a6,6,0,0,0,.91,3.16c.64,1,1.27,2.08,1.86,3.14a6,6,0,0,0,2.27,2.3L224.7,112.6A93,93,0,0,1,224.73,143.39Z"/></svg>
+                <span class="pz-rule"></span>
+                <h3 class="pz-title">Depth Wizard<br>engine</h3>
+                <p class="pz-sub">DAv2-S · TWIN μ/σ HEAD</p>
+              </div>
+            </div>
+          </div>
+          <div class="puzzle__piece">
+            <div class="puzzle__board">
+              <picture><source type="image/avif" srcset="/home/img/engine-puzzle-d@1x.avif 900w, /home/img/engine-puzzle-d@2x.avif 1800w, /home/img/engine-puzzle-d@3x.avif 2700w" sizes="min(100vw, 80svh, 1230px)"><img src="/home/img/engine-puzzle-d@2x.webp" srcset="/home/img/engine-puzzle-d@1x.webp 900w, /home/img/engine-puzzle-d@2x.webp 1800w, /home/img/engine-puzzle-d@3x.webp 2700w" sizes="min(100vw, 80svh, 1230px)" alt="" width="2700" height="2700" decoding="async" loading="lazy"></picture>
+              <div class="pz-text" style="--x:12.51%;--y:68.83%">
+                <svg class="pz-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M164,78a26,26,0,1,0-26-26A26,26,0,0,0,164,78Zm0-40a14,14,0,1,1-14,14A14,14,0,0,1,164,38Zm89.16,158.94L198.6,104.86a13.9,13.9,0,0,0-12-6.86h0a13.88,13.88,0,0,0-12,6.86l-27.88,47.05-46.56-79a14,14,0,0,0-24.13,0L2.83,197A6,6,0,0,0,8,206H248a6,6,0,0,0,5.16-9.06ZM86.27,79a2,2,0,0,1,3.46,0l25.34,43H60.93ZM18.5,194l35.36-60h68.29l19.3,32.77,0,0,16,27.2Zm152.93,0-17.85-30.29L184.83,111a2,2,0,0,1,1.72-1,1.93,1.93,0,0,1,1.72,1l49.2,83Z"/></svg>
+                <span class="pz-rule"></span>
+                <h3 class="pz-title">Terrain<br>composer</h3>
+                <p class="pz-sub">DSM = DEM + HEIGHT</p>
+              </div>
+            </div>
+          </div>
+          <div class="puzzle__piece">
+            <div class="puzzle__board">
+              <picture><source type="image/avif" srcset="/home/img/engine-puzzle-e@1x.avif 900w, /home/img/engine-puzzle-e@2x.avif 1800w, /home/img/engine-puzzle-e@3x.avif 2700w" sizes="min(100vw, 80svh, 1230px)"><img src="/home/img/engine-puzzle-e@2x.webp" srcset="/home/img/engine-puzzle-e@1x.webp 900w, /home/img/engine-puzzle-e@2x.webp 1800w, /home/img/engine-puzzle-e@3x.webp 2700w" sizes="min(100vw, 80svh, 1230px)" alt="" width="2700" height="2700" decoding="async" loading="lazy"></picture>
+              <div class="pz-text pz-text--right" style="--x:87.49%;--y:68.83%">
+                <svg class="pz-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M222.72,67.9l-88-48.17a13.9,13.9,0,0,0-13.44,0l-88,48.18A14,14,0,0,0,26,80.18v95.64a14,14,0,0,0,7.28,12.27l88,48.18a13.92,13.92,0,0,0,13.44,0l88-48.18A14,14,0,0,0,230,175.82V80.18A14,14,0,0,0,222.72,67.9ZM127,30.25a2,2,0,0,1,1.92,0L212.51,76,128,122.24,43.49,76ZM39,177.57a2,2,0,0,1-1-1.75V86.66l84,46V223Zm177.92,0L134,223V132.64l84-46v89.16A2,2,0,0,1,217,177.57Z"/></svg>
+                <span class="pz-rule"></span>
+                <h3 class="pz-title">3D<br>studio</h3>
+                <p class="pz-sub">MESH + TEXTURES</p>
+              </div>
+            </div>
+          </div>
+          <div class="puzzle__tail">
+            <div class="cp-stage" role="group" aria-label="Connaught Place, New Delhi: Depth Wizard demo">
+              <figure class="cp-box cp-box--left">
+                <div class="cp-rgb"><img src="/src/home/demo/cp-satellite.webp" alt="Overhead image of Connaught Place, New Delhi" width="960" height="960" loading="lazy" decoding="async">
+                  <div class="cp-lens" aria-hidden="true"></div></div>
+                <figcaption class="cp-cap" style="--i:0">Connaught Place, New Delhi</figcaption>
+              </figure>
+              <figure class="cp-box cp-box--right">
+                <div class="cp-3d" role="img" aria-label="3D model of Connaught Place built from published building heights"></div>
+                <figcaption class="cp-cap" style="--i:1">3D Rendering</figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+        <section class="section how" aria-labelledby="how-title">
+          <header class="sec-head sec-head--full">
+            <p class="eyebrow fade-up">03 / Workflow and evidence</p>
+            <h2 class="h2" id="how-title" style="--i:1">From one image to a measured surface</h2>
+            <p class="lead fade-up" style="--i:2">Five stages, typically 8 to 20 seconds from upload to 3D.</p>
+          </header>
+          <ol class="pipe" role="list">
+            <li class="pipe__node fade-up" style="--i:3"><span class="pipe__num">01</span><h3 class="h3">Ingest</h3><span class="chip-stack"><span class="chip">GeoTIFF</span><span class="chip">Copernicus Data Space</span></span></li>
+            <li class="pipe__node fade-up" style="--i:4"><span class="pipe__num">02</span><h3 class="h3">Ground</h3><span class="chip-stack"><span class="chip">SRTM</span></span></li>
+            <li class="pipe__node fade-up" style="--i:5"><span class="pipe__num">03</span><h3 class="h3">Depth</h3><span class="chip-stack"><span class="chip">Depth Anything V2</span><span class="chip">twin <span class="nocase">μ/σ</span> head</span></span></li>
+            <li class="pipe__node fade-up" style="--i:6"><span class="pipe__num">04</span><h3 class="h3">Calibrate</h3><span class="chip-stack"><span class="chip">ICESat-2</span></span></li>
+            <li class="pipe__node fade-up" style="--i:7"><span class="pipe__num">05</span><h3 class="h3">Compose and explore</h3><span class="chip-stack"><span class="chip-row"><span class="chip">Three.js</span><span class="chip">ThinkHazard</span></span><span class="chip">Wikidata</span></span></li>
+          </ol>
+          <div class="stats stats--3">
+            <div class="stat"><p class="stat__num" data-count="8.3" data-unit=" s">8.3 s</p><p class="stat__label">Image upload to 3D (median)</p></div>
+            <div class="stat"><p class="stat__num" data-count="12.3" data-unit=" s">12.3 s</p><p class="stat__label">GeoTIFF with terrain (median)</p></div>
+            <div class="stat"><p class="stat__num" data-count="19.3" data-unit=" s">19.3 s</p><p class="stat__label">Sentinel-2 search with place facts (median)</p></div>
+          </div>
+          <p class="source">Measured on the production backend, Google Cloud Run, Mumbai region.</p>
+          <header class="sec-head sec-head--full sub-head evidence">
+            <h2 class="h2" id="evidence-title">Measured, not claimed</h2>
+            <p class="lead fade-up" style="--i:2">To prevent spatial data leakage, our evaluation data is strictly split by geographic location and was completely excluded from model training. In the interest of full transparency, we publish all performance metrics, including our negative results.</p>
+          </header>
+          <div class="block">
+            <div class="block__aside fade-up">
+              <h3 class="h3 block__title block__title--a">Height from a single image, against airborne lidar</h3>
+              <p class="caption caption--line">Depth Wizard engine, IEEE GRSS DFC2019, 50 tiles, 4-fold spatial-quadrant hold-out, mean ± s.d. over three training seeds.</p>
+            </div>
+            <div class="stats stats--4">
+              <div class="stat"><p class="stat__num" data-count="0.072" data-unit=" m">0.072 m</p><p class="stat__label">Mean absolute error (±0.01)</p></div>
+              <div class="stat"><p class="stat__num" data-count="0.100" data-unit=" m">0.100 m</p><p class="stat__label">Root-mean-square error (±0.03)</p></div>
+              <div class="stat"><p class="stat__num" data-count="0.991">0.991</p><p class="stat__label">Pearson correlation</p></div>
+              <div class="stat"><p class="stat__num" data-count="0.916">0.916</p><p class="stat__label">Spearman correlation</p></div>
+            </div>
+            <div class="chart" data-chart="matrix"></div>
+            <p class="caption caption--note">Oracle-calibrated depth is Depth Anything V2 fitted to each tile's lidar using the true answers. It is the best a generic depth model can do.</p>
+            <p class="callout callout--a">Depth Wizard beats a baseline that is allowed to see the answers, on all four metrics.</p>
+          </div>
+          <div class="block">
+            <div class="block__aside fade-up">
+              <h3 class="h3 block__title">Terrain, checked by NASA's laser satellite</h3>
+            </div>
+            <div class="stats stats--2">
+              <div class="stat"><p class="stat__num" data-count="1.78" data-unit=" m">1.78 m</p><p class="stat__label">Median error of FABDEM terrain against ICESat-2 ground photons</p></div>
+              <div class="stat"><p class="stat__num" data-count="32" data-unit=" / 32">32 / 32</p><p class="stat__label">Benchmark tiles in India where FABDEM beats Copernicus GLO-30</p></div>
+            </div>
+            <button class="btn-ghost mono chart-open" type="button" aria-haspopup="dialog" aria-controls="tiles-dialog">Check out Per-tile RMSE against ICESat-2 (32 tiles) <span class="chart-open__icon" aria-hidden="true">↗</span></button>
+            <dialog class="chart-dialog" id="tiles-dialog" aria-labelledby="tiles-dialog-title">
+              <div class="chart-dialog__head">
+                <h3 class="h3" id="tiles-dialog-title">Terrain error per benchmark tile in India</h3>
+                <button class="chart-dialog__close mono" type="button" aria-label="Close">Close ✕</button>
+              </div>
+              <div class="chart" data-chart="dumbbell"></div>
+            </dialog>
+          </div>
+        </section>
+        <section class="section demo" id="demo-video" aria-labelledby="demo-title">
+          <header class="sec-head sec-head--full">
+            <p class="eyebrow fade-up">04 / Demo</p>
+            <h2 class="h2" id="demo-title" style="--i:1">A full run in two minutes</h2>
+            <p class="lead fade-up" style="--i:2">From a place search to a measured 3D surface, recorded in the live Studio without cuts.</p>
+          </header>
+          <div class="demo__row">
+            <div class="demo__stage">
+              <div class="demo-video"><p class="demo-video__label">Recording in progress. Open the Studio to try it live.</p></div>
+            </div>
+            <ol class="chapters" role="list" aria-label="Chapters">
+              <li><span class="chapters__t">00:00</span>Opening a demo region</li>
+              <li><span class="chapters__t">00:20</span>Searching a Sentinel-2 scene</li>
+              <li><span class="chapters__t">00:45</span>Satellite, depth, elevation and surface layers</li>
+              <li><span class="chapters__t">01:10</span>Probing height and slope</li>
+              <li><span class="chapters__t">01:30</span>Hazard context and place facts</li>
+              <li><span class="chapters__t">01:50</span>City models and the library</li>
+            </ol>
+          </div>
+          <div class="actions">
+            <button class="hero__cta mono" type="button">ENTER STUDIO <span class="hero__cta-icon" aria-hidden="true">↗</span></button>
+            <a class="hero__cta hero__cta--ghost mono" href="https://github.com/sancharimouri/depthwizard2-desktop/releases/latest">DOWNLOAD DEPTH WIZARD <span class="hero__cta-icon" aria-hidden="true">↓</span></a>
+          </div>
+        </section>
+        <section class="section studio" aria-labelledby="studio-title">
+          <header class="sec-head sec-head--full">
+            <p class="eyebrow fade-up">05 / The Studio</p>
+            <h2 class="h2" id="studio-title" style="--i:1">Everything you need to read terrain</h2>
+            <p class="lead fade-up" style="--i:2">The Studio runs in the browser and on win/linux/macOS. Open a demo region, pick a library scene, upload your own image or search Sentinel-2 by place.</p>
+          </header>
+          <ul class="grid3 feature-row rise-cells" role="list">
+            <li class="card" style="--i:0"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M229.18,173a6,6,0,0,1-2.16,8.2l-96,56a6,6,0,0,1-6,0l-96-56a6,6,0,0,1,6-10.36l93,54.23,93-54.23A6,6,0,0,1,229.18,173ZM221,122.82l-93,54.23L35,122.82a6,6,0,0,0-6,10.36l96,56a6,6,0,0,0,6,0l96-56a6,6,0,0,0-6-10.36ZM26,80a6,6,0,0,1,3-5.18l96-56a6,6,0,0,1,6,0l96,56a6,6,0,0,1,0,10.36l-96,56a6,6,0,0,1-6,0l-96-56A6,6,0,0,1,26,80Zm17.91,0L128,129.05,212.09,80,128,31Z"/></svg><h3 class="h3">Four layers</h3><p class="cell__line">Satellite, relative depth, elevation and surface, switched without reloading.</p></li>
+            <li class="card" style="--i:1"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M232,122H221.8A94.13,94.13,0,0,0,134,34.2V24a6,6,0,0,0-12,0V34.2A94.13,94.13,0,0,0,34.2,122H24a6,6,0,0,0,0,12H34.2A94.13,94.13,0,0,0,122,221.8V232a6,6,0,0,0,12,0V221.8A94.13,94.13,0,0,0,221.8,134H232a6,6,0,0,0,0-12Zm-98,87.76V200a6,6,0,0,0-12,0v9.76A82.09,82.09,0,0,1,46.24,134H56a6,6,0,0,0,0-12H46.24A82.09,82.09,0,0,1,122,46.24V56a6,6,0,0,0,12,0V46.24A82.09,82.09,0,0,1,209.76,122H200a6,6,0,0,0,0,12h9.76A82.09,82.09,0,0,1,134,209.76ZM128,90a38,38,0,1,0,38,38A38,38,0,0,0,128,90Zm0,64a26,26,0,1,1,26-26A26,26,0,0,1,128,154Z"/></svg><h3 class="h3">Live terrain probe</h3><p class="cell__line">Elevation and slope under the cursor, in metres and degrees.</p></li>
+            <li class="card" style="--i:2"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M224,202H214V40a6,6,0,0,0-6-6H152a6,6,0,0,0-6,6V82H96a6,6,0,0,0-6,6v42H48a6,6,0,0,0-6,6v66H32a6,6,0,0,0,0,12H224a6,6,0,0,0,0-12ZM158,46h44V202H158ZM102,94h44V202H102ZM54,142H90v60H54Z"/></svg><h3 class="h3">Terrain statistics</h3><p class="cell__line">Minimum, maximum, mean and relief for the whole scene.</p></li>
+            <li class="card" style="--i:3"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M164.24,195.76a6,6,0,0,1,0,8.48l-32,32a6,6,0,0,1-8.48,0l-32-32a6,6,0,0,1,8.48-8.48L122,217.51v-179L100.24,60.24a6,6,0,0,1-8.48-8.48l32-32a6,6,0,0,1,8.48,0l32,32a6,6,0,1,1-8.48,8.48L134,38.49v179l21.76-21.75A6,6,0,0,1,164.24,195.76Z"/></svg><h3 class="h3">Vertical exaggeration</h3><p class="cell__line">Flatten or stretch relief to read flat plains and steep valleys alike.</p></li>
+            <li class="card" style="--i:4"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M233.91,74.79,181.22,22.1a14,14,0,0,0-19.8,0L22.09,161.41a14,14,0,0,0,0,19.8L74.78,233.9a14,14,0,0,0,19.8,0L233.91,94.59A14,14,0,0,0,233.91,74.79ZM225.42,86.1,86.1,225.41h0a2,2,0,0,1-2.83,0L30.58,172.73a2,2,0,0,1,0-2.83L64,136.48l27.76,27.76a6,6,0,1,0,8.48-8.48L72.48,128,96,104.48l27.76,27.76a6,6,0,0,0,8.48-8.48L104.48,96,128,72.49l27.76,27.75a6,6,0,0,0,8.48-8.48L136.49,64,169.9,30.59a2,2,0,0,1,2.83,0l52.69,52.68A2,2,0,0,1,225.42,86.1Z"/></svg><h3 class="h3">Measure</h3><p class="cell__line">Distances across the surface, in metres.</p></li>
+            <li class="card" style="--i:5"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M122,136V80a6,6,0,0,1,12,0v56a6,6,0,0,1-12,0Zm6,26a10,10,0,1,0,10,10A10,10,0,0,0,128,162Zm110-34a13.82,13.82,0,0,1-4.09,9.86l-96,96.06a14,14,0,0,1-19.72,0h0l-96-96.06a13.93,13.93,0,0,1,0-19.72l96.05-96.06a14,14,0,0,1,19.72,0l96,96.06A13.82,13.82,0,0,1,238,128Zm-12,0a1.94,1.94,0,0,0-.57-1.38L129.38,30.56a2,2,0,0,0-2.76,0L30.57,126.62a2,2,0,0,0,0,2.76l96.05,96.06h0a2,2,0,0,0,2.76,0l96.05-96.06A1.94,1.94,0,0,0,226,128Z"/></svg><h3 class="h3">Scenario analysis</h3><p class="cell__line">Hazard context from ThinkHazard, such as landslide and flood exposure.</p></li>
+            <li class="card" style="--i:6"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M128,66a38,38,0,1,0,38,38A38,38,0,0,0,128,66Zm0,64a26,26,0,1,1,26-26A26,26,0,0,1,128,130Zm0-112a86.1,86.1,0,0,0-86,86c0,30.91,14.34,63.74,41.47,94.94a252.32,252.32,0,0,0,41.09,38,6,6,0,0,0,6.88,0,252.32,252.32,0,0,0,41.09-38c27.13-31.2,41.47-64,41.47-94.94A86.1,86.1,0,0,0,128,18Zm0,206.51C113,212.93,54,163.62,54,104a74,74,0,0,1,148,0C202,163.62,143,212.93,128,224.51Z"/></svg><h3 class="h3">Place facts</h3><p class="cell__line">Curated facts for library scenes; live facts from Wikidata for new areas.</p></li>
+            <li class="card" style="--i:7"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M240,210H222V96a14,14,0,0,0-14-14H142V32a14,14,0,0,0-21.77-11.64l-80,53.33A14,14,0,0,0,34,85.34V210H16a6,6,0,0,0,0,12H240a6,6,0,0,0,0-12ZM208,94a2,2,0,0,1,2,2V210H142V94ZM46,85.34a2,2,0,0,1,.89-1.66l80-53.34A2,2,0,0,1,130,32V210H46ZM110,112v16a6,6,0,0,1-12,0V112a6,6,0,0,1,12,0Zm-32,0v16a6,6,0,0,1-12,0V112a6,6,0,0,1,12,0Zm0,56v16a6,6,0,0,1-12,0V168a6,6,0,0,1,12,0Zm32,0v16a6,6,0,0,1-12,0V168a6,6,0,0,1,12,0Z"/></svg><h3 class="h3">Buildings in tile</h3><p class="cell__line">Building counts for city scenes, exact or approximate as the data allows.</p></li>
+            <li class="card" style="--i:8"><svg class="cell__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M250.83,74.71a6,6,0,0,0-6.16.3L206,100.79V72a14,14,0,0,0-14-14H32A14,14,0,0,0,18,72V184a14,14,0,0,0,14,14H192a14,14,0,0,0,14-14V155.21L244.67,181a6,6,0,0,0,9.33-5V80A6,6,0,0,0,250.83,74.71ZM194,184a2,2,0,0,1-2,2H32a2,2,0,0,1-2-2V72a2,2,0,0,1,2-2H192a2,2,0,0,1,2,2Zm48-19.21-36-24V115.21l36-24Z"/></svg><h3 class="h3">Fly&#8209;through and screenshots</h3><p class="cell__line">A guided camera path and one-click PNG capture.</p></li>
+          </ul>
+          <div class="studio__foot">
+            <p class="body note">The app (Windows/ Linux/Apple Silicon) runs the depth model on your machine with ONNX Runtime, so it works offline. <a class="link" href="https://github.com/sancharimouri/depthwizard2-desktop/releases/latest">Download</a></p>
+            <div class="actions"><button class="hero__cta mono" type="button">ENTER STUDIO <span class="hero__cta-icon" aria-hidden="true">↗</span></button></div>
+          </div>
+        </section>
+        <header class="sec-head sec-head--full studies-head">
+          <p class="eyebrow fade-up">06 / Studies</p>
+          <h2 class="h2" id="studies-title" style="--i:1">Built form, in our visual language</h2>
+          <p class="lead fade-up" style="--i:2">Four studies of Indian architecture, modelled in the same wireframe language as the Studio.</p>
+          <p class="hint fade-up" style="--i:3">Drag to rotate.</p>
+        </header>
+        <section class="cells" aria-labelledby="studies-title">
+          <figure class="cells__item">
+            <div class="cells__cell"><img src="/src/home/landmarks/curv.webp" alt="Stylised wireframe study of Shivalik Curv" width="960" height="1280" loading="lazy" decoding="async" /></div>
+            <figcaption class="cells__name"><span class="cells__title">Shivalik Curv</span><span class="cells__place">GIFT City, Gujarat</span></figcaption>
+          </figure>
+          <figure class="cells__item">
+            <div class="cells__cell"><img src="/src/home/landmarks/bas.webp" alt="Stylised wireframe study of Bombay Art Society" width="960" height="1280" loading="lazy" decoding="async" /></div>
+            <figcaption class="cells__name"><span class="cells__title">Bombay Art Society</span><span class="cells__place">Mumbai, Maharashtra</span></figcaption>
+          </figure>
+          <figure class="cells__item">
+            <div class="cells__cell"><img src="/src/home/landmarks/antilia.webp" alt="Stylised wireframe study of Antilia" width="960" height="1280" loading="lazy" decoding="async" /></div>
+            <figcaption class="cells__name"><span class="cells__title">Antilia</span><span class="cells__place">Mumbai, Maharashtra</span></figcaption>
+          </figure>
+          <figure class="cells__item">
+            <div class="cells__cell"><img class="cells__villa" src="/src/home/landmarks/villa.webp" alt="Stylised wireframe study of Ribbon House" width="960" height="1280" loading="lazy" decoding="async" /></div>
+            <figcaption class="cells__name"><span class="cells__title">Ribbon House</span><span class="cells__place">Mohali, Punjab</span></figcaption>
+          </figure>
+        </section>
+        <section class="section uses" aria-labelledby="uses-title">
+          <header class="sec-head sec-head--full">
+            <p class="eyebrow fade-up">07 / Use cases</p>
+            <h2 class="h2" id="uses-title" style="--i:1">Where height changes the decision</h2>
+          </header>
+          <ul class="grid3 feature-row" role="list">
+            <li class="card fade-up" style="--i:2"><span class="cell__num">01</span><h3 class="h3">Landslide screening</h3><p class="cell__line">Slope and relief in hill districts such as Darjeeling, read alongside hazard context.</p></li>
+            <li class="card fade-up" style="--i:3"><span class="cell__num">02</span><h3 class="h3">Flood and coastal exposure</h3><p class="cell__line">Low-lying ground along coasts and deltas, against calibrated terrain.</p></li>
+            <li class="card fade-up" style="--i:4"><span class="cell__num">03</span><h3 class="h3">Urban planning</h3><p class="cell__line">Building height and density from very-high-resolution imagery where lidar doesn't exist.</p></li>
+            <li class="card fade-up" style="--i:2"><span class="cell__num">04</span><h3 class="h3">Farming on slopes</h3><p class="cell__line">Terraces and field gradients for soil and water planning.</p></li>
+            <li class="card fade-up" style="--i:3"><span class="cell__num">05</span><h3 class="h3">Disaster first look</h3><p class="cell__line">A quick 3D view of an affected area from a single post-event image.</p></li>
+            <li class="card fade-up" style="--i:4"><span class="cell__num">06</span><h3 class="h3">Teaching and outreach</h3><p class="cell__line">Terrain made visible for students, planners and the public.</p></li>
+          </ul>
+        </section>
+        <section class="section credits" id="credits" aria-labelledby="credits-title">
+          <header class="sec-head sec-head--full">
+            <p class="eyebrow fade-up">08 / Credits</p>
+            <h2 class="h2" id="credits-title">Built on open data</h2>
+          </header>
+          <ul class="credits__grid" role="list">
+            <li class="credit"><p class="credit__src">Copernicus Sentinel-2 (via the Copernicus Data Space Ecosystem)</p><p class="credit__by">Contains modified Copernicus Sentinel data (2024–2026), processed by ESA</p><p class="credit__lic">Copernicus Sentinel data licence (free, full and open)</p></li>
+            <li class="credit"><p class="credit__src">IEEE GRSS Data Fusion Contest 2019, Track 1</p><p class="credit__by">IEEE GRSS Data Fusion Contest 2019; JHU/APL Urban Semantic 3D (US3D) dataset</p><p class="credit__lic">Contest terms; credited as required</p></li>
+            <li class="credit"><p class="credit__src">Copernicus DEM GLO-30</p><p class="credit__by">© DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA</p><p class="credit__lic">Copernicus DEM licence (GLO-30: free)</p></li>
+            <li class="credit"><p class="credit__src">ThinkHazard! (GFDRR, World Bank) and Wikidata</p><p class="credit__by">ThinkHazard! – GFDRR (thinkhazard.org); Wikidata</p><p class="credit__lic">Hazard levels CC BY 4.0; Wikidata CC0 1.0</p></li>
+            <li class="credit"><p class="credit__src">Maxar (now Vantor) Open Data Program</p><p class="credit__by">Maxar (now Vantor) Open Data Program</p><p class="credit__lic">CC BY-NC 4.0</p></li>
+            <li class="credit"><p class="credit__src">FABDEM v1-2</p><p class="credit__by">Hawker et al. (2022), Environ. Res. Lett. 17 024016; University of Bristol / Fathom</p><p class="credit__lic">CC BY-NC-SA 4.0</p></li>
+            <li class="credit"><p class="credit__src">Google Open Buildings</p><p class="credit__by">Google Research, Open Buildings (sites.research.google/open-buildings)</p><p class="credit__lic">CC BY 4.0</p></li>
+            <li class="credit"><p class="credit__src">swisstopo</p><p class="credit__by">© swisstopo</p><p class="credit__lic">Swiss federal open government data (free use with source credit)</p></li>
+            <li class="credit"><p class="credit__src">Project PLATEAU (MLIT)</p><p class="credit__by">Project PLATEAU, MLIT</p><p class="credit__lic">PLATEAU terms (CC BY 4.0 compatible)</p></li>
+            <li class="credit"><p class="credit__src">NASA ICESat-2</p><p class="credit__by">NASA</p><p class="credit__lic">NASA open data</p></li>
+            <li class="credit"><p class="credit__src">Depth Anything V2 Small</p><p class="credit__by">Yang et al. (2024), <i>Depth Anything V2</i></p><p class="credit__lic">Apache-2.0</p></li>
+            <li class="credit"><p class="credit__src">OpenStreetMap</p><p class="credit__by">© OpenStreetMap contributors</p><p class="credit__lic">ODbL 1.0</p></li>
+            <li class="credit"><p class="credit__src">3D BAG</p><p class="credit__by">3D BAG</p><p class="credit__lic">CC BY 4.0</p></li>
+            <li class="credit"><p class="credit__src">NYC 3D Building Model</p><p class="credit__by">NYC 3D Building Model</p><p class="credit__lic">NYC Open Data terms</p></li>
+            <li class="credit credit--logo" aria-hidden="true"><div class="logo3d"></div></li>
+          </ul>
+        </section>
+        <section class="cta" aria-labelledby="cta-title">
+          <p class="eyebrow fade-up">Begin</p>
+          <h2 class="h2 cta__title" id="cta-title">Put a real surface under your image.</h2>
+          <p class="lead fade-up" style="--i:2">Open the Studio, choose a scene or bring your own, and read the ground in metres.</p>
+          <div class="actions cta__actions fade-up" style="--i:3">
+            <button class="hero__cta mono" type="button">ENTER STUDIO <span class="hero__cta-icon" aria-hidden="true">↗</span></button>
+            <a class="hero__cta hero__cta--ghost mono" href="https://github.com/sancharimouri/depthwizard2-desktop/releases/latest">DOWNLOAD DEPTH WIZARD <span class="hero__cta-icon" aria-hidden="true">↓</span></a>
+          </div>
+          <a class="link cta__source fade-up" style="--i:4" href="https://github.com/sancharimouri/depthwizard-studio">View source on GitHub</a>
+        </section>
+      </main>
+      <footer class="footer">
+        <div class="footer__cols">
+          <div class="footer__brand">
+            <p class="footer__logo" aria-label="Depth Wizard"><span class="logo-d" aria-hidden="true"></span><span aria-hidden="true">EPTH WIZARD</span></p>
+            <p class="footer__tag">Single-image terrain and height, tested against independent measurements.</p>
+          </div>
+          <nav class="footer__col" aria-label="Product">
+            <p class="footer__label">Product</p>
+            <a href="/#/studio">Studio</a><a href="#demo-video">Demo</a><a href="/#/demo">Library</a><a href="https://github.com/sancharimouri/depthwizard2-desktop/releases/latest">Desktop app</a>
+          </nav>
+          <nav class="footer__col" aria-label="Project">
+            <p class="footer__label">Project</p>
+            <a href="https://github.com/sancharimouri/depthwizard-studio#readme">Docs</a><a href="#credits">Credits and sources</a><a href="https://github.com/sancharimouri/depthwizard-studio">GitHub</a>
+          </nav>
+        </div>
+        <p class="footer__bar">Designed, engineered and built by Sanchari Mouri · © 2026 Sanchari Mouri. Code under the MIT licence; data under its source licences · Smart India Hackathon 2026, problem statement SIH26175</p>
+      </footer>
+      <div class="cursor-layer" aria-hidden="true">
+        <svg class="cursor-arrow" id="cursor-arrow" width="18" height="24" viewBox="0 0 18 24">
+          <path d="M2 1.6 L16.2 12.6 L10.7 13.4 L15 21.1 L11.9 22.8 L7.55 15.05 L3.15 19.2 Z" fill="#f6f7f7" stroke="#0b1110" stroke-width="1"/>
+        </svg>
+        <canvas id="cursor-trail" class="cursor-trail"></canvas>
+        <div id="cursor-square" class="cursor-square"></div>
+      </div>
+    </div>
+</template>
+<!-- home:body:end -->
+
+<template id="world-app">
 <div id="app">
 
 
@@ -40,7 +394,7 @@
     <aside id="app-sidebar" class="app-sidebar is-collapsed" aria-label="Depth Wizard">
         <div class="sb-inner">
             <div class="sb-head">
-                <button class="sb-logo" type="button" data-page="page-docs" aria-label="Depth Wizard: open Home"
+                <button class="sb-logo" type="button" data-page="home" aria-label="Depth Wizard: open Home"
                         title="Home"><img src="/brand-d-desktop.png" alt="" width="30" height="30" /></button>
                 <span class="sb-brand-text">
                     <span class="sb-brand">Depth Wizard</span>
@@ -75,8 +429,11 @@
                     <button class="sb-page-link" type="button" data-page="page-explore" title="Demo">
                         <svg class="sb-icon sb-icon-outline" viewBox="463.6 175.4 273.6 273.6" aria-hidden="true"><path d="M 722.5 207 L 722.5 417.3 C 722.5 426.7 714.9 434.3 705.6 434.3 L 495.2 434.3 C 485.8 434.3 478.2 426.7 478.2 417.3 L 478.2 207 C 478.2 197.6 485.8 190 495.2 190 L 705.6 190 C 714.9 190 722.5 197.6 722.5 207 Z M 646.7 297.7 L 585.2 260.3 C 579.9 257.2 573.4 257.1 568 260.1 C 562.7 263.1 559.4 268.7 559.4 274.8 L 559.4 349.5 C 559.4 355.6 562.7 361.3 568 364.3 C 570.6 365.7 573.5 366.5 576.4 366.5 C 579.4 366.5 582.5 365.6 585.1 364 L 646.7 326.7 C 651.8 323.6 654.9 318.1 654.9 312.2 C 654.9 306.2 651.8 300.7 646.7 297.7 Z M 646.7 297.7 "/></svg><span class="sb-label">Demo</span>
                     </button>
-                    <button class="sb-page-link" type="button" data-page="page-docs" title="Home">
+                    <button class="sb-page-link" type="button" data-page="home" title="Home">
                         <svg class="sb-icon sb-icon-outline" viewBox="62.8 138.9 346.8 346.8" aria-hidden="true"><path d="M 383.3 327.7 L 255.9 186.5 C 250.7 180.6 243.7 177.5 236.2 177.5 C 228.6 177.5 221.6 180.6 216.4 186.5 L 89 327.7 C 81.4 336.1 82.5 342.4 83.8 345.5 C 85.1 348.5 89.1 353.5 100.4 353.5 L 125.7 353.5 L 125.7 418.1 C 125.7 434.1 138.7 447.1 154.7 447.1 L 187.3 447.1 C 189.8 447.1 191.8 445.1 191.8 442.6 L 191.8 354.1 C 191.8 343.1 200.7 334.2 211.7 334.2 L 260.6 334.2 C 271.6 334.2 280.5 343.1 280.5 354.1 L 280.5 442.6 C 280.5 445.1 282.5 447.1 285 447.1 L 317.6 447.1 C 333.6 447.1 346.6 434.1 346.6 418.1 L 346.6 353.5 L 371.9 353.5 C 383.2 353.5 387.2 348.5 388.5 345.5 C 389.9 342.4 391 336.1 383.3 327.7 Z M 383.3 327.7 "/></svg><span class="sb-label">Home</span>
+                    </button>
+                    <button class="sb-page-link" type="button" data-page="page-docs" title="Docs">
+                        <svg class="sb-icon sb-icon-outline" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span class="sb-label">Docs</span>
                     </button>
                 </nav>
                 <p id="sb-jobs-running" class="sb-muted">No jobs running</p>
@@ -988,24 +1345,13 @@
             </header>
 
             <nav class="docs-toc" aria-label="On this page">
-                <a href="#demo-video">Demo video</a>
+                <a href="/#demo-video">Demo video</a> <!-- the PERMANENT #demo-video anchor is on Home -->
                 <a href="#docs-pages">The three pages</a>
                 <a href="#docs-heights">Where the heights come from</a>
                 <a href="#docs-credits">Data sources &amp; credits</a>
                 <a href="#docs-research">What the research found</a>
                 <a href="#docs-limits">Coverage and limits</a>
             </nav>
-
-            <!-- PERMANENT anchor: id="demo-video" is linked from the submission (<site>/#demo-video).
-                 Keep the id even if the heading text changes (src/routes.js DEMO_VIDEO_ANCHOR). -->
-            <section id="demo-video" class="docs-section">
-                <h2>Demo video</h2>
-                <!-- PLACEHOLDER: replace this div with the real <video> or embed when the recording is ready. -->
-                <div class="docs-video-placeholder" data-placeholder="demo-video">
-                    <span class="docs-video-tag">PLACEHOLDER</span>
-                    <p>The demo recording will appear here.</p>
-                </div>
-            </section>
 
             <section id="docs-pages" class="docs-section">
                 <h2>The three pages</h2>
@@ -1058,7 +1404,7 @@
                     </div>
                     <div class="docs-card">
                         <div class="docs-card-num">3</div>
-                        <h3>Home</h3>
+                        <h3>Docs</h3>
                         <ul>
                             <li>This page: what the tool does, how the other two pages work, and what it can and
                                 can’t do today.</li>
@@ -1224,12 +1570,10 @@
     </div>
 
 </div>
+</template>
 
 
-<script
-    type="module"
-    src="/src/main.js"
-></script>
+<script type="module" src="/src/boot.js"></script>
 
 
 </body>
