@@ -106,6 +106,35 @@ function setupCharts() {
   charts.forEach((c) => { near.observe(c); seen.observe(c); });
 }
 
+// Demo video (section 04, the protected #demo-video): the YouTube video's ID, the one setting. Empty: the frame keeps its
+// "Recording in progress" placeholder. Otherwise the frame shows the video's poster and a play button, and the player
+// (youtube-nocookie.com) loads only on a click (a facade: nothing from YouTube's player loads before), then plays. Opened by
+// its deep link (/#demo-video), the player loads at once and plays muted with captions (browsers allow muted autoplay).
+const DEMO_VIDEO_ID = '';
+
+function setupDemoVideo() {
+  const frame = document.querySelector('.demo-video');
+  if (!frame || !DEMO_VIDEO_ID) return;
+  const id = encodeURIComponent(DEMO_VIDEO_ID);
+  const play = (params) => {
+    const player = document.createElement('iframe');
+    player.className = 'demo-video__player';
+    player.src = `https://www.youtube-nocookie.com/embed/${id}?${params}`;
+    player.title = 'Depth Wizard demo video';
+    player.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    player.allowFullscreen = true;
+    player.referrerPolicy = 'strict-origin-when-cross-origin';
+    frame.replaceChildren(player);
+  };
+  if (location.hash === '#demo-video') { play('autoplay=1&mute=1&playsinline=1&cc_load_policy=1'); return; }
+  const poster = document.createElement('button');
+  poster.type = 'button'; poster.className = 'demo-video__poster'; poster.setAttribute('aria-label', 'Play the demo video');
+  poster.style.backgroundImage = `url("https://i.ytimg.com/vi/${id}/hqdefault.jpg")`;
+  poster.innerHTML = '<span class="demo-video__play" aria-hidden="true"></span>';
+  poster.addEventListener('click', () => play('autoplay=1&playsinline=1'), { once: true });
+  frame.replaceChildren(poster);
+}
+
 // Feature and use-case cells in one row (owner 2026-10-17): the line under a title shows on hover (CSS) or on a click, tap,
 // Enter or Space, which opens that cell and closes the others in its row.
 function setupFeatureCells() {
@@ -131,4 +160,4 @@ function setupLineGradient() {
   new ResizeObserver(fit).observe(t); document.fonts.ready.then(fit);
 }
 
-export function setupSections() { setupTitleRise(); setupFadeUp(); setupCountUp(); setupCharts(); setupFeatureCells(); setupLineGradient(); }
+export function setupSections() { setupTitleRise(); setupFadeUp(); setupCountUp(); setupCharts(); setupFeatureCells(); setupLineGradient(); setupDemoVideo(); }
