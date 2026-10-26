@@ -48,7 +48,7 @@ const SCREENS = {
         },
     },
     "studio-input": {
-        url: "/",
+        url: "/#/studio",
         panels: [...COMMON, ["card", "#input-view > .iv-pane"]],
         columns: [],
         scrollByDesign: ".iv-input-pane", // the scene list: 76 cards, scrolls at every size
@@ -58,7 +58,7 @@ const SCREENS = {
         },
     },
     "studio-viewer": {
-        url: "/",
+        url: "/#/studio",
         panels: [...COMMON, ["bar", "#final-demo-expanded-bar"], ["jobs", ".final-demo-box.is-expanded .job-tabs-wrap"],
             ["left", ".final-demo-box.is-expanded .final-demo-left-rail > .xp-box"],
             ["right", ".final-demo-box.is-expanded .final-demo-right-rail > .xp-box"],
@@ -75,7 +75,7 @@ const SCREENS = {
         },
     },
     "studio-grid": {
-        url: "/",
+        url: "/#/studio",
         panels: [...COMMON, ["box", ".workbench-grid .wb-main > *, .workbench-grid .wb-side > *"]],
         columns: [],
         async open(page) {
