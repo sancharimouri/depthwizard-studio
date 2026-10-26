@@ -5,8 +5,8 @@
 //   / and an unknown hash      Home, no sidebar
 //   /#demo-video               Home, the demo video section in view (a PROTECTED link)
 //   /#/demo                    the Demo page (a PROTECTED link)
-//   /#/studio, /#/docs         the Studio input page, Docs
-//   /#docs-credits             Docs, scrolled to that section
+//   /#/studio                  the Studio input page
+//   /#/docs, /#docs-credits    Home, with the retired hash dropped from the URL (the Docs page was removed)
 //   files                      what Home loads and what the app loads share only the boot code and the shared
 //                              three.js chunks; nothing either world requests fails
 //
@@ -71,8 +71,8 @@ async function visit(hash) {
             home: Boolean(document.getElementById("site")),
             activePage: document.querySelector(".page.active")?.id ?? null,
             demoVideoInView: inView("demo-video"),
-            creditsInView: inView("docs-credits"),
             hash: location.hash,
+            historyLength: history.length,
         };
     });
     await page.close();
@@ -89,10 +89,11 @@ const studio = await visit("#/studio");
 say(studio.state.world === "app" && studio.state.activePage === "page-workbench" && studio.state.hash === "#/studio",
     `/#/studio is the Studio input page (${studio.state.activePage}, ${studio.state.hash})`);
 const docs = await visit("#/docs");
-say(docs.state.world === "app" && docs.state.activePage === "page-docs", `/#/docs is Docs (${docs.state.activePage})`);
+say(docs.state.world === "home" && !docs.state.sidebar && docs.state.hash === "" && docs.state.historyLength === home.state.historyLength,
+    `/#/docs (retired) is Home, hash replaced (${JSON.stringify(docs.state)})`);
 const anchor = await visit("#docs-credits");
-say(anchor.state.world === "app" && anchor.state.activePage === "page-docs" && anchor.state.creditsInView,
-    `/#docs-credits is Docs, scrolled to the credits`);
+say(anchor.state.world === "home" && !anchor.state.sidebar && anchor.state.hash === "" && anchor.state.historyLength === home.state.historyLength,
+    `/#docs-credits (retired) is Home, hash replaced`);
 const unknown = await visit("#/no-such-page");
 say(unknown.state.world === "home" && !unknown.state.sidebar, `an unknown hash is Home`);
 
@@ -112,11 +113,16 @@ say(unknown.state.world === "home" && !unknown.state.sidebar, `an unknown hash i
     await page.evaluate(() => document.querySelector('.sb-page-link[data-page="home"]').click());
     await page.waitForFunction(() => document.documentElement.dataset.world === "home", null, { timeout: 30000 });
     say(await page.evaluate(() => location.hash === "" && !document.getElementById("app-sidebar")), "the sidebar's Home item opens Home");
+    await page.goto(BASE + "/#/studio");
+    await settled();
+    await page.evaluate(() => { location.hash = "#/docs"; });
+    await page.waitForFunction(() => document.documentElement.dataset.world === "home", null, { timeout: 30000 });
+    say(await page.evaluate(() => location.hash === ""), "#/docs typed in the app opens Home, hash replaced");
     await page.close();
 }
 
-const homeFiles = new Set([...home.files, ...video.files, ...unknown.files]);
-const appFiles = new Set([...demo.files, ...studio.files, ...docs.files, ...anchor.files]);
+const homeFiles = new Set([...home.files, ...video.files, ...unknown.files, ...docs.files, ...anchor.files]);
+const appFiles = new Set([...demo.files, ...studio.files]);
 const both = [...homeFiles].filter(f => appFiles.has(f) && f !== "/" && !SHARED.test(f));
 say(both.length === 0, `Home and the app share no files beyond the boot code${both.length ? `: ${both.join(", ")}` : ""}`);
 say(![...appFiles].some(f => /\/home\//.test(f)), "no Home files (/home/, /src/home/) load on app routes");

@@ -2,7 +2,7 @@
 // (src/main.js), picked from the URL by worldForHash (src/routes.js). Only the chosen world's markup is inserted and
 // only its code, styles and fonts load. Moving between worlds is a full page load, so Home's global styles, cursor
 // and scroll lock never reach the app, and the app's never reach Home.
-import { worldForHash } from "./routes.js";
+import { isRetiredDocsHash, worldForHash } from "./routes.js";
 
 const desktop = Boolean(window.__TAURI__);
 const appMarkup = document.getElementById("world-app");
@@ -13,11 +13,16 @@ document.getElementById(world === "home" ? "world-app" : "world-home").remove();
 const markup = document.getElementById(`world-${world}`);
 markup.replaceWith(markup.content.cloneNode(true)); // the templates stay intact for appHasId
 document.documentElement.dataset.world = world;
+if (world === "home" && isRetiredDocsHash(location.hash)) {
+    history.replaceState(null, "", location.pathname + location.search); // #/docs, #docs-...: Home, at the top
+}
 
 // e.g. Home's ENTER STUDIO (/#/studio) or a #credits link typed in the app: a same-document hash change into the
 // other world reloads the page there.
 const followWorld = () => {
-    if (worldForHash(location.hash, appHasId, desktop) !== world) {
+    if (!desktop && isRetiredDocsHash(location.hash)) {
+        location.replace(location.pathname + location.search);
+    } else if (worldForHash(location.hash, appHasId, desktop) !== world) {
         location.reload();
     }
 };

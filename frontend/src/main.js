@@ -99,7 +99,7 @@ function setLayerDescription(layer) {
 const REGIONS = {
     // Connaught Place, 1 km: the city-tile bake (scripts/city_tiles.json "connaught_place"). TRUE COLOR is the city
     // model; imagery is a synthetic top view rendered from the region's own data (no free HD imagery may be
-    // redistributed). No credit line on the view: the Docs page credits its sources.
+    // redistributed). No credit line on the view: docs/ATTRIBUTIONS.md and Home's credits section credit its sources.
     connaught: {
         label: "Connaught Place",
         elevationSource: "3D city model",
@@ -638,10 +638,10 @@ const jobStore = createJobStore();
 // The one global sidebar (src/sidebar.js). Created before the first
 // renderJobs() so the jobs-running line and the JOBS tab exist from the start.
 // "home" (the sidebar's Home item and D mark) is the web's landing page, a separate world (src/boot.js). The desktop
-// app has no Home: no Home item, and its D mark opens Docs.
+// app has no Home: no Home item, and its D mark opens the Studio.
 if (window.__TAURI__) {
     document.querySelector('.sb-page-link[data-page="home"]')?.remove();
-    document.querySelector(".sb-logo").dataset.page = "page-docs";
+    document.querySelector(".sb-logo").dataset.page = "page-workbench";
 }
 const sidebar = createSidebar({ onNavigate: pageId => (pageId === "home" ? location.assign("/") : navigateToPage(pageId)) });
 
@@ -1862,7 +1862,7 @@ renderJobs(); // shows the panel on load if there is saved work to reopen
 
 const pages = document.querySelectorAll(".page");
 
-// Page order (2026-09-24): 1 Workbench (default), 2 Explore, 3 Docs.
+// Pages: Workbench (default) and Explore (the Docs page was removed 2026-10-26).
 let activePageId = "page-workbench";
 
 // The .page element that contains element `id`, or null (src/routes.js).
@@ -1930,7 +1930,7 @@ function syncSidebarDefault() {
     sidebar.setInViewer(viewing3d); // the closed rail lists the jobs there (no auto-open on any page)
 }
 
-// Open the page the URL names (#/studio, #/docs, #/demo, #docs-…); Workbench otherwise (the desktop app's bare URL),
+// Open the page the URL names (#/studio, #/demo); Workbench otherwise (the desktop app's bare URL),
 // so Workbench's first-show init (grid entrance) runs on load too.
 applyUrlHash();
 

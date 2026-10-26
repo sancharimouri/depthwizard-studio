@@ -4,7 +4,7 @@
 // where a line is { kind, label, text[, data] } (backend/facts/lines.py writes the same shape).
 //   - web build, library tile: the curated lines baked into the static library (job.input.staticInfo); no request
 //   - anything else: GET /api/facts with the input's footprint (bbox) or the user-entered point
-// Lines carry no sources or licences: the Docs page credits them ("Data sources & credits").
+// Lines carry no sources or licences: docs/ATTRIBUTIONS.md credits them ("Facts and scenario cards").
 
 import { apiUrl } from "./api-base.js";
 

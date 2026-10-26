@@ -1,13 +1,12 @@
 // Global sidebar: the one navigation surface on every page (Workbench and its
-// processing grid, Explore, Docs, the expanded 3D viewer window). Structured
+// processing grid, Explore, the expanded 3D viewer window). Structured
 // after shadcn/ui's sidebar-07 block:
 //
-//   header  the "D" mark (opens Home; Docs on the desktop) + "Depth Wizard" + the lock button
+//   header  the "D" mark (opens Home; the Studio on the desktop) + "Depth Wizard" + the lock button
 //           (locked: stays open and pushes the page; unlocked: closed, and
 //           hovering it opens it over the page until the pointer leaves)
 //   tabs    PAGES | JOBS (equal width, muted green underline on the active one)
-//   PAGES   DW Studio (page-workbench) / Demo / Home (web only: the landing page) / Docs (page-docs) with icons
-//           + "N jobs running"
+//   PAGES   DW Studio (page-workbench) / Demo / Home (web only: the landing page) with icons + "N jobs running"
 //   JOBS    the jobs list (rendered by main.js into the same element ids)
 //   footer  GitHub / email / LinkedIn / X links
 //   rail    drag to resize (SIDEBAR_MIN_W–SIDEBAR_MAX_W); dragging well below the
