@@ -8979,3 +8979,60 @@ body {
         grid-area: 2 / 1;
     }
 }
+
+/* Predicted height (Method 6, Tier 2 uploads only): legend + fixed badge over the 3D view while that layer is on,
+   and the probe's extra line. The ramp matches backend/generation/pipeline.py AGL_RAMP (viridis). */
+.xp-agl-legend {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    width: min(420px, calc(100% - 32px));
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(var(--bg-alt-rgb), 0.92);
+    border: 1px solid rgba(var(--text-rgb), 0.16);
+    color: rgb(var(--text-rgb));
+    font-size: 11px;
+    pointer-events: none;
+}
+
+.xp-agl-badge {
+    margin: 0 0 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(255, 176, 32, 0.14);
+    border: 1px solid rgba(255, 176, 32, 0.45);
+    line-height: 1.4;
+}
+
+.xp-agl-title {
+    margin-bottom: 4px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.xp-agl-ramp {
+    height: 10px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #440154, #3b528b, #21918c, #5ec962, #fde725);
+}
+
+.xp-agl-scale {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+}
+
+.xp-probe-agl {
+    margin: 8px 0 0;
+    font-size: 12px;
+}
+
+.xp-agl-legend[hidden],
+.xp-probe-agl[hidden] {
+    display: none;
+}

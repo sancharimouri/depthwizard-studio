@@ -8,6 +8,8 @@ Writes into <DW2_GENERATED_DIR or data/generated>/<job id>/ the viewer's exact c
   elevation.png       the TERRAIN DEM, colour-ramped (the ramp of scripts/prepare_elevation_texture.py)
   terrain.json        mesh heights from the SURFACE model (DSM) when there is one, else the terrain
   meta.json           which sources were used, and why
+  predicted_height.png / .json   Tier 2 uploads only: Method 6's predicted height above ground (a separate layer;
+                      the terrain mesh still comes from the DEM)
 Elevation always comes from a real elevation model, never from the image (CLAUDE.md framing):
   library item with a bundled pack (desktop/tiles/build_dem_pack.py): its FABDEM + GLO-30 / VHR DSM
   upload / Search Online scene: its attached DEM (user DEM or FABDEM) + live GLO-30 surface;
@@ -53,7 +55,8 @@ def generated_dir() -> Path:
 
 def job_path(job_id: str, name: str) -> Path:
     if not job_id.isalnum() or name not in {"satellite.png", "relative_depth.png", "elevation.png",
-                                            "terrain.json", "meta.json"}:
+                                            "terrain.json", "meta.json", "predicted_height.png",
+                                            "predicted_height.json"}:
         raise GenerationError("unknown generated asset")
     path = generated_dir() / job_id / name
     tmp_cap.touch(path.parent)  # "last used" for the /tmp cap
@@ -192,14 +195,44 @@ def _colour_ramp(z: np.ndarray) -> Image.Image:
     return Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8), "RGB")
 
 
-def _depth_png(resp: dict) -> Image.Image:
-    from PIL import Image
+def _decode(resp: dict) -> np.ndarray:
+    """A "u16-zlib" grid (or older raw float32) back to float32 values."""
     h, w = resp["shape"]
     raw = base64.b64decode(resp["data_b64"])
     if resp.get("encoding") == "u16-zlib":
-        d = np.frombuffer(zlib.decompress(raw), "<u2").astype(np.float32).reshape(h, w)
-    else:
-        d = np.frombuffer(raw, "<f4").reshape(h, w)
+        q = np.frombuffer(zlib.decompress(raw), "<u2").astype(np.float32).reshape(h, w)
+        return resp["min"] + q / 65535 * (resp["max"] - resp["min"])
+    return np.frombuffer(raw, "<f4").reshape(h, w)
+
+
+# Predicted height (Method 6): viridis, 0 m to the tile's top; the legend in frontend/src/main.js uses the same stops.
+AGL_RAMP = np.array([[0.00, 0.267, 0.005, 0.329], [0.25, 0.231, 0.322, 0.545], [0.50, 0.129, 0.569, 0.549],
+                     [0.75, 0.369, 0.788, 0.384], [1.00, 0.992, 0.906, 0.145]])
+AGL_GRID_MAX = 256  # side of the probe grid in predicted_height.json
+
+
+def _write_agl(out: Path, agl: dict) -> dict:
+    from PIL import Image
+    h = np.maximum(_decode(agl["agl"]), 0)  # below-ground predictions are shown as ground
+    top = max(float(h.max()), 1.0)
+    n = h / top
+    rgb = np.stack([np.interp(n, AGL_RAMP[:, 0], AGL_RAMP[:, c + 1]) for c in range(3)], -1)
+    Image.fromarray((rgb * 255).astype(np.uint8), "RGB").save(out / "predicted_height.png", optimize=True)
+    f = max(1, -(-max(h.shape) // AGL_GRID_MAX))
+    g = np.asarray(Image.fromarray(h).resize((max(1, h.shape[1] // f), max(1, h.shape[0] // f)), Image.BILINEAR))
+    q = np.round(g / top * 65535).astype("<u2")
+    (out / "predicted_height.json").write_text(json.dumps({
+        "width": g.shape[1], "height": g.shape[0], "min": 0.0, "max": top, "encoding": "u16-zlib",
+        "data_b64": base64.b64encode(zlib.compress(q.tobytes(), 6)).decode("ascii")}))
+    sigma = _decode(agl["sigma"])
+    return {"ran": True, "model": agl.get("model"), "note": agl.get("note"), "gsd_m": agl.get("gsd_m"),
+            "tiles": agl.get("tiles"), "infer_s": agl.get("infer_s"), "max_m": round(top, 1),
+            "median_m": round(float(np.median(h)), 1), "median_sigma_m": round(float(np.median(sigma)), 1)}
+
+
+def _depth_png(resp: dict) -> Image.Image:
+    from PIL import Image
+    d = _decode(resp)
     lo, hi = float(d.min()), float(d.max())
     g = ((d - lo) / (hi - lo) * 255 if hi > lo else np.zeros_like(d)).astype(np.uint8)
     return Image.fromarray(g, "L")  # same min-max grayscale as backend/depth/depth_engine.save_depth_png
@@ -212,15 +245,19 @@ def _mesh_hw(shape) -> tuple[int, int]:
 
 # ----------------------------------------------------------------------------- job
 def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item: dict | None = None,
-             input_meta: dict | None = None, input_dir: Path | None = None) -> dict:
+             input_meta: dict | None = None, input_dir: Path | None = None, agl: dict | None = None) -> dict:
     tmp_cap.maybe_sweep()
     job_id = uuid.uuid4().hex
     out = generated_dir() / job_id
     out.mkdir(parents=True, exist_ok=True)
     # the new job and its input are held until written (the /tmp cap never deletes them mid-request)
     with tmp_cap.in_use(out, input_dir):
-        return _generate(kind, item_id, preview, depth_resp, job_id, out, item=item, input_meta=input_meta,
+        meta = _generate(kind, item_id, preview, depth_resp, job_id, out, item=item, input_meta=input_meta,
                          input_dir=input_dir)
+        if agl is not None:
+            meta["agl"] = _write_agl(out, agl) if agl.get("ran") else agl
+            (out / "meta.json").write_text(json.dumps(meta, indent=1))
+        return meta
 
 
 def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id: str, out: Path, *,
@@ -232,7 +269,7 @@ def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id:
 
     elev = _library_elevation(item) if kind == "library" else _input_elevation(input_meta, input_dir)
     meta = {"job": job_id, "input": {"kind": kind, "id": item_id}, "has_elevation": elev is not None,
-            "depth": {k: depth_resp.get(k) for k in ("model", "device", "infer_s", "encoding", "host", "baked")}}
+            "depth": {k: depth_resp.get(k) for k in ("model", "device", "infer_s", "encoding", "host", "baked", "fallback")}}
     if elev is None:
         # no georeference: no elevation model exists for this input; a flat plane carries the textures
         w, h = img.size

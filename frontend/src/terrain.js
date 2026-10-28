@@ -706,6 +706,12 @@ export function createTerrain(
     }
 
 
+    // An extra draped layer (e.g. "agl-3d", Method 6's predicted height): its texture on the extruded terrain.
+    function addLayer(layer, texture) {
+        LAYER_TEXTURES[layer] = texture;
+        EXTRUDED_LAYERS.add(layer);
+    }
+
     function setLayer(layer) {
 
         material.map =
@@ -883,6 +889,7 @@ export function createTerrain(
         material,
 
         setLayer,
+        addLayer,
 
         attachStructure,
         structure: () => structure,

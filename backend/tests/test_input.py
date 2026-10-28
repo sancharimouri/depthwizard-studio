@@ -1,4 +1,4 @@
-"""Page 1 input routes: GSD read from the geotransform, tier routing at 2.4 m,
+"""Page 1 input routes: GSD read from the geotransform, tier routing at 0.6 m,
 user-DEM validation. FABDEM (Earth Engine) is exercised separately, live."""
 
 import io
@@ -47,7 +47,8 @@ def test_vhr_geotiff_routes_to_tier2_with_dem_choice():
 
 
 def test_boundary_and_coarse():
-    assert _upload("b.tif", _tif(2.4)).json()["routing"]["tier"] == 2
+    assert _upload("b.tif", _tif(0.6)).json()["routing"]["tier"] == 2
+    assert _upload("c.tif", _tif(1.2)).json()["routing"]["tier"] == 1
     coarse = _upload("s2.tif", _tif(10)).json()
     assert coarse["routing"]["tier"] == 1 and "FABDEM" in coarse["routing"]["summary"]
 

@@ -6,16 +6,17 @@ once sourced, dem.tif + dem_preview.png. Session storage only: nothing here is
 tied to a user account, and the folder is not cleaned up automatically.
 
 Tier routing (the product's two processing tiers):
-  GSD <= 2.4 m  -> Tier 2 candidate (height prediction). The user supplies a DEM
-                   or has FABDEM fetched for them.
-  GSD  > 2.4 m  -> Tier 1 (DEM only). FABDEM is fetched automatically; no height
+  GSD <= 0.6 m  -> Tier 2 (height prediction). The user supplies a DEM or has
+                   FABDEM fetched for them, and Method 6 adds its predicted height
+                   above ground (backend/api/generation_routes.py).
+  GSD  > 0.6 m  -> Tier 1 (DEM only). FABDEM is fetched automatically; no height
                    prediction is attempted.
   no georeference (PNG/JPG, or a GeoTIFF without a CRS/transform)
                 -> GSD unknown and no location to fetch a DEM for: relative-depth
                    preview only (placeholder — no metric output).
-2.4 m is the project's tested VHR boundary for real imagery. (A synthetic
-degradation test on one sensor held up to 5 m; real sensors weren't tested
-between 2.4 and 10 m, so 2.4 m is the conservative, evidence-backed limit.)
+0.6 m (2026-10-29, was 2.4 m): Method 6 is trained at 0.3 m and collapses on coarser imagery at its own
+pixel count (Pearson 0.745 at 0.3 m, 0.187 at 1.2 m; resolution-transfer.md, protocol P). The model service
+resamples to 0.3 m, so 0.6 m keeps that to at most 4x the pixels (docker/model/app.py).
 """
 
 from __future__ import annotations
@@ -40,7 +41,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # DW2_UPLOADS_DIR: a writable per-user folder when the backend runs from a read-only
 # install (the desktop app, desktop/freeze_trial/dw2_entry.py); default for dev.
 UPLOADS = Path(os.environ["DW2_UPLOADS_DIR"]) if os.environ.get("DW2_UPLOADS_DIR") else ROOT / "data" / "uploads"
-TIER2_MAX_GSD_M = 2.4
+TIER2_MAX_GSD_M = 0.6  # the model service's AGL_MAX_GSD_M (docker/model/app.py)
 MANUAL_GSD_RANGE_M = (0.01, 1000.0)  # a GSD typed in by the user (images with no geotransform)
 MIN_DEM_OVERLAP = 0.9
 ALLOWED_EXT = {".tif", ".tiff", ".png", ".jpg", ".jpeg"}
@@ -348,7 +349,7 @@ def _attach_user_dem(input_id: str, filename: str, stream, max_bytes: int = 512 
     if not meta.get("georeferenced"):
         raise InputError("The image has no georeference, so a DEM can't be aligned to it.")
     if meta["routing"].get("tier") != 2:
-        raise InputError("A user DEM is only used for Tier 2 (≤ 2.4 m) images; this one uses FABDEM.")
+        raise InputError(f"A user DEM is only used for Tier 2 (≤ {TIER2_MAX_GSD_M} m) images; this one uses FABDEM.")
     if Path(filename or "").suffix.lower() not in {".tif", ".tiff"}:
         raise InputError("The DEM must be a GeoTIFF (.tif/.tiff).")
     import rasterio

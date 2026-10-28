@@ -565,7 +565,7 @@ export function createInputView(root, { onStart }) {
                     )),
             );
         } else if (sel.routing.tier === 2) {
-            // GSD <= 2.4 m: the user chooses — their own DEM, or FABDEM fetched for them.
+            // GSD <= 0.6 m (Tier 2): the user chooses — their own DEM, or FABDEM fetched for them.
             const demInput = el("input", { type: "file", accept: ".tif,.tiff", hidden: true });
             demInput.addEventListener("change", () => {
                 if (demInput.files?.[0]) {
@@ -1144,7 +1144,7 @@ export function createInputView(root, { onStart }) {
             const sel = selectionFromInput(meta, "upload");
             select(sel);
             if (sel.routing.tier === 1) {
-                fetchFabdem(sel); // > 2.4 m: automatic, no choice offered
+                fetchFabdem(sel); // > 0.6 m: automatic, no choice offered
             }
         } catch (error) {
             uploadStatus.className = "iv-status is-error";

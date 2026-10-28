@@ -108,7 +108,7 @@ function iconButton(parent, { name, iconName, cls = "", tipBelow = false, disabl
 }
 
 export function createExpandedChrome({
-    box, canvas, viewer, tool, getRegionKey, setLayer, getLayer, getTheme, setTheme, nav,
+    box, canvas, viewer, tool, getRegionKey, setLayer, getLayer, getTheme, setTheme, nav, hasLayer = () => true,
 }) {
     // ------------------------------------------------------------------ state (session-only)
     const library = { points: [], lines: [], areas: [], screenshots: [], recordings: [] };
@@ -373,7 +373,7 @@ export function createExpandedChrome({
     optCont.addEventListener("click", () => { closeAll(); tool.setMode(MODES.CONTINUOUS); });
 
     const viewMenu = popover(viewWrap, "xv-menu xv-above");
-    for (const [layer, label] of [["satellite-3d", "RGB (True Colour)"], ["dsm-3d", "DSM (relative depth)"], ["elevation-3d", "DEM elevation"], ["wireframe-3d", "Wireframe"]]) {
+    for (const [layer, label] of [["satellite-3d", "RGB (True Colour)"], ["dsm-3d", "DSM (relative depth)"], ["elevation-3d", "DEM elevation"], ["wireframe-3d", "Wireframe"], ["agl-3d", "Predicted height"]]) {
         const b = el("button", { type: "button", role: "menuitemradio", "data-layer": layer, text: label }, viewMenu);
         b.addEventListener("click", () => { closeAll(); setLayer(layer); syncToolbar(); });
     }
@@ -530,7 +530,10 @@ export function createExpandedChrome({
         optTwo.setAttribute("aria-checked", String(mode === MODES.TWO_POINT));
         optCont.setAttribute("aria-checked", String(mode === MODES.CONTINUOUS));
         const layer = getLayer();
-        viewMenu.querySelectorAll("button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.layer === layer)));
+        viewMenu.querySelectorAll("button").forEach(b => {
+            b.setAttribute("aria-checked", String(b.dataset.layer === layer));
+            b.hidden = !hasLayer(b.dataset.layer);
+        });
         const canSave = tool.model.chains.some(c => c.points.length >= 2);
         saveBtn.classList.toggle("is-muted", !canSave);
         const total = CATEGORIES.reduce((n, c) => n + library[c.key].length, 0);

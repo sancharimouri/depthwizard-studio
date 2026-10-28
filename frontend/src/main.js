@@ -833,6 +833,15 @@ async function computeJobGeneration(job) {
         const d = g.depth ?? {};
         queueCalcLogLine(job, `Relative depth: DAv2-Small on ${String(d.device ?? "?").toUpperCase()}, `
             + `${(d.shape ?? []).join("×")}, ${d.infer_s}s inference (${d.encoding ?? "float32"}) via ${d.host ?? "inference host"}`);
+        if (d.fallback) {
+            queueCalcLogLine(job, d.fallback);
+        }
+        if (m.agl?.ran) {
+            queueCalcLogLine(job, `Predicted height above ground: Method 6 at ${m.agl.gsd_m} m/pixel, ${m.agl.tiles} tiles, `
+                + `${m.agl.infer_s}s (median ${m.agl.median_m} m, top ${m.agl.max_m} m, median uncertainty ±${m.agl.median_sigma_m} m)`);
+        } else if (m.agl?.reason) {
+            queueCalcLogLine(job, `No predicted height: ${m.agl.reason}`);
+        }
         if (m.has_elevation) {
             // measured facts only; no tier or elevation-model names in the processing page
             generationLogLines(m, job.gen.roundTripS).forEach(line => queueCalcLogLine(job, line));
@@ -2384,6 +2393,7 @@ function activateFinalDemoLayer(layer) {
     document.querySelectorAll("#final-demo-box .layer-button").forEach(button => {
         button.classList.toggle("active", button.dataset.layer === layer);
     });
+    syncAglLegend();
 
     const description = document.getElementById("final-demo-layer-description");
     if (description) {
@@ -2496,12 +2506,87 @@ async function showJobInFinalDemoInner(job) {
     if (active && active !== job) {
         return active.gen?.status === "ok" && active.status === "complete" ? showJobInFinalDemoInner(active) : null;
     }
+    await attachAglLayer(job, terrain);
     showBuildingCount("xp-buildings", job.input?.inputRef?.id);
     applyDefaultExaggeration(job);
     finalDemoHistory?.reset();
     renderSource(job);
     applyViewerMemory(job.viewMemory); // the user's own edits for this job, if any
     return terrain;
+}
+
+// Method 6's predicted height above ground (Tier 2 uploads at <= 0.6 m only; backend/generation/pipeline.py
+// _write_agl): an extra "agl-3d" layer draped on the DEM terrain (the mesh itself stays the DEM), its legend and
+// badge, and the probe's "Predicted height above ground" line, read from the job's 16-bit grid.
+const AGL_BADGE = "Model-predicted height above ground (Method 6). Validated on DFC2019 (US cities); "
+    + "did not generalise to the GAMUS benchmark.";
+let finalDemoAgl = null; // { width, height, max, values: Float32Array (m) } for the job on screen
+
+async function decodeU16Zlib(b64, n, max) {
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const raw = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"))).arrayBuffer();
+    const q = new Uint16Array(raw, 0, n);
+    return Float32Array.from(q, v => v / 65535 * max);
+}
+
+async function attachAglLayer(job, terrain) {
+    finalDemoAgl = null;
+    const a = job.gen?.assets;
+    if (a?.agl && a?.agl_grid) {
+        try {
+            const [texture, grid] = await Promise.all([
+                new THREE.TextureLoader().loadAsync(job.gen.textures.agl),
+                fetch(a.agl_grid).then(r => r.json()),
+            ]);
+            terrain.addLayer("agl-3d", texture);
+            finalDemoAgl = { ...grid, values: await decodeU16Zlib(grid.data_b64, grid.width * grid.height, grid.max) };
+        } catch (error) {
+            appendCalcLogLine(document.getElementById("calc-log-scroll"),
+                `Predicted height failed to load (${error?.message ?? error})`, job);
+        }
+    }
+    const probe = document.getElementById("xp-probe-agl");
+    if (probe) {
+        probe.hidden = !finalDemoAgl;
+    }
+    syncAglLegend();
+}
+
+// Predicted height (m) at a terrain grid position (the hover sample's x = column, y = row from the north edge).
+function aglAt(sample) {
+    const geo = finalDemoMeasureTool?.geo;
+    if (!finalDemoAgl || !sample || !geo) {
+        return null;
+    }
+    const { width, height, values } = finalDemoAgl;
+    const c = Math.round(sample.x / Math.max(1, geo.width - 1) * (width - 1));
+    const r = Math.round(sample.y / Math.max(1, geo.height - 1) * (height - 1));
+    return values[Math.min(height - 1, Math.max(0, r)) * width + Math.min(width - 1, Math.max(0, c))];
+}
+
+// Legend + badge over the 3D view while the Predicted height layer is on.
+function syncAglLegend() {
+    const box = document.getElementById("final-demo-box");
+    let el = document.getElementById("xp-agl-legend");
+    const on = Boolean(finalDemoAgl) && finalDemoCurrentLayer === "agl-3d";
+    if (!on) {
+        if (el) {
+            el.hidden = true;
+        }
+        return;
+    }
+    if (!el && box) {
+        el = document.createElement("div");
+        el.id = "xp-agl-legend";
+        el.className = "xp-agl-legend";
+        el.setAttribute("data-xv-ui", "");
+        box.append(el);
+    }
+    el.innerHTML = `<p class="xp-agl-badge">${AGL_BADGE}</p>`
+        + `<div class="xp-agl-title">Predicted height above ground</div>`
+        + `<div class="xp-agl-ramp" aria-hidden="true"></div>`
+        + `<div class="xp-agl-scale"><span>0 m</span><span>${(finalDemoAgl.max / 2).toFixed(0)} m</span><span>${finalDemoAgl.max.toFixed(0)} m</span></div>`;
+    el.hidden = false;
 }
 
 // The curated tile's default slider value (tile_manifest.json -> generate meta.default_exaggeration),
@@ -2690,6 +2775,13 @@ function initFinalDemoViewer(job) {
         dblclickToggle: true,
     });
     finalDemoMeasureTool.onHover(probeWriter("xp-probe-elev", "xp-probe-slope"));
+    finalDemoMeasureTool.onHover(sample => {
+        const out = document.getElementById("xp-probe-agl-value");
+        const h = aglAt(sample);
+        if (out) {
+            out.textContent = h == null ? "—" : `${h.toFixed(1)} m`;
+        }
+    });
     // Toolbar, library, terrain context menu, notes, screenshots, play/pause, theme.
     finalDemoChrome = createExpandedChrome({
         box: document.getElementById("final-demo-box"),
@@ -2703,6 +2795,7 @@ function initFinalDemoViewer(job) {
         nav: createNavActions(),
         getTheme: () => workbenchTheme,
         setTheme: applyWorkbenchTheme,
+        hasLayer: layer => layer !== "agl-3d" || Boolean(finalDemoAgl),
     });
     if (import.meta.env?.DEV) {
         window.__dwMeasureTool = finalDemoMeasureTool; // dev-only hooks for the headless tests

@@ -9,6 +9,11 @@ The host comes from the environment, read on every request:
                        serving POST /predict (the desktop app's local ONNX server,
                        bridge/dav2_server_onnx.py).
 
+  DW2_MODEL_URL        optional: the Cloud Run model service (docker/model/app.py). When set it is called FIRST,
+                       with an ID token for this service's own service account (metadata server); on a
+                       timeout, an unreachable host or a 5xx it falls back to the host above. The response
+                       says which one answered ("host", plus "fallback" when the Space stood in).
+
 Space calls always carry HF_TOKEN as an explicit Authorization header. gradio_client's
 token= alone only authenticates the huggingface.co API calls, not the requests to
 *.hf.space (checked 2026-09-26), which would make them anonymous for ZeroGPU quota.
@@ -194,10 +199,12 @@ async def _call_space(sid: str, filename: str, body: bytes) -> dict:
 
 
 # ------------------------------------------------------------------ plain HTTP (desktop app's local server)
-async def _call_http(url: str, filename: str, body: bytes, content_type: str) -> dict:
+async def _call_http(url: str, filename: str, body: bytes, content_type: str, headers: dict | None = None,
+                     path: str = "/predict", data: dict | None = None) -> dict:
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT_S) as client:
-            r = await client.post(f"{url}/predict", files={"file": (filename, body, content_type)})
+            r = await client.post(f"{url}{path}", files={"file": (filename, body, content_type)}, data=data,
+                                  headers=headers)
     except httpx.HTTPError as exc:
         raise HTTPException(status_code=502, detail=f"Inference host unreachable ({type(exc).__name__}).") from exc
     if r.status_code != 200:
@@ -207,15 +214,56 @@ async def _call_http(url: str, filename: str, body: bytes, content_type: str) ->
 
 
 HOST_CALLS = {"n": 0}  # real depth-host calls made by this process (logged; baked library depth never counts)
+MODEL_HOST = "Cloud Run model service"  # how the UI names DW2_MODEL_URL (never the internal URL)
+
+
+def model_url() -> str:
+    return os.environ.get("DW2_MODEL_URL", "").strip().rstrip("/")
+
+
+_id_tokens: dict[str, tuple[str, float]] = {}
+
+
+def _id_token(audience: str) -> str:
+    """An ID token for this service's own service account (Cloud Run metadata server), reused for 50 minutes."""
+    tok, exp = _id_tokens.get(audience, ("", 0.0))
+    if time.time() < exp:
+        return tok
+    import google.auth.transport.requests
+    import google.oauth2.id_token
+    tok = google.oauth2.id_token.fetch_id_token(google.auth.transport.requests.Request(), audience)
+    _id_tokens[audience] = (tok, time.time() + 50 * 60)
+    return tok
+
+
+async def call_model(path: str, filename: str, body: bytes, content_type: str, data: dict | None = None) -> dict:
+    """POST to the model service with an ID token. Raises HTTPException (502 when there is no token or no host)."""
+    url = model_url()
+    try:
+        token = await asyncio.to_thread(_id_token, url)
+    except Exception as exc:  # noqa: BLE001 - no metadata server (local dev) or no credentials
+        raise HTTPException(status_code=502, detail=f"No ID token for the model service ({type(exc).__name__}).") from exc
+    return await _call_http(url, filename, body, content_type, {"Authorization": f"Bearer {token}"}, path, data)
 
 
 async def _forward(filename: str, body: bytes, content_type: str) -> dict:
+    log = logging.getLogger("uvicorn.error")
+    HOST_CALLS["n"] += 1
+    fallback = None
+    if model_url():
+        log.info("depth host call #%d -> %s (%s)", HOST_CALLS["n"], MODEL_HOST, filename)
+        try:
+            return {**await call_model("/predict", filename, body, content_type), "host": MODEL_HOST}
+        except HTTPException as exc:
+            if exc.status_code < 500:
+                raise
+            fallback = f"{MODEL_HOST} failed ({exc.detail}); the Hugging Face Space answered instead."
+            log.warning("depth host call #%d: %s", HOST_CALLS["n"], fallback)
     url = host()
     sid = space_id(url)
-    HOST_CALLS["n"] += 1
-    logging.getLogger("uvicorn.error").info("depth host call #%d -> %s (%s)", HOST_CALLS["n"], sid or url, filename)
+    log.info("depth host call #%d -> %s (%s)", HOST_CALLS["n"], sid or url, filename)
     out = await (_call_space(sid, filename, body) if sid else _call_http(url, filename, body, content_type))
-    return {**out, "host": sid or url}
+    return {**out, "host": sid or url, **({"fallback": fallback} if fallback else {})}
 
 
 # ------------------------------------------------------------------ routes
