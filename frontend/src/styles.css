@@ -2650,7 +2650,8 @@ kbd {
 }
 
 .xv-caret[data-count]:not([data-count=""])::before,
-.xv-notes-count[data-count]:not([data-count=""])::before {
+.xv-notes-count[data-count]:not([data-count=""])::before,
+.xv-rec[data-count]:not([data-count=""])::before {
     content: attr(data-count);
     position: absolute;
     top: -6px;
@@ -2903,7 +2904,21 @@ kbd {
     cursor: zoom-in;
 }
 
-.xv-thumb img {
+/* Recording: the button turns red while it records; its badge counts down the seconds left. */
+.xv-icon-btn.xv-rec.is-recording,
+.xv-icon-btn.xv-rec.is-recording:is(:hover, :focus-visible):not(:disabled) {
+    background: rgba(255, 77, 77, 0.18);
+    border-color: #ff4d4d;
+    color: #ff4d4d;
+}
+
+.xv-rec.is-recording[data-count]:not([data-count=""])::before {
+    background: #ff4d4d;
+    color: #fff;
+}
+
+.xv-thumb img,
+.xv-thumb video {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -3197,7 +3212,8 @@ kbd {
     flex: 1;
 }
 
-.xv-preview-panel img {
+.xv-preview-panel img,
+.xv-preview-panel video {
     display: block;
     max-width: 100%;
     max-height: 70vh;

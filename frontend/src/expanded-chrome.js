@@ -5,7 +5,7 @@
 //
 // ALL saved state here is SESSION-ONLY (in memory): there is no backend
 // storage, so everything is gone after a reload or Close. The UI says so.
-// Video recording is an explicit placeholder (disabled), not implemented.
+// Recording: up to 3 clips of at most 10 s each (client-side MediaRecorder), session-only like screenshots.
 //
 // Every element this module adds carries [data-xv-ui] so the measurement
 // tool ignores clicks on it; open popovers/dialogs carry [data-xv-popover]
@@ -71,6 +71,10 @@ const CATEGORIES = [
 const fmtM = m => (Math.abs(m) >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${m.toFixed(0)} m`);
 const fmtArea = a => (a >= 1e6 ? `${(a / 1e6).toFixed(3)} km²` : `${Math.round(a).toLocaleString()} m²`);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+const MEDIA = new Set(["screenshots", "recordings"]); // categories holding a file (object URL), not a terrain overlay
+const REC_SECONDS = 10; // longest recording
+const REC_MAX = 3; // recordings kept per session
 
 function el(tag, attrs = {}, parent = null, ns = null) {
     const node = ns ? document.createElementNS(ns, tag) : document.createElement(tag);
@@ -216,7 +220,7 @@ export function createExpandedChrome({
     const toolbar = el("div", { class: "xv-toolbar", role: "toolbar", "aria-label": "3D view tools", "data-xv-ui": "" }, box);
     const pointerBtn = iconButton(toolbar, { name: "Pointer", iconName: "cursor" });
     const shotBtn = iconButton(toolbar, { name: "Screenshot", iconName: "camera" });
-    const recBtn = iconButton(toolbar, { name: "Record", iconName: "video", disabled: true });
+    const recBtn = iconButton(toolbar, { name: "Record", iconName: "video", cls: "xv-rec" });
     const measureWrap = el("div", { class: "xv-wrap" }, toolbar);
     const measureBtn = iconButton(measureWrap, { name: "Measure", iconName: "ruler" });
     const viewWrap = el("div", { class: "xv-wrap" }, toolbar);
@@ -595,6 +599,9 @@ export function createExpandedChrome({
         if (cat === "screenshots") {
             return `${item.width}×${item.height} px · ${item.region} · ${item.createdAt.toLocaleTimeString()}`;
         }
+        if (cat === "recordings") {
+            return `${item.seconds.toFixed(1)} s · ${item.width}×${item.height} px · ${item.region} · ${item.createdAt.toLocaleTimeString()}`;
+        }
         return "";
     }
 
@@ -612,8 +619,8 @@ export function createExpandedChrome({
         if (!ok) {
             return;
         }
-        if (cat === "screenshots") {
-            library.screenshots.forEach(s => URL.revokeObjectURL(s.url));
+        if (MEDIA.has(cat)) {
+            library[cat].forEach(s => URL.revokeObjectURL(s.url));
         }
         library[cat].length = 0;
         toast(`Deleted all ${c.label.toLowerCase()}.`);
@@ -635,7 +642,7 @@ export function createExpandedChrome({
         if (!ok) {
             return;
         }
-        library.screenshots.forEach(s => URL.revokeObjectURL(s.url));
+        [...library.screenshots, ...library.recordings].forEach(s => URL.revokeObjectURL(s.url));
         for (const c of CATEGORIES) {
             library[c.key].length = 0;
         }
@@ -704,21 +711,13 @@ export function createExpandedChrome({
         el("span", { html: icon(c.icon, 16) }, head);
         el("span", { text: c.label }, head);
         const items = library[c.key];
-        if (c.key === "recordings") {
-            el("div", {
-                class: "xv-empty",
-                text: "Video recording isn't available yet — it needs capture and encoding support that doesn't exist in this project. Use Screenshot for now.",
-            }, flyout);
-            const b = el("button", { type: "button", class: "xv-text-btn", disabled: "", text: "Start recording (not yet available)" }, flyout);
-            b.setAttribute("aria-disabled", "true");
-            return;
-        }
         if (!items.length) {
             const how = {
                 points: "Right-click the terrain in pointer mode and choose “Save point”.",
                 lines: "Measure two points or an open chain, then click Save.",
                 areas: "Close a continuous chain into a shape, then click Save.",
                 screenshots: "Click the camera button to capture the view.",
+                recordings: `Click the record button to capture up to ${REC_SECONDS} s of the view (${REC_MAX} per session).`,
             }[c.key];
             el("div", { class: "xv-empty", text: `Nothing saved yet. ${how}` }, flyout);
             return;
@@ -726,9 +725,13 @@ export function createExpandedChrome({
         const ul = el("ul", { class: "xv-fly-list" }, flyout);
         for (const item of items) {
             const li = el("li", { class: "xv-fly-item" }, ul);
-            if (c.key === "screenshots") {
+            if (MEDIA.has(c.key)) {
                 const thumb = el("button", { type: "button", class: "xv-thumb", "aria-label": `Preview ${item.name}` }, li);
-                el("img", { src: item.url, alt: item.name }, thumb);
+                if (c.key === "screenshots") {
+                    el("img", { src: item.url, alt: item.name }, thumb);
+                } else {
+                    el("video", { src: item.url, muted: "", preload: "metadata", "aria-hidden": "true" }, thumb);
+                }
                 thumb.addEventListener("click", () => openPreview(item));
             } else {
                 const lab = el("label", { class: "xv-switch", "data-tip": item.visible ? "Hide on terrain" : "Show on terrain" }, li);
@@ -744,10 +747,10 @@ export function createExpandedChrome({
             const text = el("div", { class: "xv-fly-text" }, li);
             el("div", { class: "xv-fly-name", text: item.name }, text);
             el("div", { class: "xv-fly-meta", html: itemMeta(c.key, item) }, text);
-            if (c.key === "screenshots") {
+            if (MEDIA.has(c.key)) {
                 const dl = el("a", {
                     class: "xv-icon-btn xv-sm", href: item.url, download: item.fileName,
-                    "aria-label": `Download ${item.name}`, "data-tip": "Download PNG", html: icon("download", 16),
+                    "aria-label": `Download ${item.name}`, "data-tip": `Download ${item.format}`, html: icon("download", 16),
                 }, li);
                 dl.addEventListener("click", e => e.stopPropagation());
             }
@@ -759,7 +762,7 @@ export function createExpandedChrome({
                 const i = library[c.key].indexOf(item);
                 if (i >= 0) {
                     library[c.key].splice(i, 1);
-                    if (c.key === "screenshots") {
+                    if (MEDIA.has(c.key)) {
                         URL.revokeObjectURL(item.url);
                     }
                 }
@@ -771,21 +774,29 @@ export function createExpandedChrome({
     }
 
     // ------------------------------------------------------------------ screenshot (real, client-side)
-    const preview = el("div", { class: "upload-modal xv-preview", "data-xv-popover": "", "data-xv-ui": "", hidden: "", role: "dialog", "aria-modal": "true", "aria-label": "Screenshot preview" }, box);
+    const preview = el("div", { class: "upload-modal xv-preview", "data-xv-popover": "", "data-xv-ui": "", hidden: "", role: "dialog", "aria-modal": "true", "aria-label": "Preview" }, box);
     const previewBackdrop = el("div", { class: "upload-backdrop" }, preview);
     const previewPanel = el("div", { class: "xv-preview-panel" }, preview);
     function openPreview(item) {
         previewPanel.replaceChildren();
         const head = el("div", { class: "xv-preview-head" }, previewPanel);
         el("div", { class: "xv-fly-name", text: `${item.name} · ${item.width}×${item.height} px` }, head);
-        el("a", { class: "xv-text-btn", href: item.url, download: item.fileName, html: `${icon("download", 16)} Download PNG` }, head);
+        el("a", { class: "xv-text-btn", href: item.url, download: item.fileName, html: `${icon("download", 16)} Download ${item.format}` }, head);
         const close = el("button", { type: "button", class: "xv-icon-btn xv-sm", "aria-label": "Close preview", "data-tip": "Close", html: icon("x", 18) }, head);
-        close.addEventListener("click", () => { preview.hidden = true; });
-        el("img", { src: item.url, alt: item.name }, previewPanel);
+        close.addEventListener("click", closePreview);
+        if (item.format === "PNG") {
+            el("img", { src: item.url, alt: item.name }, previewPanel);
+        } else {
+            el("video", { src: item.url, controls: "", autoplay: "", playsinline: "", "aria-label": item.name }, previewPanel);
+        }
         preview.hidden = false;
         close.focus();
     }
-    previewBackdrop.addEventListener("click", () => { preview.hidden = true; });
+    function closePreview() {
+        preview.hidden = true;
+        previewPanel.replaceChildren(); // stops a playing recording
+    }
+    previewBackdrop.addEventListener("click", closePreview);
 
     function drawSelectionOnto(ctx, scale) {
         // Same visuals as the live overlay: measurement selection (red),
@@ -878,6 +889,7 @@ export function createExpandedChrome({
                 region,
                 createdAt: stamp,
                 fileName: `depthwizard-${region}-${stamp.toISOString().replace(/[:.]/g, "-").slice(0, 19)}.png`,
+                format: "PNG",
                 visible: false,
             });
             box.classList.add("xv-flash");
@@ -886,7 +898,104 @@ export function createExpandedChrome({
             renderLibrary();
         }, "image/png");
     });
-    recBtn.addEventListener("click", () => toast("Video recording isn't available yet — use Screenshot for now."));
+
+    // ------------------------------------------------------------------ recording (real, client-side)
+    // Each frame is a fresh render drawn onto a 2D canvas with the same overlays as a screenshot (capped at 1920 px
+    // wide); MediaRecorder encodes that canvas's stream, as MP4 where the browser can, else WebM. It stops by itself
+    // after REC_SECONDS, or on a second click; the badge counts down the seconds left.
+    const REC_TYPES = [["video/mp4;codecs=avc1", "MP4"], ["video/mp4", "MP4"], ["video/webm;codecs=vp9", "WebM"], ["video/webm", "WebM"]];
+    const recType = typeof MediaRecorder !== "undefined" && REC_TYPES.find(([t]) => MediaRecorder.isTypeSupported(t));
+    let rec = null;
+
+    function setRecName(name) {
+        recBtn.setAttribute("aria-label", name);
+        recBtn.dataset.tip = name;
+    }
+
+    function startRecording() {
+        if (!recType) {
+            toast("Video recording isn't supported in this browser.", "error");
+            return;
+        }
+        if (library.recordings.length >= REC_MAX) {
+            toast(`You can keep ${REC_MAX} recordings per session. Delete one in Saved items to record again.`, "error");
+            return;
+        }
+        closeAll();
+        const scale = Math.min(1, 1920 / canvas.width);
+        const out = document.createElement("canvas");
+        out.width = Math.round((canvas.width * scale) / 2) * 2; // even sizes, as H.264 needs
+        out.height = Math.round((canvas.height * scale) / 2) * 2;
+        const ctx = out.getContext("2d");
+        const chunks = [];
+        const recorder = new MediaRecorder(out.captureStream(30), { mimeType: recType[0], videoBitsPerSecond: 8e6 });
+        const r = { recorder, raf: 0, tick: 0, timer: 0, startedAt: performance.now(), region: getRegionKey() || "terrain" };
+        const drawFrame = () => {
+            viewer.render(); // read the WebGL buffer in the same task as a fresh render, as the screenshot does
+            ctx.drawImage(canvas, 0, 0, out.width, out.height);
+            drawSelectionOnto(ctx, out.width / canvas.clientWidth);
+            r.raf = requestAnimationFrame(drawFrame);
+        };
+        recorder.ondataavailable = e => {
+            if (e.data.size) {
+                chunks.push(e.data);
+            }
+        };
+        recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: recType[0].split(";")[0] });
+            if (!blob.size) {
+                toast("Recording failed — the browser produced no video.", "error");
+                return;
+            }
+            const seconds = Math.min(REC_SECONDS, (r.stoppedAt - r.startedAt) / 1000);
+            const stamp = new Date();
+            library.recordings.push({
+                id: nextId++,
+                name: `Recording ${library.recordings.length + 1}`,
+                url: URL.createObjectURL(blob),
+                blob,
+                width: out.width,
+                height: out.height,
+                seconds,
+                region: r.region,
+                createdAt: stamp,
+                fileName: `depthwizard-${r.region}-${stamp.toISOString().replace(/[:.]/g, "-").slice(0, 19)}.${recType[1].toLowerCase()}`,
+                format: recType[1],
+                visible: false,
+            });
+            toast(`Recording saved to Library → Recordings (session only). ${seconds.toFixed(1)} s, ${out.width}×${out.height} px.`);
+            renderLibrary();
+        };
+        drawFrame();
+        recorder.start();
+        r.tick = setInterval(() => {
+            recBtn.dataset.count = String(Math.max(1, Math.ceil(REC_SECONDS - (performance.now() - r.startedAt) / 1000)));
+        }, 200);
+        r.timer = setTimeout(stopRecording, REC_SECONDS * 1000);
+        rec = r;
+        recBtn.dataset.count = String(REC_SECONDS);
+        recBtn.classList.add("is-recording");
+        recBtn.setAttribute("aria-pressed", "true");
+        setRecName("Stop recording");
+    }
+
+    function stopRecording() {
+        const r = rec;
+        if (!r) {
+            return;
+        }
+        rec = null;
+        r.stoppedAt = performance.now();
+        cancelAnimationFrame(r.raf);
+        clearInterval(r.tick);
+        clearTimeout(r.timer);
+        recBtn.dataset.count = "";
+        recBtn.classList.remove("is-recording");
+        recBtn.setAttribute("aria-pressed", "false");
+        setRecName("Record");
+        r.recorder.stop();
+    }
+    recBtn.addEventListener("click", () => (rec ? stopRecording() : startRecording()));
 
     // ------------------------------------------------------------------ terrain right-click menu (pointer mode)
     const ctxMenu = popover(box, "xv-ctx");
