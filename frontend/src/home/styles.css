@@ -648,7 +648,7 @@ button { font: inherit; }
    as the hero button's ghost, glowing exactly like it on hover (owner) */
 .demo__row { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
 .chapters { padding: 0; gap: 0; background: transparent; }
-.chapters li { grid-template-columns: 60px 1fr; padding: 13px 0; border-top: 1px solid var(--line); }
+.chapters li { grid-template-columns: 60px 1fr; padding: 7px 0; border-top: 1px solid var(--line); }   /* 10 chapters (2026-10-29): 7px rows, no gap, 13px text, so the list fits beside the video (was 13px + 14px gap, 14px) */
 .chapters li:last-child { border-bottom: 1px solid var(--line); }
 .chapters__t { color: var(--teal); }
 .actions { margin-top: 32px; gap: 14px; }
@@ -942,7 +942,7 @@ html:has(.chart-dialog[open]) { overflow: hidden; }   /* the page stays put behi
 .demo-video__poster:hover .demo-video__play, .demo-video__poster:focus-visible .demo-video__play { transform: scale(1.08); background-color: var(--teal-strong); }
 .is-open .demo-video__play, .demo-video__poster.is-open:hover .demo-video__play { transform: scale(0); opacity: 0; }
 body:has(.demo-video__player:hover) .cursor-layer { opacity: 0; }
-.chapters { margin: 0; padding: 20px 0 20px 24px; background: var(--bg); list-style: none; display: grid; gap: 14px; font: 300 14px/1.45 "Sora", sans-serif; color: var(--text-2); }
+.chapters { margin: 0; padding: 20px 0 20px 24px; background: var(--bg); list-style: none; display: grid; gap: 0; font: 300 13px/1.4 "Sora", sans-serif; color: var(--text-2); }
 .chapters li { display: grid; grid-template-columns: 56px 1fr; }
 .chapters__t { font: 500 12px/1.7 var(--mono); color: var(--text-3); font-variant-numeric: tabular-nums; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 40px; }
