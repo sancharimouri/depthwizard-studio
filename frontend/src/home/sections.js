@@ -112,7 +112,7 @@ function setupCharts() {
 // (youtube-nocookie.com) loads only on that click (a facade: nothing from YouTube's player loads before) and starts playing
 // behind the shutter. Empty ID: the shutter reveals the "Recording in progress" placeholder. Opened by its deep link
 // (/#demo-video), the player loads at once and plays muted with captions (browsers allow muted autoplay).
-const DEMO_VIDEO_ID = '';
+const DEMO_VIDEO_ID = 'JjrGWxGnc6M';
 
 function setupDemoVideo() {
   const frame = document.querySelector('.demo-video');
@@ -131,7 +131,7 @@ function setupDemoVideo() {
   if (id && location.hash === '#demo-video') { frame.replaceChildren(player('autoplay=1&mute=1&playsinline=1&cc_load_policy=1')); return; }
   const poster = document.createElement('button');
   poster.type = 'button'; poster.className = 'demo-video__poster'; poster.setAttribute('aria-label', 'Play the demo video');
-  if (id) poster.style.setProperty('--poster', `url("https://i.ytimg.com/vi/${id}/hqdefault.jpg")`);
+  if (id) poster.style.setProperty('--poster', `url("https://i.ytimg.com/vi/${id}/maxresdefault.jpg")`);
   poster.innerHTML = '<span class="demo-video__half demo-video__half--top"></span><span class="demo-video__half demo-video__half--bottom"></span>'
     + '<span class="demo-video__line"></span><span class="demo-video__play"></span>';
   poster.addEventListener('click', () => {
