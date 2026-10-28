@@ -106,33 +106,45 @@ function setupCharts() {
   charts.forEach((c) => { near.observe(c); seen.observe(c); });
 }
 
-// Demo video (section 04, the protected #demo-video): the YouTube video's ID, the one setting. Empty: the frame keeps its
-// "Recording in progress" placeholder. Otherwise the frame shows the video's poster and a play button, and the player
-// (youtube-nocookie.com) loads only on a click (a facade: nothing from YouTube's player loads before), then plays. Opened by
-// its deep link (/#demo-video), the player loads at once and plays muted with captions (browsers allow muted autoplay).
+// Demo video (section 04, the protected #demo-video): the YouTube video's ID, the one setting. The frame always shows a teal
+// play button. A click opens the shutter (owner 2026-10-29): a teal line grows out from the button's sides across the frame's
+// middle, splits in two and the halves slide to the top and bottom edges, revealing the video. The player
+// (youtube-nocookie.com) loads only on that click (a facade: nothing from YouTube's player loads before) and starts playing
+// behind the shutter. Empty ID: the shutter reveals the "Recording in progress" placeholder. Opened by its deep link
+// (/#demo-video), the player loads at once and plays muted with captions (browsers allow muted autoplay).
 const DEMO_VIDEO_ID = '';
 
 function setupDemoVideo() {
   const frame = document.querySelector('.demo-video');
-  if (!frame || !DEMO_VIDEO_ID) return;
+  if (!frame) return;
   const id = encodeURIComponent(DEMO_VIDEO_ID);
-  const play = (params) => {
-    const player = document.createElement('iframe');
-    player.className = 'demo-video__player';
-    player.src = `https://www.youtube-nocookie.com/embed/${id}?${params}`;
-    player.title = 'Depth Wizard demo video';
-    player.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-    player.allowFullscreen = true;
-    player.referrerPolicy = 'strict-origin-when-cross-origin';
-    frame.replaceChildren(player);
+  const player = (params) => {
+    const p = document.createElement('iframe');
+    p.className = 'demo-video__player';
+    p.src = `https://www.youtube-nocookie.com/embed/${id}?${params}`;
+    p.title = 'Depth Wizard demo video';
+    p.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    p.allowFullscreen = true;
+    p.referrerPolicy = 'strict-origin-when-cross-origin';
+    return p;
   };
-  if (location.hash === '#demo-video') { play('autoplay=1&mute=1&playsinline=1&cc_load_policy=1'); return; }
+  if (id && location.hash === '#demo-video') { frame.replaceChildren(player('autoplay=1&mute=1&playsinline=1&cc_load_policy=1')); return; }
   const poster = document.createElement('button');
   poster.type = 'button'; poster.className = 'demo-video__poster'; poster.setAttribute('aria-label', 'Play the demo video');
-  poster.style.backgroundImage = `url("https://i.ytimg.com/vi/${id}/hqdefault.jpg")`;
-  poster.innerHTML = '<span class="demo-video__play" aria-hidden="true"></span>';
-  poster.addEventListener('click', () => play('autoplay=1&playsinline=1'), { once: true });
-  frame.replaceChildren(poster);
+  if (id) poster.style.setProperty('--poster', `url("https://i.ytimg.com/vi/${id}/hqdefault.jpg")`);
+  poster.innerHTML = '<span class="demo-video__half demo-video__half--top"></span><span class="demo-video__half demo-video__half--bottom"></span>'
+    + '<span class="demo-video__line"></span><span class="demo-video__play"></span>';
+  poster.addEventListener('click', () => {
+    const video = id ? player('autoplay=1&playsinline=1') : null;
+    if (video) frame.replaceChildren(video, poster);
+    const done = () => { poster.remove(); video?.focus(); };
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { done(); return; }
+    poster.disabled = true;
+    void poster.offsetWidth;   // start the transitions from the closed state
+    poster.classList.add('is-open');
+    poster.addEventListener('transitionend', (e) => { if (e.target === poster && e.propertyName === 'opacity') done(); });
+  }, { once: true });
+  if (id) frame.replaceChildren(poster); else frame.append(poster);
 }
 
 // Feature and use-case cells in one row (owner 2026-10-17): the line under a title shows on hover (CSS) or on a click, tap,

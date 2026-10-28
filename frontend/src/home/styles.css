@@ -912,18 +912,35 @@ html:has(.chart-dialog[open]) { overflow: hidden; }   /* the page stays put behi
   content: ''; position: absolute; z-index: -1; left: 50%; top: 50%; width: 100vw; height: clamp(240px, 21vw, 300px);
   translate: -50% -50%; background: url('./art/elevation-profile.svg') center / 100% 100% no-repeat; opacity: .3; pointer-events: none;
 }
-.demo-video { display: grid; place-items: center; aspect-ratio: 16 / 9; border: 1px solid rgba(200, 210, 206, .18); background: var(--bg); padding: 24px; }
+.demo-video { position: relative; overflow: hidden; display: grid; place-items: center; aspect-ratio: 16 / 9; border: 1px solid rgba(200, 210, 206, .18); background: var(--bg); padding: 24px; }
 .demo-video__label { margin: 0; font: 400 12px/1.5 var(--mono); letter-spacing: .14em; text-transform: uppercase; text-align: center; color: rgba(200, 210, 206, .55); }
-/* The video (src/sections.js, DEMO_VIDEO_ID set): the poster and then the player fill the frame inside its line, so the frame
-   drops its padding only then; its size and line are unchanged. The poster is YouTube's thumbnail (cover crops its letterbox)
-   with a round teal play button; over the player the site's cursor hides (the player has its own). */
-.demo-video:has(> .demo-video__poster, > .demo-video__player) { padding: 0; }
-.demo-video__poster, .demo-video__player { width: 100%; height: 100%; border: 0; display: block; }
-.demo-video__poster { appearance: none; padding: 0; cursor: pointer; display: grid; place-items: center; background: var(--bg) center / cover no-repeat; }
-.demo-video__play { width: 76px; height: 76px; border-radius: 50%; background: rgba(5, 7, 7, .72); border: 1px solid rgba(117, 240, 214, .45);
-  box-shadow: 0 0 32px rgba(89, 217, 192, .25); display: grid; place-items: center; transition: transform .3s var(--ease-out), background-color .3s; }
-.demo-video__play::before { content: ''; margin-left: 5px; border-style: solid; border-width: 12px 0 12px 20px; border-color: transparent transparent transparent var(--teal-strong); }
-.demo-video__poster:hover .demo-video__play, .demo-video__poster:focus-visible .demo-video__play { transform: scale(1.08); background-color: rgba(5, 7, 7, .86); }
+/* The video (src/sections.js): the player fills the frame inside its line, so the frame drops its padding then; its size and
+   line are unchanged. The poster button covers the frame: YouTube's thumbnail (cover crops its letterbox; none before the
+   video ID is set) drawn twice, once per half, and a round teal play button. The shutter (.is-open, owner 2026-10-29): the
+   button shrinks away while a 2px teal line grows out from its sides to the frame's edges (.4s); at .42s the line splits
+   into the halves' own seam lines and the halves slide to the top and bottom edges (.7s), then the shutter fades (.25s) and
+   is removed, leaving the player. Over the player the site's cursor hides (the player has its own). */
+.demo-video:has(> .demo-video__player) { padding: 0; }
+.demo-video__player { width: 100%; height: 100%; border: 0; display: block; }
+.demo-video__poster { appearance: none; position: absolute; inset: 0; z-index: 1; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; transition: opacity .25s 1.12s; }
+.demo-video__poster.is-open { opacity: 0; cursor: default; }
+.demo-video__half { position: absolute; inset: 0; background: var(--bg) var(--poster, none) center / cover no-repeat; transition: transform .7s cubic-bezier(.7, 0, .2, 1) .42s; }
+.demo-video__half--top { clip-path: inset(0 0 50% 0); }
+.demo-video__half--bottom { clip-path: inset(50% 0 0 0); }
+.demo-video__half::after, .demo-video__line { content: ''; position: absolute; left: 0; right: 0; height: 2px; background: var(--teal-strong); box-shadow: 0 0 14px rgba(89, 217, 192, .75); opacity: 0; }
+.demo-video__half--top::after { top: calc(50% - 2px); }
+.demo-video__half--bottom::after { top: 50%; }
+.demo-video__line { top: calc(50% - 1px); clip-path: inset(0 calc(50% - 38px)); transition: clip-path .4s var(--ease-out); }
+.is-open .demo-video__line { clip-path: inset(0 0); animation: demo-line .42s step-end; }   /* shown until the halves' lines take over */
+@keyframes demo-line { from { opacity: 1; } to { opacity: 0; } }
+.is-open .demo-video__half::after { opacity: 1; transition: opacity 0s .42s; }
+.is-open .demo-video__half--top { transform: translateY(calc(-50% + 2px)); }
+.is-open .demo-video__half--bottom { transform: translateY(calc(50% - 2px)); }
+.demo-video__play { position: relative; width: 76px; height: 76px; border-radius: 50%; background: var(--teal);
+  box-shadow: 0 0 32px rgba(89, 217, 192, .35); display: grid; place-items: center; transition: transform .3s var(--ease-out), background-color .3s, opacity .25s; }
+.demo-video__play::before { content: ''; margin-left: 5px; border-style: solid; border-width: 12px 0 12px 20px; border-color: transparent transparent transparent var(--bg); }
+.demo-video__poster:hover .demo-video__play, .demo-video__poster:focus-visible .demo-video__play { transform: scale(1.08); background-color: var(--teal-strong); }
+.is-open .demo-video__play, .demo-video__poster.is-open:hover .demo-video__play { transform: scale(0); opacity: 0; }
 body:has(.demo-video__player:hover) .cursor-layer { opacity: 0; }
 .chapters { margin: 0; padding: 20px 0 20px 24px; background: var(--bg); list-style: none; display: grid; gap: 14px; font: 300 14px/1.45 "Sora", sans-serif; color: var(--text-2); }
 .chapters li { display: grid; grid-template-columns: 56px 1fr; }
