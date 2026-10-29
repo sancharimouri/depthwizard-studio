@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#59d9c0"/></marker><marker id="w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#d9b48a"/></marker></defs>
+<rect width="1280" height="640" rx="18" fill="#090d0c"/><rect x=".5" y=".5" width="1279" height="639" rx="18" fill="none" stroke="#252d29"/>
+<text x="40" y="48" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" fill="#59d9c0" text-anchor="start" letter-spacing="2.5">HOW A JOB RUNS</text>
+<text x="40" y="74" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="400" fill="#a9b3ae" text-anchor="start" letter-spacing="0">From any input to an explorable 3D scene. Wherever the image has a location, elevation comes from a real DEM.</text>
+<rect x="40" y="100" width="200" height="330" rx="14" fill="#0b0e0d" stroke="#252d29"/>
+<text x="56" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="600" fill="#59d9c0" text-anchor="start" letter-spacing="1.5">01</text>
+<text x="80" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#a9b3ae" text-anchor="start" letter-spacing="1.5">INPUT</text>
+<rect x="272" y="100" width="226" height="330" rx="14" fill="#0b0e0d" stroke="#252d29"/>
+<text x="288" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="600" fill="#59d9c0" text-anchor="start" letter-spacing="1.5">02</text>
+<text x="312" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#a9b3ae" text-anchor="start" letter-spacing="1.5">BACKEND · FASTAPI</text>
+<rect x="530" y="100" width="226" height="330" rx="14" fill="#0b0e0d" stroke="#252d29"/>
+<text x="546" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="600" fill="#59d9c0" text-anchor="start" letter-spacing="1.5">03</text>
+<text x="570" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#a9b3ae" text-anchor="start" letter-spacing="1.5">MODEL SERVICE · ONNX</text>
+<rect x="788" y="100" width="200" height="330" rx="14" fill="#0b0e0d" stroke="#252d29"/>
+<text x="804" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="600" fill="#59d9c0" text-anchor="start" letter-spacing="1.5">04</text>
+<text x="828" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#a9b3ae" text-anchor="start" letter-spacing="1.5">TERRAIN COMPOSER</text>
+<rect x="1020" y="100" width="220" height="330" rx="14" fill="#0b0e0d" stroke="#252d29"/>
+<text x="1036" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="600" fill="#d9b48a" text-anchor="start" letter-spacing="1.5">05</text>
+<text x="1060" y="126" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#a9b3ae" text-anchor="start" letter-spacing="1.5">3D STUDIO · THREE.JS</text>
+<rect x="56" y="150" width="168" height="70" rx="10" fill="#131715" stroke="#59d9c0" stroke-opacity=".75"/>
+<text x="140.0" y="183.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Upload</text>
+<text x="140.0" y="203.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">PNG · JPG · GeoTIFF</text>
+<rect x="56" y="236" width="168" height="70" rx="10" fill="#131715" stroke="#59d9c0" stroke-opacity=".75"/>
+<text x="140.0" y="269.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Sentinel-2</text>
+<text x="140.0" y="289.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">live search · CDSE</text>
+<rect x="56" y="322" width="168" height="70" rx="10" fill="#131715" stroke="#59d9c0" stroke-opacity=".75"/>
+<text x="140.0" y="355.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Tile library</text>
+<text x="140.0" y="375.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">74 curated scenes</text>
+<rect x="288" y="150" width="194" height="100" rx="10" fill="#131715" stroke="#59d9c0" stroke-opacity=".75"/>
+<text x="385.0" y="192.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Data manager</text>
+<text x="385.0" y="212.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">ingest · reproject</text>
+<text x="385.0" y="228.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">GSD check</text>
+<rect x="288" y="290" width="194" height="100" rx="10" fill="#131715" stroke="#252d29" stroke-opacity=".75"/>
+<text x="385.0" y="332.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Elevation</text>
+<text x="385.0" y="352.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">Copernicus GLO-30</text>
+<text x="385.0" y="368.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">FABDEM bare earth</text>
+<rect x="546" y="150" width="194" height="100" rx="10" fill="#131715" stroke="#59d9c0" stroke-opacity=".75"/>
+<text x="643.0" y="192.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Depth Anything V2-S</text>
+<text x="643.0" y="212.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">relative depth layer</text>
+<text x="643.0" y="228.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">every input</text>
+<rect x="546" y="290" width="194" height="100" rx="10" fill="#131715" stroke="#59d9c0" stroke-opacity=".75"/>
+<text x="643.0" y="332.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Method 6</text>
+<text x="643.0" y="352.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">height above ground</text>
+<text x="643.0" y="368.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">≤ 0.6 m/pixel only</text>
+<rect x="804" y="190" width="168" height="160" rx="10" fill="#131715" stroke="#59d9c0" stroke-opacity=".75"/>
+<text x="888.0" y="262.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Compose</text>
+<text x="888.0" y="282.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">DEM mesh</text>
+<text x="888.0" y="298.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">+ layers + provenance</text>
+<rect x="1036" y="170" width="188" height="80" rx="10" fill="#131715" stroke="#d9b48a" stroke-opacity=".75"/>
+<text x="1130.0" y="208.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Web app</text>
+<text x="1130.0" y="228.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">browser · no install</text>
+<rect x="1036" y="290" width="188" height="80" rx="10" fill="#131715" stroke="#d9b48a" stroke-opacity=".75"/>
+<text x="1130.0" y="328.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Desktop app</text>
+<text x="1130.0" y="348.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">Tauri · offline tiles</text>
+<path d="M244,265.0 L266,265.0" stroke="#59d9c0" stroke-width="1.6" fill="none" marker-end="url(#a)" />
+<path d="M502,265.0 L524,265.0" stroke="#59d9c0" stroke-width="1.6" fill="none" marker-end="url(#a)" />
+<path d="M760,265.0 L782,265.0" stroke="#59d9c0" stroke-width="1.6" fill="none" marker-end="url(#a)" />
+<path d="M992,265.0 L1014,265.0" stroke="#59d9c0" stroke-width="1.6" fill="none" marker-end="url(#a)" />
+<path d="M410,252 L410,286" stroke="#59d9c0" stroke-width="1.6" fill="none" marker-end="url(#a)" stroke-dasharray="3 4"/>
+<rect x="40" y="462" width="1200" height="140" rx="14" fill="#0b0e0d" stroke="#252d29" stroke-dasharray="5 5"/>
+<text x="56" y="490" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="600" fill="#d9b48a" text-anchor="start" letter-spacing="1.5">OFFLINE</text>
+<text x="124" y="490" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="500" fill="#a9b3ae" text-anchor="start" letter-spacing="1.5">TRAINING &amp; VALIDATION (KAGGLE GPU)</text>
+<rect x="56" y="508" width="170" height="74" rx="10" fill="#131715" stroke="#d9b48a" stroke-opacity=".75"/>
+<text x="141.0" y="543.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">DFC2019</text>
+<text x="141.0" y="563.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">lidar DSM pairs</text>
+<path d="M228,545 L252,545" stroke="#d9b48a" stroke-width="1.6" fill="none" marker-end="url(#w)" />
+<rect x="256" y="508" width="170" height="74" rx="10" fill="#131715" stroke="#d9b48a" stroke-opacity=".75"/>
+<text x="341.0" y="543.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Fine-tune</text>
+<text x="341.0" y="563.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">full DAv2-S · twin μ/σ</text>
+<path d="M428,545 L452,545" stroke="#d9b48a" stroke-width="1.6" fill="none" marker-end="url(#w)" />
+<rect x="456" y="508" width="170" height="74" rx="10" fill="#131715" stroke="#d9b48a" stroke-opacity=".75"/>
+<text x="541.0" y="543.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Export</text>
+<text x="541.0" y="563.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">ONNX · parity-checked</text>
+<path d="M628,545 L652,545" stroke="#d9b48a" stroke-width="1.6" fill="none" marker-end="url(#w)" />
+<rect x="656" y="508" width="170" height="74" rx="10" fill="#131715" stroke="#d9b48a" stroke-opacity=".75"/>
+<text x="741.0" y="543.0" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#e6ece8" text-anchor="middle" letter-spacing="0">Weights</text>
+<text x="741.0" y="563.0" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="400" fill="#7c8782" text-anchor="middle" letter-spacing="0">private model store</text>
+<text x="900" y="526" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" font-weight="600" fill="#59d9c0" text-anchor="start" letter-spacing="1.5">INDEPENDENT CHECKS</text>
+<text x="900" y="552" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12.5" font-weight="400" fill="#a9b3ae" text-anchor="start" letter-spacing="0">· DFC2019 held-out quadrants · 3 seeds</text>
+<text x="900" y="572" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12.5" font-weight="400" fill="#a9b3ae" text-anchor="start" letter-spacing="0">· GAMUS · 2,861 aerial tiles</text>
+<text x="900" y="592" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12.5" font-weight="400" fill="#a9b3ae" text-anchor="start" letter-spacing="0">· ICESat-2 · GEDI lidar (Sentinel-2)</text>
+<path d="M746,506 L640,396" stroke="#d9b48a" stroke-width="1.6" fill="none" marker-end="url(#w)" stroke-dasharray="4 4"/>
+</svg>

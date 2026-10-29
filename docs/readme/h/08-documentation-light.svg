@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="44" viewBox="0 0 1000 44">
+  <text x="0" y="28" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" font-weight="600" fill="#0f8f7a" letter-spacing="1">08</text>
+  <rect x="30" y="22" width="30" height="2" rx="1" fill="#0f8f7a"/>
+  <text x="74" y="29" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="15" font-weight="600" fill="#1f2328" letter-spacing="2.6">DOCUMENTATION</text>
+  <rect x="251" y="23" width="749" height="1" fill="#d0d7de"/>
+</svg>
