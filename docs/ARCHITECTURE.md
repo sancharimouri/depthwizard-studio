@@ -21,14 +21,16 @@ The tiers exist because of a research result: a learned height model works at ~0
 | Web frontend | Vite + three.js viewer: layer switching, orbit and fly (WASD) controls, measurement, Facts and scenario cards; Home (the landing page, imported from depthwizard-home) | `frontend/` |
 | Static tile library | The web build bakes every library tile (listing, meshes, textures, depth) into static files served with the site, so opening a library tile needs no backend call | `frontend/src/library-source.js` |
 | Backend | FastAPI container: uploads, live Sentinel-2 search, DEM fetch (GLO-30, FABDEM), per-job generation of the viewer's assets, Facts lookups | `backend/`, `docker/Dockerfile` |
-| Depth service | A Hugging Face Space running Depth Anything V2 Small on a shared GPU; the backend calls it for relative depth | `space/app.py` |
+| Model service | A Cloud Run container on ONNX Runtime (CPU): Depth Anything V2 Small for relative depth, and Method 6 for predicted height above ground on images at 0.6 m/pixel or finer. The backend calls it first; a Hugging Face Space running the same depth model is the fallback | `docker/model/`, `space/app.py` |
 | Desktop app | Tauri 2 shell around the same frontend, with the backend frozen (PyInstaller) as a local sidecar and DAv2-Small as ONNX, so it runs offline for local tiles | `desktop/`, [DESKTOP_APP.md](DESKTOP_APP.md) |
 
 ## One job, end to end
 
 1. **Input:** a library tile, a Sentinel-2 scene found by live search, or an upload (PNG, JPG or GeoTIFF).
 2. **Elevation:** the tile's DEM pack, the DEM attached to the upload, or live Copernicus GLO-30. A plain PNG/JPG
-   without georeference has no elevation, and the app says so and shows a flat plane.
+   without georeference has no DEM. Its 3D surface is then flat ground plus Method 6's predicted height above
+   ground when the image is 0.6 m/pixel or finer, or relief from relative depth (not to scale) otherwise. No
+   elevation values are invented, and the DEM elevation layer isn't offered.
 3. **Relative depth:** Depth Anything V2 on the image, shown as its own layer.
 4. **Assets:** `satellite.png`, `relative_depth.png`, `elevation.png`, `terrain.json` and `meta.json` (which sources
    were used, and why), written per job (`backend/generation/pipeline.py`).

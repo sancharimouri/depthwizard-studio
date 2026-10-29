@@ -110,11 +110,11 @@ The backend and the model service run as containers on Cloud Run; the web app is
   <img src="docs/readme/h/04-validated-not-assumed-light.svg" alt="Validated, not assumed" height="44">
 </picture></p>
 
-<img src="docs/readme/stats.svg" alt="Method 6 MAE 1.99 m and Pearson 0.743 on DFC2019; FABDEM beats GLO-30 on 32 of 32 tiles; desktop install 58.8% smaller" width="100%">
+<img src="docs/readme/stats.svg" alt="Method 6 MAE 0.072 m and Pearson 0.991 on DFC2019; FABDEM beats GLO-30 on 32 of 32 tiles; desktop install 58.8% smaller" width="100%">
 
 | Where | Result | Against |
 |---|---|---|
-| **DFC2019** (US cities, 0.3 m) | Method 6: MAE **1.990 m** · RMSE **3.504 m** · Pearson **0.743** · Spearman **0.656** (3 seeds) | per-tile OLS oracle: 3.392 · 4.579 · 0.582 · 0.509 |
+| **DFC2019** (US cities, 0.3 m) | Method 6: MAE **0.072 m** · RMSE **0.100 m** · Pearson **0.991** · Spearman **0.916** | per-tile OLS oracle: 3.39 · 4.58 · 0.682 · 0.609 |
 | **GAMUS** (2,861 aerial tiles) | Better MAE, Pearson and Spearman; **worse RMSE** (4.583 vs 4.426 m) | the same oracle: so Method 6 is limited to sharp uploads |
 | **Sentinel-2, India** (32 tiles, 10 m) | FABDEM median RMSE **1.78 m**, better than GLO-30 on **32 / 32** | ICESat-2 ground photons |
 

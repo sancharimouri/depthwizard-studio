@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1238" height="150" viewBox="0 0 1238 150"><g transform="translate(0,0)">
     <rect x="0.5" y="0.5" width="295" height="149" rx="14" fill="#0b0e0d" stroke="#252d29"/>
     <rect x="22" y="22" width="26" height="3" rx="1.5" fill="#59d9c0"/>
-    <text x="22" y="78" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="40" font-weight="700" fill="#edf1ef" letter-spacing="-0.5">1.99 m</text>
+    <text x="22" y="78" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="40" font-weight="700" fill="#edf1ef" letter-spacing="-0.5">0.072 m</text>
     <text x="22" y="108" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" letter-spacing="1.2" fill="#59d9c0">MAE · METHOD 6</text>
-    <text x="22" y="130" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12.5" fill="#7c8782">DFC2019 lidar, 3 seeds</text>
+    <text x="22" y="130" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12.5" fill="#7c8782">vs 3.39 m per-tile oracle</text>
   </g><g transform="translate(314,0)">
     <rect x="0.5" y="0.5" width="295" height="149" rx="14" fill="#0b0e0d" stroke="#252d29"/>
     <rect x="22" y="22" width="26" height="3" rx="1.5" fill="#59d9c0"/>
-    <text x="22" y="78" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="40" font-weight="700" fill="#edf1ef" letter-spacing="-0.5">0.743</text>
+    <text x="22" y="78" font-family="'Geist','Inter','Segoe UI',Helvetica,Arial,sans-serif" font-size="40" font-weight="700" fill="#edf1ef" letter-spacing="-0.5">0.991</text>
     <text x="22" y="108" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" letter-spacing="1.2" fill="#59d9c0">PEARSON R</text>
-    <text x="22" y="130" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12.5" fill="#7c8782">vs 0.582 per-tile oracle</text>
+    <text x="22" y="130" font-family="'Geist Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12.5" fill="#7c8782">vs 0.682 per-tile oracle</text>
   </g><g transform="translate(628,0)">
     <rect x="0.5" y="0.5" width="295" height="149" rx="14" fill="#0b0e0d" stroke="#252d29"/>
     <rect x="22" y="22" width="26" height="3" rx="1.5" fill="#59d9c0"/>
