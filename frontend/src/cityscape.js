@@ -25,7 +25,10 @@ const GROUND_STEP = 5; // m, ground mesh spacing (FABDEM is 10 m; finer so roads
 const MIN_FPS = 30;    // below this for a while: drop ambient occlusion, then shadows, then render at 3/4 resolution
 const STEPS = ["0.75x resolution", "shadows off"]; // the step taken on reaching each level
 const GRACE_MS = 2000; // frames right after a model shows (uploads, first draws) are not judged
-let deviceLevel = 2;   // the quality this device settled on: the next model starts there, so switching never re-steps
+let deviceLevel = 2;   // the quality this device settled on at rest: the next model starts there, so switching never re-steps
+const SPIN_MOVING = 0.2;   // rad/s: a step taken at or above this camera rotation speed was caused by the motion
+const SPIN_RECOVER = 0.25; // ...and is undone once the rotation slows to this fraction of its speed at the step
+const RECOVER_MS = 300;    // for this long
 // a turn of the event loop, so a long build doesn't freeze the page's animations
 const yieldToPage = () => new Promise(resolve => setTimeout(resolve));
 
@@ -336,8 +339,9 @@ export async function buildCityStructure(data, unitsPerMetre, renderer) {
 // While `frame` is visible: the viewer's own lights off, tone mapping and haze (no screen-space AO: the GTAO pass
 // drew the model near-black until the frame-rate check dropped it, 2026-10-12; the ground keeps its baked AO).
 // Quality steps down when the frame rate stays under MIN_FPS: first the sun's shadows,
-// then the render resolution (3/4).
-// ponytail: one-way step-down per model; a step back up would need hysteresis against the drop it causes.
+// then the render resolution (3/4). A step taken while the camera rotates (fast orbiting) is temporary: quality
+// comes back once the rotation slows to a quarter of its speed at the step, or stops. The hysteresis is that ratio
+// plus the 1.5 s slow-frame window before any step. A step taken at rest (a slow device) stays, as before.
 function createCityRenderer(viewer, frame, sun) {
     const { renderer, scene, camera } = viewer;
     const viewerLights = scene.children.filter(o => o.isLight);
@@ -345,22 +349,43 @@ function createCityRenderer(viewer, frame, sun) {
     const saved = {};
     let active = false;
     let level = deviceLevel; // 2: shadows, 1: none, 0: none at 3/4 resolution
+    let restLevel = level;   // the level to come back to when a motion-caused step is undone
     sun.castShadow = level >= 2;
     let activeSince = 0;
     let stepPending = false;
+    let restorePending = false;
+    // the view's rotation relative to the model: camera orbit and the structure's own yaw (rotate buttons, auto-rotate)
+    const viewQ = new THREE.Quaternion(), lastQ = new THREE.Quaternion();
+    let spin = 0, peakSpin = 0, stepSpin = 0, calmSince = null; // camera rotation speed (rad/s, smoothed); its peak over the slow window; that peak at the step
 
     // the quality step, crossfaded from the frame just drawn at the old quality (no visible pop)
     function stepDown() {
         stepPending = false;
         viewer.holdFrame({ fresh: false });
         level -= 1;
-        deviceLevel = level;
+        stepSpin = peakSpin;
+        peakSpin = 0;
+        if (stepSpin < SPIN_MOVING) {
+            restLevel = deviceLevel = level;
+        }
         if (level === 1) {
             sun.castShadow = false;
         } else if (level === 0) {
             renderer.setPixelRatio(saved.pixelRatio * 0.75);
         }
         viewer.releaseFrame(600);
+    }
+    // back to restLevel, crossfaded the same way
+    function restore() {
+        restorePending = false;
+        viewer.holdFrame({ fresh: false });
+        if (level === 0) {
+            renderer.setPixelRatio(saved.pixelRatio);
+        }
+        level = restLevel;
+        sun.castShadow = level >= 2;
+        viewer.releaseFrame(600);
+        console.info("city model: rotation slowed, quality restored");
     }
     let last = 0, avg = 1000 / 60, slowSince = null;
 
@@ -388,6 +413,25 @@ function createCityRenderer(viewer, frame, sun) {
         const now = performance.now();
         const dt = last ? now - last : 0;
         last = now;
+        frame.getWorldQuaternion(viewQ).invert().multiply(camera.quaternion);
+        const turned = viewQ.angleTo(lastQ);
+        lastQ.copy(viewQ);
+        if (dt && dt <= 250) {
+            spin = spin * 0.85 + (turned / (dt / 1000)) * 0.15;
+            peakSpin = Math.max(peakSpin, spin);
+        }
+        if (level < restLevel && stepSpin >= SPIN_MOVING && spin < stepSpin * SPIN_RECOVER) {
+            calmSince ??= now;
+            if (now - calmSince > RECOVER_MS) {
+                restorePending = true;
+                calmSince = null;
+                slowSince = null;
+                avg = 1000 / 60;
+                return;
+            }
+        } else {
+            calmSince = null;
+        }
         if (!dt || dt > 250 || level === 0 || now - activeSince < GRACE_MS) {
             slowSince = null;
             avg = 1000 / 60;
@@ -396,12 +440,13 @@ function createCityRenderer(viewer, frame, sun) {
         avg = avg * 0.92 + dt * 0.08;
         if (avg <= 1000 / MIN_FPS) {
             slowSince = null;
+            peakSpin = 0;
             return;
         }
         slowSince ??= now;
         if (now - slowSince > 1500) {
             stepPending = true; // applied after this frame is drawn, under a crossfade from it
-            console.info(`city model: ${Math.round(1000 / avg)} fps, quality step: ${STEPS[level - 1]}`);
+            console.info(`city model: ${Math.round(1000 / avg)} fps, rotating ${peakSpin.toFixed(2)} rad/s, quality step: ${STEPS[level - 1]}`);
             slowSince = null;
             avg = 1000 / 60;
         }
@@ -429,6 +474,8 @@ function createCityRenderer(viewer, frame, sun) {
             renderer.render(scene, camera);
             if (stepPending) {
                 stepDown();
+            } else if (restorePending) {
+                restore();
             }
             return true;
         },
