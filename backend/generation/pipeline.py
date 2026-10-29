@@ -325,7 +325,7 @@ def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id:
         if surface is None:
             write_terrain_json(out / "terrain.json", flat, bounds, flat.shape)
         else:
-            mesh = write_terrain_json(out / "terrain.json", surface, bounds, hw, limit_outliers=False)
+            mesh = write_terrain_json(out / "terrain.json", surface, bounds, hw, spike_smoothing=True)
             extra["grid"] = [mesh["width"], mesh["height"]]
             note = "No georeference, so there is no DEM for this input" + (
                 f": plane sized from the {gsd:g} m/pixel GSD entered for it." if gsd else ".")
@@ -342,7 +342,7 @@ def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id:
         # outlier limiter capped them near the ground on tiles that are mostly bare ground (IQR of a few cm).
         lidar = kind == "library" and bool(item) and item.get("collection") == "dfc2019"
         mesh = write_terrain_json(out / "terrain.json", surface, lonlat, _mesh_hw(surface.shape), display=display,
-                                  limit_outliers=not lidar)
+                                  limit_outliers=not lidar, spike_smoothing=kind == "input")
         crs = elev.get("crs_label") or str(elev["crs"])
         if elev.get("note"):
             meta["note"] = elev["note"]

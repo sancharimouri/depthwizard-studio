@@ -363,7 +363,10 @@ export function createTerrain(
 
     // Per-region: median-filter the raw height field before exaggeration
     // (see the block comment above) to remove single/few-vertex outliers.
-    const spikeSmoothingParams = SPIKE_SMOOTHING_PARAMS[regionKey];
+    // terrain.json `spikeSmoothing` (uploads): Kolkata's tuned values; an upload's mesh (<= 341 vertices on the
+    // 100-unit plane) has about Kolkata's vertex spacing, so its world-space slope cap carries over.
+    const spikeSmoothingParams = SPIKE_SMOOTHING_PARAMS[regionKey]
+        ?? (terrainData.spikeSmoothing ? SPIKE_SMOOTHING_PARAMS.kolkata : undefined);
 
     const heightsForMesh = spikeSmoothingParams
         ? medianFilter2D(meshSource.heights, width, height, spikeSmoothingParams.medianKernelSize)

@@ -52,6 +52,8 @@ def test_limit_outliers_flag_only_when_disabled(tmp_path):
     assert "limitOutliers" not in json.loads(p.read_text())     # default: unchanged output, viewer limits as before
     write_terrain_json(p, surface, (0, 0, 1, 1), (4, 4), limit_outliers=False)
     assert json.loads(p.read_text())["limitOutliers"] is False  # DFC2019 lidar: the viewer skips the limiter
+    write_terrain_json(p, surface, (0, 0, 1, 1), (4, 4), spike_smoothing=True)
+    assert json.loads(p.read_text())["spikeSmoothing"] is True  # uploads: the viewer smooths spikes
 
 
 def test_baked_depth_matches_only_the_exact_preview(tmp_path, monkeypatch):
