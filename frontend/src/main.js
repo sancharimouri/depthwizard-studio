@@ -766,9 +766,7 @@ function applyMiniBoxCaptions(job) {
         set("dsm-3d-box", lines);
         set("metric-elevation-3d-box", lines);
     } else if (!m.has_elevation) {
-        set("dsm-3d-box", ["No surface model: no georeference",
-            m.surface_kind === "agl" ? "Flat ground (0 m) + predicted height above ground"
-                : m.surface_kind === "relative" ? m.relief_note : "Relative depth on a flat plane"]);
+        set("dsm-3d-box", ["No surface model: no georeference", ...(m.surface_kind ? [] : ["Relative depth on a flat plane"])]);
         set("metric-elevation-3d-box", ["No DEM: no georeference", m.note]);
     } else {
         set("dsm-3d-box", [`${m.grid[0]}×${m.grid[1]} mesh`, `Surface ${rangeText(m.surface_range_m)} · relative depth draped`]);
@@ -2547,7 +2545,8 @@ async function decodeU16Zlib(b64, n, max) {
 async function attachAglLayer(job, terrain) {
     finalDemoAgl = null;
     const a = job.gen?.assets;
-    if (a?.agl && a?.agl_grid) {
+    // no DEM (upload with no georeference): the predicted height is already the surface, no separate layer
+    if (a?.agl && a?.agl_grid && !REGIONS[job.gen.key]?.surfaceKind) {
         try {
             const [texture, grid] = await Promise.all([
                 new THREE.TextureLoader().loadAsync(job.gen.textures.agl),
@@ -2584,8 +2583,7 @@ function syncAglLegend() {
     const box = document.getElementById("final-demo-box");
     let el = document.getElementById("xp-agl-legend");
     const on = Boolean(finalDemoAgl) && finalDemoCurrentLayer === "agl-3d";
-    const relative = REGIONS[finalDemoCurrentRegionKey]?.surfaceKind === "relative";
-    if (!on && !relative) {
+    if (!on) {
         if (el) {
             el.hidden = true;
         }
@@ -2598,7 +2596,7 @@ function syncAglLegend() {
         el.setAttribute("data-xv-ui", "");
         box.append(el);
     }
-    el.innerHTML = !on ? `<p class="xp-agl-badge">Relative relief, not to scale</p>` : `<p class="xp-agl-badge">${AGL_BADGE}</p>`
+    el.innerHTML = `<p class="xp-agl-badge">${AGL_BADGE}</p>`
         + `<div class="xp-agl-title">Predicted height above ground</div>`
         + `<div class="xp-agl-ramp" aria-hidden="true"></div>`
         + `<div class="xp-agl-scale"><span>0 m</span><span>${(finalDemoAgl.max / 2).toFixed(0)} m</span><span>${finalDemoAgl.max.toFixed(0)} m</span></div>`;
@@ -2811,10 +2809,10 @@ function initFinalDemoViewer(job) {
         nav: createNavActions(),
         getTheme: () => workbenchTheme,
         setTheme: applyWorkbenchTheme,
-        hasLayer: layer => layer !== "agl-3d" || Boolean(finalDemoAgl),
-        // an upload with no georeference has no DEM: its Elevation layer is shown disabled, with the reason
-        layerNote: layer => (layer === "elevation-3d" && REGIONS[finalDemoCurrentRegionKey]?.surfaceKind
-            ? "No terrain: this image has no location" : null),
+        // an upload with no georeference (no DEM): RGB, DSM and wireframe only
+        hasLayer: layer => (REGIONS[finalDemoCurrentRegionKey]?.surfaceKind
+            ? ["satellite-3d", "dsm-3d", "wireframe-3d"].includes(layer)
+            : layer !== "agl-3d" || Boolean(finalDemoAgl)),
     });
     if (import.meta.env?.DEV) {
         window.__dwMeasureTool = finalDemoMeasureTool; // dev-only hooks for the headless tests

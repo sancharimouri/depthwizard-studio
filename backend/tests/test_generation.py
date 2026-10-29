@@ -159,5 +159,5 @@ def test_no_georef_upload_with_method6_is_flat_ground_plus_predicted_height(env,
 def test_no_georef_upload_without_method6_is_relative_relief_not_elevation(env, tmp_path):
     m, t = _no_georef_upload(tmp_path)
     assert m["has_elevation"] is False and m["surface_kind"] == "relative"
-    assert "not to scale" in m["note"] and "surface_range_m" not in m
+    assert "no DEM" in m["note"] and "surface_range_m" not in m
     assert t["elevationMin"] == 0 and t["elevationMax"] > 0
