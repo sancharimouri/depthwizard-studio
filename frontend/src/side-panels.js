@@ -111,15 +111,30 @@ export function terrainStats(terrainData) {
     return { min: at(min), max: at(max), mean: at(sum / n), relief: (max - min) * (hi - lo) };
 }
 
-// prefix: "xp-elev" (Studio viewer) or "demo-elev" (Demo page)
-export function renderTerrainStats(terrainData, prefix = "xp-elev") {
+// prefix: "xp-elev" (Studio viewer) or "demo-elev" (Demo page).
+// kind (uploads with no georeference): "agl" = height above ground in metres; "relative" = 0-1 of the relief, no metres.
+const STAT_LABELS = {
+    agl: ["MIN ABOVE GROUND", "MAX ABOVE GROUND", "MEAN ABOVE GROUND", "RELIEF"],
+    relative: ["MIN (RELATIVE)", "MAX (RELATIVE)", "MEAN (RELATIVE)", "RANGE (RELATIVE)"],
+    null: ["MIN ELEVATION", "MAX ELEVATION", "MEAN ELEVATION", "RELIEF"],
+};
+
+export function renderTerrainStats(terrainData, prefix = "xp-elev", kind = null) {
     const s = terrainStats(terrainData);
-    const fmt = v => (v == null ? "—" : `${Math.round(v).toLocaleString()} m`);
-    [[`${prefix}-min`, s.min], [`${prefix}-max`, s.max], [`${prefix}-mean`, s.mean], [`${prefix}-relief`, s.relief]]
-        .forEach(([id, v]) => {
+    const { elevationMin: lo, elevationMax: hi } = terrainData;
+    const fmt = kind === "relative"
+        ? (v, isRange) => (v == null ? "—" : ((isRange ? v : v - lo) / Math.max(hi - lo, 1e-9)).toFixed(2))
+        : kind === "agl" ? v => (v == null ? "—" : `${v.toFixed(1)} m`)
+        : v => (v == null ? "—" : `${Math.round(v).toLocaleString()} m`);
+    const labels = STAT_LABELS[kind] ?? STAT_LABELS.null;
+    [[`${prefix}-min`, s.min], [`${prefix}-max`, s.max], [`${prefix}-mean`, s.mean], [`${prefix}-relief`, s.relief, true]]
+        .forEach(([id, v, isRange], i) => {
             const node = document.getElementById(id);
             if (node) {
-                node.textContent = fmt(v);
+                node.textContent = fmt(v, isRange);
+                if (node.previousElementSibling?.classList.contains("stat-label")) {
+                    node.previousElementSibling.textContent = labels[i];
+                }
             }
         });
 }

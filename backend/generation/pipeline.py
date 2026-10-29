@@ -15,7 +15,9 @@ Elevation always comes from a real elevation model, never from the image (CLAUDE
   upload / Search Online scene: its attached DEM (user DEM or FABDEM) + live GLO-30 surface;
                                 no attached DEM -> live GLO-30 for both
   DFC2019 library tile: its curated private pack (docs/method-audit/08-dfc2019-terrain-packs/)
-  no georeference and no pack (plain PNG/JPG): no elevation; a flat plane, said so in meta/UI
+  no georeference and no pack (plain PNG/JPG): no elevation model. An upload's 3D surface is then
+                                flat ground (0 m) + Method 6 height above ground when Method 6 ran (<= 0.6 m),
+                                else relative relief from DAv2 depth, labelled "not to scale"; never elevation
 """
 from __future__ import annotations
 
@@ -253,15 +255,47 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
     # the new job and its input are held until written (the /tmp cap never deletes them mid-request)
     with tmp_cap.in_use(out, input_dir):
         meta = _generate(kind, item_id, preview, depth_resp, job_id, out, item=item, input_meta=input_meta,
-                         input_dir=input_dir)
+                         input_dir=input_dir, agl=agl)
         if agl is not None:
             meta["agl"] = _write_agl(out, agl) if agl.get("ran") else agl
             (out / "meta.json").write_text(json.dumps(meta, indent=1))
         return meta
 
 
+# Relative relief (an upload with no georeference and no Method 6): DAv2 depth (larger = nearer = higher), scaled so
+# its full range is this fraction of the plane's width. A display choice, not a measurement: the UI says "not to scale".
+RELATIVE_RELIEF_FRACTION = 0.08
+RELATIVE_NOTE = "Relative relief, not to scale"
+
+
+def _no_georef_surface(kind: str, img, depth_resp: dict, agl: dict | None, bounds, gsd) -> tuple:
+    """(surface grid, mesh hw, extra meta) for a no-georeference job; None surface keeps the flat plane."""
+    from PIL import Image
+    if kind != "input":
+        return None, None, {}
+    if agl and agl.get("ran"):
+        h = np.maximum(_decode(agl["agl"]), 0)  # below-ground predictions are ground, as on the layer
+        # default slider x10: the curated DFC2019 library tiles (same 0.3 m scale) sit at x10-14
+        return h, _mesh_hw(h.shape), {"surface_kind": "agl", "default_exaggeration": 10,
+                                      "surface_range_m": [0.0, round(float(h.max()), 1)],
+                                      "note": "No georeference, so there is no DEM for this input: the 3D surface is "
+                                              "flat ground (0 m) plus Method 6's predicted height above ground."}
+    w, h = img.size
+    mh, mw = _mesh_hw((h, w)) if max(w, h) > 256 else (h, w)
+    d = np.asarray(Image.fromarray(_decode(depth_resp)).resize((mw, mh), Image.BILINEAR), np.float32)
+    lo, hi = float(d.min()), float(d.max())
+    width_m = (bounds[2] - bounds[0]) * 111_320
+    rel = (d - lo) / (hi - lo) if hi > lo else np.zeros_like(d)
+    where = f"the {gsd:g} m/pixel GSD entered for it" if gsd else "no GSD"
+    return rel * RELATIVE_RELIEF_FRACTION * width_m, (mh, mw), {
+        "surface_kind": "relative", "relief_note": RELATIVE_NOTE,
+        "note": f"No georeference, so there is no DEM for this input: {RELATIVE_NOTE.lower()}, built from relative "
+                f"depth on a plane sized from {where}."}
+
+
 def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id: str, out: Path, *,
-              item: dict | None = None, input_meta: dict | None = None, input_dir: Path | None = None) -> dict:
+              item: dict | None = None, input_meta: dict | None = None, input_dir: Path | None = None,
+              agl: dict | None = None) -> dict:
     from PIL import Image  # imported here, not at module import (idle memory; docs/container-measurements.md)
     img = Image.open(io.BytesIO(preview)).convert("RGB")
     img.save(out / "satellite.png", optimize=True)
@@ -286,9 +320,14 @@ def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id:
         else:
             bounds = (0.0, 0.0, 0.01 * aspect, 0.01)
             note = "No georeference, so there is no DEM for this input: relative depth only, on a flat plane."
-        write_terrain_json(out / "terrain.json", flat, bounds, flat.shape)
+        surface, hw, extra = _no_georef_surface(kind, img, depth_resp, agl, bounds, gsd)
+        if surface is None:
+            write_terrain_json(out / "terrain.json", flat, bounds, flat.shape)
+        else:
+            mesh = write_terrain_json(out / "terrain.json", surface, bounds, hw, limit_outliers=False)
+            extra["grid"] = [mesh["width"], mesh["height"]]
         Image.new("RGB", (64, 64), (46, 46, 46)).save(out / "elevation.png")
-        meta.update(terrain_source=None, surface_source=None, crs=None, resolution_m=gsd, note=note)
+        meta.update({"terrain_source": None, "surface_source": None, "crs": None, "resolution_m": gsd, "note": note, **extra})
     else:
         from rasterio.warp import transform_bounds
         terrain = np.asarray(elev["terrain"], np.float32)

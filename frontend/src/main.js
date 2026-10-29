@@ -683,6 +683,8 @@ function registerJobRegion(job) {
     REGIONS[job.gen.key] = {
         label: job.input.title,
         hasElevation: m.has_elevation,
+        // no georeference (uploads): "agl" = flat ground + Method 6 height above ground, "relative" = relative relief
+        surfaceKind: m.has_elevation ? null : (m.surface_kind ?? null),
         imagery: shortSource(imagery),
         elevationSource: m.has_elevation ? shortSource(m.surface_source) : "No elevation model (no georeference)",
         terrainSource: m.has_elevation ? shortSource(m.terrain_source) : null,
@@ -764,7 +766,9 @@ function applyMiniBoxCaptions(job) {
         set("dsm-3d-box", lines);
         set("metric-elevation-3d-box", lines);
     } else if (!m.has_elevation) {
-        set("dsm-3d-box", ["No surface model: no georeference", "Relative depth on a flat plane"]);
+        set("dsm-3d-box", ["No surface model: no georeference",
+            m.surface_kind === "agl" ? "Flat ground (0 m) + predicted height above ground"
+                : m.surface_kind === "relative" ? m.relief_note : "Relative depth on a flat plane"]);
         set("metric-elevation-3d-box", ["No DEM: no georeference", m.note]);
     } else {
         set("dsm-3d-box", [`${m.grid[0]}×${m.grid[1]} mesh`, `Surface ${rangeText(m.surface_range_m)} · relative depth draped`]);
@@ -2281,7 +2285,11 @@ const FINAL_DEMO_REGION_SWITCHER_ENABLED = false;
 function updateFinalDemoStats(regionKey, terrain, terrainData) {
     const region = REGIONS[regionKey];
 
-    renderTerrainStats(terrainData);
+    renderTerrainStats(terrainData, "xp-elev", region?.surfaceKind);
+    const probeLabel = document.getElementById("xp-probe-elev")?.previousElementSibling;
+    if (probeLabel) {
+        probeLabel.textContent = { agl: "HEIGHT ABOVE GROUND", relative: "RELATIVE RELIEF" }[region?.surfaceKind] ?? "ELEVATION";
+    }
     syncExaggerationSlider(terrain);
 
     const elevationElement = document.getElementById("final-demo-elevation-value");
@@ -2319,15 +2327,22 @@ function updateFinalDemoStats(regionKey, terrain, terrainData) {
 
 // Live Terrain Probe (Studio viewer and Demo page): elevation and slope of the point under the pointer,
 // a dash when the pointer isn't on the terrain.
-function probeWriter(elevId, slopeId) {
+// getKind (Studio only): the job's no-georeference surface. "agl" reads height above ground in metres; "relative"
+// reads 0-1 of the relief (no metres, no slope: the relief is not to scale).
+function probeWriter(elevId, slopeId, getKind = () => null) {
     return sample => {
         const elev = document.getElementById(elevId);
         const slope = document.getElementById(slopeId);
+        const kind = getKind();
+        const t = finalDemoCurrentTerrain;
         if (elev) {
-            elev.textContent = sample ? `${Math.round(sample.elevation).toLocaleString()} m` : "—";
+            elev.textContent = !sample ? "—"
+                : kind === "agl" ? `${sample.elevation.toFixed(1)} m`
+                : kind === "relative" ? ((sample.elevation - t.elevationMin) / Math.max(t.elevationMax - t.elevationMin, 1e-9)).toFixed(2)
+                : `${Math.round(sample.elevation).toLocaleString()} m`;
         }
         if (slope) {
-            slope.textContent = sample ? `${sample.slope.toFixed(1)}°` : "—";
+            slope.textContent = sample && kind !== "relative" ? `${sample.slope.toFixed(1)}°` : "—";
         }
     };
 }
@@ -2569,7 +2584,8 @@ function syncAglLegend() {
     const box = document.getElementById("final-demo-box");
     let el = document.getElementById("xp-agl-legend");
     const on = Boolean(finalDemoAgl) && finalDemoCurrentLayer === "agl-3d";
-    if (!on) {
+    const relative = REGIONS[finalDemoCurrentRegionKey]?.surfaceKind === "relative";
+    if (!on && !relative) {
         if (el) {
             el.hidden = true;
         }
@@ -2582,7 +2598,7 @@ function syncAglLegend() {
         el.setAttribute("data-xv-ui", "");
         box.append(el);
     }
-    el.innerHTML = `<p class="xp-agl-badge">${AGL_BADGE}</p>`
+    el.innerHTML = !on ? `<p class="xp-agl-badge">Relative relief, not to scale</p>` : `<p class="xp-agl-badge">${AGL_BADGE}</p>`
         + `<div class="xp-agl-title">Predicted height above ground</div>`
         + `<div class="xp-agl-ramp" aria-hidden="true"></div>`
         + `<div class="xp-agl-scale"><span>0 m</span><span>${(finalDemoAgl.max / 2).toFixed(0)} m</span><span>${finalDemoAgl.max.toFixed(0)} m</span></div>`;
@@ -2774,7 +2790,7 @@ function initFinalDemoViewer(job) {
         hoverReadout: () => finalDemoBoxEl?.classList.contains("is-expanded") ?? false,
         dblclickToggle: true,
     });
-    finalDemoMeasureTool.onHover(probeWriter("xp-probe-elev", "xp-probe-slope"));
+    finalDemoMeasureTool.onHover(probeWriter("xp-probe-elev", "xp-probe-slope", () => REGIONS[finalDemoCurrentRegionKey]?.surfaceKind));
     finalDemoMeasureTool.onHover(sample => {
         const out = document.getElementById("xp-probe-agl-value");
         const h = aglAt(sample);
@@ -2796,6 +2812,9 @@ function initFinalDemoViewer(job) {
         getTheme: () => workbenchTheme,
         setTheme: applyWorkbenchTheme,
         hasLayer: layer => layer !== "agl-3d" || Boolean(finalDemoAgl),
+        // an upload with no georeference has no DEM: its Elevation layer is shown disabled, with the reason
+        layerNote: layer => (layer === "elevation-3d" && REGIONS[finalDemoCurrentRegionKey]?.surfaceKind
+            ? "No terrain: this image has no location" : null),
     });
     if (import.meta.env?.DEV) {
         window.__dwMeasureTool = finalDemoMeasureTool; // dev-only hooks for the headless tests

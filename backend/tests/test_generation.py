@@ -135,3 +135,29 @@ def test_manual_gsd_gives_the_flat_plane_its_real_size(env, tmp_path):
     width_m = (b["east"] - b["west"]) * 111320
     height_m = (b["north"] - b["south"]) * 110574
     assert abs(width_m - 200) < 1 and abs(height_m - 150) < 1, (width_m, height_m)
+
+
+def _no_georef_upload(tmp_path, agl=None):
+    meta = {"id": "b" * 32, "kind": "upload", "georeferenced": False, "size_px": [400, 300],
+            "gsd_m": 0.3, "gsd_manual": True}
+    m = pipeline.generate("input", meta["id"], jpeg(400, 300), depth_resp(), input_meta=meta, input_dir=tmp_path,
+                          agl=agl)
+    return m, json.loads((pipeline.generated_dir() / m["job"] / "terrain.json").read_text())
+
+
+def test_no_georef_upload_with_method6_is_flat_ground_plus_predicted_height(env, tmp_path):
+    a = np.zeros((300, 400), np.float32)
+    a[100:150, 100:200] = 12.0  # one 12 m building on flat ground
+    enc = lambda g: {"encoding": "u16-zlib", "shape": list(g.shape), "min": float(g.min()), "max": float(g.max()),
+                     "data_b64": base64.b64encode(zlib.compress(
+                         np.round((g - g.min()) / max(g.max() - g.min(), 1e-6) * 65535).astype("<u2").tobytes())).decode()}
+    m, t = _no_georef_upload(tmp_path, {"ran": True, "agl": enc(a), "sigma": enc(a * 0 + 1), "gsd_m": 0.3})
+    assert m["has_elevation"] is False and m["surface_kind"] == "agl" and m["agl"]["ran"]
+    assert t["elevationMin"] == pytest.approx(0, abs=0.01) and t["elevationMax"] == pytest.approx(12, abs=0.1)
+
+
+def test_no_georef_upload_without_method6_is_relative_relief_not_elevation(env, tmp_path):
+    m, t = _no_georef_upload(tmp_path)
+    assert m["has_elevation"] is False and m["surface_kind"] == "relative"
+    assert "not to scale" in m["note"] and "surface_range_m" not in m
+    assert t["elevationMin"] == 0 and t["elevationMax"] > 0

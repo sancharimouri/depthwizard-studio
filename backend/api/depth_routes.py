@@ -225,13 +225,21 @@ _id_tokens: dict[str, tuple[str, float]] = {}
 
 
 def _id_token(audience: str) -> str:
-    """An ID token for this service's own service account (Cloud Run metadata server), reused for 50 minutes."""
+    """An ID token for this service's own service account (Cloud Run metadata server), reused for 50 minutes.
+    Local dev only: DW2_MODEL_GCLOUD_TOKEN=1 falls back to `gcloud auth print-identity-token` (needs run.invoker)."""
     tok, exp = _id_tokens.get(audience, ("", 0.0))
     if time.time() < exp:
         return tok
     import google.auth.transport.requests
     import google.oauth2.id_token
-    tok = google.oauth2.id_token.fetch_id_token(google.auth.transport.requests.Request(), audience)
+    try:
+        tok = google.oauth2.id_token.fetch_id_token(google.auth.transport.requests.Request(), audience)
+    except Exception:  # noqa: BLE001 - local dev: no metadata server; use the developer's own gcloud identity
+        if not os.environ.get("DW2_MODEL_GCLOUD_TOKEN"):
+            raise
+        import subprocess
+        tok = subprocess.run(["gcloud", "auth", "print-identity-token"], capture_output=True, text=True,
+                             check=True, timeout=30).stdout.strip()
     _id_tokens[audience] = (tok, time.time() + 50 * 60)
     return tok
 

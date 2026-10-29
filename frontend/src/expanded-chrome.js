@@ -108,7 +108,7 @@ function iconButton(parent, { name, iconName, cls = "", tipBelow = false, disabl
 }
 
 export function createExpandedChrome({
-    box, canvas, viewer, tool, getRegionKey, setLayer, getLayer, getTheme, setTheme, nav, hasLayer = () => true,
+    box, canvas, viewer, tool, getRegionKey, setLayer, getLayer, getTheme, setTheme, nav, hasLayer = () => true, layerNote = () => null,
 }) {
     // ------------------------------------------------------------------ state (session-only)
     const library = { points: [], lines: [], areas: [], screenshots: [], recordings: [] };
@@ -374,7 +374,7 @@ export function createExpandedChrome({
 
     const viewMenu = popover(viewWrap, "xv-menu xv-above");
     for (const [layer, label] of [["satellite-3d", "RGB (True Colour)"], ["dsm-3d", "DSM (relative depth)"], ["elevation-3d", "DEM elevation"], ["wireframe-3d", "Wireframe"], ["agl-3d", "Predicted height"]]) {
-        const b = el("button", { type: "button", role: "menuitemradio", "data-layer": layer, text: label }, viewMenu);
+        const b = el("button", { type: "button", role: "menuitemradio", "data-layer": layer, "data-label": label, text: label }, viewMenu);
         b.addEventListener("click", () => { closeAll(); setLayer(layer); syncToolbar(); });
     }
     viewBtn.addEventListener("click", () => { syncToolbar(); toggle(viewMenu, viewBtn); });
@@ -533,6 +533,9 @@ export function createExpandedChrome({
         viewMenu.querySelectorAll("button").forEach(b => {
             b.setAttribute("aria-checked", String(b.dataset.layer === layer));
             b.hidden = !hasLayer(b.dataset.layer);
+            const note = layerNote(b.dataset.layer);
+            b.disabled = Boolean(note);
+            b.textContent = note ? `${b.dataset.label} (${note})` : b.dataset.label;
         });
         const canSave = tool.model.chains.some(c => c.points.length >= 2);
         saveBtn.classList.toggle("is-muted", !canSave);
