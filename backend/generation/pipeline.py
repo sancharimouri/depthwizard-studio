@@ -267,6 +267,15 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
 RELATIVE_RELIEF_FRACTION = 0.08
 
 
+def agl_exaggeration(h) -> float:
+    """Default slider for a flat-ground + predicted-height surface. The library's DFC2019 rule (docs/library_v2.md,
+    "Exaggeration": exag ~ (p98-p2)^-0.521), anchored on the owner's pick for the upload of JAX_004_006 (p98-p2
+    15.1 m -> x22), clamped to x15-35 in 0.5 steps."""
+    r = float(np.percentile(h, 98) - np.percentile(h, 2))
+    e = 22 * (max(r, 0.1) / 15.1) ** -0.521
+    return float(min(35.0, max(15.0, round(e * 2) / 2)))
+
+
 def _no_georef_surface(kind: str, img, depth_resp: dict, agl: dict | None, bounds, gsd) -> tuple:
     """(surface grid, mesh hw, extra meta) for a no-georeference job; None surface keeps the flat plane."""
     from PIL import Image
@@ -274,8 +283,7 @@ def _no_georef_surface(kind: str, img, depth_resp: dict, agl: dict | None, bound
         return None, None, {}
     if agl and agl.get("ran"):
         h = np.maximum(_decode(agl["agl"]), 0)  # below-ground predictions are ground, as on the layer
-        # default slider x10: the curated DFC2019 library tiles (same 0.3 m scale) sit at x10-14
-        return h, _mesh_hw(h.shape), {"surface_kind": "agl", "default_exaggeration": 10,
+        return h, _mesh_hw(h.shape), {"surface_kind": "agl", "default_exaggeration": agl_exaggeration(h),
                                       "surface_range_m": [0.0, round(float(h.max()), 1)]}
     w, h = img.size
     mh, mw = _mesh_hw((h, w)) if max(w, h) > 256 else (h, w)

@@ -155,6 +155,10 @@ def test_no_georef_upload_with_method6_is_flat_ground_plus_predicted_height(env,
     assert m["has_elevation"] is False and m["surface_kind"] == "agl" and m["agl"]["ran"]
     assert t["elevationMin"] == pytest.approx(0, abs=0.01) and t["elevationMax"] == pytest.approx(12, abs=0.1)
 
+    from backend.generation.pipeline import agl_exaggeration
+    ramp = np.linspace(0, 15.1 / 0.96, 10001)  # p98-p2 = 15.1 m, the JAX_004_006 anchor
+    assert agl_exaggeration(ramp) == 22 and agl_exaggeration(ramp * 0) == 35 and agl_exaggeration(ramp * 5) == 15
+
 
 def test_no_georef_upload_without_method6_is_relative_relief_not_elevation(env, tmp_path):
     m, t = _no_georef_upload(tmp_path)
