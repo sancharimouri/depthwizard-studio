@@ -262,9 +262,11 @@ def generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, *, item:
         return meta
 
 
-# Relative relief (an upload with no georeference and no Method 6): DAv2 depth (larger = nearer = higher), scaled so
-# its full range is this fraction of the plane's width. A display choice, not a measurement: the UI shows it as 0-1, no metres.
-RELATIVE_RELIEF_FRACTION = 0.08
+# Relative relief (an upload with no georeference and no Method 6): DAv2 depth (larger = nearer = higher), spanning a
+# fixed nominal range. The viewer's vertical scale is per metre, not per plane width, so a range tied to the width
+# (it was 8% of it) stood km tall on a 20 km plane. With a small fixed range the viewer's relief floor
+# (terrain.js MIN_RELIEF_FRACTION) shows it at 15% of the plane, whatever its size. Not a measurement: the UI shows 0-1.
+RELATIVE_RELIEF_M = 100.0
 
 
 def agl_exaggeration(h) -> float:
@@ -289,9 +291,8 @@ def _no_georef_surface(kind: str, img, depth_resp: dict, agl: dict | None, bound
     mh, mw = _mesh_hw((h, w)) if max(w, h) > 256 else (h, w)
     d = np.asarray(Image.fromarray(_decode(depth_resp)).resize((mw, mh), Image.BILINEAR), np.float32)
     lo, hi = float(d.min()), float(d.max())
-    width_m = (bounds[2] - bounds[0]) * 111_320
     rel = (d - lo) / (hi - lo) if hi > lo else np.zeros_like(d)
-    return rel * RELATIVE_RELIEF_FRACTION * width_m, (mh, mw), {"surface_kind": "relative"}
+    return rel * RELATIVE_RELIEF_M, (mh, mw), {"surface_kind": "relative"}
 
 
 def _generate(kind: str, item_id: str, preview: bytes, depth_resp: dict, job_id: str, out: Path, *,
